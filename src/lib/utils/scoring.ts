@@ -1,5 +1,28 @@
 import { MatchResult, ScoringResult, ScoringBreakdown } from '@/types';
-import { getUnderdog, predictedUnderdogWin, isUpsetResult } from './upset';
+
+// ============= KICKTIPP QUOTA SCORING SYSTEM =============
+// Points = TendencyQuota (2-6) + GoalDiffBonus (0-1) + ExactScoreBonus (0-3)
+// Maximum: 10 points
+//
+// Quota Calculation:
+// - Count predictions by tendency (Home/Draw/Away)
+// - rawQuota = totalPredictions / predictionsForThatTendency
+// - Clamp to range [2, 6]
+// - Rare predictions = more points, common predictions = fewer points
+//
+// Example (30 models, actual: Away Win 0-1):
+// - Predictions: 24 Home, 4 Draw, 2 Away
+// - Quotas: H=2, D=6, A=6 (clamped)
+// - Model predicted 0-1 (Away, exact): 6 + 1 + 3 = 10 points
+// - Model predicted 2-0 (Home, wrong): 0 points
+
+// Minimum and maximum quota values
+const MIN_QUOTA = 2;
+const MAX_QUOTA = 6;
+
+// Bonus points
+const GOAL_DIFF_BONUS = 1;
+const EXACT_SCORE_BONUS = 3;
 
 // Determine match result from scores
 export function getResult(homeScore: number, awayScore: number): MatchResult {
@@ -8,7 +31,7 @@ export function getResult(homeScore: number, awayScore: number): MatchResult {
   return 'D';
 }
 
-// Calculate points for a prediction
+// Calculate points for a prediction (legacy simple scoring for backward compat)
 // 3 points = exact score
 // 1 point = correct result (W/D/L)
 // 0 points = wrong
@@ -52,7 +75,116 @@ export function formatResult(result: MatchResult): string {
   }
 }
 
-// ============= ENHANCED SCORING (6 categories, max 10 points) =============
+// ============= QUOTA CALCULATION =============
+
+export interface QuotaResult {
+  home: number;  // Quota for home win predictions (2-6)
+  draw: number;  // Quota for draw predictions (2-6)
+  away: number;  // Quota for away win predictions (2-6)
+}
+
+// Calculate quotas from prediction distribution
+// Each quota represents the points a model earns for correctly predicting that outcome
+export function calculateQuotas(
+  predictions: Array<{ predictedHome: number; predictedAway: number }>
+): QuotaResult {
+  const total = predictions.length;
+  
+  if (total === 0) {
+    // Default quotas if no predictions
+    return { home: MIN_QUOTA, draw: MIN_QUOTA, away: MIN_QUOTA };
+  }
+  
+  // Count predictions by tendency
+  let homeCount = 0;
+  let drawCount = 0;
+  let awayCount = 0;
+  
+  for (const pred of predictions) {
+    const result = getResult(pred.predictedHome, pred.predictedAway);
+    if (result === 'H') homeCount++;
+    else if (result === 'D') drawCount++;
+    else awayCount++;
+  }
+  
+  // Calculate raw quotas: total / count for each tendency
+  // If no one predicted that outcome, use MAX_QUOTA (rarest possible)
+  const rawHomeQuota = homeCount > 0 ? total / homeCount : MAX_QUOTA;
+  const rawDrawQuota = drawCount > 0 ? total / drawCount : MAX_QUOTA;
+  const rawAwayQuota = awayCount > 0 ? total / awayCount : MAX_QUOTA;
+  
+  // Clamp to [MIN_QUOTA, MAX_QUOTA] and round to 1 decimal
+  return {
+    home: Math.round(Math.min(MAX_QUOTA, Math.max(MIN_QUOTA, rawHomeQuota)) * 10) / 10,
+    draw: Math.round(Math.min(MAX_QUOTA, Math.max(MIN_QUOTA, rawDrawQuota)) * 10) / 10,
+    away: Math.round(Math.min(MAX_QUOTA, Math.max(MIN_QUOTA, rawAwayQuota)) * 10) / 10,
+  };
+}
+
+// ============= QUOTA-BASED SCORING =============
+
+export interface QuotaScoringInput {
+  predictedHome: number;
+  predictedAway: number;
+  actualHome: number;
+  actualAway: number;
+  quotaHome: number;
+  quotaDraw: number;
+  quotaAway: number;
+}
+
+// Calculate points for a single prediction using the quota system
+export function calculateQuotaScores(input: QuotaScoringInput): ScoringBreakdown {
+  const { predictedHome, predictedAway, actualHome, actualAway, quotaHome, quotaDraw, quotaAway } = input;
+  
+  const breakdown: ScoringBreakdown = {
+    tendencyPoints: 0,
+    goalDiffBonus: 0,
+    exactScoreBonus: 0,
+    total: 0,
+  };
+  
+  // Determine tendencies
+  const predictedResult = getResult(predictedHome, predictedAway);
+  const actualResult = getResult(actualHome, actualAway);
+  
+  // If wrong tendency, no points at all
+  if (predictedResult !== actualResult) {
+    return breakdown;
+  }
+  
+  // 1. Tendency Points: Use the quota for the actual result (2-6)
+  switch (actualResult) {
+    case 'H':
+      breakdown.tendencyPoints = quotaHome;
+      break;
+    case 'D':
+      breakdown.tendencyPoints = quotaDraw;
+      break;
+    case 'A':
+      breakdown.tendencyPoints = quotaAway;
+      break;
+  }
+  
+  // 2. Goal Difference Bonus (+1)
+  const predictedDiff = predictedHome - predictedAway;
+  const actualDiff = actualHome - actualAway;
+  if (predictedDiff === actualDiff) {
+    breakdown.goalDiffBonus = GOAL_DIFF_BONUS;
+  }
+  
+  // 3. Exact Score Bonus (+3)
+  if (predictedHome === actualHome && predictedAway === actualAway) {
+    breakdown.exactScoreBonus = EXACT_SCORE_BONUS;
+  }
+  
+  // Calculate total
+  breakdown.total = breakdown.tendencyPoints + breakdown.goalDiffBonus + breakdown.exactScoreBonus;
+  
+  return breakdown;
+}
+
+// ============= LEGACY ENHANCED SCORING (for backward compatibility during transition) =============
 
 export interface EnhancedScoringInput {
   predictedHome: number;
@@ -63,80 +195,24 @@ export interface EnhancedScoringInput {
   awayWinPct: number | null;
 }
 
-// Calculate enhanced scoring breakdown (6 categories, max 10 points)
+// Legacy scoring function - now wraps quota scoring with default quotas
+// This ensures old code paths still work during transition
 export function calculateEnhancedScores(input: EnhancedScoringInput): ScoringBreakdown {
-  const { predictedHome, predictedAway, actualHome, actualAway, homeWinPct, awayWinPct } = input;
-  
-  const breakdown: ScoringBreakdown = {
-    exactScore: 0,
-    result: 0,
-    goalDiff: 0,
-    overUnder: 0,
-    btts: 0,
-    upsetBonus: 0,
-    total: 0,
-  };
-
-  // 1. Exact Score (5 points)
-  const isExact = predictedHome === actualHome && predictedAway === actualAway;
-  if (isExact) {
-    breakdown.exactScore = 5;
-  }
-
-  // 2. Correct Result (2 points) - only if not exact
-  const predictedResult = getResult(predictedHome, predictedAway);
-  const actualResult = getResult(actualHome, actualAway);
-  if (!isExact && predictedResult === actualResult) {
-    breakdown.result = 2;
-  }
-
-  // 3. Correct Goal Difference (1 point)
-  const predictedDiff = predictedHome - predictedAway;
-  const actualDiff = actualHome - actualAway;
-  if (predictedDiff === actualDiff) {
-    breakdown.goalDiff = 1;
-  }
-
-  // 4. Over/Under 2.5 (1 point)
-  const predictedTotal = predictedHome + predictedAway;
-  const actualTotal = actualHome + actualAway;
-  const predictedOver = predictedTotal > 2.5;
-  const actualOver = actualTotal > 2.5;
-  if (predictedOver === actualOver) {
-    breakdown.overUnder = 1;
-  }
-
-  // 5. Both Teams to Score (1 point)
-  const predictedBtts = predictedHome > 0 && predictedAway > 0;
-  const actualBtts = actualHome > 0 && actualAway > 0;
-  if (predictedBtts === actualBtts) {
-    breakdown.btts = 1;
-  }
-
-  // 6. Upset Bonus (2 points) - if correctly predicted underdog win
-  const underdog = getUnderdog(homeWinPct, awayWinPct);
-  const wasUpset = isUpsetResult(homeWinPct, awayWinPct, actualHome, actualAway);
-  const calledUpset = predictedUnderdogWin(predictedHome, predictedAway, underdog);
-  
-  if (wasUpset && calledUpset) {
-    breakdown.upsetBonus = 2;
-  }
-
-  // Calculate total
-  breakdown.total = 
-    breakdown.exactScore + 
-    breakdown.result + 
-    breakdown.goalDiff + 
-    breakdown.overUnder + 
-    breakdown.btts + 
-    breakdown.upsetBonus;
-
-  return breakdown;
+  // Use minimum quota (2) as default when quotas aren't available
+  // This gives a baseline score similar to old system
+  return calculateQuotaScores({
+    predictedHome: input.predictedHome,
+    predictedAway: input.predictedAway,
+    actualHome: input.actualHome,
+    actualAway: input.actualAway,
+    quotaHome: MIN_QUOTA,
+    quotaDraw: MIN_QUOTA,
+    quotaAway: MIN_QUOTA,
+  });
 }
 
-// ============= LEGACY SCORING (for backward compatibility) =============
+// ============= LEGACY ACCURACY STATS =============
 
-// Calculate accuracy statistics
 export interface AccuracyStats {
   totalPredictions: number;
   exactScores: number;

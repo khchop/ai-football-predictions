@@ -62,8 +62,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
         awayWinPct: analysis?.awayWinPct ?? null,
       });
       points = scoring.total;
-      isExact = scoring.exactScore > 0;
-      isCorrectResult = scoring.result > 0;
+      isExact = scoring.exactScoreBonus > 0;
+      isCorrectResult = scoring.tendencyPoints > 0;
     }
 
     return {

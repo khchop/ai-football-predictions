@@ -30,6 +30,11 @@ export const matches = sqliteTable('matches', {
   round: text('round'), // e.g., "Group A - Matchday 1", "Quarter-finals"
   venue: text('venue'),
   isUpset: integer('is_upset', { mode: 'boolean' }).default(false), // Whether the underdog won
+  // Kicktipp quota scoring: points for correct tendency (2-6 range)
+  // Lower quota = more models predicted that outcome = less reward
+  quotaHome: real('quota_home'), // Points for predicting home win (2-6)
+  quotaDraw: real('quota_draw'), // Points for predicting draw (2-6)
+  quotaAway: real('quota_away'), // Points for predicting away win (2-6)
   createdAt: text('created_at').default(sql`(datetime('now'))`),
   updatedAt: text('updated_at').default(sql`(datetime('now'))`),
 });

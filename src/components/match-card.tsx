@@ -22,6 +22,10 @@ interface MatchCardProps {
     round?: string | null;
     venue?: string | null;
     isUpset?: boolean | null;
+    // Kicktipp quota scoring
+    quotaHome?: number | null;
+    quotaDraw?: number | null;
+    quotaAway?: number | null;
     competition: {
       id: string;
       name: string;
@@ -255,6 +259,34 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
                 awayFavorite && "bg-primary/10 text-primary"
               )}>
                 {analysis.oddsAway}
+              </span>
+            </div>
+          )}
+
+          {/* Quota display (for finished matches with quotas) */}
+          {isFinished && match.quotaHome && match.quotaDraw && match.quotaAway && (
+            <div className="mt-3 flex items-center justify-center gap-2 text-xs">
+              <span className="text-muted-foreground">Quota:</span>
+              <span className={cn(
+                "font-mono px-1.5 py-0.5 rounded",
+                match.homeScore !== null && match.awayScore !== null && 
+                match.homeScore > match.awayScore && "bg-green-500/20 text-green-400"
+              )}>
+                H:{match.quotaHome}
+              </span>
+              <span className={cn(
+                "font-mono px-1.5 py-0.5 rounded",
+                match.homeScore !== null && match.awayScore !== null && 
+                match.homeScore === match.awayScore && "bg-green-500/20 text-green-400"
+              )}>
+                D:{match.quotaDraw}
+              </span>
+              <span className={cn(
+                "font-mono px-1.5 py-0.5 rounded",
+                match.homeScore !== null && match.awayScore !== null && 
+                match.awayScore > match.homeScore && "bg-green-500/20 text-green-400"
+              )}>
+                A:{match.quotaAway}
               </span>
             </div>
           )}

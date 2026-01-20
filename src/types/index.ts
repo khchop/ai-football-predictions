@@ -134,20 +134,18 @@ export interface ScoringResult {
   actualResult: MatchResult;
 }
 
-// Enhanced scoring breakdown (6 categories, max 10 points)
-// Max with exact score: 5 + 0 + 1 + 1 + 1 + 2 = 10
-// Max without exact: 0 + 2 + 1 + 1 + 1 + 2 = 7
+// Kicktipp Quota Scoring Breakdown (max 10 points)
+// Points = TendencyQuota (2-6) + GoalDiffBonus (0-1) + ExactScoreBonus (0-3)
+// TendencyQuota: Based on how many models predicted the same outcome (rarer = more points)
+// Formula: rawQuota = totalPredictions / predictionsForThatTendency, clamped to [2, 6]
 export interface ScoringBreakdown {
-  exactScore: number;    // 5 pts if exact match
-  result: number;        // 2 pts if correct result (only if not exact)
-  goalDiff: number;      // 1 pt if correct goal difference
-  overUnder: number;     // 1 pt if correct over/under 2.5
-  btts: number;          // 1 pt if correct both teams to score
-  upsetBonus: number;    // 2 pts if correctly predicted underdog win
-  total: number;         // Sum of all points (max 10)
+  tendencyPoints: number;   // 2-6 based on quota (0 if wrong tendency)
+  goalDiffBonus: number;    // +1 if correct goal difference
+  exactScoreBonus: number;  // +3 if exact score match
+  total: number;            // Sum of all points (max 10)
 }
 
-// Enhanced leaderboard entry with points breakdown
+// Enhanced leaderboard entry with quota-based scoring breakdown
 export interface EnhancedLeaderboardEntry {
   modelId: string;
   displayName: string;
@@ -155,20 +153,14 @@ export interface EnhancedLeaderboardEntry {
   totalPredictions: number;
   totalPoints: number;
   averagePoints: number;
-  // Points breakdown totals
-  pointsExactScore: number;
-  pointsResult: number;
-  pointsGoalDiff: number;
-  pointsOverUnder: number;
-  pointsBtts: number;
-  pointsUpsetBonus: number;
+  // Points breakdown totals (quota system)
+  pointsTendency: number;     // Sum of tendency quota points (2-6 per correct)
+  pointsGoalDiff: number;     // Sum of goal diff bonuses (+1 each)
+  pointsExactScore: number;   // Sum of exact score bonuses (+3 each)
   // Category counts
-  exactScores: number;
-  correctResults: number;
-  correctGoalDiffs: number;
-  correctOverUnders: number;
-  correctBtts: number;
-  upsetsCalled: number;
+  correctTendencies: number;  // How many correct H/D/A predictions
+  correctGoalDiffs: number;   // How many correct goal differences
+  exactScores: number;        // How many exact score matches
 }
 
 // API-Football Prediction Response

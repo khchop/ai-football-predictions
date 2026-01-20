@@ -635,25 +635,47 @@ export async function getMatchesReadyForPrediction(): Promise<Array<{
   return result;
 }
 
-// ============= PREDICTION SCORING =============
+// ============= PREDICTION SCORING (QUOTA SYSTEM) =============
 
 export async function updatePredictionScores(
   predictionId: string,
   scores: ScoringBreakdown
 ) {
   const db = getDb();
+  // Map new quota-based scoring to existing columns:
+  // - pointsResult: now stores tendencyPoints (2-6)
+  // - pointsGoalDiff: stores goal diff bonus (0-1)
+  // - pointsExactScore: stores exact score bonus (0-3)
+  // - Unused columns (pointsOverUnder, pointsBtts, pointsUpsetBonus): set to 0
   return db
     .update(predictions)
     .set({
-      pointsExactScore: scores.exactScore,
-      pointsResult: scores.result,
-      pointsGoalDiff: scores.goalDiff,
-      pointsOverUnder: scores.overUnder,
-      pointsBtts: scores.btts,
-      pointsUpsetBonus: scores.upsetBonus,
+      pointsResult: scores.tendencyPoints,
+      pointsGoalDiff: scores.goalDiffBonus,
+      pointsExactScore: scores.exactScoreBonus,
+      pointsOverUnder: 0, // No longer used
+      pointsBtts: 0,      // No longer used
+      pointsUpsetBonus: 0, // No longer used (replaced by quota system)
       pointsTotal: scores.total,
     })
     .where(eq(predictions.id, predictionId));
+}
+
+// Save calculated quotas to a match
+export async function saveMatchQuotas(
+  matchId: string,
+  quotas: { home: number; draw: number; away: number }
+) {
+  const db = getDb();
+  return db
+    .update(matches)
+    .set({
+      quotaHome: quotas.home,
+      quotaDraw: quotas.draw,
+      quotaAway: quotas.away,
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(matches.id, matchId));
 }
 
 export async function setMatchUpset(matchId: string, isUpset: boolean) {
@@ -667,23 +689,21 @@ export async function setMatchUpset(matchId: string, isUpset: boolean) {
     .where(eq(matches.id, matchId));
 }
 
-// ============= ENHANCED LEADERBOARD =============
+// ============= ENHANCED LEADERBOARD (QUOTA SYSTEM) =============
 
 export async function getEnhancedLeaderboard(): Promise<EnhancedLeaderboardEntry[]> {
   const db = getDb();
   
   // Get all predictions for finished matches with their scores
+  // Note: pointsResult now stores tendencyPoints, pointsExactScore stores exact bonus
   const finishedPredictions = await db
     .select({
       modelId: predictions.modelId,
       displayName: models.displayName,
       provider: models.provider,
-      pointsExactScore: predictions.pointsExactScore,
-      pointsResult: predictions.pointsResult,
-      pointsGoalDiff: predictions.pointsGoalDiff,
-      pointsOverUnder: predictions.pointsOverUnder,
-      pointsBtts: predictions.pointsBtts,
-      pointsUpsetBonus: predictions.pointsUpsetBonus,
+      pointsExactScore: predictions.pointsExactScore, // Now: exact score bonus (0 or 3)
+      pointsResult: predictions.pointsResult,         // Now: tendency quota points (0 or 2-6)
+      pointsGoalDiff: predictions.pointsGoalDiff,     // Goal diff bonus (0 or 1)
       pointsTotal: predictions.pointsTotal,
     })
     .from(predictions)
@@ -708,36 +728,32 @@ export async function getEnhancedLeaderboard(): Promise<EnhancedLeaderboardEntry
       totalPredictions: 0,
       totalPoints: 0,
       averagePoints: 0,
-      pointsExactScore: 0,
-      pointsResult: 0,
+      // Quota system breakdown
+      pointsTendency: 0,
       pointsGoalDiff: 0,
-      pointsOverUnder: 0,
-      pointsBtts: 0,
-      pointsUpsetBonus: 0,
-      exactScores: 0,
-      correctResults: 0,
+      pointsExactScore: 0,
+      // Counts
+      correctTendencies: 0,
       correctGoalDiffs: 0,
-      correctOverUnders: 0,
-      correctBtts: 0,
-      upsetsCalled: 0,
+      exactScores: 0,
     };
 
     stats.totalPredictions++;
     stats.totalPoints += pred.pointsTotal || 0;
-    stats.pointsExactScore += pred.pointsExactScore || 0;
-    stats.pointsResult += pred.pointsResult || 0;
-    stats.pointsGoalDiff += pred.pointsGoalDiff || 0;
-    stats.pointsOverUnder += pred.pointsOverUnder || 0;
-    stats.pointsBtts += pred.pointsBtts || 0;
-    stats.pointsUpsetBonus += pred.pointsUpsetBonus || 0;
+    
+    // Quota system aggregation
+    const tendencyPts = pred.pointsResult || 0; // tendencyPoints stored in pointsResult
+    const goalDiffPts = pred.pointsGoalDiff || 0;
+    const exactPts = pred.pointsExactScore || 0;
+    
+    stats.pointsTendency += tendencyPts;
+    stats.pointsGoalDiff += goalDiffPts;
+    stats.pointsExactScore += exactPts;
 
     // Count categories achieved
-    if ((pred.pointsExactScore || 0) > 0) stats.exactScores++;
-    if ((pred.pointsResult || 0) > 0) stats.correctResults++;
-    if ((pred.pointsGoalDiff || 0) > 0) stats.correctGoalDiffs++;
-    if ((pred.pointsOverUnder || 0) > 0) stats.correctOverUnders++;
-    if ((pred.pointsBtts || 0) > 0) stats.correctBtts++;
-    if ((pred.pointsUpsetBonus || 0) > 0) stats.upsetsCalled++;
+    if (tendencyPts > 0) stats.correctTendencies++;
+    if (goalDiffPts > 0) stats.correctGoalDiffs++;
+    if (exactPts > 0) stats.exactScores++;
 
     modelStats.set(pred.modelId, stats);
   }

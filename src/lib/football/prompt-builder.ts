@@ -28,6 +28,20 @@ const ANALYSIS_HEADER = `You will receive match data in a structured format. Ana
 - LINEUPS: Confirmed starting players and formations
 - ABSENCES: Injured/suspended players
 
+SCORING SYSTEM (Kicktipp Quota Rule):
+You are competing against other AI models. Points depend on prediction rarity:
+- Correct tendency (H/D/A): 2-6 pts (rarer prediction = more points)
+- Correct goal difference: +1 pt bonus
+- Exact score: +3 pts bonus
+- Maximum: 10 points per match
+
+RISK/REWARD STRATEGY:
+- "Safe" prediction (e.g., strong favorite wins): Low quota (2-3 pts), high probability
+- "Risky" prediction (e.g., upset): High quota (5-6 pts), low probability
+- Consider expected value: probability × points
+- Only predict upsets when data genuinely supports it
+- Don't be contrarian just to score more - accuracy still matters!
+
 Key prediction factors:
 1. Home advantage typically worth 0.3-0.5 goals
 2. Recent form indicates current confidence/momentum  

@@ -5,12 +5,13 @@ import {
   updatePredictionScores,
   setMatchUpset,
   getMatchAnalysisByMatchId,
+  saveMatchQuotas,
 } from '@/lib/db/queries';
 import { getDb, matches } from '@/lib/db';
 import { eq, inArray } from 'drizzle-orm';
 import { getLiveFixtures, mapFixtureStatus, formatMatchMinute } from '@/lib/football/api-football';
 import { COMPETITIONS } from '@/lib/football/competitions';
-import { calculateEnhancedScores } from '@/lib/utils/scoring';
+import { calculateQuotas, calculateQuotaScores } from '@/lib/utils/scoring';
 import { isUpsetResult } from '@/lib/utils/upset';
 
 // Verify cron secret for security
@@ -164,13 +165,13 @@ export async function GET(request: NextRequest) {
   return POST(request);
 }
 
-// Score all predictions for a finished match (copied from update-results)
+// Score all predictions for a finished match using Kicktipp quota system
 async function scorePredictionsForMatch(
   matchId: string,
   actualHome: number,
   actualAway: number
 ) {
-  console.log(`[Scoring] Calculating scores for match ${matchId}`);
+  console.log(`[Scoring] Calculating quota-based scores for match ${matchId}`);
   
   try {
     // Get analysis data for upset detection (may not exist)
@@ -180,17 +181,14 @@ async function scorePredictionsForMatch(
     const homeWinPct = (analysis?.homeWinPct != null && analysis.homeWinPct > 0) ? analysis.homeWinPct : null;
     const awayWinPct = (analysis?.awayWinPct != null && analysis.awayWinPct > 0) ? analysis.awayWinPct : null;
 
-    // Determine if this was an upset (only if we have analysis data)
+    // Determine if this was an upset (for display purposes, not scoring)
     let wasUpset = false;
     if (homeWinPct !== null && awayWinPct !== null) {
       wasUpset = isUpsetResult(homeWinPct, awayWinPct, actualHome, actualAway);
       if (wasUpset) {
         console.log(`[Scoring] Match was an UPSET! (home: ${homeWinPct}%, away: ${awayWinPct}%)`);
       }
-    } else {
-      console.log(`[Scoring] No win percentages available for upset detection`);
     }
-    
     await setMatchUpset(matchId, wasUpset);
 
     // Get all predictions for this match
@@ -202,18 +200,32 @@ async function scorePredictionsForMatch(
       return;
     }
 
+    // Step 1: Calculate quotas based on prediction distribution
+    const predictionData = matchPredictions.map(({ prediction }) => ({
+      predictedHome: prediction.predictedHomeScore,
+      predictedAway: prediction.predictedAwayScore,
+    }));
+    
+    const quotas = calculateQuotas(predictionData);
+    console.log(`[Scoring] Quotas: H=${quotas.home} D=${quotas.draw} A=${quotas.away}`);
+    
+    // Save quotas to match for display
+    await saveMatchQuotas(matchId, quotas);
+
+    // Step 2: Score each prediction using the calculated quotas
     let scoredCount = 0;
     let totalPoints = 0;
 
     for (const { prediction } of matchPredictions) {
-      // Calculate enhanced scores (6 categories)
-      const scores = calculateEnhancedScores({
+      // Calculate quota-based scores
+      const scores = calculateQuotaScores({
         predictedHome: prediction.predictedHomeScore,
         predictedAway: prediction.predictedAwayScore,
         actualHome,
         actualAway,
-        homeWinPct,
-        awayWinPct,
+        quotaHome: quotas.home,
+        quotaDraw: quotas.draw,
+        quotaAway: quotas.away,
       });
 
       // Update prediction with scores
@@ -223,14 +235,14 @@ async function scorePredictionsForMatch(
       totalPoints += scores.total;
       
       // Log notable scores
-      if (scores.exactScore > 0) {
-        console.log(`[Scoring] EXACT SCORE: ${prediction.predictedHomeScore}-${prediction.predictedAwayScore} = ${scores.total} pts`);
-      } else if (scores.upsetBonus > 0) {
-        console.log(`[Scoring] UPSET CALLED: ${prediction.predictedHomeScore}-${prediction.predictedAwayScore} = ${scores.total} pts`);
+      if (scores.exactScoreBonus > 0) {
+        console.log(`[Scoring] EXACT SCORE: ${prediction.predictedHomeScore}-${prediction.predictedAwayScore} = ${scores.total} pts (tendency: ${scores.tendencyPoints})`);
+      } else if (scores.tendencyPoints >= 5) {
+        console.log(`[Scoring] HIGH QUOTA: ${prediction.predictedHomeScore}-${prediction.predictedAwayScore} = ${scores.total} pts (rare prediction!)`);
       }
     }
 
-    console.log(`[Scoring] Scored ${scoredCount} predictions, total ${totalPoints} points`);
+    console.log(`[Scoring] Scored ${scoredCount} predictions, total ${totalPoints} points, avg ${(totalPoints / scoredCount).toFixed(2)}`);
   } catch (error) {
     console.error(`[Scoring] Error scoring match ${matchId}:`, error);
   }
