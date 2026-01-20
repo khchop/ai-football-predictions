@@ -216,6 +216,52 @@ export function mapFixtureStatus(apiStatus: string): string {
   return statusMap[apiStatus] || 'scheduled';
 }
 
+// ============= MATCH EVENTS =============
+
+export interface MatchEvent {
+  time: {
+    elapsed: number;
+    extra: number | null;
+  };
+  team: {
+    id: number;
+    name: string;
+    logo: string;
+  };
+  player: {
+    id: number | null;
+    name: string | null;
+  };
+  assist: {
+    id: number | null;
+    name: string | null;
+  };
+  type: string; // "Goal", "Card", "subst", "Var"
+  detail: string; // "Normal Goal", "Yellow Card", "Red Card", "Substitution 1", etc.
+  comments: string | null;
+}
+
+interface MatchEventsResponse {
+  response: MatchEvent[];
+  results: number;
+}
+
+// Fetch match events (goals, cards, substitutions) for a fixture
+export async function getMatchEvents(fixtureId: number): Promise<MatchEvent[]> {
+  try {
+    const data = await fetchFromAPI<MatchEventsResponse>({
+      endpoint: '/fixtures/events',
+      params: {
+        fixture: fixtureId,
+      },
+    });
+    return data.response || [];
+  } catch (error) {
+    console.error(`[API-Football] Error fetching events for fixture ${fixtureId}:`, error);
+    return [];
+  }
+}
+
 // Format match minute for live display (e.g., "45'", "HT", "67'", "90'+3")
 export function formatMatchMinute(status: { elapsed: number | null; short: string }): string {
   switch (status.short) {

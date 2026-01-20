@@ -3,7 +3,9 @@ import Image from 'next/image';
 import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { PredictionTable } from '@/components/prediction-table';
+import { MatchEvents } from '@/components/match-events';
 import { getMatchWithAnalysis } from '@/lib/db/queries';
+import { getMatchEvents } from '@/lib/football/api-football';
 import { calculateEnhancedScores } from '@/lib/utils/scoring';
 import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, AlertTriangle, Users } from 'lucide-react';
 import Link from 'next/link';
@@ -42,6 +44,11 @@ export default async function MatchPage({ params }: MatchPageProps) {
   // Parse analysis data
   const keyInjuries = parseJson<KeyInjury[]>(analysis?.keyInjuries ?? null) || [];
   const likelyScores = parseJson<LikelyScore[]>(analysis?.likelyScores ?? null) || [];
+
+  // Fetch match events for finished/live matches
+  const matchEvents = (isFinished || isLive) && match.externalId 
+    ? await getMatchEvents(parseInt(match.externalId, 10))
+    : [];
 
   const predictionsWithPoints = predictions.map(({ prediction, model }) => {
     // Check if we have enhanced scoring data stored
@@ -90,8 +97,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
   const exactCount = predictionsWithPoints.filter(p => p.isExact).length;
   const correctResultCount = predictionsWithPoints.filter(p => p.isCorrectResult && !p.isExact).length;
-  const wrongCount = predictionsWithPoints.filter(p => p.points !== null && p.points < 2).length;
-  const upsetCalledCount = predictionsWithPoints.filter(p => (p.pointsUpsetBonus || 0) > 0).length;
+  const wrongCount = predictionsWithPoints.filter(p => p.points !== null && p.points === 0).length;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -244,6 +250,20 @@ export default async function MatchPage({ params }: MatchPageProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Match Events (for finished/live matches) */}
+      {(isFinished || isLive) && matchEvents.length > 0 && (
+        <Card className="bg-card/50 border-border/50">
+          <CardContent className="p-6">
+            <h2 className="text-xl font-bold mb-4">Match Events</h2>
+            <MatchEvents 
+              events={matchEvents}
+              homeTeam={match.homeTeam}
+              awayTeam={match.awayTeam}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Pre-Match Analysis Panel */}
       {analysis && (
@@ -498,24 +518,18 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
       {/* Prediction Results Summary */}
       {isFinished && predictions.length > 0 && (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div className="rounded-xl bg-green-500/10 border border-green-500/20 p-4 text-center">
             <p className="text-3xl font-bold text-green-400">{exactCount}</p>
             <p className="text-sm text-muted-foreground">Exact Scores</p>
           </div>
           <div className="rounded-xl bg-yellow-500/10 border border-yellow-500/20 p-4 text-center">
             <p className="text-3xl font-bold text-yellow-400">{correctResultCount}</p>
-            <p className="text-sm text-muted-foreground">Correct Results</p>
+            <p className="text-sm text-muted-foreground">Correct Result</p>
           </div>
-          {match.isUpset && upsetCalledCount > 0 && (
-            <div className="rounded-xl bg-orange-500/10 border border-orange-500/20 p-4 text-center">
-              <p className="text-3xl font-bold text-orange-400">{upsetCalledCount}</p>
-              <p className="text-sm text-muted-foreground">Called Upset</p>
-            </div>
-          )}
-          <div className="rounded-xl bg-muted/50 border border-border p-4 text-center">
-            <p className="text-3xl font-bold text-muted-foreground">{wrongCount}</p>
-            <p className="text-sm text-muted-foreground">Low Score</p>
+          <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-center">
+            <p className="text-3xl font-bold text-red-400">{wrongCount}</p>
+            <p className="text-sm text-muted-foreground">Wrong Result</p>
           </div>
         </div>
       )}
