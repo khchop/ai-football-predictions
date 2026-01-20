@@ -111,9 +111,20 @@ export function parsePredictionResponse(response: string): ParsedPrediction {
       const scorePattern = /(\d+)\s*[-:]\s*(\d+)/;
       const scoreMatch = cleaned.match(scorePattern);
       if (scoreMatch) {
+        const homeNum = parseInt(scoreMatch[1], 10);
+        const awayNum = parseInt(scoreMatch[2], 10);
+        // Reject if scores look like years (> 20)
+        if (homeNum > 20 || awayNum > 20) {
+          return {
+            homeScore: 0,
+            awayScore: 0,
+            success: false,
+            error: `Unrealistic scores detected: ${homeNum}-${awayNum}`,
+          };
+        }
         return {
-          homeScore: parseInt(scoreMatch[1], 10),
-          awayScore: parseInt(scoreMatch[2], 10),
+          homeScore: homeNum,
+          awayScore: awayNum,
           success: true,
         };
       }
@@ -147,17 +158,24 @@ export function parsePredictionResponse(response: string): ParsedPrediction {
         };
       }
       
+      // Clamp to reasonable range (0-20 goals max)
+      const clampedHome = Math.min(20, Math.max(0, homeNum));
+      const clampedAway = Math.min(20, Math.max(0, awayNum));
+      
       return {
-        homeScore: Math.max(0, homeNum),
-        awayScore: Math.max(0, awayNum),
+        homeScore: clampedHome,
+        awayScore: clampedAway,
         success: true,
       };
     }
 
-    // Validate scores are non-negative integers
+    // Validate scores are non-negative integers, clamped to reasonable range
+    const clampedHome = Math.min(20, Math.max(0, Math.floor(homeScore)));
+    const clampedAway = Math.min(20, Math.max(0, Math.floor(awayScore)));
+    
     return {
-      homeScore: Math.max(0, Math.floor(homeScore)),
-      awayScore: Math.max(0, Math.floor(awayScore)),
+      homeScore: clampedHome,
+      awayScore: clampedAway,
       success: true,
     };
   } catch (error) {
