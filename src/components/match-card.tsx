@@ -134,9 +134,9 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
         {/* Match Content */}
         <div className="p-4">
           {/* Teams Row */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* Home Team */}
-            <div className="flex-1 flex items-center gap-2.5 min-w-0">
+            <div className="flex-1 flex items-center gap-2 min-w-0">
               <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden relative">
                 {match.homeTeamLogo ? (
                   <Image
@@ -156,30 +156,30 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
                   <Star className="absolute -top-1 -right-1 h-3 w-3 text-yellow-400 fill-yellow-400" />
                 )}
               </div>
-              <div className="flex flex-col min-w-0 overflow-hidden">
-                <span className={cn(
-                  "font-medium text-sm truncate",
+              <div className="flex-1 min-w-0">
+                <p className={cn(
+                  "font-medium text-sm leading-tight truncate",
                   isFinished && match.homeScore !== null && match.awayScore !== null &&
                   match.homeScore > match.awayScore && "text-green-400"
                 )}>
                   {match.homeTeam}
-                </span>
+                </p>
                 {/* Injuries indicator */}
                 {analysis?.homeInjuriesCount && analysis.homeInjuriesCount > 0 && !isFinished && (
-                  <span className="text-xs text-red-400 flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" />
+                  <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
+                    <AlertTriangle className="h-3 w-3 flex-shrink-0" />
                     {analysis.homeInjuriesCount} out
-                  </span>
+                  </p>
                 )}
               </div>
             </div>
 
             {/* Score / VS */}
-            <div className="flex-shrink-0 w-16 text-center">
+            <div className="flex-shrink-0 w-14 text-center">
               {isFinished || isLive ? (
                 <div className="flex items-center justify-center gap-1">
                   <span className={cn(
-                    "text-xl font-bold",
+                    "text-xl font-bold tabular-nums",
                     isFinished && match.homeScore !== null && match.awayScore !== null &&
                     match.homeScore > match.awayScore && "text-green-400"
                   )}>
@@ -187,7 +187,7 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
                   </span>
                   <span className="text-muted-foreground">-</span>
                   <span className={cn(
-                    "text-xl font-bold",
+                    "text-xl font-bold tabular-nums",
                     isFinished && match.homeScore !== null && match.awayScore !== null &&
                     match.awayScore > match.homeScore && "text-green-400"
                   )}>
@@ -200,21 +200,21 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
             </div>
 
             {/* Away Team */}
-            <div className="flex-1 flex items-center gap-2.5 justify-end min-w-0">
-              <div className="flex flex-col items-end min-w-0 overflow-hidden">
-                <span className={cn(
-                  "font-medium text-sm truncate text-right",
+            <div className="flex-1 flex items-center gap-2 justify-end min-w-0">
+              <div className="flex-1 min-w-0 text-right">
+                <p className={cn(
+                  "font-medium text-sm leading-tight truncate",
                   isFinished && match.homeScore !== null && match.awayScore !== null &&
                   match.awayScore > match.homeScore && "text-green-400"
-                )}>
+                )} dir="rtl">
                   {match.awayTeam}
-                </span>
+                </p>
                 {/* Injuries indicator */}
                 {analysis?.awayInjuriesCount && analysis.awayInjuriesCount > 0 && !isFinished && (
-                  <span className="text-xs text-red-400 flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" />
+                  <p className="text-xs text-red-400 flex items-center gap-1 justify-end mt-0.5">
+                    <AlertTriangle className="h-3 w-3 flex-shrink-0" />
                     {analysis.awayInjuriesCount} out
-                  </span>
+                  </p>
                 )}
               </div>
               <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden relative">
