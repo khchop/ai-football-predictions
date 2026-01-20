@@ -26,6 +26,7 @@ export const matches = sqliteTable('matches', {
   homeScore: integer('home_score'), // NULL until match finished
   awayScore: integer('away_score'),
   status: text('status').default('scheduled'), // scheduled, live, finished, postponed, cancelled
+  matchMinute: text('match_minute'), // Live match time: "45'", "HT", "67'", "90'+3"
   round: text('round'), // e.g., "Group A - Matchday 1", "Quarter-finals"
   venue: text('venue'),
   isUpset: integer('is_upset', { mode: 'boolean' }).default(false), // Whether the underdog won

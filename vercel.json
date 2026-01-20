@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
+      "path": "/api/cron/update-live-scores",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/cron/fetch-fixtures",
       "schedule": "0 */6 * * *"
     },

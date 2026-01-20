@@ -91,6 +91,7 @@ export interface APIFootballFixture {
     status: {
       short: string;
       long: string;
+      elapsed: number | null;
     };
   };
   league: {

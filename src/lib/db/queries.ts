@@ -192,7 +192,8 @@ export async function updateMatchResult(
   matchId: string,
   homeScore: number,
   awayScore: number,
-  status: string
+  status: string,
+  matchMinute?: string | null
 ) {
   const db = getDb();
   return db
@@ -201,9 +202,34 @@ export async function updateMatchResult(
       homeScore,
       awayScore,
       status,
+      matchMinute: matchMinute ?? null,
       updatedAt: new Date().toISOString(),
     })
     .where(eq(matches.id, matchId));
+}
+
+// Get all currently live matches
+export async function getLiveMatches() {
+  const db = getDb();
+  return db
+    .select({
+      match: matches,
+      competition: competitions,
+    })
+    .from(matches)
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(eq(matches.status, 'live'))
+    .orderBy(matches.kickoffTime);
+}
+
+// Get count of live matches (for tab badge)
+export async function getLiveMatchCount(): Promise<number> {
+  const db = getDb();
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(matches)
+    .where(eq(matches.status, 'live'));
+  return result[0]?.count || 0;
 }
 
 // ============= MODELS =============

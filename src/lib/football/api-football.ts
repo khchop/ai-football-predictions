@@ -215,3 +215,40 @@ export function mapFixtureStatus(apiStatus: string): string {
 
   return statusMap[apiStatus] || 'scheduled';
 }
+
+// Format match minute for live display (e.g., "45'", "HT", "67'", "90'+3")
+export function formatMatchMinute(status: { elapsed: number | null; short: string }): string {
+  switch (status.short) {
+    case 'HT':
+      return 'HT';
+    case 'FT':
+      return 'FT';
+    case 'AET':
+      return 'AET';
+    case 'PEN':
+      return 'PEN';
+    case 'BT':
+      return 'Break';
+    case 'NS':
+    case 'TBD':
+      return '';
+    case '1H':
+      // First half: show minute, handle extra time
+      if (status.elapsed && status.elapsed > 45) {
+        return `45'+${status.elapsed - 45}`;
+      }
+      return status.elapsed ? `${status.elapsed}'` : 'LIVE';
+    case '2H':
+      // Second half: show minute, handle extra time  
+      if (status.elapsed && status.elapsed > 90) {
+        return `90'+${status.elapsed - 90}`;
+      }
+      return status.elapsed ? `${status.elapsed}'` : 'LIVE';
+    case 'ET':
+      return status.elapsed ? `ET ${status.elapsed}'` : 'ET';
+    case 'P':
+      return 'PEN';
+    default:
+      return status.elapsed ? `${status.elapsed}'` : 'LIVE';
+  }
+}

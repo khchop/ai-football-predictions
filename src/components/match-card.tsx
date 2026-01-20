@@ -4,7 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { format, parseISO, formatDistanceToNow, isAfter } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { MapPin, Star, AlertTriangle, TrendingUp } from 'lucide-react';
+import { MapPin, Star, AlertTriangle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface MatchCardProps {
   match: {
@@ -17,6 +18,7 @@ interface MatchCardProps {
     awayScore: number | null;
     kickoffTime: string;
     status: string;
+    matchMinute?: string | null;
     round?: string | null;
     venue?: string | null;
     isUpset?: boolean | null;
@@ -54,13 +56,33 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
   const homeFavorite = analysis?.homeWinPct && analysis?.awayWinPct && analysis.homeWinPct > analysis.awayWinPct;
   const awayFavorite = analysis?.homeWinPct && analysis?.awayWinPct && analysis.awayWinPct > analysis.homeWinPct;
 
+  // Track score changes for goal animation
+  const [prevScore, setPrevScore] = useState({ home: match.homeScore, away: match.awayScore });
+  const [showGoalAnimation, setShowGoalAnimation] = useState(false);
+
+  useEffect(() => {
+    // Check if score changed (goal scored)
+    if (
+      isLive &&
+      (match.homeScore !== prevScore.home || match.awayScore !== prevScore.away) &&
+      prevScore.home !== null // Don't animate on initial load
+    ) {
+      setShowGoalAnimation(true);
+      const timer = setTimeout(() => setShowGoalAnimation(false), 2000);
+      setPrevScore({ home: match.homeScore, away: match.awayScore });
+      return () => clearTimeout(timer);
+    }
+    setPrevScore({ home: match.homeScore, away: match.awayScore });
+  }, [match.homeScore, match.awayScore, isLive, prevScore.home, prevScore.away]);
+
   return (
     <Link href={`/matches/${match.id}`}>
       <div 
         className={cn(
           "group relative rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden transition-all duration-200",
           "hover:bg-card/80 hover:border-border",
-          isLive && "border-red-500/50 ring-1 ring-red-500/20"
+          isLive && "border-red-500/50 ring-1 ring-red-500/20",
+          showGoalAnimation && "animate-goal-flash"
         )}
       >
         {/* Live indicator bar */}
@@ -96,7 +118,11 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
               match.status === 'scheduled' && "bg-primary text-white",
               isFinished && "bg-muted text-muted-foreground"
             )}>
-              {isLive ? 'LIVE' : isFinished ? 'FT' : format(kickoff, 'HH:mm')}
+              {isLive 
+                ? (match.matchMinute || 'LIVE')
+                : isFinished 
+                  ? 'FT' 
+                  : format(kickoff, 'HH:mm')}
             </span>
           </div>
         </div>
