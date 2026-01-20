@@ -7,10 +7,24 @@ import { MatchEvents } from '@/components/match-events';
 import { getMatchWithAnalysis } from '@/lib/db/queries';
 import { getMatchEvents } from '@/lib/football/api-football';
 import { calculateEnhancedScores } from '@/lib/utils/scoring';
-import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, AlertTriangle, Users } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, AlertTriangle, Users, Target } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import type { KeyInjury, LikelyScore } from '@/types';
+import { Collapsible } from '@/components/ui/collapsible';
+
+// Helper to parse form percentage string (e.g., "60%" -> 60)
+function parseFormPercent(form: string | null): number | null {
+  if (!form) return null;
+  const match = form.match(/(\d+)/);
+  return match ? parseInt(match[1], 10) : null;
+}
+
+// Helper to format lineup players into a cleaner list
+function formatLineup(lineup: string | null): string[] {
+  if (!lineup) return [];
+  return lineup.split(',').map(p => p.trim()).filter(Boolean);
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -269,40 +283,40 @@ export default async function MatchPage({ params }: MatchPageProps) {
       {analysis && (
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-6">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
               Pre-Match Analysis
             </h2>
             
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Odds & Prediction */}
-              <div className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Left Column: Odds & Prediction */}
+              <div className="space-y-6">
                 {/* Betting Odds */}
                 {analysis.oddsHome && analysis.oddsDraw && analysis.oddsAway && (
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Betting Odds</h3>
-                    <div className="flex items-center gap-3">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Betting Odds</h3>
+                    <div className="flex items-center gap-2">
                       <div className={cn(
-                        "flex-1 text-center p-2 rounded-lg",
+                        "flex-1 text-center py-3 px-2 rounded-lg transition-colors",
                         analysis.homeWinPct && analysis.awayWinPct && analysis.homeWinPct > analysis.awayWinPct
-                          ? "bg-primary/10 border border-primary/30"
+                          ? "bg-primary/15 border border-primary/40"
                           : "bg-muted/50"
                       )}>
-                        <p className="text-lg font-bold font-mono">{analysis.oddsHome}</p>
-                        <p className="text-xs text-muted-foreground">Home</p>
+                        <p className="text-xl font-bold font-mono">{analysis.oddsHome}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Home</p>
                       </div>
-                      <div className="flex-1 text-center p-2 rounded-lg bg-muted/50">
-                        <p className="text-lg font-bold font-mono">{analysis.oddsDraw}</p>
-                        <p className="text-xs text-muted-foreground">Draw</p>
+                      <div className="flex-1 text-center py-3 px-2 rounded-lg bg-muted/50">
+                        <p className="text-xl font-bold font-mono">{analysis.oddsDraw}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Draw</p>
                       </div>
                       <div className={cn(
-                        "flex-1 text-center p-2 rounded-lg",
+                        "flex-1 text-center py-3 px-2 rounded-lg transition-colors",
                         analysis.homeWinPct && analysis.awayWinPct && analysis.awayWinPct > analysis.homeWinPct
-                          ? "bg-primary/10 border border-primary/30"
+                          ? "bg-primary/15 border border-primary/40"
                           : "bg-muted/50"
                       )}>
-                        <p className="text-lg font-bold font-mono">{analysis.oddsAway}</p>
-                        <p className="text-xs text-muted-foreground">Away</p>
+                        <p className="text-xl font-bold font-mono">{analysis.oddsAway}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Away</p>
                       </div>
                     </div>
                   </div>
@@ -311,16 +325,16 @@ export default async function MatchPage({ params }: MatchPageProps) {
                 {/* Win Percentages */}
                 {analysis.homeWinPct && analysis.awayWinPct && (
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Win Probability</h3>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-mono w-10">{analysis.homeWinPct}%</span>
-                      <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden flex">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Win Probability</h3>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold font-mono w-12">{analysis.homeWinPct}%</span>
+                      <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden flex">
                         <div 
                           className="h-full bg-primary transition-all"
                           style={{ width: `${analysis.homeWinPct}%` }}
                         />
                         <div 
-                          className="h-full bg-muted-foreground/30 transition-all"
+                          className="h-full bg-muted-foreground/40 transition-all"
                           style={{ width: `${analysis.drawPct || 0}%` }}
                         />
                         <div 
@@ -328,10 +342,10 @@ export default async function MatchPage({ params }: MatchPageProps) {
                           style={{ width: `${analysis.awayWinPct}%` }}
                         />
                       </div>
-                      <span className="text-sm font-mono w-10 text-right">{analysis.awayWinPct}%</span>
+                      <span className="text-sm font-bold font-mono w-12 text-right">{analysis.awayWinPct}%</span>
                     </div>
                     {analysis.advice && (
-                      <p className="text-xs text-muted-foreground mt-2 italic">&quot;{analysis.advice}&quot;</p>
+                      <p className="text-xs text-primary/80 mt-3 italic">&quot;{analysis.advice}&quot;</p>
                     )}
                   </div>
                 )}
@@ -339,11 +353,14 @@ export default async function MatchPage({ params }: MatchPageProps) {
                 {/* Likely Scores */}
                 {likelyScores.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Likely Scores</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Likely Scores</h3>
                     <div className="flex flex-wrap gap-2">
                       {likelyScores.slice(0, 4).map((score, i) => (
-                        <span key={i} className="px-2 py-1 bg-muted/50 rounded text-sm font-mono">
-                          {score.score} <span className="text-muted-foreground">({score.odds})</span>
+                        <span key={i} className={cn(
+                          "px-3 py-1.5 rounded-lg text-sm font-mono",
+                          i === 0 ? "bg-primary/15 border border-primary/30" : "bg-muted/50"
+                        )}>
+                          {score.score} <span className="text-muted-foreground text-xs">({score.odds})</span>
                         </span>
                       ))}
                     </div>
@@ -351,89 +368,79 @@ export default async function MatchPage({ params }: MatchPageProps) {
                 )}
               </div>
 
-              {/* Team Form & Comparison */}
-              <div className="space-y-4">
-                {/* Team Comparison */}
+              {/* Right Column: Team Stats */}
+              <div className="space-y-6">
+                {/* Team Comparison Bars */}
                 {analysis.formHomePct && analysis.formAwayPct && (
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Team Comparison</h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="w-16">Form</span>
-                        <span className="w-8 text-right">{analysis.formHomePct}%</span>
-                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden flex">
-                          <div className="h-full bg-primary" style={{ width: `${analysis.formHomePct}%` }} />
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Team Comparison</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="w-14 font-medium">Form</span>
+                        <span className="w-10 text-right font-mono">{analysis.formHomePct}%</span>
+                        <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-primary rounded-full" style={{ width: `${analysis.formHomePct}%` }} />
                         </div>
-                        <span className="w-8">{analysis.formAwayPct}%</span>
+                        <span className="w-10 font-mono">{analysis.formAwayPct}%</span>
                       </div>
                       {analysis.attackHomePct && analysis.attackAwayPct && (
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="w-16">Attack</span>
-                          <span className="w-8 text-right">{analysis.attackHomePct}%</span>
-                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden flex">
-                            <div className="h-full bg-green-500" style={{ width: `${analysis.attackHomePct}%` }} />
+                        <div className="flex items-center gap-3 text-xs">
+                          <span className="w-14 font-medium">Attack</span>
+                          <span className="w-10 text-right font-mono">{analysis.attackHomePct}%</span>
+                          <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-green-500 rounded-full" style={{ width: `${analysis.attackHomePct}%` }} />
                           </div>
-                          <span className="w-8">{analysis.attackAwayPct}%</span>
+                          <span className="w-10 font-mono">{analysis.attackAwayPct}%</span>
                         </div>
                       )}
                       {analysis.defenseHomePct && analysis.defenseAwayPct && (
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="w-16">Defense</span>
-                          <span className="w-8 text-right">{analysis.defenseHomePct}%</span>
-                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden flex">
-                            <div className="h-full bg-blue-500" style={{ width: `${analysis.defenseHomePct}%` }} />
+                        <div className="flex items-center gap-3 text-xs">
+                          <span className="w-14 font-medium">Defense</span>
+                          <span className="w-10 text-right font-mono">{analysis.defenseHomePct}%</span>
+                          <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${analysis.defenseHomePct}%` }} />
                           </div>
-                          <span className="w-8">{analysis.defenseAwayPct}%</span>
+                          <span className="w-10 font-mono">{analysis.defenseAwayPct}%</span>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
 
-                {/* Recent Form */}
+                {/* Recent Form - Now shows percentage progress bar */}
                 {(analysis.homeTeamForm || analysis.awayTeamForm) && (
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Recent Form</h3>
-                    <div className="space-y-1">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Recent Form (Last 5)</h3>
+                    <div className="space-y-2">
                       {analysis.homeTeamForm && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs w-24 truncate">{match.homeTeam}</span>
-                          <div className="flex gap-1">
-                            {analysis.homeTeamForm.split('').map((r, i) => (
-                              <span key={i} className={cn(
-                                "w-5 h-5 rounded text-xs flex items-center justify-center font-bold",
-                                r === 'W' && "bg-green-500/20 text-green-400",
-                                r === 'D' && "bg-yellow-500/20 text-yellow-400",
-                                r === 'L' && "bg-red-500/20 text-red-400"
-                              )}>
-                                {r}
-                              </span>
-                            ))}
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs w-28 truncate font-medium">{match.homeTeam}</span>
+                          <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all" 
+                              style={{ width: `${parseFormPercent(analysis.homeTeamForm) || 0}%` }} 
+                            />
                           </div>
+                          <span className="text-xs font-mono w-10 text-right">{analysis.homeTeamForm}</span>
                           {analysis.homeGoalsScored !== null && analysis.homeGoalsConceded !== null && (
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-muted-foreground w-12">
                               ({analysis.homeGoalsScored}:{analysis.homeGoalsConceded})
                             </span>
                           )}
                         </div>
                       )}
                       {analysis.awayTeamForm && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs w-24 truncate">{match.awayTeam}</span>
-                          <div className="flex gap-1">
-                            {analysis.awayTeamForm.split('').map((r, i) => (
-                              <span key={i} className={cn(
-                                "w-5 h-5 rounded text-xs flex items-center justify-center font-bold",
-                                r === 'W' && "bg-green-500/20 text-green-400",
-                                r === 'D' && "bg-yellow-500/20 text-yellow-400",
-                                r === 'L' && "bg-red-500/20 text-red-400"
-                              )}>
-                                {r}
-                              </span>
-                            ))}
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs w-28 truncate font-medium">{match.awayTeam}</span>
+                          <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all" 
+                              style={{ width: `${parseFormPercent(analysis.awayTeamForm) || 0}%` }} 
+                            />
                           </div>
+                          <span className="text-xs font-mono w-10 text-right">{analysis.awayTeamForm}</span>
                           {analysis.awayGoalsScored !== null && analysis.awayGoalsConceded !== null && (
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-muted-foreground w-12">
                               ({analysis.awayGoalsScored}:{analysis.awayGoalsConceded})
                             </span>
                           )}
@@ -445,72 +452,98 @@ export default async function MatchPage({ params }: MatchPageProps) {
               </div>
             </div>
 
-            {/* Lineups */}
+            {/* Collapsible: Lineups */}
             {analysis.lineupsAvailable && analysis.homeStartingXI && analysis.awayStartingXI && (
-              <div className="mt-6 pt-6 border-t border-border/50">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Confirmed Lineups
-                </h3>
-                <div className="grid md:grid-cols-2 gap-4">
+              <Collapsible
+                title={`Confirmed Lineups`}
+                icon={<Users className="h-4 w-4" />}
+                defaultOpen={false}
+                className="mt-4"
+              >
+                <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <p className="text-sm font-medium mb-1">
-                      {match.homeTeam} {analysis.homeFormation && `(${analysis.homeFormation})`}
-                    </p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-medium text-sm">{match.homeTeam}</span>
+                      {analysis.homeFormation && (
+                        <span className="text-xs px-2 py-0.5 bg-primary/10 rounded-full text-primary">
+                          {analysis.homeFormation}
+                        </span>
+                      )}
+                    </div>
                     {analysis.homeCoach && (
-                      <p className="text-xs text-muted-foreground mb-2">Coach: {analysis.homeCoach}</p>
+                      <p className="text-xs text-muted-foreground mb-3">Coach: {analysis.homeCoach}</p>
                     )}
-                    <p className="text-xs text-muted-foreground">{analysis.homeStartingXI}</p>
+                    <div className="grid grid-cols-2 gap-1">
+                      {formatLineup(analysis.homeStartingXI).map((player, i) => (
+                        <span key={i} className="text-xs text-muted-foreground py-0.5">
+                          {player}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                   <div>
-                    <p className="text-sm font-medium mb-1">
-                      {match.awayTeam} {analysis.awayFormation && `(${analysis.awayFormation})`}
-                    </p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-medium text-sm">{match.awayTeam}</span>
+                      {analysis.awayFormation && (
+                        <span className="text-xs px-2 py-0.5 bg-accent/10 rounded-full text-accent">
+                          {analysis.awayFormation}
+                        </span>
+                      )}
+                    </div>
                     {analysis.awayCoach && (
-                      <p className="text-xs text-muted-foreground mb-2">Coach: {analysis.awayCoach}</p>
+                      <p className="text-xs text-muted-foreground mb-3">Coach: {analysis.awayCoach}</p>
                     )}
-                    <p className="text-xs text-muted-foreground">{analysis.awayStartingXI}</p>
+                    <div className="grid grid-cols-2 gap-1">
+                      {formatLineup(analysis.awayStartingXI).map((player, i) => (
+                        <span key={i} className="text-xs text-muted-foreground py-0.5">
+                          {player}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Collapsible>
             )}
 
-            {/* Key Injuries */}
+            {/* Collapsible: Key Absences */}
             {keyInjuries.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-border/50">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-red-400" />
-                  Key Absences ({(analysis.homeInjuriesCount || 0) + (analysis.awayInjuriesCount || 0)})
-                </h3>
-                <div className="grid md:grid-cols-2 gap-4">
+              <Collapsible
+                title={`Key Absences (${(analysis.homeInjuriesCount || 0) + (analysis.awayInjuriesCount || 0)})`}
+                icon={<AlertTriangle className="h-4 w-4 text-red-400" />}
+                defaultOpen={false}
+                className="mt-0"
+              >
+                <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <p className="text-sm font-medium mb-1">{match.homeTeam} ({analysis.homeInjuriesCount || 0})</p>
-                    <div className="space-y-1">
+                    <p className="text-sm font-medium mb-2">{match.homeTeam} ({analysis.homeInjuriesCount || 0})</p>
+                    <div className="space-y-1.5">
                       {keyInjuries
                         .filter(i => i.teamName === match.homeTeam)
                         .slice(0, 5)
                         .map((injury, i) => (
-                          <p key={i} className="text-xs text-muted-foreground">
-                            {injury.playerName} - <span className="text-red-400">{injury.reason}</span>
-                          </p>
+                          <div key={i} className="flex items-center gap-2 text-xs">
+                            <span className="text-muted-foreground">{injury.playerName}</span>
+                            <span className="text-red-400">- {injury.reason}</span>
+                          </div>
                         ))}
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm font-medium mb-1">{match.awayTeam} ({analysis.awayInjuriesCount || 0})</p>
-                    <div className="space-y-1">
+                    <p className="text-sm font-medium mb-2">{match.awayTeam} ({analysis.awayInjuriesCount || 0})</p>
+                    <div className="space-y-1.5">
                       {keyInjuries
                         .filter(i => i.teamName === match.awayTeam)
                         .slice(0, 5)
                         .map((injury, i) => (
-                          <p key={i} className="text-xs text-muted-foreground">
-                            {injury.playerName} - <span className="text-red-400">{injury.reason}</span>
-                          </p>
+                          <div key={i} className="flex items-center gap-2 text-xs">
+                            <span className="text-muted-foreground">{injury.playerName}</span>
+                            <span className="text-red-400">- {injury.reason}</span>
+                          </div>
                         ))}
                     </div>
                   </div>
                 </div>
-              </div>
+              </Collapsible>
             )}
           </CardContent>
         </Card>
