@@ -157,11 +157,14 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className={cn(
-                  "font-medium text-sm leading-tight truncate",
-                  isFinished && match.homeScore !== null && match.awayScore !== null &&
-                  match.homeScore > match.awayScore && "text-green-400"
-                )}>
+                <p 
+                  className={cn(
+                    "font-medium text-sm leading-tight truncate",
+                    isFinished && match.homeScore !== null && match.awayScore !== null &&
+                    match.homeScore > match.awayScore && "text-green-400"
+                  )}
+                  title={match.homeTeam}
+                >
                   {match.homeTeam}
                 </p>
                 {/* Injuries indicator */}
@@ -202,11 +205,15 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
             {/* Away Team */}
             <div className="flex-1 flex items-center gap-2 justify-end min-w-0">
               <div className="flex-1 min-w-0 text-right">
-                <p className={cn(
-                  "font-medium text-sm leading-tight truncate",
-                  isFinished && match.homeScore !== null && match.awayScore !== null &&
-                  match.awayScore > match.homeScore && "text-green-400"
-                )} dir="rtl">
+                <p 
+                  className={cn(
+                    "font-medium text-sm leading-tight truncate",
+                    isFinished && match.homeScore !== null && match.awayScore !== null &&
+                    match.awayScore > match.homeScore && "text-green-400"
+                  )} 
+                  dir="rtl"
+                  title={match.awayTeam}
+                >
                   {match.awayTeam}
                 </p>
                 {/* Injuries indicator */}
