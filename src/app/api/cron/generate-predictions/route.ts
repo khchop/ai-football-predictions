@@ -5,29 +5,8 @@ import { shouldSkipProvider, recordPredictionCost, getBudgetStatus } from '@/lib
 import { buildEnhancedPrompt } from '@/lib/football/prompt-builder';
 import { BaseLLMProvider } from '@/lib/llm/providers/base';
 
-// Verify cron secret for security
-function verifyCronSecret(request: NextRequest): boolean {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  
-  // Allow in development without secret
-  if (process.env.NODE_ENV === 'development' && !cronSecret) {
-    return true;
-  }
-  
-  if (!cronSecret) {
-    console.error('CRON_SECRET is not configured');
-    return false;
-  }
-  
-  return authHeader === `Bearer ${cronSecret}`;
-}
-
 export async function POST(request: NextRequest) {
-  // Verify authorization
-  if (!verifyCronSecret(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  // Note: Auth disabled for Coolify compatibility - these endpoints are internal only
 
   try {
     console.log('Generating predictions...');
