@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/fetch-fixtures",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/fetch-analysis",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/generate-predictions",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/update-results",
+      "schedule": "*/10 * * * *"
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+import { Suspense } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { LeaderboardTable } from '@/components/leaderboard-table';
+import { AccuracyChart } from '@/components/accuracy-chart';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getLeaderboard } from '@/lib/db/queries';
+import { Trophy, BarChart3, Table } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
+
+async function LeaderboardContent() {
+  const leaderboard = await getLeaderboard();
+  
+  if (leaderboard.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-border/50 bg-card/30 p-12 text-center">
+        <Trophy className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+        <p className="text-muted-foreground">No predictions have been scored yet.</p>
+        <p className="text-sm text-muted-foreground/70 mt-1">
+          Rankings will appear once matches are completed.
+        </p>
+      </div>
+    );
+  }
+  
+  return (
+    <Tabs defaultValue="table" className="space-y-6">
+      <TabsList className="bg-card/50 border border-border/50">
+        <TabsTrigger value="table" className="gap-2 data-[state=active]:bg-primary/10">
+          <Table className="h-4 w-4" />
+          Table
+        </TabsTrigger>
+        <TabsTrigger value="chart" className="gap-2 data-[state=active]:bg-primary/10">
+          <BarChart3 className="h-4 w-4" />
+          Chart
+        </TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="table">
+        <Card className="bg-card/50 border-border/50">
+          <CardContent className="p-0">
+            <LeaderboardTable entries={leaderboard} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+      
+      <TabsContent value="chart">
+        <Card className="bg-card/50 border-border/50">
+          <CardContent className="p-6">
+            <AccuracyChart data={leaderboard} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+function LoadingSkeleton() {
+  return (
+    <Card className="bg-card/50 border-border/50">
+      <CardContent className="p-6">
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-16" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function LeaderboardPage() {
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <div className="h-12 w-12 rounded-xl gradient-primary flex items-center justify-center">
+          <Trophy className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold">Leaderboard</h1>
+          <p className="text-muted-foreground">
+            Which AI predicts football best?
+          </p>
+        </div>
+      </div>
+
+      {/* Scoring Guide */}
+      <div className="grid sm:grid-cols-3 gap-4">
+        <div className="rounded-xl bg-green-500/10 border border-green-500/20 p-4 text-center">
+          <p className="text-3xl font-bold text-green-400">3 pts</p>
+          <p className="text-sm font-medium">Exact Score</p>
+          <p className="text-xs text-muted-foreground mt-1">Perfect prediction</p>
+        </div>
+        <div className="rounded-xl bg-yellow-500/10 border border-yellow-500/20 p-4 text-center">
+          <p className="text-3xl font-bold text-yellow-400">1 pt</p>
+          <p className="text-sm font-medium">Correct Result</p>
+          <p className="text-xs text-muted-foreground mt-1">Win/Draw/Loss right</p>
+        </div>
+        <div className="rounded-xl bg-muted/50 border border-border p-4 text-center">
+          <p className="text-3xl font-bold text-muted-foreground">0 pts</p>
+          <p className="text-sm font-medium">Wrong</p>
+          <p className="text-xs text-muted-foreground mt-1">Incorrect prediction</p>
+        </div>
+      </div>
+
+      {/* Leaderboard Content */}
+      <Suspense fallback={<LoadingSkeleton />}>
+        <LeaderboardContent />
+      </Suspense>
+    </div>
+  );
+}
