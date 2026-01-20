@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MatchCard } from '@/components/match-card';
-import { getUpcomingMatches, getFinishedMatches, getOverallStats, getPredictionsForMatch } from '@/lib/db/queries';
+import { getUpcomingMatches, getFinishedMatches, getOverallStats, getPredictionsForMatch, getLiveMatches } from '@/lib/db/queries';
 import { Trophy, Calendar, Bot, Target, ArrowRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
@@ -56,6 +56,54 @@ async function StatsBar() {
         <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform flex-shrink-0" />
       </Link>
     </div>
+  );
+}
+
+async function LiveMatches() {
+  const matches = await getLiveMatches();
+  
+  // Don't render anything if no live matches
+  if (matches.length === 0) {
+    return null;
+  }
+  
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-4 gap-4">
+        <div className="flex items-center gap-3">
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+          </span>
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-red-400">Live Matches</h2>
+            <p className="text-sm text-muted-foreground">{matches.length} match{matches.length !== 1 ? 'es' : ''} in progress</p>
+          </div>
+        </div>
+        <Link 
+          href="/matches" 
+          className="flex items-center gap-1 text-sm text-red-400 hover:text-red-300 transition-colors flex-shrink-0"
+        >
+          View all
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {matches.map(({ match, competition }) => (
+          <MatchCard
+            key={match.id}
+            match={{
+              ...match,
+              status: 'live',
+              competition: {
+                id: competition.id,
+                name: competition.name,
+              },
+            }}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -193,6 +241,11 @@ export default function HomePage() {
       {/* Stats */}
       <Suspense fallback={<StatsLoadingSkeleton />}>
         <StatsBar />
+      </Suspense>
+
+      {/* Live Matches - only shows when there are live matches */}
+      <Suspense fallback={null}>
+        <LiveMatches />
       </Suspense>
 
       {/* Upcoming Matches */}

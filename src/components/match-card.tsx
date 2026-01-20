@@ -152,7 +152,7 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
                   <Star className="absolute -top-1 -right-1 h-3 w-3 text-yellow-400 fill-yellow-400" />
                 )}
               </div>
-              <div className="flex flex-col min-w-0">
+              <div className="flex flex-col min-w-0 overflow-hidden">
                 <span className={cn(
                   "font-medium text-sm truncate",
                   isFinished && match.homeScore !== null && match.awayScore !== null &&
@@ -197,7 +197,7 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
 
             {/* Away Team */}
             <div className="flex-1 flex items-center gap-2.5 justify-end min-w-0">
-              <div className="flex flex-col items-end min-w-0">
+              <div className="flex flex-col items-end min-w-0 overflow-hidden">
                 <span className={cn(
                   "font-medium text-sm truncate text-right",
                   isFinished && match.homeScore !== null && match.awayScore !== null &&
