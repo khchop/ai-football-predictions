@@ -133,64 +133,66 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
 
         {/* Match Content */}
         <div className="p-4">
-          {/* Teams Row */}
-          <div className="flex items-center gap-2">
+          {/* Teams and Score - Stacked Layout */}
+          <div className="flex items-center justify-between gap-3">
             {/* Home Team */}
-            <div className="flex-1 flex items-center gap-2 min-w-0">
-              <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden relative">
-                {match.homeTeamLogo ? (
-                  <Image
-                    src={match.homeTeamLogo}
-                    alt={match.homeTeam}
-                    width={32}
-                    height={32}
-                    className="object-contain"
-                  />
-                ) : (
-                  <span className="text-sm font-bold text-muted-foreground">
-                    {match.homeTeam.substring(0, 2).toUpperCase()}
-                  </span>
-                )}
-                {/* Favorite star indicator */}
-                {homeFavorite && !isFinished && (
-                  <Star className="absolute -top-1 -right-1 h-3 w-3 text-yellow-400 fill-yellow-400" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p 
-                  className={cn(
-                    "font-medium text-sm leading-tight truncate",
-                    isFinished && match.homeScore !== null && match.awayScore !== null &&
-                    match.homeScore > match.awayScore && "text-green-400"
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden relative">
+                  {match.homeTeamLogo ? (
+                    <Image
+                      src={match.homeTeamLogo}
+                      alt={match.homeTeam}
+                      width={32}
+                      height={32}
+                      className="object-contain"
+                    />
+                  ) : (
+                    <span className="text-sm font-bold text-muted-foreground">
+                      {match.homeTeam.substring(0, 2).toUpperCase()}
+                    </span>
                   )}
-                  title={match.homeTeam}
-                >
-                  {match.homeTeam}
-                </p>
-                {/* Injuries indicator */}
-                {analysis?.homeInjuriesCount && analysis.homeInjuriesCount > 0 && !isFinished && (
-                  <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
-                    <AlertTriangle className="h-3 w-3 flex-shrink-0" />
-                    {analysis.homeInjuriesCount} out
+                  {/* Favorite star indicator */}
+                  {homeFavorite && !isFinished && (
+                    <Star className="absolute -top-1 -right-1 h-3 w-3 text-yellow-400 fill-yellow-400" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p 
+                    className={cn(
+                      "font-medium text-sm leading-tight line-clamp-2",
+                      isFinished && match.homeScore !== null && match.awayScore !== null &&
+                      match.homeScore > match.awayScore && "text-green-400"
+                    )}
+                    title={match.homeTeam}
+                  >
+                    {match.homeTeam}
                   </p>
-                )}
+                  {/* Injuries indicator */}
+                  {analysis?.homeInjuriesCount && analysis.homeInjuriesCount > 0 && !isFinished && (
+                    <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
+                      <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                      {analysis.homeInjuriesCount} out
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Score / VS */}
-            <div className="flex-shrink-0 w-14 text-center">
+            <div className="flex-shrink-0 text-center px-2">
               {isFinished || isLive ? (
-                <div className="flex items-center justify-center gap-1">
+                <div className="flex items-center justify-center gap-1.5">
                   <span className={cn(
-                    "text-xl font-bold tabular-nums",
+                    "text-2xl font-bold tabular-nums",
                     isFinished && match.homeScore !== null && match.awayScore !== null &&
                     match.homeScore > match.awayScore && "text-green-400"
                   )}>
                     {match.homeScore}
                   </span>
-                  <span className="text-muted-foreground">-</span>
+                  <span className="text-muted-foreground text-lg">-</span>
                   <span className={cn(
-                    "text-xl font-bold tabular-nums",
+                    "text-2xl font-bold tabular-nums",
                     isFinished && match.homeScore !== null && match.awayScore !== null &&
                     match.awayScore > match.homeScore && "text-green-400"
                   )}>
@@ -203,45 +205,46 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
             </div>
 
             {/* Away Team */}
-            <div className="flex-1 flex items-center gap-2 justify-end min-w-0">
-              <div className="flex-1 min-w-0 text-right">
-                <p 
-                  className={cn(
-                    "font-medium text-sm leading-tight truncate",
-                    isFinished && match.homeScore !== null && match.awayScore !== null &&
-                    match.awayScore > match.homeScore && "text-green-400"
-                  )} 
-                  dir="rtl"
-                  title={match.awayTeam}
-                >
-                  {match.awayTeam}
-                </p>
-                {/* Injuries indicator */}
-                {analysis?.awayInjuriesCount && analysis.awayInjuriesCount > 0 && !isFinished && (
-                  <p className="text-xs text-red-400 flex items-center gap-1 justify-end mt-0.5">
-                    <AlertTriangle className="h-3 w-3 flex-shrink-0" />
-                    {analysis.awayInjuriesCount} out
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 justify-end">
+                <div className="min-w-0 flex-1 text-right">
+                  <p 
+                    className={cn(
+                      "font-medium text-sm leading-tight line-clamp-2",
+                      isFinished && match.homeScore !== null && match.awayScore !== null &&
+                      match.awayScore > match.homeScore && "text-green-400"
+                    )}
+                    title={match.awayTeam}
+                  >
+                    {match.awayTeam}
                   </p>
-                )}
-              </div>
-              <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden relative">
-                {match.awayTeamLogo ? (
-                  <Image
-                    src={match.awayTeamLogo}
-                    alt={match.awayTeam}
-                    width={32}
-                    height={32}
-                    className="object-contain"
-                  />
-                ) : (
-                  <span className="text-sm font-bold text-muted-foreground">
-                    {match.awayTeam.substring(0, 2).toUpperCase()}
-                  </span>
-                )}
-                {/* Favorite star indicator */}
-                {awayFavorite && !isFinished && (
-                  <Star className="absolute -top-1 -left-1 h-3 w-3 text-yellow-400 fill-yellow-400" />
-                )}
+                  {/* Injuries indicator */}
+                  {analysis?.awayInjuriesCount && analysis.awayInjuriesCount > 0 && !isFinished && (
+                    <p className="text-xs text-red-400 flex items-center gap-1 justify-end mt-0.5">
+                      <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                      {analysis.awayInjuriesCount} out
+                    </p>
+                  )}
+                </div>
+                <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden relative">
+                  {match.awayTeamLogo ? (
+                    <Image
+                      src={match.awayTeamLogo}
+                      alt={match.awayTeam}
+                      width={32}
+                      height={32}
+                      className="object-contain"
+                    />
+                  ) : (
+                    <span className="text-sm font-bold text-muted-foreground">
+                      {match.awayTeam.substring(0, 2).toUpperCase()}
+                    </span>
+                  )}
+                  {/* Favorite star indicator */}
+                  {awayFavorite && !isFinished && (
+                    <Star className="absolute -top-1 -left-1 h-3 w-3 text-yellow-400 fill-yellow-400" />
+                  )}
+                </div>
               </div>
             </div>
           </div>
