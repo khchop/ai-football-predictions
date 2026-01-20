@@ -91,23 +91,34 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
-      {/* Scoring Guide */}
-      <div className="grid sm:grid-cols-3 gap-4">
-        <div className="rounded-xl bg-green-500/10 border border-green-500/20 p-4 text-center">
-          <p className="text-3xl font-bold text-green-400">3 pts</p>
-          <p className="text-sm font-medium">Exact Score</p>
-          <p className="text-xs text-muted-foreground mt-1">Perfect prediction</p>
+      {/* Scoring Guide - Kicktipp Quota System */}
+      <div className="rounded-xl bg-card/50 border border-border/50 p-5">
+        <h2 className="text-sm font-medium text-muted-foreground mb-4">Quota Scoring System</h2>
+        <div className="grid sm:grid-cols-4 gap-3">
+          <div className="rounded-lg bg-primary/10 border border-primary/20 p-3 text-center">
+            <p className="text-2xl font-bold text-primary">2-6</p>
+            <p className="text-xs font-medium mt-1">Tendency</p>
+            <p className="text-xs text-muted-foreground">Rarer = more pts</p>
+          </div>
+          <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-3 text-center">
+            <p className="text-2xl font-bold text-blue-400">+1</p>
+            <p className="text-xs font-medium mt-1">Goal Diff</p>
+            <p className="text-xs text-muted-foreground">Correct margin</p>
+          </div>
+          <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-3 text-center">
+            <p className="text-2xl font-bold text-green-400">+3</p>
+            <p className="text-xs font-medium mt-1">Exact Score</p>
+            <p className="text-xs text-muted-foreground">Perfect match</p>
+          </div>
+          <div className="rounded-lg bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 p-3 text-center">
+            <p className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">10</p>
+            <p className="text-xs font-medium mt-1">Maximum</p>
+            <p className="text-xs text-muted-foreground">Per match</p>
+          </div>
         </div>
-        <div className="rounded-xl bg-yellow-500/10 border border-yellow-500/20 p-4 text-center">
-          <p className="text-3xl font-bold text-yellow-400">1 pt</p>
-          <p className="text-sm font-medium">Correct Result</p>
-          <p className="text-xs text-muted-foreground mt-1">Win/Draw/Loss right</p>
-        </div>
-        <div className="rounded-xl bg-muted/50 border border-border p-4 text-center">
-          <p className="text-3xl font-bold text-muted-foreground">0 pts</p>
-          <p className="text-sm font-medium">Wrong</p>
-          <p className="text-xs text-muted-foreground mt-1">Incorrect prediction</p>
-        </div>
+        <p className="text-xs text-muted-foreground mt-3 text-center">
+          Quota points depend on how many AI models predicted the same result. Rarer correct predictions earn more points!
+        </p>
       </div>
 
       {/* Leaderboard Content */}
