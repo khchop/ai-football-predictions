@@ -133,7 +133,9 @@ export interface ScoringResult {
   actualResult: MatchResult;
 }
 
-// Enhanced scoring breakdown (6 categories, max 12 points)
+// Enhanced scoring breakdown (6 categories, max 10 points)
+// Max with exact score: 5 + 0 + 1 + 1 + 1 + 2 = 10
+// Max without exact: 0 + 2 + 1 + 1 + 1 + 2 = 7
 export interface ScoringBreakdown {
   exactScore: number;    // 5 pts if exact match
   result: number;        // 2 pts if correct result (only if not exact)
@@ -141,7 +143,7 @@ export interface ScoringBreakdown {
   overUnder: number;     // 1 pt if correct over/under 2.5
   btts: number;          // 1 pt if correct both teams to score
   upsetBonus: number;    // 2 pts if correctly predicted underdog win
-  total: number;         // Sum of all points (max 12)
+  total: number;         // Sum of all points (max 10)
 }
 
 // Enhanced leaderboard entry with points breakdown

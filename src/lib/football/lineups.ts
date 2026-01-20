@@ -1,5 +1,5 @@
 import { APIFootballLineupsResponse } from '@/types';
-import { updateMatchAnalysisLineups, getMatchAnalysisByMatchId } from '@/lib/db/queries';
+import { updateMatchAnalysisLineups, getMatchAnalysisByMatchId, getMatchById } from '@/lib/db/queries';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 
@@ -69,13 +69,36 @@ export async function updateMatchLineups(
     return false;
   }
 
-  // API returns an array with 2 elements: [home team lineup, away team lineup]
+  // Get match data to verify team order
+  const matchData = await getMatchById(matchId);
+  if (!matchData) {
+    console.error(`[Lineups] Match ${matchId} not found in database`);
+    return false;
+  }
+
   const [lineup1, lineup2] = lineupsData.response;
   
-  // We need to determine which is home and which is away
-  // The API typically returns home first, but we should verify with existing match data
-  const homeLineup = lineup1;
-  const awayLineup = lineup2;
+  // Verify which lineup belongs to which team by matching team names
+  // Use case-insensitive partial matching to handle name variations
+  const lineup1IsHome = isTeamMatch(lineup1.team.name, matchData.match.homeTeam);
+  const lineup2IsHome = isTeamMatch(lineup2.team.name, matchData.match.homeTeam);
+  
+  let homeLineup, awayLineup;
+  
+  if (lineup1IsHome && !lineup2IsHome) {
+    homeLineup = lineup1;
+    awayLineup = lineup2;
+  } else if (lineup2IsHome && !lineup1IsHome) {
+    homeLineup = lineup2;
+    awayLineup = lineup1;
+  } else {
+    // Fallback to API order if matching is ambiguous
+    console.warn(`[Lineups] Could not verify team order for match ${matchId}, using API order`);
+    console.warn(`  - API teams: ${lineup1.team.name}, ${lineup2.team.name}`);
+    console.warn(`  - DB teams: ${matchData.match.homeTeam}, ${matchData.match.awayTeam}`);
+    homeLineup = lineup1;
+    awayLineup = lineup2;
+  }
 
   const lineupData = {
     homeFormation: homeLineup.formation || null,
@@ -92,10 +115,30 @@ export async function updateMatchLineups(
   await updateMatchAnalysisLineups(matchId, lineupData);
   
   console.log(`[Lineups] Stored lineups for match ${matchId}`);
-  console.log(`  - Home: ${lineupData.homeFormation} (Coach: ${lineupData.homeCoach})`);
-  console.log(`  - Away: ${lineupData.awayFormation} (Coach: ${lineupData.awayCoach})`);
+  console.log(`  - Home (${matchData.match.homeTeam}): ${lineupData.homeFormation} (Coach: ${lineupData.homeCoach})`);
+  console.log(`  - Away (${matchData.match.awayTeam}): ${lineupData.awayFormation} (Coach: ${lineupData.awayCoach})`);
 
   return true;
+}
+
+// Helper to match team names with fuzzy matching
+function isTeamMatch(apiName: string, dbName: string): boolean {
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const apiNorm = normalize(apiName);
+  const dbNorm = normalize(dbName);
+  
+  // Exact match after normalization
+  if (apiNorm === dbNorm) return true;
+  
+  // One contains the other
+  if (apiNorm.includes(dbNorm) || dbNorm.includes(apiNorm)) return true;
+  
+  // Check if significant portion matches (first 5 chars)
+  if (apiNorm.length >= 5 && dbNorm.length >= 5) {
+    if (apiNorm.startsWith(dbNorm.slice(0, 5)) || dbNorm.startsWith(apiNorm.slice(0, 5))) return true;
+  }
+  
+  return false;
 }
 
 // Check if lineups are available for a match

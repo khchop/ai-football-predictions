@@ -53,7 +53,7 @@ export function parsePredictionResponse(response: string): ParsedPrediction {
     cleaned = cleaned.replace(/```\n?/g, '');
     
     // Try to find JSON object with home_score/away_score or homeScore/awayScore pattern
-    // Look for the most specific pattern first
+    // Look for the most specific pattern first (simple flat objects)
     const jsonPatterns = [
       /\{\s*"home_score"\s*:\s*\d+\s*,\s*"away_score"\s*:\s*\d+\s*\}/i,
       /\{\s*"away_score"\s*:\s*\d+\s*,\s*"home_score"\s*:\s*\d+\s*\}/i,
@@ -61,13 +61,34 @@ export function parsePredictionResponse(response: string): ParsedPrediction {
       /\{\s*"awayScore"\s*:\s*\d+\s*,\s*"homeScore"\s*:\s*\d+\s*\}/i,
       /\{[^{}]*"home_?[sS]core"[^{}]*"away_?[sS]core"[^{}]*\}/i,
       /\{[^{}]*"away_?[sS]core"[^{}]*"home_?[sS]core"[^{}]*\}/i,
-      /\{[\s\S]*?\}/,  // Fallback: any JSON object
     ];
 
     let jsonMatch: RegExpMatchArray | null = null;
     for (const pattern of jsonPatterns) {
       jsonMatch = cleaned.match(pattern);
       if (jsonMatch) break;
+    }
+
+    // If no simple match found, try to parse all JSON objects in the response
+    if (!jsonMatch) {
+      // Use a balanced bracket approach to find valid JSON objects
+      const jsonObjects = findJsonObjects(cleaned);
+      for (const obj of jsonObjects) {
+        try {
+          const parsed = JSON.parse(obj);
+          // Check if this object or any nested property has our scores
+          const scores = findScoresInObject(parsed);
+          if (scores) {
+            return {
+              homeScore: Math.max(0, Math.floor(scores.home)),
+              awayScore: Math.max(0, Math.floor(scores.away)),
+              success: true,
+            };
+          }
+        } catch {
+          // Continue to next match
+        }
+      }
     }
 
     if (!jsonMatch) {
@@ -133,4 +154,56 @@ export function parsePredictionResponse(response: string): ParsedPrediction {
       error: `Failed to parse JSON: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
   }
+}
+
+// Find all JSON objects in a string using balanced bracket matching
+function findJsonObjects(text: string): string[] {
+  const objects: string[] = [];
+  let depth = 0;
+  let start = -1;
+  
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '{') {
+      if (depth === 0) start = i;
+      depth++;
+    } else if (text[i] === '}') {
+      depth--;
+      if (depth === 0 && start !== -1) {
+        objects.push(text.slice(start, i + 1));
+        start = -1;
+      }
+    }
+  }
+  
+  return objects;
+}
+
+// Recursively search for score fields in an object
+function findScoresInObject(obj: unknown): { home: number; away: number } | null {
+  if (!obj || typeof obj !== 'object') return null;
+  
+  const record = obj as Record<string, unknown>;
+  
+  // Check for direct score properties
+  const homeScore = record['home_score'] ?? record['homeScore'] ?? record['home'];
+  const awayScore = record['away_score'] ?? record['awayScore'] ?? record['away'];
+  
+  if (homeScore !== undefined && awayScore !== undefined) {
+    const home = typeof homeScore === 'number' ? homeScore : parseInt(String(homeScore), 10);
+    const away = typeof awayScore === 'number' ? awayScore : parseInt(String(awayScore), 10);
+    if (!isNaN(home) && !isNaN(away)) {
+      return { home, away };
+    }
+  }
+  
+  // Check nested objects (e.g., { prediction: { home_score: 1, away_score: 0 } })
+  for (const key in record) {
+    const value = record[key];
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const nested = findScoresInObject(value);
+      if (nested) return nested;
+    }
+  }
+  
+  return null;
 }

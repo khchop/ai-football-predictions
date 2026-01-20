@@ -94,8 +94,9 @@ export async function POST(request: NextRequest) {
       console.log(`  Analysis: ${analysis ? 'Yes' : 'No'}, Lineups: ${analysis?.lineupsAvailable ? 'Yes' : 'No'}`);
 
       // Generate predictions from all providers
+      // Process sequentially (mutex pattern) to prevent budget race conditions
       for (const provider of activeProviders) {
-        // Check budget for OpenRouter providers
+        // Check budget BEFORE API call (budget check is now atomic per-provider)
         const budgetCheck = await shouldSkipProvider(provider as OpenRouterProvider);
         if (budgetCheck.skip) {
           console.log(`Skipping ${provider.id} - ${budgetCheck.reason}`);
@@ -104,6 +105,9 @@ export async function POST(request: NextRequest) {
         }
 
         totalPredictions++;
+        
+        // Track cost immediately after API call, not after save
+        let apiCost = 0;
         
         try {
           console.log(`Generating prediction: ${provider.id} for ${match.homeTeam} vs ${match.awayTeam}`);
@@ -122,6 +126,14 @@ export async function POST(request: NextRequest) {
             );
           }
 
+          // Record cost IMMEDIATELY after API call (regardless of parse/save success)
+          // This ensures budget tracking is accurate even if response parsing fails
+          if ('estimateCost' in provider && typeof provider.estimateCost === 'function') {
+            const inputTokens = analysis ? 500 : 200;
+            apiCost = (provider as OpenRouterProvider).estimateCost(inputTokens, 50);
+            await recordPredictionCost(provider.id, apiCost);
+          }
+
           if (result.success) {
             await createPrediction({
               matchId: match.id,
@@ -133,15 +145,7 @@ export async function POST(request: NextRequest) {
               processingTimeMs: result.processingTimeMs,
             });
             successfulPredictions++;
-            console.log(`Prediction saved: ${result.homeScore}-${result.awayScore}`);
-
-            // Record cost for OpenRouter providers
-            if ('estimateCost' in provider && typeof provider.estimateCost === 'function') {
-              // Enhanced prompts are longer - estimate ~500 tokens for rich context
-              const inputTokens = analysis ? 500 : 200;
-              const cost = (provider as OpenRouterProvider).estimateCost(inputTokens, 20);
-              await recordPredictionCost(provider.id, cost);
-            }
+            console.log(`Prediction saved: ${result.homeScore}-${result.awayScore} (cost: $${apiCost.toFixed(6)})`);
           } else {
             const errorMsg = `${provider.id} failed for match ${match.id}: ${result.error}`;
             console.error(errorMsg);
@@ -151,6 +155,12 @@ export async function POST(request: NextRequest) {
           // Small delay between API calls to avoid rate limiting
           await new Promise(resolve => setTimeout(resolve, 200));
         } catch (error) {
+          // Record cost even on error (API was still called and billed)
+          if (apiCost === 0 && 'estimateCost' in provider && typeof provider.estimateCost === 'function') {
+            const inputTokens = analysis ? 500 : 200;
+            apiCost = (provider as OpenRouterProvider).estimateCost(inputTokens, 50);
+            await recordPredictionCost(provider.id, apiCost);
+          }
           const errorMsg = `Error with ${provider.id} for match ${match.id}: ${error}`;
           console.error(errorMsg);
           errors.push(errorMsg);

@@ -10,6 +10,41 @@ export interface PromptContext {
   analysis: MatchAnalysis | null;
 }
 
+// ============================================================================
+// OPENROUTER CONTEXT CACHING OPTIMIZATION
+// ============================================================================
+// OpenRouter caches based on prompt prefixes. To maximize cache hits:
+// 1. Put static instructions at the START of the prompt
+// 2. Put match-specific dynamic data at the END
+// 3. The system prompt is handled separately and cached automatically
+// ============================================================================
+
+// Static analysis section headers - cacheable prefix
+const ANALYSIS_HEADER = `You will receive match data in a structured format. Analyze ALL provided data carefully:
+
+- BETTING ODDS: Market expectations (lower odds = more likely outcome)
+- FORM: Recent results (W=Win, D=Draw, L=Loss) 
+- COMPARISON: Statistical ratings (higher % = stronger in that area)
+- LINEUPS: Confirmed starting players and formations
+- ABSENCES: Injured/suspended players
+
+Key prediction factors:
+1. Home advantage typically worth 0.3-0.5 goals
+2. Recent form indicates current confidence/momentum  
+3. Injury impact depends on player importance
+4. Odds reflect collective market intelligence
+5. Head-to-head history matters for derby matches
+
+Your task: Predict the most likely final score.
+Response format: ONLY JSON {"home_score": X, "away_score": Y}
+
+`;
+
+// Get the cacheable prefix for prompts
+export function getCacheablePromptPrefix(): string {
+  return ANALYSIS_HEADER;
+}
+
 // Build a simple comparison bar for display
 function buildComparisonBar(homePct: number | null, awayPct: number | null): string {
   if (homePct === null || awayPct === null) return '';
@@ -63,106 +98,112 @@ function formatTeamInjuries(injuries: KeyInjury[], teamName: string, count: numb
 }
 
 // Build enhanced prompt with all available context
+// Structure: CACHEABLE PREFIX + DYNAMIC MATCH DATA
 export function buildEnhancedPrompt(context: PromptContext): string {
   const { homeTeam, awayTeam, competition, kickoffTime, analysis } = context;
   
   const kickoff = parseISO(kickoffTime);
   const formattedDate = format(kickoff, "yyyy-MM-dd HH:mm 'UTC'");
   
-  const lines: string[] = [];
+  // Start with cacheable prefix (static instructions)
+  const lines: string[] = [ANALYSIS_HEADER];
   
-  // Header
+  // Add separator before dynamic content
   lines.push('═'.repeat(60));
-  lines.push(`MATCH: ${homeTeam} vs ${awayTeam}`);
+  lines.push('MATCH DATA:');
+  lines.push('═'.repeat(60));
+  lines.push('');
+  
+  // Dynamic content: Match header
+  lines.push(`Match: ${homeTeam} vs ${awayTeam}`);
   lines.push(`Competition: ${competition}`);
   lines.push(`Date: ${formattedDate}`);
-  lines.push('═'.repeat(60));
   lines.push('');
   
   // If we have analysis data, include it
   if (analysis) {
     // Betting Odds
     if (analysis.oddsHome || analysis.oddsDraw || analysis.oddsAway) {
-      lines.push('📊 BETTING ODDS:');
-      lines.push(`   Home Win: ${analysis.oddsHome || 'N/A'} | Draw: ${analysis.oddsDraw || 'N/A'} | Away Win: ${analysis.oddsAway || 'N/A'}`);
+      lines.push('BETTING ODDS:');
+      lines.push(`Home Win: ${analysis.oddsHome || 'N/A'} | Draw: ${analysis.oddsDraw || 'N/A'} | Away Win: ${analysis.oddsAway || 'N/A'}`);
       
       // Likely scores
       const likelyScores = parseLikelyScores(analysis.likelyScores);
       if (likelyScores.length > 0) {
         const scoresStr = likelyScores.slice(0, 3).map(s => `${s.score} (${s.odds})`).join(', ');
-        lines.push(`   Likely scores: ${scoresStr}`);
+        lines.push(`Likely scores: ${scoresStr}`);
       }
       lines.push('');
     }
     
     // Pre-match analysis
     if (analysis.favoriteTeamName || analysis.advice) {
-      lines.push('⭐ PRE-MATCH ANALYSIS:');
+      lines.push('PRE-MATCH ANALYSIS:');
       if (analysis.favoriteTeamName && analysis.homeWinPct && analysis.awayWinPct) {
         const favoriteIsHome = analysis.favoriteTeamId && analysis.homeWinPct > analysis.awayWinPct;
         const favoritePct = favoriteIsHome ? analysis.homeWinPct : analysis.awayWinPct;
-        lines.push(`   Favorite: ${analysis.favoriteTeamName} (${favoritePct}% chance)`);
+        lines.push(`Favorite: ${analysis.favoriteTeamName} (${favoritePct}% chance)`);
       }
       if (analysis.advice) {
-        lines.push(`   Advice: "${analysis.advice}"`);
+        lines.push(`Advice: "${analysis.advice}"`);
       }
       lines.push('');
     }
     
     // Team comparison
     if (analysis.formHomePct || analysis.attackHomePct || analysis.defenseHomePct) {
-      lines.push('⚔️ TEAM COMPARISON:');
+      lines.push('TEAM COMPARISON:');
       if (analysis.formHomePct && analysis.formAwayPct) {
-        lines.push(`   Form:    ${homeTeam} ${buildComparisonBar(analysis.formHomePct, analysis.formAwayPct)} ${awayTeam}`);
+        lines.push(`Form: ${homeTeam} ${buildComparisonBar(analysis.formHomePct, analysis.formAwayPct)} ${awayTeam}`);
       }
       if (analysis.attackHomePct && analysis.attackAwayPct) {
-        lines.push(`   Attack:  ${homeTeam} ${buildComparisonBar(analysis.attackHomePct, analysis.attackAwayPct)} ${awayTeam}`);
+        lines.push(`Attack: ${homeTeam} ${buildComparisonBar(analysis.attackHomePct, analysis.attackAwayPct)} ${awayTeam}`);
       }
       if (analysis.defenseHomePct && analysis.defenseAwayPct) {
-        lines.push(`   Defense: ${homeTeam} ${buildComparisonBar(analysis.defenseHomePct, analysis.defenseAwayPct)} ${awayTeam}`);
+        lines.push(`Defense: ${homeTeam} ${buildComparisonBar(analysis.defenseHomePct, analysis.defenseAwayPct)} ${awayTeam}`);
       }
       lines.push('');
     }
     
     // Home team form
-    lines.push(`🏠 ${homeTeam.toUpperCase()} (Home):`);
+    lines.push(`${homeTeam.toUpperCase()} (Home):`);
     if (analysis.homeTeamForm) {
       const form = analysis.homeTeamForm.split('').join('-');
       const goalsInfo = analysis.homeGoalsScored !== null && analysis.homeGoalsConceded !== null
         ? ` (${analysis.homeGoalsScored} scored, ${analysis.homeGoalsConceded} conceded in last 5)`
         : '';
-      lines.push(`   Recent Form: ${form}${goalsInfo}`);
+      lines.push(`Recent Form: ${form}${goalsInfo}`);
     }
     if (analysis.lineupsAvailable && analysis.homeFormation) {
-      lines.push(`   Formation: ${analysis.homeFormation}`);
+      lines.push(`Formation: ${analysis.homeFormation}`);
       if (analysis.homeCoach) {
-        lines.push(`   Coach: ${analysis.homeCoach}`);
+        lines.push(`Coach: ${analysis.homeCoach}`);
       }
     }
     lines.push('');
     
     // Away team form
-    lines.push(`🚌 ${awayTeam.toUpperCase()} (Away):`);
+    lines.push(`${awayTeam.toUpperCase()} (Away):`);
     if (analysis.awayTeamForm) {
       const form = analysis.awayTeamForm.split('').join('-');
       const goalsInfo = analysis.awayGoalsScored !== null && analysis.awayGoalsConceded !== null
         ? ` (${analysis.awayGoalsScored} scored, ${analysis.awayGoalsConceded} conceded in last 5)`
         : '';
-      lines.push(`   Recent Form: ${form}${goalsInfo}`);
+      lines.push(`Recent Form: ${form}${goalsInfo}`);
     }
     if (analysis.lineupsAvailable && analysis.awayFormation) {
-      lines.push(`   Formation: ${analysis.awayFormation}`);
+      lines.push(`Formation: ${analysis.awayFormation}`);
       if (analysis.awayCoach) {
-        lines.push(`   Coach: ${analysis.awayCoach}`);
+        lines.push(`Coach: ${analysis.awayCoach}`);
       }
     }
     lines.push('');
     
     // Lineups (if available)
     if (analysis.lineupsAvailable && analysis.homeStartingXI && analysis.awayStartingXI) {
-      lines.push('📋 CONFIRMED LINEUPS:');
-      lines.push(`   ${homeTeam} XI: ${analysis.homeStartingXI}`);
-      lines.push(`   ${awayTeam} XI: ${analysis.awayStartingXI}`);
+      lines.push('CONFIRMED LINEUPS:');
+      lines.push(`${homeTeam} XI: ${analysis.homeStartingXI}`);
+      lines.push(`${awayTeam} XI: ${analysis.awayStartingXI}`);
       lines.push('');
     }
     
@@ -170,27 +211,24 @@ export function buildEnhancedPrompt(context: PromptContext): string {
     const totalInjuries = (analysis.homeInjuriesCount || 0) + (analysis.awayInjuriesCount || 0);
     if (totalInjuries > 0) {
       const keyInjuries = parseKeyInjuries(analysis.keyInjuries);
-      lines.push('🏥 KEY ABSENCES:');
+      lines.push('KEY ABSENCES:');
       if (analysis.homeInjuriesCount && analysis.homeInjuriesCount > 0) {
-        lines.push(`   ${homeTeam} (${analysis.homeInjuriesCount}): ${formatTeamInjuries(keyInjuries, homeTeam, analysis.homeInjuriesCount)}`);
+        lines.push(`${homeTeam} (${analysis.homeInjuriesCount}): ${formatTeamInjuries(keyInjuries, homeTeam, analysis.homeInjuriesCount)}`);
       }
       if (analysis.awayInjuriesCount && analysis.awayInjuriesCount > 0) {
-        lines.push(`   ${awayTeam} (${analysis.awayInjuriesCount}): ${formatTeamInjuries(keyInjuries, awayTeam, analysis.awayInjuriesCount)}`);
+        lines.push(`${awayTeam} (${analysis.awayInjuriesCount}): ${formatTeamInjuries(keyInjuries, awayTeam, analysis.awayInjuriesCount)}`);
       }
       lines.push('');
     }
   } else {
     // No analysis available
-    lines.push('Note: No pre-match analysis data available.');
-    lines.push('Consider team strength, recent form, and historical results.');
+    lines.push('Note: No detailed pre-match analysis available.');
     lines.push('');
   }
   
-  // Footer with instructions
+  // Final instruction (kept short)
   lines.push('═'.repeat(60));
-  lines.push('Based on this analysis, predict the final score.');
-  lines.push('Respond with ONLY JSON: {"home_score": X, "away_score": Y}');
-  lines.push('═'.repeat(60));
+  lines.push('Predict final score as JSON: {"home_score": X, "away_score": Y}');
   
   return lines.join('\n');
 }

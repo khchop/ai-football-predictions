@@ -33,7 +33,7 @@ export class OpenRouterProvider extends OpenAICompatibleProvider {
   protected getHeaders(): Record<string, string> {
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
-      throw new Error('OPENROUTER_API_KEY is not configured');
+      throw new Error('OpenRouter API key is not configured');
     }
     return {
       Authorization: `Bearer ${apiKey}`,

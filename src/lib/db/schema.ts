@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
 
 // Competitions we track (Champions League, Premier League, etc.)
 export const competitions = sqliteTable('competitions', {
@@ -7,7 +8,7 @@ export const competitions = sqliteTable('competitions', {
   apiFootballId: integer('api_football_id').notNull(), // API-Football league ID
   season: integer('season').notNull(), // e.g., 2024
   active: integer('active', { mode: 'boolean' }).default(true),
-  createdAt: text('created_at').default(new Date().toISOString()),
+  createdAt: text('created_at').default(sql`(datetime('now'))`),
 });
 
 // Individual matches
@@ -28,8 +29,8 @@ export const matches = sqliteTable('matches', {
   round: text('round'), // e.g., "Group A - Matchday 1", "Quarter-finals"
   venue: text('venue'),
   isUpset: integer('is_upset', { mode: 'boolean' }).default(false), // Whether the underdog won
-  createdAt: text('created_at').default(new Date().toISOString()),
-  updatedAt: text('updated_at').default(new Date().toISOString()),
+  createdAt: text('created_at').default(sql`(datetime('now'))`),
+  updatedAt: text('updated_at').default(sql`(datetime('now'))`),
 });
 
 // LLM models we test
@@ -40,7 +41,7 @@ export const models = sqliteTable('models', {
   displayName: text('display_name').notNull(), // e.g., "Llama 3.3 70B (Groq)"
   isPremium: integer('is_premium', { mode: 'boolean' }).default(false),
   active: integer('active', { mode: 'boolean' }).default(true),
-  createdAt: text('created_at').default(new Date().toISOString()),
+  createdAt: text('created_at').default(sql`(datetime('now'))`),
 });
 
 // Predictions made by models
@@ -64,8 +65,8 @@ export const predictions = sqliteTable('predictions', {
   pointsOverUnder: integer('points_over_under').default(0), // 1 pt if correct over/under 2.5
   pointsBtts: integer('points_btts').default(0), // 1 pt if correct both teams to score
   pointsUpsetBonus: integer('points_upset_bonus').default(0), // 2 pts if predicted underdog win
-  pointsTotal: integer('points_total').default(0), // Sum of all points (max 12)
-  createdAt: text('created_at').default(new Date().toISOString()),
+  pointsTotal: integer('points_total').default(0), // Sum of all points (max 10)
+  createdAt: text('created_at').default(sql`(datetime('now'))`),
 });
 
 // Daily usage tracking for budget control
@@ -75,8 +76,8 @@ export const modelUsage = sqliteTable('model_usage', {
   modelId: text('model_id').notNull(),
   predictionsCount: integer('predictions_count').default(0),
   totalCost: text('total_cost').default('0'), // Stored as string for precision
-  createdAt: text('created_at').default(new Date().toISOString()),
-  updatedAt: text('updated_at').default(new Date().toISOString()),
+  createdAt: text('created_at').default(sql`(datetime('now'))`),
+  updatedAt: text('updated_at').default(sql`(datetime('now'))`),
 });
 
 // Type exports for use in application
@@ -154,7 +155,7 @@ export const matchAnalysis = sqliteTable('match_analysis', {
   rawLineupsData: text('raw_lineups_data'),
   
   analysisUpdatedAt: text('analysis_updated_at'),
-  createdAt: text('created_at').default(new Date().toISOString()),
+  createdAt: text('created_at').default(sql`(datetime('now'))`),
 });
 
 export type MatchAnalysis = typeof matchAnalysis.$inferSelect;

@@ -74,9 +74,14 @@ export async function getMatchesWithoutPredictions(): Promise<{ match: Match; pr
   const now = new Date();
   const predictionWindow = new Date(now.getTime() + 12 * 60 * 60 * 1000);
   
-  const matchesResult = await db
-    .select()
+  // Single query with LEFT JOIN to get matches and their predictions in one go
+  const matchesWithPredictions = await db
+    .select({
+      match: matches,
+      modelId: predictions.modelId,
+    })
     .from(matches)
+    .leftJoin(predictions, eq(matches.id, predictions.matchId))
     .where(
       and(
         eq(matches.status, 'scheduled'),
@@ -85,19 +90,23 @@ export async function getMatchesWithoutPredictions(): Promise<{ match: Match; pr
       )
     );
 
-  // For each match, check which models haven't predicted yet
-  const result: { match: Match; predictedModelIds: Set<string> }[] = [];
-  for (const match of matchesResult) {
-    const existingPredictions = await db
-      .select({ modelId: predictions.modelId })
-      .from(predictions)
-      .where(eq(predictions.matchId, match.id));
+  // Group predictions by match
+  const matchMap = new Map<string, { match: Match; predictedModelIds: Set<string> }>();
+  
+  for (const row of matchesWithPredictions) {
+    if (!matchMap.has(row.match.id)) {
+      matchMap.set(row.match.id, {
+        match: row.match,
+        predictedModelIds: new Set(),
+      });
+    }
     
-    const predictedModelIds = new Set(existingPredictions.map(p => p.modelId));
-    result.push({ match, predictedModelIds });
+    if (row.modelId) {
+      matchMap.get(row.match.id)!.predictedModelIds.add(row.modelId);
+    }
   }
   
-  return result;
+  return Array.from(matchMap.values());
 }
 
 export async function getMatchesPendingResults() {
@@ -231,7 +240,12 @@ export async function getModelById(id: string) {
 export async function createPrediction(data: Omit<NewPrediction, 'id'>) {
   const db = getDb();
   const id = uuidv4();
-  return db.insert(predictions).values({ ...data, id });
+  // Use onConflictDoNothing to prevent duplicate predictions for same match+model
+  // The unique index idx_predictions_match_model enforces this constraint
+  return db
+    .insert(predictions)
+    .values({ ...data, id })
+    .onConflictDoNothing();
 }
 
 export async function getPredictionsForMatch(matchId: string) {
@@ -397,7 +411,7 @@ export async function upsertMatchAnalysis(data: NewMatchAnalysis) {
     .insert(matchAnalysis)
     .values(data)
     .onConflictDoUpdate({
-      target: matchAnalysis.id,
+      target: matchAnalysis.matchId, // Fixed: was matchAnalysis.id
       set: {
         favoriteTeamId: data.favoriteTeamId,
         favoriteTeamName: data.favoriteTeamName,
@@ -538,14 +552,19 @@ export async function getMatchesReadyForPrediction(): Promise<Array<{
   const thirtyMinsFromNow = new Date(now.getTime() + 30 * 60 * 1000);
   const fiveMinsFromNow = new Date(now.getTime() + 5 * 60 * 1000);
   
-  // Get scheduled matches within 30 minutes
+  // Single query: Get matches with their analysis and prediction counts
   const matchesInWindow = await db
     .select({
       match: matches,
       competition: competitions,
+      analysis: matchAnalysis,
+      predictionCount: sql<number>`(
+        SELECT COUNT(*) FROM predictions p WHERE p.match_id = ${matches.id}
+      )`,
     })
     .from(matches)
     .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .leftJoin(matchAnalysis, eq(matches.id, matchAnalysis.matchId))
     .where(
       and(
         eq(matches.status, 'scheduled'),
@@ -561,36 +580,27 @@ export async function getMatchesReadyForPrediction(): Promise<Array<{
     hasPredictions: boolean;
   }> = [];
 
-  for (const { match, competition } of matchesInWindow) {
-    // Check if match has predictions
-    const existingPredictions = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(predictions)
-      .where(eq(predictions.matchId, match.id));
-    
-    const hasPredictions = (existingPredictions[0]?.count || 0) > 0;
+  for (const row of matchesInWindow) {
+    const hasPredictions = (row.predictionCount || 0) > 0;
     
     // If match has predictions, skip (predictions already generated)
     if (hasPredictions) {
       continue;
     }
     
-    // Get analysis for this match
-    const analysis = await getMatchAnalysisByMatchId(match.id);
-    
     // Check if we should generate predictions now
-    const kickoff = new Date(match.kickoffTime);
+    const kickoff = new Date(row.match.kickoffTime);
     const isWithin5Mins = kickoff <= fiveMinsFromNow;
-    const hasLineups = analysis?.lineupsAvailable === true;
+    const hasLineups = row.analysis?.lineupsAvailable === true;
     
     // Generate if:
     // 1. We have lineups (preferred), OR
     // 2. We're within 5 mins of kickoff (fallback)
     if (hasLineups || isWithin5Mins) {
       result.push({
-        match,
-        competition: { id: competition.id, name: competition.name },
-        analysis,
+        match: row.match,
+        competition: { id: row.competition.id, name: row.competition.name },
+        analysis: row.analysis,
         hasPredictions: false,
       });
     }

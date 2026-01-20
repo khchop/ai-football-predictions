@@ -52,7 +52,7 @@ export function formatResult(result: MatchResult): string {
   }
 }
 
-// ============= ENHANCED SCORING (6 categories, max 12 points) =============
+// ============= ENHANCED SCORING (6 categories, max 10 points) =============
 
 export interface EnhancedScoringInput {
   predictedHome: number;
@@ -63,7 +63,7 @@ export interface EnhancedScoringInput {
   awayWinPct: number | null;
 }
 
-// Calculate enhanced scoring breakdown (6 categories, max 12 points)
+// Calculate enhanced scoring breakdown (6 categories, max 10 points)
 export function calculateEnhancedScores(input: EnhancedScoringInput): ScoringBreakdown {
   const { predictedHome, predictedAway, actualHome, actualAway, homeWinPct, awayWinPct } = input;
   

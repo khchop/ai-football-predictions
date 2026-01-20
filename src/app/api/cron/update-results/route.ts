@@ -157,22 +157,34 @@ async function scorePredictionsForMatch(
   console.log(`[Scoring] Calculating scores for match ${matchId}`);
   
   try {
-    // Get analysis data for upset detection
+    // Get analysis data for upset detection (may not exist)
     const analysis = await getMatchAnalysisByMatchId(matchId);
-    const homeWinPct = analysis?.homeWinPct ?? null;
-    const awayWinPct = analysis?.awayWinPct ?? null;
-
-    // Determine if this was an upset
-    const wasUpset = isUpsetResult(homeWinPct, awayWinPct, actualHome, actualAway);
-    await setMatchUpset(matchId, wasUpset);
     
-    if (wasUpset) {
-      console.log(`[Scoring] Match was an UPSET!`);
+    // Only use win percentages if analysis exists and has valid data
+    const homeWinPct = (analysis?.homeWinPct != null && analysis.homeWinPct > 0) ? analysis.homeWinPct : null;
+    const awayWinPct = (analysis?.awayWinPct != null && analysis.awayWinPct > 0) ? analysis.awayWinPct : null;
+
+    // Determine if this was an upset (only if we have analysis data)
+    let wasUpset = false;
+    if (homeWinPct !== null && awayWinPct !== null) {
+      wasUpset = isUpsetResult(homeWinPct, awayWinPct, actualHome, actualAway);
+      if (wasUpset) {
+        console.log(`[Scoring] Match was an UPSET! (home: ${homeWinPct}%, away: ${awayWinPct}%)`);
+      }
+    } else {
+      console.log(`[Scoring] No win percentages available for upset detection`);
     }
+    
+    await setMatchUpset(matchId, wasUpset);
 
     // Get all predictions for this match
     const matchPredictions = await getPredictionsForMatch(matchId);
     console.log(`[Scoring] Found ${matchPredictions.length} predictions to score`);
+
+    if (matchPredictions.length === 0) {
+      console.log(`[Scoring] No predictions to score for match ${matchId}`);
+      return;
+    }
 
     let scoredCount = 0;
     let totalPoints = 0;
