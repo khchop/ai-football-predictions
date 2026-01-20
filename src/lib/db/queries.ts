@@ -1,5 +1,5 @@
 import { getDb, competitions, matches, models, predictions, matchAnalysis } from './index';
-import { eq, and, gte, lte, desc, sql, isNotNull, isNull } from 'drizzle-orm';
+import { eq, and, gte, lte, desc, sql, isNotNull, isNull, notInArray } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import type { NewCompetition, NewMatch, NewModel, NewPrediction, Match, MatchAnalysis, NewMatchAnalysis } from './schema';
 import type { ScoringBreakdown, EnhancedLeaderboardEntry } from '@/types';
@@ -253,6 +253,15 @@ export async function upsertModel(data: NewModel) {
 export async function getActiveModels() {
   const db = getDb();
   return db.select().from(models).where(eq(models.active, true));
+}
+
+// Deactivate models not in the provided list of IDs
+export async function deactivateOldModels(activeModelIds: string[]) {
+  const db = getDb();
+  return db
+    .update(models)
+    .set({ active: false })
+    .where(notInArray(models.id, activeModelIds));
 }
 
 export async function getModelById(id: string) {

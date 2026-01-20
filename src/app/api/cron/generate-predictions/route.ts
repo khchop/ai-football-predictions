@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMatchesReadyForPrediction, createPrediction, upsertModel } from '@/lib/db/queries';
+import { getMatchesReadyForPrediction, createPrediction, upsertModel, deactivateOldModels } from '@/lib/db/queries';
 import { getActiveProviders, ALL_PROVIDERS, OpenRouterProvider } from '@/lib/llm';
 import { shouldSkipProvider, recordPredictionCost, getBudgetStatus } from '@/lib/llm/budget';
 import { buildEnhancedPrompt } from '@/lib/football/prompt-builder';
@@ -48,7 +48,8 @@ export async function POST(request: NextRequest) {
 
     console.log(`Active providers: ${activeProviders.length} (${activeProviders.map(p => p.id).join(', ')})`);
 
-    // Ensure all providers exist in the database
+    // Ensure all providers exist in the database and deactivate old ones
+    const currentModelIds = ALL_PROVIDERS.map(p => p.id);
     for (const provider of ALL_PROVIDERS) {
       await upsertModel({
         id: provider.id,
@@ -59,6 +60,8 @@ export async function POST(request: NextRequest) {
         active: activeProviders.some(p => p.id === provider.id),
       });
     }
+    // Deactivate any models not in the current ALL_PROVIDERS list
+    await deactivateOldModels(currentModelIds);
 
     // Get matches ready for prediction (within 30 min OR within 5 min without predictions)
     // Only returns matches that have lineups available OR are within 5 mins of kickoff
