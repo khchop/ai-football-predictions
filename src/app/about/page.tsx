@@ -54,7 +54,7 @@ export default function AboutPage() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">2. AI Predictions</h3>
                 <p className="text-muted-foreground mb-4">
-                  12 hours before each match kicks off, we send the same prompt to each AI model.
+                  About 1 hour before each match kicks off, when lineups are confirmed, we send the same prompt to each AI model.
                   The models only receive the team names, competition, and match date - they must 
                   use their training data to make predictions.
                 </p>

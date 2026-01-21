@@ -1,5 +1,5 @@
 import { getDb, competitions, matches, models, predictions, matchAnalysis } from './index';
-import { eq, and, gte, lte, desc, sql, isNotNull, isNull, notInArray } from 'drizzle-orm';
+import { eq, and, or, gte, lte, desc, sql, isNotNull, isNull, notInArray } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import type { NewCompetition, NewMatch, NewModel, NewPrediction, Match, MatchAnalysis, NewMatchAnalysis } from './schema';
 import type { ScoringBreakdown, EnhancedLeaderboardEntry } from '@/types';
@@ -704,7 +704,40 @@ export async function getMatchesNeedingLineups(): Promise<Array<Match & { analys
   return result.map(r => ({ ...r.match, analysisId: r.analysisId }));
 }
 
-// Get matches ready for prediction (kickoff within 30 min OR within 5 min if no predictions yet)
+// Get matches that need analysis refresh (within 2h of kickoff, analysis > 4h old)
+// This ensures we have fresh odds/injuries data before generating predictions
+export async function getMatchesNeedingAnalysisRefresh(): Promise<Array<Match & { analysisId: string }>> {
+  const db = getDb();
+  const now = new Date();
+  const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+  
+  const result = await db
+    .select({
+      match: matches,
+      analysisId: matchAnalysis.id,
+      analysisUpdatedAt: matchAnalysis.analysisUpdatedAt,
+    })
+    .from(matches)
+    .innerJoin(matchAnalysis, eq(matches.id, matchAnalysis.matchId))
+    .where(
+      and(
+        eq(matches.status, 'scheduled'),
+        gte(matches.kickoffTime, now.toISOString()),
+        lte(matches.kickoffTime, twoHoursFromNow.toISOString()),
+        // Analysis is older than 4 hours (or never updated)
+        or(
+          isNull(matchAnalysis.analysisUpdatedAt),
+          lte(matchAnalysis.analysisUpdatedAt, fourHoursAgo.toISOString())
+        )
+      )
+    );
+
+  return result.map(r => ({ ...r.match, analysisId: r.analysisId }));
+}
+
+// Get matches ready for prediction (kickoff within 90 min OR within 5 min if no predictions yet)
+// 90 min window allows predictions when lineups are confirmed (~1 hour before kickoff)
 export async function getMatchesReadyForPrediction(): Promise<Array<{
   match: Match;
   competition: { id: string; name: string };
@@ -713,7 +746,7 @@ export async function getMatchesReadyForPrediction(): Promise<Array<{
 }>> {
   const db = getDb();
   const now = new Date();
-  const thirtyMinsFromNow = new Date(now.getTime() + 30 * 60 * 1000);
+  const ninetyMinsFromNow = new Date(now.getTime() + 90 * 60 * 1000);
   const fiveMinsFromNow = new Date(now.getTime() + 5 * 60 * 1000);
   
   // Single query: Get matches with their analysis and prediction counts
@@ -733,7 +766,7 @@ export async function getMatchesReadyForPrediction(): Promise<Array<{
       and(
         eq(matches.status, 'scheduled'),
         gte(matches.kickoffTime, now.toISOString()),
-        lte(matches.kickoffTime, thirtyMinsFromNow.toISOString())
+        lte(matches.kickoffTime, ninetyMinsFromNow.toISOString())
       )
     );
 

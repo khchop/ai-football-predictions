@@ -574,7 +574,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
           <p className="text-sm text-muted-foreground mb-6">
             {predictions.length > 0 
               ? `${predictions.length} AI models predicted this match`
-              : 'Predictions are made 12 hours before kickoff'}
+              : 'Predictions are generated when lineups are confirmed (~1 hour before kickoff)'}
           </p>
           <PredictionTable
             predictions={predictionsWithPoints}

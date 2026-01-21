@@ -45,7 +45,7 @@ export function PredictionTable({
         <Bot className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
         <p className="text-muted-foreground">No predictions yet</p>
         <p className="text-sm text-muted-foreground/70 mt-1">
-          AI predictions are made 12 hours before kickoff
+          AI predictions are generated when lineups are confirmed (~1 hour before kickoff)
         </p>
       </div>
     );
