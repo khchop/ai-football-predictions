@@ -25,21 +25,61 @@ const BATCH_SIZE = 10;
 // Retry configuration
 const MAX_RETRIES = 2;
 const RETRY_DELAYS = [1000, 2000]; // Exponential backoff: 1s, 2s
+const RATE_LIMIT_RETRY_DELAYS = [3000, 5000]; // Longer delays for rate limits
 
 // Errors that indicate JSON parsing failed (retryable)
-const RETRYABLE_ERROR_PATTERNS = [
+const JSON_PARSE_ERROR_PATTERNS = [
   'No JSON array found',
   'Failed to parse batch JSON',
   'No predictions parsed',
   'Parsed result is not an array',
   'API response contained no usable content',
   'No JSON object found',
+  'Unexpected token',
 ];
 
-// Check if an error is retryable (JSON parse failure vs network/timeout)
+// Errors that are definitely NOT worth retrying (auth, budget, etc)
+const NON_RETRYABLE_ERROR_PATTERNS = [
+  'API error 402', // Payment Required (OpenRouter/Provider budget)
+  'API error 401', // Unauthorized
+  'API error 403', // Forbidden
+  'spend limit exceeded',
+  'insufficient balance',
+  'credit limit reached',
+];
+
+// Rate limit errors
+const RATE_LIMIT_PATTERNS = [
+  'API error 429',
+  'rate limit',
+  'too many requests',
+  'throttled',
+];
+
+// Check if an error is a non-retryable error
+function isNonRetryableError(error: string | undefined): boolean {
+  if (!error) return false;
+  return NON_RETRYABLE_ERROR_PATTERNS.some(pattern => error.toLowerCase().includes(pattern.toLowerCase()));
+}
+
+// Check if an error is a rate limit error
+function isRateLimitError(error: string | undefined): boolean {
+  if (!error) return false;
+  return RATE_LIMIT_PATTERNS.some(pattern => error.toLowerCase().includes(pattern.toLowerCase()));
+}
+
+// Check if an error is retryable (JSON parse failure or rate limit)
 function isRetryableError(error: string | undefined): boolean {
   if (!error) return false;
-  return RETRYABLE_ERROR_PATTERNS.some(pattern => error.includes(pattern));
+  
+  // If it's specifically non-retryable (budget/auth), return false
+  if (isNonRetryableError(error)) return false;
+  
+  // Rate limits are retryable with longer delays
+  if (isRateLimitError(error)) return true;
+  
+  // JSON parse errors are retryable
+  return JSON_PARSE_ERROR_PATTERNS.some(pattern => error.includes(pattern));
 }
 
 // Retry stats tracking per provider
@@ -64,7 +104,10 @@ async function predictBatchWithRetry(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     // Delay before retry (not on first attempt)
     if (attempt > 0) {
-      const delay = RETRY_DELAYS[attempt - 1] || RETRY_DELAYS[RETRY_DELAYS.length - 1];
+      // Use longer delays if we hit a rate limit
+      const delayList = isRateLimitError(lastResult!.error) ? RATE_LIMIT_RETRY_DELAYS : RETRY_DELAYS;
+      const delay = delayList[attempt - 1] || delayList[delayList.length - 1];
+      
       console.log(`    Retry ${attempt}/${maxRetries} in ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
       retryCount++;
@@ -86,9 +129,10 @@ async function predictBatchWithRetry(
       break;
     }
 
-    // Log the parse failure
+    // Log the error type
     if (attempt < maxRetries) {
-      console.log(`    Parse failed: ${lastResult.error}`);
+      const type = isRateLimitError(lastResult.error) ? 'Rate limit' : 'Parse failure';
+      console.log(`    ${type}: ${lastResult.error}`);
     }
   }
 
@@ -361,6 +405,13 @@ export async function POST(request: NextRequest) {
             console.log(`    ${modelId}: AUTO-DISABLED after 3 consecutive failures`);
           }
         }
+      }
+
+      // Small delay after processing each model to avoid rate limits, especially for free tier
+      const castedProvider = provider as unknown as OpenRouterProvider;
+      if (castedProvider.tier === 'free') {
+        console.log(`  Waiting 500ms before next model...`);
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
 

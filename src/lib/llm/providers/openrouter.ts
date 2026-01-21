@@ -111,12 +111,12 @@ export const Qwen3Next80BProvider = new OpenRouterProvider(
   false
 );
 
-// 5. Nemotron 3 Nano 30B - NVIDIA (Free) - Has "Reasoning OFF" mode (default for instruct)
-export const Nemotron3NanoProvider = new OpenRouterProvider(
-  'nemotron-3-nano',
+// 5. Nemotron Nano 9B V2 (Free) - NVIDIA
+export const NemotronNano9BFreeProvider = new OpenRouterProvider(
+  'nemotron-nano-9b-free',
   'openrouter',
-  'nvidia/nemotron-3-nano-30b-a3b:free',
-  'Nemotron 3 Nano 30B (NVIDIA)',
+  'nvidia/nemotron-nano-9b-v2:free',
+  'Nemotron Nano 9B V2 Free (NVIDIA)',
   'free',
   { promptPer1M: 0, completionPer1M: 0 },
   false
@@ -423,7 +423,7 @@ export const OPENROUTER_PROVIDERS = [
   MistralSmall31Provider,        // 2  - FREE - Mistral
   Gemma3_27BProvider,            // 3  - FREE - Google
   Qwen3Next80BProvider,          // 4  - FREE - Alibaba
-  Nemotron3NanoProvider,         // 5  - FREE - NVIDIA
+  NemotronNano9BFreeProvider,    // 5  - FREE - NVIDIA
   GLM45AirProvider,              // 6  - FREE - Zhipu AI
   MiMoV2FlashProvider,           // 7  - FREE - Xiaomi
   DolphinMistral24BProvider,     // 8  - FREE - CognitiveComp
