@@ -1,4 +1,4 @@
-import { getDb, competitions, matches, models, predictions, matchAnalysis } from './index';
+import { getDb, competitions, matches, models, predictions, matchAnalysis, predictionAttempts } from './index';
 import { eq, and, or, gte, lte, desc, sql, isNotNull, isNull, notInArray, inArray } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import type { NewCompetition, NewMatch, NewModel, NewPrediction, Match, MatchAnalysis, NewMatchAnalysis, Model, Competition } from './schema';
@@ -495,6 +495,139 @@ export async function getAutoDisabledModels(): Promise<Model[]> {
 // Check if a model should be skipped due to health issues
 export function shouldSkipModelDueToHealth(model: Model): boolean {
   return model.autoDisabled === true;
+}
+
+// ============= PREDICTION ATTEMPT TRACKING =============
+
+// Get missing model/match pairs for prediction
+// Returns which models still need to generate predictions for which matches
+// Excludes: matches with existing predictions, pairs with 3+ attempts
+export async function getMissingModelPredictions(matchIds: string[], activeModelIds: string[]) {
+  if (matchIds.length === 0 || activeModelIds.length === 0) return [];
+  
+  const db = getDb();
+  
+  // Get all existing successful predictions
+  const existingPreds = await db
+    .select({
+      matchId: predictions.matchId,
+      modelId: predictions.modelId,
+    })
+    .from(predictions)
+    .where(inArray(predictions.matchId, matchIds));
+  
+  // Get attempt records for these matches (with 3+ failures)
+  const failedAttempts = await db
+    .select({
+      matchId: predictionAttempts.matchId,
+      modelId: predictionAttempts.modelId,
+    })
+    .from(predictionAttempts)
+    .where(
+      and(
+        inArray(predictionAttempts.matchId, matchIds),
+        gte(predictionAttempts.attemptCount, 3)
+      )
+    );
+  
+  // Build set of existing (match, model) pairs
+  const existing = new Set(existingPreds.map(p => `${p.matchId}|${p.modelId}`));
+  const failed = new Set(failedAttempts.map(p => `${p.matchId}|${p.modelId}`));
+  
+  // Generate all (match, model) combinations and filter
+  const missing: Array<{ matchId: string; modelId: string }> = [];
+  for (const matchId of matchIds) {
+    for (const modelId of activeModelIds) {
+      const key = `${matchId}|${modelId}`;
+      if (!existing.has(key) && !failed.has(key)) {
+        missing.push({ matchId, modelId });
+      }
+    }
+  }
+  
+  return missing;
+}
+
+// Record a failed prediction attempt for a match/model pair
+// Increments attempt count, records error and timestamp
+export async function recordPredictionAttemptFailure(
+  matchId: string,
+  modelId: string,
+  error: string
+): Promise<void> {
+  const db = getDb();
+  const id = uuidv4();
+  const now = new Date().toISOString();
+  
+  await db
+    .insert(predictionAttempts)
+    .values({
+      id,
+      matchId,
+      modelId,
+      attemptCount: 1,
+      lastAttemptAt: now,
+      lastError: error.substring(0, 500), // Truncate long errors
+    })
+    .onConflictDoUpdate({
+      target: [predictionAttempts.matchId, predictionAttempts.modelId],
+      set: {
+        attemptCount: sql`COALESCE(${predictionAttempts.attemptCount}, 0) + 1`,
+        lastAttemptAt: now,
+        lastError: error.substring(0, 500),
+      },
+    });
+}
+
+// Clear prediction attempt record (called on successful prediction)
+// Removes the record to keep tracking table clean
+export async function clearPredictionAttempt(
+  matchId: string,
+  modelId: string
+): Promise<void> {
+  const db = getDb();
+  await db
+    .delete(predictionAttempts)
+    .where(
+      and(
+        eq(predictionAttempts.matchId, matchId),
+        eq(predictionAttempts.modelId, modelId)
+      )
+    );
+}
+
+// Get current attempt count for a match/model pair
+export async function getPredictionAttemptCount(
+  matchId: string,
+  modelId: string
+): Promise<number> {
+  const db = getDb();
+  const result = await db
+    .select({ count: predictionAttempts.attemptCount })
+    .from(predictionAttempts)
+    .where(
+      and(
+        eq(predictionAttempts.matchId, matchId),
+        eq(predictionAttempts.modelId, modelId)
+      )
+    )
+    .limit(1);
+  
+  return result[0]?.count || 0;
+}
+
+// Clean up old prediction attempt records (older than N days)
+// Called periodically to keep table size manageable
+export async function cleanupOldPredictionAttempts(daysOld: number = 7): Promise<number> {
+  const db = getDb();
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+  
+  const result = await db
+    .delete(predictionAttempts)
+    .where(lte(predictionAttempts.createdAt, cutoffDate.toISOString()));
+  
+  return result.rowCount || 0;
 }
 
 // ============= PREDICTIONS =============

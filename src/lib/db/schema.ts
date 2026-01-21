@@ -136,6 +136,30 @@ export type NewPrediction = typeof predictions.$inferInsert;
 export type ModelUsage = typeof modelUsage.$inferSelect;
 export type NewModelUsage = typeof modelUsage.$inferInsert;
 
+// Track failed prediction attempts per match/model pair
+// Allows retrying up to 3 times before giving up
+// Records are auto-cleaned after 7 days
+export const predictionAttempts = pgTable('prediction_attempts', {
+  id: text('id').primaryKey(), // UUID
+  matchId: text('match_id')
+    .notNull()
+    .references(() => matches.id),
+  modelId: text('model_id')
+    .notNull()
+    .references(() => models.id),
+  attemptCount: integer('attempt_count').default(0), // Number of failed attempts
+  lastAttemptAt: text('last_attempt_at'), // ISO timestamp of last failed attempt
+  lastError: text('last_error'), // Error message from last attempt
+  createdAt: text('created_at').default(sql`now()`),
+}, (table) => [
+  unique('prediction_attempts_match_model_unique').on(table.matchId, table.modelId),
+  index('idx_prediction_attempts_match_id').on(table.matchId),
+  index('idx_prediction_attempts_created_at').on(table.createdAt),
+]);
+
+export type PredictionAttempt = typeof predictionAttempts.$inferSelect;
+export type NewPredictionAttempt = typeof predictionAttempts.$inferInsert;
+
 // Pre-match analysis data from API-Football
 export const matchAnalysis = pgTable('match_analysis', {
   id: text('id').primaryKey(), // UUID
