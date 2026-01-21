@@ -508,7 +508,8 @@ export async function getAllModelsWithHealth(): Promise<Model[]> {
   return db
     .select()
     .from(models)
-    .orderBy(desc(models.active), models.displayName);
+    .where(eq(models.active, true))
+    .orderBy(models.displayName);
 }
 
 // Get models that are auto-disabled
