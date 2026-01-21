@@ -1,7 +1,7 @@
 import { LLMProvider } from '@/types';
 import { OPENROUTER_PROVIDERS } from './providers/openrouter';
 
-// All available providers - 30 models via OpenRouter
+// All available providers - 33 models (30 open-source + 3 premium via OpenRouter)
 export const ALL_PROVIDERS: LLMProvider[] = [...OPENROUTER_PROVIDERS];
 
 // Get active providers (checks if API keys are configured)
@@ -51,3 +51,12 @@ export { OPENROUTER_PROVIDERS };
 
 // Re-export OpenRouter provider class for type checking
 export { OpenRouterProvider, type ModelTier, type ModelPricing } from './providers/openrouter';
+
+// Re-export batch prediction types
+export { type BatchPredictionResult } from './providers/base';
+export { 
+  type BatchParsedResult, 
+  type BatchPredictionItem,
+  BATCH_SYSTEM_PROMPT,
+  parseBatchPredictionResponse,
+} from './prompt';

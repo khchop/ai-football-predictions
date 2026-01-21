@@ -1,6 +1,10 @@
 // Prompt templates for LLM predictions
 // Keep prompts simple and focused for reliable JSON parsing
 
+// ============================================================================
+// SINGLE MATCH PREDICTION
+// ============================================================================
+
 export const SYSTEM_PROMPT = `You are a football match score predictor competing against other AI models.
 
 SCORING SYSTEM (Kicktipp Quota Rule):
@@ -238,4 +242,148 @@ function findScoresInObject(obj: unknown): { home: number; away: number } | null
   }
   
   return null;
+}
+
+// ============================================================================
+// BATCH PREDICTION (Multiple Matches)
+// ============================================================================
+
+export const BATCH_SYSTEM_PROMPT = `You are a football match score predictor competing against other AI models.
+
+SCORING SYSTEM (Kicktipp Quota Rule):
+- Points depend on how many OTHER models predict the same outcome
+- Rarer predictions = MORE points if correct (2-6 pts for tendency)
+- Common predictions = FEWER points even if correct
+- Bonus: +1 for correct goal difference, +3 for exact score
+- Maximum: 10 points per match
+
+STRATEGY:
+- Consider the risk/reward tradeoff carefully
+- Don't predict upsets just to be different - only when data supports it
+- A "safe" prediction earns fewer points but is more reliable
+- A "risky" prediction earns more if correct but 0 if wrong
+
+IMPORTANT: You will receive MULTIPLE matches. Respond with a JSON ARRAY of predictions.
+Each prediction must include the match_id and scores.
+
+Output format:
+[
+  {"match_id": "abc123", "home_score": 2, "away_score": 1},
+  {"match_id": "def456", "home_score": 0, "away_score": 0},
+  ...
+]
+
+Rules:
+- Include ALL matches in your response
+- match_id must exactly match the provided IDs
+- home_score and away_score must be non-negative integers
+- Do not include any other text, explanation, or markdown
+- Just output the raw JSON array`;
+
+// Batch prediction result for a single match
+export interface BatchPredictionItem {
+  matchId: string;
+  homeScore: number;
+  awayScore: number;
+}
+
+// Full batch prediction result
+export interface BatchParsedResult {
+  predictions: BatchPredictionItem[];
+  success: boolean;
+  error?: string;
+  failedMatchIds?: string[];
+}
+
+// Parse batch prediction response - expects JSON array
+export function parseBatchPredictionResponse(
+  response: string,
+  expectedMatchIds: string[]
+): BatchParsedResult {
+  try {
+    // Clean up the response
+    let cleaned = response.trim();
+    
+    // Remove thinking/reasoning tags
+    cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    cleaned = cleaned.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+    cleaned = cleaned.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
+    
+    // Remove markdown code block markers
+    cleaned = cleaned.replace(/```json\n?/gi, '');
+    cleaned = cleaned.replace(/```\n?/g, '');
+    
+    // Find JSON array in response
+    const arrayMatch = cleaned.match(/\[[\s\S]*\]/);
+    if (!arrayMatch) {
+      return {
+        predictions: [],
+        success: false,
+        error: 'No JSON array found in response',
+        failedMatchIds: expectedMatchIds,
+      };
+    }
+    
+    const parsed = JSON.parse(arrayMatch[0]);
+    
+    if (!Array.isArray(parsed)) {
+      return {
+        predictions: [],
+        success: false,
+        error: 'Parsed result is not an array',
+        failedMatchIds: expectedMatchIds,
+      };
+    }
+    
+    const predictions: BatchPredictionItem[] = [];
+    const foundMatchIds = new Set<string>();
+    
+    for (const item of parsed) {
+      // Extract match ID (support various formats)
+      const matchId = item.match_id ?? item.matchId ?? item.id ?? item.fixture_id ?? item.fixtureId;
+      if (!matchId) continue;
+      
+      const matchIdStr = String(matchId);
+      
+      // Extract scores
+      const homeScore = item.home_score ?? item.homeScore ?? item.home;
+      const awayScore = item.away_score ?? item.awayScore ?? item.away;
+      
+      if (homeScore === undefined || awayScore === undefined) continue;
+      
+      const homeNum = typeof homeScore === 'number' ? homeScore : parseInt(String(homeScore), 10);
+      const awayNum = typeof awayScore === 'number' ? awayScore : parseInt(String(awayScore), 10);
+      
+      if (isNaN(homeNum) || isNaN(awayNum)) continue;
+      
+      // Reject unrealistic scores
+      if (homeNum > 20 || awayNum > 20 || homeNum < 0 || awayNum < 0) continue;
+      
+      predictions.push({
+        matchId: matchIdStr,
+        homeScore: Math.floor(homeNum),
+        awayScore: Math.floor(awayNum),
+      });
+      foundMatchIds.add(matchIdStr);
+    }
+    
+    // Find missing match IDs
+    const failedMatchIds = expectedMatchIds.filter(id => !foundMatchIds.has(id));
+    
+    return {
+      predictions,
+      success: predictions.length > 0,
+      error: failedMatchIds.length > 0 
+        ? `Missing predictions for ${failedMatchIds.length} matches` 
+        : undefined,
+      failedMatchIds: failedMatchIds.length > 0 ? failedMatchIds : undefined,
+    };
+  } catch (error) {
+    return {
+      predictions: [],
+      success: false,
+      error: `Failed to parse batch JSON: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      failedMatchIds: expectedMatchIds,
+    };
+  }
 }

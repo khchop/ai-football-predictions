@@ -48,6 +48,17 @@ export class OpenRouterProvider extends OpenAICompatibleProvider {
     const outputCost = (outputTokens / 1_000_000) * this.pricing.completionPer1M;
     return inputCost + outputCost;
   }
+
+  // Estimate cost for batch prediction
+  // Default: 400 tokens per match input (with analysis), 50 per match output
+  estimateBatchCost(matchCount: number, hasAnalysis: boolean = true): number {
+    const inputTokensPerMatch = hasAnalysis ? 400 : 200;
+    const outputTokensPerMatch = 50;
+    return this.estimateCost(
+      inputTokensPerMatch * matchCount,
+      outputTokensPerMatch * matchCount
+    );
+  }
 }
 
 // ============================================================================
@@ -429,7 +440,44 @@ export const DolphinMistralVeniceProvider = new OpenRouterProvider(
 );
 
 // ============================================================================
-// Export all OpenRouter providers (30 open-source models)
+// PREMIUM Models (3) - Anthropic & OpenAI via OpenRouter
+// ============================================================================
+
+// 31. Claude Sonnet 4.5 - PREMIUM (Best balance of intelligence + 1M context)
+export const ClaudeSonnet45Provider = new OpenRouterProvider(
+  'claude-sonnet-4.5',
+  'openrouter',
+  'anthropic/claude-sonnet-4.5',
+  'Claude Sonnet 4.5 (Anthropic)',
+  'premium',
+  { promptPer1M: 3.00, completionPer1M: 15.00 },
+  true
+);
+
+// 32. Claude Haiku 4.5 - PREMIUM (Fast, high-quality, affordable)
+export const ClaudeHaiku45Provider = new OpenRouterProvider(
+  'claude-haiku-4.5',
+  'openrouter',
+  'anthropic/claude-haiku-4.5',
+  'Claude Haiku 4.5 (Anthropic)',
+  'premium',
+  { promptPer1M: 1.00, completionPer1M: 5.00 },
+  true
+);
+
+// 33. GPT-4.1 Mini - MID (OpenAI benchmark, great value, 1M context)
+export const GPT41MiniProvider = new OpenRouterProvider(
+  'gpt-4.1-mini',
+  'openrouter',
+  'openai/gpt-4.1-mini',
+  'GPT-4.1 Mini (OpenAI)',
+  'mid',
+  { promptPer1M: 0.40, completionPer1M: 1.60 },
+  true
+);
+
+// ============================================================================
+// Export all OpenRouter providers (33 models: 30 open-source + 3 premium)
 // ============================================================================
 
 export const OPENROUTER_PROVIDERS = [
@@ -475,9 +523,14 @@ export const OPENROUTER_PROVIDERS = [
   Olmo31Provider,                // 28 - $0.30/1M
   Hermes3Provider,               // 29 - $0.25/1M
   DolphinMistralVeniceProvider,  // 30 - FREE
+  // Premium (3) - Anthropic & OpenAI
+  ClaudeSonnet45Provider,        // 31 - $3/$15 per 1M (PREMIUM)
+  ClaudeHaiku45Provider,         // 32 - $1/$5 per 1M (PREMIUM)
+  GPT41MiniProvider,             // 33 - $0.40/$1.60 per 1M (MID)
 ];
 
 // Summary:
 // - 15 FREE models (no cost)
-// - 15 Paid models (low cost, mostly under $1/1M tokens)
-// - All 30 models are open-source/open-weights
+// - 15 Paid open-source models (low cost, mostly under $1/1M tokens)
+// - 3 Premium models (Anthropic Claude + OpenAI GPT)
+// - Total: 33 models (30 open-source + 3 premium)

@@ -1,5 +1,22 @@
 import { LLMPredictionResult, LLMProvider } from '@/types';
-import { SYSTEM_PROMPT, createUserPrompt, parsePredictionResponse } from '../prompt';
+import { 
+  SYSTEM_PROMPT, 
+  BATCH_SYSTEM_PROMPT,
+  createUserPrompt, 
+  parsePredictionResponse,
+  parseBatchPredictionResponse,
+  BatchParsedResult,
+} from '../prompt';
+
+// Result for batch predictions
+export interface BatchPredictionResult {
+  predictions: Map<string, { homeScore: number; awayScore: number }>;
+  rawResponse: string;
+  success: boolean;
+  error?: string;
+  processingTimeMs: number;
+  failedMatchIds?: string[];
+}
 
 // Base class for LLM providers with common functionality
 export abstract class BaseLLMProvider implements LLMProvider {
@@ -63,6 +80,59 @@ export abstract class BaseLLMProvider implements LLMProvider {
       };
     }
   }
+
+  // Batch prediction method - predict multiple matches in one API call
+  async predictBatch(
+    batchPrompt: string,
+    expectedMatchIds: string[]
+  ): Promise<BatchPredictionResult> {
+    const startTime = Date.now();
+
+    try {
+      const rawResponse = await this.callAPI(BATCH_SYSTEM_PROMPT, batchPrompt);
+      const processingTimeMs = Date.now() - startTime;
+
+      const parsed: BatchParsedResult = parseBatchPredictionResponse(rawResponse, expectedMatchIds);
+
+      if (!parsed.success || parsed.predictions.length === 0) {
+        return {
+          predictions: new Map(),
+          rawResponse,
+          success: false,
+          error: parsed.error || 'No predictions parsed',
+          processingTimeMs,
+          failedMatchIds: parsed.failedMatchIds,
+        };
+      }
+
+      // Convert array to Map for easy lookup
+      const predictionsMap = new Map<string, { homeScore: number; awayScore: number }>();
+      for (const pred of parsed.predictions) {
+        predictionsMap.set(pred.matchId, {
+          homeScore: pred.homeScore,
+          awayScore: pred.awayScore,
+        });
+      }
+
+      return {
+        predictions: predictionsMap,
+        rawResponse,
+        success: true,
+        processingTimeMs,
+        failedMatchIds: parsed.failedMatchIds,
+      };
+    } catch (error) {
+      const processingTimeMs = Date.now() - startTime;
+      return {
+        predictions: new Map(),
+        rawResponse: '',
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        processingTimeMs,
+        failedMatchIds: expectedMatchIds,
+      };
+    }
+  }
 }
 
 // OpenAI-compatible API format (used by Groq, OpenRouter, Together, etc.)
@@ -70,13 +140,19 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
   protected abstract endpoint: string;
   protected abstract getHeaders(): Record<string, string>;
   
-  // Request timeout in milliseconds (30 seconds)
+  // Request timeout in milliseconds (30 seconds for single, 60 for batch)
   protected readonly requestTimeout = 30000;
+  protected readonly batchRequestTimeout = 60000;
 
   protected async callAPI(systemPrompt: string, userPrompt: string): Promise<string> {
+    // Use longer timeout for batch requests (detected by system prompt)
+    const isBatch = systemPrompt === BATCH_SYSTEM_PROMPT;
+    const timeout = isBatch ? this.batchRequestTimeout : this.requestTimeout;
+    const maxTokens = isBatch ? 2000 : 500; // More tokens for batch responses
+
     // Create abort controller for timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
     
     try {
       const response = await fetch(this.endpoint, {
@@ -92,7 +168,7 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
             { role: 'user', content: userPrompt },
           ],
           temperature: 0.7,
-          max_tokens: 500, // Increased for reasoning models
+          max_tokens: maxTokens,
         }),
         signal: controller.signal,
       });
@@ -141,7 +217,7 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
     } catch (error) {
       // Handle abort (timeout) specifically
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error(`Request timed out after ${this.requestTimeout}ms`);
+        throw new Error(`Request timed out after ${timeout}ms`);
       }
       throw error;
     } finally {

@@ -10,6 +10,11 @@ export interface PromptContext {
   analysis: MatchAnalysis | null;
 }
 
+// Extended context for batch predictions
+export interface BatchMatchContext extends PromptContext {
+  matchId: string;
+}
+
 // ============================================================================
 // OPENROUTER CONTEXT CACHING OPTIMIZATION
 // ============================================================================
@@ -261,4 +266,137 @@ export function buildSimplePrompt(
     kickoffTime: matchDate,
     analysis: null,
   });
+}
+
+// ============================================================================
+// BATCH PROMPT BUILDING (Multiple Matches in One API Call)
+// ============================================================================
+
+// Static header for batch prompts - cacheable across all batches
+const BATCH_ANALYSIS_HEADER = `You will receive MULTIPLE matches in a structured format. Analyze ALL provided data carefully for EACH match.
+
+DATA SECTIONS PER MATCH:
+- BETTING ODDS: Market expectations (lower odds = more likely outcome)
+- FORM: Recent results (W=Win, D=Draw, L=Loss)
+- COMPARISON: Statistical ratings (higher % = stronger in that area)
+- LINEUPS: Confirmed starting players and formations (if available)
+- ABSENCES: Injured/suspended players
+
+SCORING SYSTEM (Kicktipp Quota Rule):
+You are competing against other AI models. Points depend on prediction rarity:
+- Correct tendency (H/D/A): 2-6 pts (rarer prediction = more points)
+- Correct goal difference: +1 pt bonus
+- Exact score: +3 pts bonus
+- Maximum: 10 points per match
+
+STRATEGY:
+- Analyze each match independently based on its data
+- Don't predict upsets just to be different - only when data supports it
+- Consider expected value: probability × points
+
+OUTPUT FORMAT - JSON ARRAY with ALL matches:
+[
+  {"match_id": "id1", "home_score": X, "away_score": Y},
+  {"match_id": "id2", "home_score": X, "away_score": Y},
+  ...
+]
+
+`;
+
+// Build a compact match summary for batch prompts
+function buildCompactMatchSummary(context: BatchMatchContext, index: number): string {
+  const { matchId, homeTeam, awayTeam, competition, kickoffTime, analysis } = context;
+  
+  const kickoff = parseISO(kickoffTime);
+  const formattedTime = format(kickoff, "HH:mm 'UTC'");
+  
+  const lines: string[] = [];
+  
+  // Match header with ID (important for matching responses)
+  lines.push(`[${index + 1}] match_id: "${matchId}"`);
+  lines.push(`    ${homeTeam} vs ${awayTeam} | ${competition} | ${formattedTime}`);
+  
+  if (analysis) {
+    // Odds (compact)
+    if (analysis.oddsHome || analysis.oddsDraw || analysis.oddsAway) {
+      lines.push(`    Odds: H=${analysis.oddsHome || '-'} D=${analysis.oddsDraw || '-'} A=${analysis.oddsAway || '-'}`);
+    }
+    
+    // Form (compact)
+    const homeForm = analysis.homeTeamForm || '-';
+    const awayForm = analysis.awayTeamForm || '-';
+    lines.push(`    Form: ${homeTeam}=${homeForm} | ${awayTeam}=${awayForm}`);
+    
+    // Comparison (compact, only if available)
+    if (analysis.formHomePct && analysis.formAwayPct) {
+      lines.push(`    Stats: Form ${analysis.formHomePct}%-${analysis.formAwayPct}% | Atk ${analysis.attackHomePct || '-'}%-${analysis.attackAwayPct || '-'}% | Def ${analysis.defenseHomePct || '-'}%-${analysis.defenseAwayPct || '-'}%`);
+    }
+    
+    // Favorite (compact)
+    if (analysis.favoriteTeamName) {
+      const favPct = analysis.homeWinPct && analysis.awayWinPct 
+        ? Math.max(analysis.homeWinPct, analysis.awayWinPct)
+        : null;
+      lines.push(`    Favorite: ${analysis.favoriteTeamName}${favPct ? ` (${favPct}%)` : ''}`);
+    }
+    
+    // Key absences (very compact)
+    const totalInjuries = (analysis.homeInjuriesCount || 0) + (analysis.awayInjuriesCount || 0);
+    if (totalInjuries > 0) {
+      const keyInjuries = parseKeyInjuries(analysis.keyInjuries);
+      const topInjuries = keyInjuries.slice(0, 4).map(i => `${i.playerName}(${i.teamName.substring(0, 3)})`).join(', ');
+      lines.push(`    Absences: ${topInjuries}${keyInjuries.length > 4 ? ` +${keyInjuries.length - 4} more` : ''}`);
+    }
+    
+    // Lineups indicator
+    if (analysis.lineupsAvailable) {
+      lines.push(`    Lineups: ${analysis.homeFormation || '?'} vs ${analysis.awayFormation || '?'} (confirmed)`);
+    }
+  } else {
+    lines.push(`    [No detailed analysis available]`);
+  }
+  
+  return lines.join('\n');
+}
+
+// Build batch prompt for multiple matches
+export function buildBatchPrompt(matches: BatchMatchContext[]): string {
+  if (matches.length === 0) {
+    return '';
+  }
+  
+  const lines: string[] = [BATCH_ANALYSIS_HEADER];
+  
+  // Add competition/date context if all matches are same competition
+  const competitions = [...new Set(matches.map(m => m.competition))];
+  if (competitions.length === 1) {
+    lines.push(`Competition: ${competitions[0]}`);
+  }
+  
+  const matchDate = matches[0] ? format(parseISO(matches[0].kickoffTime), 'yyyy-MM-dd') : '';
+  lines.push(`Match Date: ${matchDate}`);
+  lines.push(`Total Matches: ${matches.length}`);
+  lines.push('');
+  lines.push('═'.repeat(60));
+  lines.push('MATCHES:');
+  lines.push('═'.repeat(60));
+  lines.push('');
+  
+  // Add each match summary
+  for (let i = 0; i < matches.length; i++) {
+    lines.push(buildCompactMatchSummary(matches[i], i));
+    lines.push('');
+  }
+  
+  // Final instruction
+  lines.push('═'.repeat(60));
+  lines.push(`Predict ALL ${matches.length} matches. Output JSON array only:`);
+  lines.push('[{"match_id": "...", "home_score": X, "away_score": Y}, ...]');
+  
+  return lines.join('\n');
+}
+
+// Get the cacheable prefix for batch prompts
+export function getBatchCacheablePrefix(): string {
+  return BATCH_ANALYSIS_HEADER;
 }

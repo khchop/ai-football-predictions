@@ -2,14 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMatchesReadyForPrediction, createPrediction, upsertModel, deactivateOldModels } from '@/lib/db/queries';
 import { getActiveProviders, ALL_PROVIDERS, OpenRouterProvider } from '@/lib/llm';
 import { shouldSkipProvider, recordPredictionCost, getBudgetStatus } from '@/lib/llm/budget';
-import { buildEnhancedPrompt } from '@/lib/football/prompt-builder';
+import { buildBatchPrompt, BatchMatchContext } from '@/lib/football/prompt-builder';
 import { BaseLLMProvider } from '@/lib/llm/providers/base';
+
+// Batch size for grouping matches (10 matches per API call)
+const BATCH_SIZE = 10;
 
 export async function POST(request: NextRequest) {
   // Note: Auth disabled for Coolify compatibility - these endpoints are internal only
 
   try {
-    console.log('Generating predictions...');
+    console.log('Generating predictions (batch mode)...');
     
     // Get budget status at start
     const budgetStart = await getBudgetStatus();
@@ -57,94 +60,121 @@ export async function POST(request: NextRequest) {
 
     console.log(`Found ${matchesReadyForPrediction.length} matches ready for predictions`);
 
-    let totalPredictions = 0;
-    let successfulPredictions = 0;
-    let skippedDueToBudget = 0;
-    const errors: string[] = [];
-
-    for (const { match, competition, analysis } of matchesReadyForPrediction) {
-      // Build enhanced prompt with all available context
-      const enhancedPrompt = buildEnhancedPrompt({
+    // Build batch contexts for all matches
+    const batchContexts: (BatchMatchContext & { matchDbId: string })[] = matchesReadyForPrediction.map(
+      ({ match, competition, analysis }) => ({
+        matchId: match.id, // Use DB ID as match_id for response matching
+        matchDbId: match.id,
         homeTeam: match.homeTeam,
         awayTeam: match.awayTeam,
         competition: competition.name,
         kickoffTime: match.kickoffTime,
         analysis,
-      });
+      })
+    );
 
-      console.log(`Match: ${match.homeTeam} vs ${match.awayTeam}`);
-      console.log(`  Analysis: ${analysis ? 'Yes' : 'No'}, Lineups: ${analysis?.lineupsAvailable ? 'Yes' : 'No'}`);
+    // Group matches into batches of BATCH_SIZE
+    const batches: (BatchMatchContext & { matchDbId: string })[][] = [];
+    for (let i = 0; i < batchContexts.length; i += BATCH_SIZE) {
+      batches.push(batchContexts.slice(i, i + BATCH_SIZE));
+    }
 
-      // Generate predictions from all providers
-      // Process sequentially (mutex pattern) to prevent budget race conditions
+    console.log(`Created ${batches.length} batch(es) of up to ${BATCH_SIZE} matches each`);
+
+    let totalPredictions = 0;
+    let successfulPredictions = 0;
+    let skippedDueToBudget = 0;
+    const errors: string[] = [];
+
+    // Process each batch with each provider
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      const matchIds = batch.map(m => m.matchId);
+      
+      console.log(`\nProcessing batch ${batchIndex + 1}/${batches.length} (${batch.length} matches)`);
+      console.log(`  Matches: ${batch.map(m => `${m.homeTeam} vs ${m.awayTeam}`).join(', ')}`);
+
+      // Build batch prompt once per batch
+      const batchPrompt = buildBatchPrompt(batch);
+
+      // Process providers sequentially to prevent budget race conditions
       for (const provider of activeProviders) {
-        // Check budget BEFORE API call (budget check is now atomic per-provider)
+        // Check budget BEFORE API call
         const budgetCheck = await shouldSkipProvider(provider as OpenRouterProvider);
         if (budgetCheck.skip) {
-          console.log(`Skipping ${provider.id} - ${budgetCheck.reason}`);
-          skippedDueToBudget++;
+          console.log(`  Skipping ${provider.id} - ${budgetCheck.reason}`);
+          skippedDueToBudget += batch.length; // Count all matches in batch as skipped
           continue;
         }
 
-        totalPredictions++;
+        totalPredictions += batch.length;
         
-        // Track cost immediately after API call, not after save
+        // Estimate cost for batch (more input tokens, proportionally more output)
         let apiCost = 0;
+        const hasAnalysis = batch.some(m => m.analysis);
         
         try {
-          console.log(`Generating prediction: ${provider.id} for ${match.homeTeam} vs ${match.awayTeam}`);
+          console.log(`  ${provider.id}: Generating batch prediction...`);
           
-          // Use enhanced prompt via predictWithPrompt method
-          let result;
-          if ('predictWithPrompt' in provider && typeof provider.predictWithPrompt === 'function') {
-            result = await (provider as BaseLLMProvider).predictWithPrompt(enhancedPrompt);
-          } else {
-            // Fallback to standard predict for providers that don't support enhanced prompts
-            result = await provider.predict(
-              match.homeTeam,
-              match.awayTeam,
-              competition.name,
-              match.kickoffTime
-            );
-          }
+          // Use batch prediction method
+          const baseProvider = provider as BaseLLMProvider;
+          const result = await baseProvider.predictBatch(batchPrompt, matchIds);
 
-          // Record cost IMMEDIATELY after API call (regardless of parse/save success)
-          // This ensures budget tracking is accurate even if response parsing fails
+          // Record cost IMMEDIATELY after API call
           if ('estimateCost' in provider && typeof provider.estimateCost === 'function') {
-            const inputTokens = analysis ? 500 : 200;
-            apiCost = (provider as OpenRouterProvider).estimateCost(inputTokens, 50);
+            // Batch cost estimation: ~200 tokens per match input, ~50 per match output
+            const inputTokens = hasAnalysis ? 400 * batch.length : 200 * batch.length;
+            const outputTokens = 50 * batch.length;
+            apiCost = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
             await recordPredictionCost(provider.id, apiCost);
           }
 
-          if (result.success) {
-            await createPrediction({
-              matchId: match.id,
-              modelId: provider.id,
-              predictedHomeScore: result.homeScore,
-              predictedAwayScore: result.awayScore,
-              confidence: result.confidence,
-              rawResponse: result.rawResponse,
-              processingTimeMs: result.processingTimeMs,
-            });
-            successfulPredictions++;
-            console.log(`Prediction saved: ${result.homeScore}-${result.awayScore} (cost: $${apiCost.toFixed(6)})`);
+          if (result.success && result.predictions.size > 0) {
+            // Save individual predictions from batch result
+            for (const batchItem of batch) {
+              const prediction = result.predictions.get(batchItem.matchId);
+              
+              if (prediction) {
+                await createPrediction({
+                  matchId: batchItem.matchDbId,
+                  modelId: provider.id,
+                  predictedHomeScore: prediction.homeScore,
+                  predictedAwayScore: prediction.awayScore,
+                  rawResponse: `[batch] ${prediction.homeScore}-${prediction.awayScore}`,
+                  processingTimeMs: Math.round(result.processingTimeMs / batch.length),
+                });
+                successfulPredictions++;
+              } else {
+                // Match not found in response - log error
+                const errorMsg = `${provider.id}: No prediction for ${batchItem.homeTeam} vs ${batchItem.awayTeam}`;
+                console.error(`    ${errorMsg}`);
+                errors.push(errorMsg);
+              }
+            }
+            
+            console.log(`    Saved ${result.predictions.size}/${batch.length} predictions (cost: $${apiCost.toFixed(6)})`);
+            
+            if (result.failedMatchIds && result.failedMatchIds.length > 0) {
+              console.log(`    Missing: ${result.failedMatchIds.length} matches`);
+            }
           } else {
-            const errorMsg = `${provider.id} failed for match ${match.id}: ${result.error}`;
-            console.error(errorMsg);
+            const errorMsg = `${provider.id} batch failed: ${result.error}`;
+            console.error(`    ${errorMsg}`);
             errors.push(errorMsg);
           }
 
-          // Small delay between API calls to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 200));
+          // Small delay between provider calls to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 300));
         } catch (error) {
           // Record cost even on error (API was still called and billed)
           if (apiCost === 0 && 'estimateCost' in provider && typeof provider.estimateCost === 'function') {
-            const inputTokens = analysis ? 500 : 200;
-            apiCost = (provider as OpenRouterProvider).estimateCost(inputTokens, 50);
+            const inputTokens = hasAnalysis ? 400 * batch.length : 200 * batch.length;
+            const outputTokens = 50 * batch.length;
+            apiCost = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
             await recordPredictionCost(provider.id, apiCost);
           }
-          const errorMsg = `Error with ${provider.id} for match ${match.id}: ${error}`;
-          console.error(errorMsg);
+          const errorMsg = `Error with ${provider.id} for batch ${batchIndex + 1}: ${error}`;
+          console.error(`    ${errorMsg}`);
           errors.push(errorMsg);
         }
       }
@@ -153,7 +183,7 @@ export async function POST(request: NextRequest) {
     // Get final budget status
     const budgetEnd = await getBudgetStatus();
 
-    console.log(`Generated ${successfulPredictions}/${totalPredictions} predictions`);
+    console.log(`\nGenerated ${successfulPredictions}/${totalPredictions} predictions`);
     console.log(`Budget used: $${(budgetEnd.spent - budgetStart.spent).toFixed(4)}`);
     if (skippedDueToBudget > 0) {
       console.log(`Skipped ${skippedDueToBudget} predictions due to budget`);
@@ -161,8 +191,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Generated ${successfulPredictions} of ${totalPredictions} predictions`,
+      message: `Generated ${successfulPredictions} of ${totalPredictions} predictions (batch mode)`,
       matches: matchesReadyForPrediction.length,
+      batches: batches.length,
+      batchSize: BATCH_SIZE,
       providers: activeProviders.length,
       predictions: totalPredictions,
       successful: successfulPredictions,
