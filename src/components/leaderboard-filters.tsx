@@ -25,7 +25,7 @@ export function LeaderboardFilters({ className }: LeaderboardFiltersProps) {
   const updateParams = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     
-    if (value === 'all' || value === '0') {
+    if (value === 'all') {
       params.delete(key);
     } else {
       params.set(key, value);

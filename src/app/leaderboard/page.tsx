@@ -21,7 +21,7 @@ async function LeaderboardContent({ searchParams }: { searchParams: { [key: stri
   
   const filters = {
     days: daysParam ? parseInt(String(daysParam), 10) : undefined,
-    minPredictions: minPredictionsParam ? parseInt(String(minPredictionsParam), 10) : 5,
+    minPredictions: minPredictionsParam !== undefined ? parseInt(String(minPredictionsParam), 10) : 5,
     activeOnly: true,
   };
 

@@ -510,6 +510,28 @@ export async function getLeaderboardFiltered(filters: LeaderboardFilters = {}) {
     modelStats.set(pred.modelId, stats);
   }
 
+  // If minPredictions is 0, include all active models (even those with no predictions)
+  if (minPredictions === 0 && activeOnly) {
+    const allActiveModels = await db
+      .select({ id: models.id, displayName: models.displayName, provider: models.provider })
+      .from(models)
+      .where(eq(models.active, true));
+    
+    for (const model of allActiveModels) {
+      if (!modelStats.has(model.id)) {
+        modelStats.set(model.id, {
+          modelId: model.id,
+          displayName: model.displayName,
+          provider: model.provider,
+          totalPredictions: 0,
+          exactScores: 0,
+          correctResults: 0,
+          totalPoints: 0,
+        });
+      }
+    }
+  }
+
   // Convert to array, filter by min predictions, and calculate percentages
   const leaderboard = Array.from(modelStats.values())
     .filter(stats => stats.totalPredictions >= minPredictions)
