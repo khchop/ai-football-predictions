@@ -229,8 +229,19 @@ export interface APIFootballPredictionResponse {
       total: { home: string; away: string };
     };
     h2h: Array<{
-      fixture: { id: number };
-      goals: { home: number; away: number };
+      fixture: { 
+        id: number;
+        date: string;
+        venue?: { name: string; city: string } | null;
+      };
+      teams: {
+        home: { id: number; name: string; logo: string };
+        away: { id: number; name: string; logo: string };
+      };
+      goals: { home: number | null; away: number | null };
+      score: {
+        fulltime: { home: number | null; away: number | null };
+      };
     }>;
   }>;
 }
@@ -344,4 +355,13 @@ export interface KeyInjury {
   teamName: string;
   reason: string;
   type: string;
+}
+
+// Head-to-head match result (stored in h2hResults JSON)
+export interface H2HMatch {
+  date: string | null;    // ISO date string or null for legacy data
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number;
+  awayScore: number;
 }

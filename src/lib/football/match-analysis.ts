@@ -4,6 +4,7 @@ import {
   APIFootballOddsResponse,
   LikelyScore,
   KeyInjury,
+  H2HMatch,
 } from '@/types';
 import { upsertMatchAnalysis, getMatchAnalysisByMatchId } from '@/lib/db/queries';
 import { v4 as uuidv4 } from 'uuid';
@@ -162,21 +163,34 @@ function extractMatchWinnerOdds(oddsResponse: APIFootballOddsResponse | null): {
 }
 
 // Extract head-to-head stats from prediction response
-interface H2HResult {
-  home: number;
-  away: number;
-}
-
+// Now using richer H2H data with dates and team names
 interface H2HStats {
   total: number;
   homeWins: number;
   draws: number;
   awayWins: number;
-  lastResults: H2HResult[];
+  matches: H2HMatch[];  // Richer match data for display
+}
+
+// Type for the H2H data from API-Football prediction response
+interface APIFootballH2HMatch {
+  fixture: { 
+    id: number;
+    date: string;
+    venue?: { name: string; city: string } | null;
+  };
+  teams: {
+    home: { id: number; name: string; logo: string };
+    away: { id: number; name: string; logo: string };
+  };
+  goals: { home: number | null; away: number | null };
+  score: {
+    fulltime: { home: number | null; away: number | null };
+  };
 }
 
 function extractH2HStats(
-  h2hData: Array<{ fixture: { id: number }; goals: { home: number; away: number } }> | undefined,
+  h2hData: APIFootballH2HMatch[] | undefined,
   homeTeamId: number,
   awayTeamId: number
 ): H2HStats {
@@ -185,7 +199,7 @@ function extractH2HStats(
     homeWins: 0,
     draws: 0,
     awayWins: 0,
-    lastResults: [],
+    matches: [],
   };
 
   if (!h2hData || h2hData.length === 0) {
@@ -210,10 +224,13 @@ function extractH2HStats(
     }
   }
 
-  // Store last 5 results for prompt display
-  result.lastResults = recentMatches.map(m => ({
-    home: m.goals.home ?? 0,
-    away: m.goals.away ?? 0,
+  // Store last 5 results with full match details
+  result.matches = recentMatches.map(m => ({
+    date: m.fixture?.date || null,
+    homeTeam: m.teams?.home?.name || 'Unknown',
+    awayTeam: m.teams?.away?.name || 'Unknown',
+    homeScore: m.goals.home ?? 0,
+    awayScore: m.goals.away ?? 0,
   }));
 
   return result;
@@ -348,7 +365,7 @@ export async function fetchAndStoreAnalysis(
     h2hHomeWins: h2h.total > 0 ? h2h.homeWins : null,
     h2hDraws: h2h.total > 0 ? h2h.draws : null,
     h2hAwayWins: h2h.total > 0 ? h2h.awayWins : null,
-    h2hResults: h2h.lastResults.length > 0 ? JSON.stringify(h2h.lastResults) : null,
+    h2hResults: h2h.matches.length > 0 ? JSON.stringify(h2h.matches) : null,
     
     // Keep existing lineup data if present
     homeFormation: existing?.homeFormation || null,

@@ -12,32 +12,9 @@ import { calculateEnhancedScores } from '@/lib/utils/scoring';
 import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, AlertTriangle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import type { KeyInjury, LikelyScore } from '@/types';
+import type { KeyInjury, LikelyScore, H2HMatch } from '@/types';
 import type { LeagueStanding } from '@/lib/db/schema';
 import { Collapsible } from '@/components/ui/collapsible';
-
-// Helper to render form letters (WWDLW) with color coding
-function FormLetters({ form }: { form: string }) {
-  return (
-    <div className="flex gap-0.5">
-      {form.split('').map((letter, i) => {
-        const colorClass = 
-          letter === 'W' ? 'bg-green-500 text-white' :
-          letter === 'D' ? 'bg-yellow-500 text-white' :
-          letter === 'L' ? 'bg-red-500 text-white' :
-          'bg-muted text-muted-foreground';
-        return (
-          <span 
-            key={i} 
-            className={cn("w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center", colorClass)}
-          >
-            {letter}
-          </span>
-        );
-      })}
-    </div>
-  );
-}
 
 // Helper to get team abbreviation (3-4 chars)
 function getTeamAbbr(teamName: string): string {
@@ -94,12 +71,6 @@ function getTeamAbbr(teamName: string): string {
   return teamName.slice(0, 3).toUpperCase();
 }
 
-// H2H result type
-interface H2HResult {
-  home: number;
-  away: number;
-}
-
 // Helper to find the lowest odds (favorite)
 function getLowestOdds(home: string, draw: string, away: string): 'home' | 'draw' | 'away' {
   const h = parseFloat(home);
@@ -148,17 +119,19 @@ export default async function MatchPage({ params }: MatchPageProps) {
   // Parse analysis data
   const keyInjuries = parseJson<KeyInjury[]>(analysis?.keyInjuries ?? null) || [];
   const likelyScores = parseJson<LikelyScore[]>(analysis?.likelyScores ?? null) || [];
-  const h2hResults = parseJson<H2HResult[]>(analysis?.h2hResults ?? null) || [];
+  const h2hMatches = parseJson<H2HMatch[]>(analysis?.h2hResults ?? null) || [];
 
-  // Fetch league standings for domestic league matches
+  // Fetch league standings for domestic leagues and European league phase
   let homeStanding: LeagueStanding | null = null;
   let awayStanding: LeagueStanding | null = null;
   
   const competitionConfig = getCompetitionById(competition.id);
-  const isDomesticLeague = competitionConfig?.category === 'club-domestic';
+  const canHaveStandings = competitionConfig?.category === 'club-domestic' || 
+                           competitionConfig?.category === 'club-europe';
   
-  if (isDomesticLeague && competitionConfig) {
+  if (canHaveStandings && competitionConfig) {
     // Fetch standings for both teams in parallel
+    // For European competitions, this will return null for knockout stages (no standings table)
     [homeStanding, awayStanding] = await Promise.all([
       getStandingByTeamName(match.homeTeam, competitionConfig.apiFootballId),
       getStandingByTeamName(match.awayTeam, competitionConfig.apiFootballId),
@@ -491,219 +464,114 @@ export default async function MatchPage({ params }: MatchPageProps) {
                             <span>{draws} draws</span>
                             <span>{awayWins} wins</span>
                           </div>
-                          
-                          {/* Recent meetings as score pills */}
-                          {h2hResults.length > 0 && (
-                            <div className="flex items-center gap-1 flex-wrap">
-                              <span className="text-xs text-muted-foreground mr-1">Recent:</span>
-                              {h2hResults.slice(0, 5).map((r, i) => (
-                                <span 
-                                  key={i} 
-                                  className={cn(
-                                    "px-2 py-0.5 rounded text-xs font-mono",
-                                    r.home > r.away ? "bg-primary/20 text-primary" :
-                                    r.away > r.home ? "bg-accent/20 text-accent" :
-                                    "bg-muted/50"
-                                  )}
-                                >
-                                  {r.home}-{r.away}
-                                </span>
-                              ))}
-                            </div>
-                          )}
                         </>
                       );
                     })()}
+                    
+                    {/* Match history table */}
+                    {h2hMatches.length > 0 && (
+                      <div className="mt-3 bg-muted/20 rounded-lg overflow-hidden">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="border-b border-border/30">
+                              {h2hMatches.some(m => m.date) && (
+                                <th className="py-2 px-2 text-left font-medium text-muted-foreground">Date</th>
+                              )}
+                              <th className="py-2 px-2 text-left font-medium text-muted-foreground">Match</th>
+                              <th className="py-2 px-2 text-center font-medium text-muted-foreground">Score</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {h2hMatches.slice(0, 5).map((h2hMatch, i) => (
+                              <tr key={i} className="border-b border-border/20 last:border-0">
+                                {h2hMatches.some(m => m.date) && (
+                                  <td className="py-2 px-2 text-muted-foreground whitespace-nowrap">
+                                    {h2hMatch.date 
+                                      ? format(parseISO(h2hMatch.date), 'MMM d, yy')
+                                      : '—'}
+                                  </td>
+                                )}
+                                <td className="py-2 px-2">
+                                  <span className={cn(
+                                    h2hMatch.homeScore > h2hMatch.awayScore && "font-medium"
+                                  )}>
+                                    {h2hMatch.homeTeam}
+                                  </span>
+                                  <span className="text-muted-foreground mx-1">-</span>
+                                  <span className={cn(
+                                    h2hMatch.awayScore > h2hMatch.homeScore && "font-medium"
+                                  )}>
+                                    {h2hMatch.awayTeam}
+                                  </span>
+                                </td>
+                                <td className="py-2 px-2 text-center font-mono font-medium">
+                                  <span className={cn(
+                                    h2hMatch.homeScore > h2hMatch.awayScore ? "text-primary" :
+                                    h2hMatch.awayScore > h2hMatch.homeScore ? "text-accent" : ""
+                                  )}>
+                                    {h2hMatch.homeScore}-{h2hMatch.awayScore}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Row 2: Recent Form (full width) */}
-            {(analysis.homeTeamForm || analysis.awayTeamForm) && (
-              <div className="mb-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Recent Form (Last 5)</h3>
-                <div className="bg-muted/30 rounded-lg p-3 space-y-2">
-                  {/* Home team row */}
-                  {analysis.homeTeamForm && (
-                    <div className="flex items-center gap-3">
-                      <span className="w-12 text-xs font-bold text-primary" title={match.homeTeam}>
-                        {getTeamAbbr(match.homeTeam)}
-                      </span>
-                      <FormLetters form={analysis.homeTeamForm} />
-                      <div className="flex items-center gap-3 ml-auto text-xs">
-                        {analysis.homeGoalsScored != null && (
-                          <span className="text-muted-foreground">
-                            <span className="text-foreground font-medium">{analysis.homeGoalsScored}</span> GF
-                          </span>
-                        )}
-                        {analysis.homeGoalsConceded != null && (
-                          <span className="text-muted-foreground">
-                            <span className="text-foreground font-medium">{analysis.homeGoalsConceded}</span> GA
-                          </span>
-                        )}
-                        {analysis.homeGoalsScored != null && analysis.homeGoalsConceded != null && (() => {
-                          const gd = analysis.homeGoalsScored - analysis.homeGoalsConceded;
-                          return (
-                            <span className={cn(
-                              "font-bold min-w-[32px] text-right",
-                              gd > 0 ? "text-green-400" : gd < 0 ? "text-red-400" : "text-muted-foreground"
-                            )}>
-                              {gd > 0 ? '+' : ''}{gd}
-                            </span>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Away team row */}
-                  {analysis.awayTeamForm && (
-                    <div className="flex items-center gap-3">
-                      <span className="w-12 text-xs font-bold text-accent" title={match.awayTeam}>
-                        {getTeamAbbr(match.awayTeam)}
-                      </span>
-                      <FormLetters form={analysis.awayTeamForm} />
-                      <div className="flex items-center gap-3 ml-auto text-xs">
-                        {analysis.awayGoalsScored != null && (
-                          <span className="text-muted-foreground">
-                            <span className="text-foreground font-medium">{analysis.awayGoalsScored}</span> GF
-                          </span>
-                        )}
-                        {analysis.awayGoalsConceded != null && (
-                          <span className="text-muted-foreground">
-                            <span className="text-foreground font-medium">{analysis.awayGoalsConceded}</span> GA
-                          </span>
-                        )}
-                        {analysis.awayGoalsScored != null && analysis.awayGoalsConceded != null && (() => {
-                          const gd = analysis.awayGoalsScored - analysis.awayGoalsConceded;
-                          return (
-                            <span className={cn(
-                              "font-bold min-w-[32px] text-right",
-                              gd > 0 ? "text-green-400" : gd < 0 ? "text-red-400" : "text-muted-foreground"
-                            )}>
-                              {gd > 0 ? '+' : ''}{gd}
-                            </span>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Row 3: League Standings (only for domestic leagues) */}
+            {/* Row 2: League Position (compact table) */}
             {(homeStanding || awayStanding) && (
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">League Position</h3>
                 <div className="bg-muted/30 rounded-lg overflow-hidden">
-                  {/* Desktop: Full table */}
-                  <div className="hidden sm:block">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="border-b border-border/50">
-                          <th className="py-2 px-3 text-left font-medium text-muted-foreground">#</th>
-                          <th className="py-2 px-3 text-left font-medium text-muted-foreground">Team</th>
-                          <th className="py-2 px-2 text-center font-medium text-muted-foreground">P</th>
-                          <th className="py-2 px-2 text-center font-medium text-muted-foreground">W</th>
-                          <th className="py-2 px-2 text-center font-medium text-muted-foreground">D</th>
-                          <th className="py-2 px-2 text-center font-medium text-muted-foreground">L</th>
-                          <th className="py-2 px-2 text-center font-medium text-muted-foreground">GD</th>
-                          <th className="py-2 px-3 text-center font-medium text-muted-foreground">Pts</th>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border/50">
+                        <th className="py-2 px-3 text-left font-medium text-muted-foreground">#</th>
+                        <th className="py-2 px-3 text-left font-medium text-muted-foreground">Team</th>
+                        <th className="py-2 px-2 text-center font-medium text-muted-foreground">W-D-L</th>
+                        <th className="py-2 px-2 text-center font-medium text-muted-foreground">Pts</th>
+                        <th className="py-2 px-3 text-center font-medium text-muted-foreground">GF-GA</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {homeStanding && (
+                        <tr className="bg-primary/10">
+                          <td className="py-2 px-3 font-bold">{homeStanding.position}</td>
+                          <td className="py-2 px-3 font-medium">{homeStanding.teamName}</td>
+                          <td className="py-2 px-2 text-center font-mono">
+                            {homeStanding.won}-{homeStanding.drawn}-{homeStanding.lost}
+                          </td>
+                          <td className="py-2 px-2 text-center font-bold">{homeStanding.points}</td>
+                          <td className="py-2 px-3 text-center font-mono text-muted-foreground">
+                            {homeStanding.goalsFor}-{homeStanding.goalsAgainst}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {homeStanding && (
-                          <tr className="bg-primary/10">
-                            <td className="py-2 px-3 font-bold">{homeStanding.position}</td>
-                            <td className="py-2 px-3 font-medium">{homeStanding.teamName}</td>
-                            <td className="py-2 px-2 text-center text-muted-foreground">{homeStanding.played}</td>
-                            <td className="py-2 px-2 text-center text-muted-foreground">{homeStanding.won}</td>
-                            <td className="py-2 px-2 text-center text-muted-foreground">{homeStanding.drawn}</td>
-                            <td className="py-2 px-2 text-center text-muted-foreground">{homeStanding.lost}</td>
-                            <td className={cn(
-                              "py-2 px-2 text-center font-medium",
-                              homeStanding.goalDiff > 0 ? "text-green-400" : 
-                              homeStanding.goalDiff < 0 ? "text-red-400" : ""
-                            )}>
-                              {homeStanding.goalDiff > 0 ? '+' : ''}{homeStanding.goalDiff}
-                            </td>
-                            <td className="py-2 px-3 text-center font-bold">{homeStanding.points}</td>
-                          </tr>
-                        )}
-                        {awayStanding && (
-                          <tr className="bg-accent/10">
-                            <td className="py-2 px-3 font-bold">{awayStanding.position}</td>
-                            <td className="py-2 px-3 font-medium">{awayStanding.teamName}</td>
-                            <td className="py-2 px-2 text-center text-muted-foreground">{awayStanding.played}</td>
-                            <td className="py-2 px-2 text-center text-muted-foreground">{awayStanding.won}</td>
-                            <td className="py-2 px-2 text-center text-muted-foreground">{awayStanding.drawn}</td>
-                            <td className="py-2 px-2 text-center text-muted-foreground">{awayStanding.lost}</td>
-                            <td className={cn(
-                              "py-2 px-2 text-center font-medium",
-                              awayStanding.goalDiff > 0 ? "text-green-400" : 
-                              awayStanding.goalDiff < 0 ? "text-red-400" : ""
-                            )}>
-                              {awayStanding.goalDiff > 0 ? '+' : ''}{awayStanding.goalDiff}
-                            </td>
-                            <td className="py-2 px-3 text-center font-bold">{awayStanding.points}</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  
-                  {/* Mobile: Compact view */}
-                  <div className="sm:hidden p-3 space-y-2">
-                    {homeStanding && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded bg-primary/20 flex items-center justify-center text-xs font-bold">
-                            {homeStanding.position}
-                          </span>
-                          <span className="text-xs font-medium">{getTeamAbbr(match.homeTeam)}</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-xs">
-                          <span className="text-muted-foreground">{homeStanding.played}P</span>
-                          <span className={cn(
-                            "font-medium",
-                            homeStanding.goalDiff > 0 ? "text-green-400" : 
-                            homeStanding.goalDiff < 0 ? "text-red-400" : ""
-                          )}>
-                            {homeStanding.goalDiff > 0 ? '+' : ''}{homeStanding.goalDiff}
-                          </span>
-                          <span className="font-bold">{homeStanding.points} pts</span>
-                        </div>
-                      </div>
-                    )}
-                    {awayStanding && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded bg-accent/20 flex items-center justify-center text-xs font-bold">
-                            {awayStanding.position}
-                          </span>
-                          <span className="text-xs font-medium">{getTeamAbbr(match.awayTeam)}</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-xs">
-                          <span className="text-muted-foreground">{awayStanding.played}P</span>
-                          <span className={cn(
-                            "font-medium",
-                            awayStanding.goalDiff > 0 ? "text-green-400" : 
-                            awayStanding.goalDiff < 0 ? "text-red-400" : ""
-                          )}>
-                            {awayStanding.goalDiff > 0 ? '+' : ''}{awayStanding.goalDiff}
-                          </span>
-                          <span className="font-bold">{awayStanding.points} pts</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                      {awayStanding && (
+                        <tr className="bg-accent/10">
+                          <td className="py-2 px-3 font-bold">{awayStanding.position}</td>
+                          <td className="py-2 px-3 font-medium">{awayStanding.teamName}</td>
+                          <td className="py-2 px-2 text-center font-mono">
+                            {awayStanding.won}-{awayStanding.drawn}-{awayStanding.lost}
+                          </td>
+                          <td className="py-2 px-2 text-center font-bold">{awayStanding.points}</td>
+                          <td className="py-2 px-3 text-center font-mono text-muted-foreground">
+                            {awayStanding.goalsFor}-{awayStanding.goalsAgainst}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
 
-            {/* Row 4: Likely Scores (full width) */}
+            {/* Row 3: Likely Scores (full width) */}
             {likelyScores.length > 0 && (
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">Likely Scores</h3>
