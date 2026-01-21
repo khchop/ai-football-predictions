@@ -155,16 +155,7 @@ export const KimiK2FreeProvider = new OpenRouterProvider(
   false
 );
 
-// 9. Gemini 3 Flash Preview - Google (Free)
-export const Gemini3FlashPreviewProvider = new OpenRouterProvider(
-  'gemini-3-flash-preview-free',
-  'openrouter',
-  'google/gemini-3-flash-preview:free',
-  'Gemini 3 Flash Preview (Google)',
-  'free',
-  { promptPer1M: 0, completionPer1M: 0 },
-  false
-);
+// (Moved to PREMIUM tier - see below)
 
 // 10. (Kept) Gemma 3 27B - Google (Free)
 // Already defined above as Gemma3_27BProvider
@@ -383,14 +374,14 @@ export const CommandRPlusProvider = new OpenRouterProvider(
   true
 );
 
-// 29. Claude 3.5 Haiku - Anthropic
-export const Claude35HaikuProvider = new OpenRouterProvider(
-  'claude-3.5-haiku',
+// 29. Claude Haiku 4.5 - Anthropic
+export const ClaudeHaiku45Provider = new OpenRouterProvider(
+  'claude-haiku-4.5',
   'openrouter',
-  'anthropic/claude-3.5-haiku',
-  'Claude 3.5 Haiku (Anthropic)',
+  'anthropic/claude-haiku-4.5',
+  'Claude Haiku 4.5 (Anthropic)',
   'premium',
-  { promptPer1M: 0.80, completionPer1M: 4.00 },
+  { promptPer1M: 1.00, completionPer1M: 5.00 },
   true
 );
 
@@ -413,6 +404,17 @@ export const Llama4MaverickProvider = new OpenRouterProvider(
   'Llama 4 Maverick (Meta)',
   'premium',
   { promptPer1M: 0.15, completionPer1M: 0.60 },
+  true
+);
+
+// 32. Gemini 3 Flash Preview - Google
+export const Gemini3FlashPreviewProvider = new OpenRouterProvider(
+  'gemini-3-flash-preview',
+  'openrouter',
+  'google/gemini-3-flash-preview',
+  'Gemini 3 Flash Preview (Google)',
+  'premium',
+  { promptPer1M: 0.50, completionPer1M: 3.00 },
   true
 );
 
@@ -456,10 +458,10 @@ export const OPENROUTER_PROVIDERS = [
   Llama31_405BProvider,          // 24 - $3.50/$3.50 - Meta
   MistralLarge2Provider,         // 25 - $2.00/$6.00 - Mistral
   CommandRPlusProvider,          // 26 - $2.50/$10.00 - Cohere
-  Claude35HaikuProvider,         // 27 - $0.80/$4.00 - Anthropic
+  ClaudeHaiku45Provider,         // 27 - $1.00/$5.00 - Anthropic
   Grok41FastProvider,            // 28 - $0.20/$0.50 - xAI
   Llama4MaverickProvider,        // 29 - $0.15/$0.60 - Meta
-  Gemini3FlashPreviewProvider,   // 30 - FREE - Google
+  Gemini3FlashPreviewProvider,   // 30 - $0.50/$3.00 - Google
 ];
 
 // ============================================================================
@@ -467,12 +469,13 @@ export const OPENROUTER_PROVIDERS = [
 // - 8 FREE models (no cost) from 6 providers
 // - 8 ULTRA-BUDGET models ($0.02-$0.40 per 1M tokens)
 // - 7 BUDGET models ($0.08-$0.75 per 1M tokens)
-// - 7 PREMIUM models ($0.15-$3.50 per 1M tokens)
+// - 7 PREMIUM models ($0.15-$5.00 per 1M tokens)
 // - Mix of open-source and proprietary models (OpenAI, Google, Anthropic, xAI)
 // - Provider diversity: 12 different providers, max 6 from any single provider (Meta)
 // - All non-reasoning models (no o1, o3, r1, thinking models)
+// - All model IDs verified against OpenRouter API as of January 21, 2025
 // 
-// Estimated monthly cost at 25 matches/day: ~$4.67/month
+// Estimated monthly cost at 25 matches/day: ~$5.40/month
 // 
 // Hybrid Model Notes (default to Instruct mode, don't send reasoning flags):
 // - deepseek/deepseek-v3.2, deepseek/deepseek-chat-v3.1
