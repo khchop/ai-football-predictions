@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Trophy, Medal, Award, ArrowUp, ArrowDown, ArrowUpDown, Flame, Snowflake, Minus } from 'lucide-react';
 
@@ -196,12 +197,14 @@ export function LeaderboardTable({ entries, showBreakdown = false }: Leaderboard
     const exactCount = entry.exactScores ?? 0;
     
     return (
-      <div 
+      <Link 
+        href={`/models/${entry.modelId}`}
         className={cn(
-          "rounded-lg border border-border/50 p-4 space-y-3",
-          index === 0 && "bg-yellow-500/5 border-yellow-500/30",
-          index === 1 && "bg-gray-500/5 border-gray-400/30",
-          index === 2 && "bg-orange-500/5 border-orange-500/30"
+          "block rounded-lg border border-border/50 p-4 space-y-3 transition-colors",
+          index === 0 && "bg-yellow-500/5 border-yellow-500/30 hover:bg-yellow-500/10",
+          index === 1 && "bg-gray-500/5 border-gray-400/30 hover:bg-gray-500/10",
+          index === 2 && "bg-orange-500/5 border-orange-500/30 hover:bg-orange-500/10",
+          index > 2 && "hover:bg-muted/30"
         )}
       >
         {/* Header: Rank + Model Name + Streak */}
@@ -272,7 +275,7 @@ export function LeaderboardTable({ entries, showBreakdown = false }: Leaderboard
             {accuracy}%
           </span>
         </div>
-      </div>
+      </Link>
     );
   };
 
@@ -383,10 +386,10 @@ export function LeaderboardTable({ entries, showBreakdown = false }: Leaderboard
                     </div>
                   </td>
                   <td className="py-4 px-4">
-                    <div>
-                      <p className="font-medium">{entry.displayName}</p>
+                    <Link href={`/models/${entry.modelId}`} className="block group">
+                      <p className="font-medium group-hover:text-primary transition-colors">{entry.displayName}</p>
                       <p className="text-xs text-muted-foreground capitalize">{entry.provider}</p>
-                    </div>
+                    </Link>
                   </td>
                   <td className="py-4 px-3 text-center font-mono text-sm">
                     {entry.totalPredictions}

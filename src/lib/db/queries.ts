@@ -1203,3 +1203,310 @@ export async function getMatchWithAnalysis(matchId: string) {
     predictions: matchPredictions,
   };
 }
+
+// ============= MODEL DETAIL PAGE QUERIES =============
+
+// Get model prediction history with match and competition details
+export async function getModelPredictionHistory(
+  modelId: string,
+  options: { limit?: number; offset?: number; competitionId?: string } = {}
+) {
+  const { limit = 20, offset = 0, competitionId } = options;
+  const db = getDb();
+  
+  const conditions = [
+    eq(predictions.modelId, modelId),
+    eq(matches.status, 'finished'),
+  ];
+  
+  if (competitionId) {
+    conditions.push(eq(matches.competitionId, competitionId));
+  }
+  
+  return db
+    .select({
+      prediction: predictions,
+      match: matches,
+      competition: competitions,
+    })
+    .from(predictions)
+    .innerJoin(matches, eq(predictions.matchId, matches.id))
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(and(...conditions))
+    .orderBy(desc(matches.kickoffTime))
+    .limit(limit)
+    .offset(offset);
+}
+
+// Get model stats broken down by competition
+export async function getModelStatsByCompetition(modelId: string) {
+  const db = getDb();
+  
+  const results = await db
+    .select({
+      competitionId: competitions.id,
+      competitionName: competitions.name,
+      predictedHomeScore: predictions.predictedHomeScore,
+      predictedAwayScore: predictions.predictedAwayScore,
+      actualHomeScore: matches.homeScore,
+      actualAwayScore: matches.awayScore,
+      pointsTotal: predictions.pointsTotal,
+      pointsExactScore: predictions.pointsExactScore,
+      pointsResult: predictions.pointsResult,
+    })
+    .from(predictions)
+    .innerJoin(matches, eq(predictions.matchId, matches.id))
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(
+      and(
+        eq(predictions.modelId, modelId),
+        eq(matches.status, 'finished'),
+        isNotNull(matches.homeScore),
+        isNotNull(matches.awayScore)
+      )
+    );
+
+  // Aggregate by competition
+  const competitionStats = new Map<string, {
+    competitionId: string;
+    competitionName: string;
+    totalPredictions: number;
+    correctTendencies: number;
+    exactScores: number;
+    totalPoints: number;
+  }>();
+
+  for (const row of results) {
+    const stats = competitionStats.get(row.competitionId) || {
+      competitionId: row.competitionId,
+      competitionName: row.competitionName,
+      totalPredictions: 0,
+      correctTendencies: 0,
+      exactScores: 0,
+      totalPoints: 0,
+    };
+
+    stats.totalPredictions++;
+    stats.totalPoints += row.pointsTotal || 0;
+    
+    // Count exact scores and correct tendencies
+    if ((row.pointsExactScore || 0) > 0) {
+      stats.exactScores++;
+      stats.correctTendencies++; // Exact score includes correct tendency
+    } else if ((row.pointsResult || 0) > 0) {
+      stats.correctTendencies++;
+    }
+
+    competitionStats.set(row.competitionId, stats);
+  }
+
+  // Convert to array with calculated averages
+  return Array.from(competitionStats.values())
+    .map(stats => ({
+      ...stats,
+      averagePoints: stats.totalPredictions > 0
+        ? Math.round((stats.totalPoints / stats.totalPredictions) * 100) / 100
+        : 0,
+      accuracy: stats.totalPredictions > 0
+        ? Math.round((stats.correctTendencies / stats.totalPredictions) * 100)
+        : 0,
+    }))
+    .sort((a, b) => b.totalPredictions - a.totalPredictions);
+}
+
+// Get model weekly performance for chart (max 90 days, weekly aggregates)
+export async function getModelWeeklyPerformance(modelId: string, maxDays: number = 90) {
+  const db = getDb();
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - maxDays);
+  
+  const results = await db
+    .select({
+      kickoffTime: matches.kickoffTime,
+      pointsTotal: predictions.pointsTotal,
+      pointsResult: predictions.pointsResult,
+    })
+    .from(predictions)
+    .innerJoin(matches, eq(predictions.matchId, matches.id))
+    .where(
+      and(
+        eq(predictions.modelId, modelId),
+        eq(matches.status, 'finished'),
+        gte(matches.kickoffTime, cutoffDate.toISOString())
+      )
+    )
+    .orderBy(matches.kickoffTime);
+
+  // Aggregate by week (Monday start)
+  const weeklyStats = new Map<string, {
+    weekStart: string;
+    matchCount: number;
+    totalPoints: number;
+    correctTendencies: number;
+  }>();
+
+  for (const row of results) {
+    const date = new Date(row.kickoffTime);
+    // Get Monday of the week
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(date);
+    monday.setDate(diff);
+    const weekKey = monday.toISOString().split('T')[0];
+
+    const stats = weeklyStats.get(weekKey) || {
+      weekStart: weekKey,
+      matchCount: 0,
+      totalPoints: 0,
+      correctTendencies: 0,
+    };
+
+    stats.matchCount++;
+    stats.totalPoints += row.pointsTotal || 0;
+    if ((row.pointsResult || 0) > 0) {
+      stats.correctTendencies++;
+    }
+
+    weeklyStats.set(weekKey, stats);
+  }
+
+  // Convert to array with calculated averages
+  return Array.from(weeklyStats.values())
+    .map(stats => ({
+      ...stats,
+      avgPoints: stats.matchCount > 0
+        ? Math.round((stats.totalPoints / stats.matchCount) * 100) / 100
+        : 0,
+      accuracy: stats.matchCount > 0
+        ? Math.round((stats.correctTendencies / stats.matchCount) * 100)
+        : 0,
+    }))
+    .sort((a, b) => a.weekStart.localeCompare(b.weekStart));
+}
+
+// Get fun stats for model (most predicted score, best exact score hit)
+export async function getModelFunStats(modelId: string) {
+  const db = getDb();
+  
+  // Get all predictions for this model
+  const allPredictions = await db
+    .select({
+      predictedHomeScore: predictions.predictedHomeScore,
+      predictedAwayScore: predictions.predictedAwayScore,
+      actualHomeScore: matches.homeScore,
+      actualAwayScore: matches.awayScore,
+      pointsExactScore: predictions.pointsExactScore,
+      processingTimeMs: predictions.processingTimeMs,
+      status: matches.status,
+    })
+    .from(predictions)
+    .innerJoin(matches, eq(predictions.matchId, matches.id))
+    .where(eq(predictions.modelId, modelId));
+
+  // Count predicted scores
+  const predictedScoreCounts = new Map<string, number>();
+  // Count exact score hits
+  const exactScoreHits = new Map<string, number>();
+  let totalProcessingTime = 0;
+  let processingTimeCount = 0;
+  let totalExactScores = 0;
+
+  for (const pred of allPredictions) {
+    const predictedScore = `${pred.predictedHomeScore}-${pred.predictedAwayScore}`;
+    predictedScoreCounts.set(predictedScore, (predictedScoreCounts.get(predictedScore) || 0) + 1);
+    
+    if (pred.processingTimeMs) {
+      totalProcessingTime += pred.processingTimeMs;
+      processingTimeCount++;
+    }
+
+    // Only count finished matches for exact scores
+    if (pred.status === 'finished' && (pred.pointsExactScore || 0) > 0) {
+      totalExactScores++;
+      const actualScore = `${pred.actualHomeScore}-${pred.actualAwayScore}`;
+      exactScoreHits.set(actualScore, (exactScoreHits.get(actualScore) || 0) + 1);
+    }
+  }
+
+  // Find most predicted score
+  let mostPredictedScore: { score: string; count: number } | null = null;
+  for (const [score, count] of predictedScoreCounts) {
+    if (!mostPredictedScore || count > mostPredictedScore.count) {
+      mostPredictedScore = { score, count };
+    }
+  }
+
+  // Find best exact score hit (most times hit)
+  let bestExactScore: { score: string; count: number } | null = null;
+  for (const [score, count] of exactScoreHits) {
+    if (!bestExactScore || count > bestExactScore.count) {
+      bestExactScore = { score, count };
+    }
+  }
+
+  return {
+    mostPredictedScore,
+    bestExactScore,
+    totalExactScores,
+    avgProcessingTimeMs: processingTimeCount > 0
+      ? Math.round(totalProcessingTime / processingTimeCount)
+      : null,
+  };
+}
+
+// Get overall model stats (for header display)
+export async function getModelOverallStats(modelId: string) {
+  const db = getDb();
+  
+  const results = await db
+    .select({
+      pointsTotal: predictions.pointsTotal,
+      pointsResult: predictions.pointsResult,
+      pointsExactScore: predictions.pointsExactScore,
+      pointsGoalDiff: predictions.pointsGoalDiff,
+    })
+    .from(predictions)
+    .innerJoin(matches, eq(predictions.matchId, matches.id))
+    .where(
+      and(
+        eq(predictions.modelId, modelId),
+        eq(matches.status, 'finished'),
+        isNotNull(matches.homeScore),
+        isNotNull(matches.awayScore)
+      )
+    );
+
+  let totalPredictions = 0;
+  let totalPoints = 0;
+  let correctTendencies = 0;
+  let exactScores = 0;
+  let correctGoalDiffs = 0;
+
+  for (const row of results) {
+    totalPredictions++;
+    totalPoints += row.pointsTotal || 0;
+    
+    if ((row.pointsExactScore || 0) > 0) {
+      exactScores++;
+      correctTendencies++;
+      correctGoalDiffs++;
+    } else {
+      if ((row.pointsResult || 0) > 0) correctTendencies++;
+      if ((row.pointsGoalDiff || 0) > 0) correctGoalDiffs++;
+    }
+  }
+
+  return {
+    totalPredictions,
+    totalPoints,
+    averagePoints: totalPredictions > 0
+      ? Math.round((totalPoints / totalPredictions) * 100) / 100
+      : 0,
+    accuracy: totalPredictions > 0
+      ? Math.round((correctTendencies / totalPredictions) * 100)
+      : 0,
+    exactScores,
+    correctTendencies,
+    correctGoalDiffs,
+  };
+}
