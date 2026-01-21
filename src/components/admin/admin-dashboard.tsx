@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ModelHealthTable } from './model-health-table';
 import { CostSummary } from './cost-summary';
 import { Activity, AlertTriangle, DollarSign, Lock, Loader2 } from 'lucide-react';
@@ -54,16 +54,7 @@ export function AdminDashboard() {
   const [error, setError] = useState('');
   const [data, setData] = useState<AdminData | null>(null);
 
-  // Check if already authenticated (from sessionStorage)
-  useEffect(() => {
-    const storedAuth = sessionStorage.getItem('admin_authenticated');
-    if (storedAuth === 'true') {
-      setIsAuthenticated(true);
-      fetchData();
-    }
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const storedPassword = sessionStorage.getItem('admin_password') || password;
@@ -92,7 +83,16 @@ export function AdminDashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [password]);
+
+  // Check if already authenticated (from sessionStorage)
+  useEffect(() => {
+    const storedAuth = sessionStorage.getItem('admin_authenticated');
+    if (storedAuth === 'true') {
+      setIsAuthenticated(true);
+      fetchData();
+    }
+  }, [fetchData]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

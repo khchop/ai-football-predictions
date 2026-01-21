@@ -1,6 +1,6 @@
 import { getDb } from '@/lib/db';
 import { modelUsage } from '@/lib/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { OpenRouterProvider, ModelTier } from './providers/openrouter';
 

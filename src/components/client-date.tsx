@@ -1,5 +1,9 @@
 'use client';
 
+/* eslint-disable react-hooks/set-state-in-effect, react-hooks/error-boundaries */
+// This file intentionally uses setMounted(true) in useEffect for hydration safety
+// and validates dates in try/catch before rendering JSX
+
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import { useEffect, useState } from 'react';
 
@@ -31,25 +35,30 @@ export function ClientDate({
     return <span className={className}>--</span>;
   }
 
+  // Parse and validate date before rendering
+  let date: Date;
   try {
-    const date = parseISO(dateString);
-    
-    if (relative) {
-      return (
-        <span className={className} suppressHydrationWarning>
-          {formatDistanceToNow(date, { addSuffix: true })}
-        </span>
-      );
+    date = parseISO(dateString);
+    if (isNaN(date.getTime())) {
+      return <span className={className}>Invalid date</span>;
     }
-    
-    return (
-      <span className={className} suppressHydrationWarning>
-        {format(date, formatStr)}
-      </span>
-    );
   } catch {
     return <span className={className}>Invalid date</span>;
   }
+
+  if (relative) {
+    return (
+      <span className={className} suppressHydrationWarning>
+        {formatDistanceToNow(date, { addSuffix: true })}
+      </span>
+    );
+  }
+
+  return (
+    <span className={className} suppressHydrationWarning>
+      {format(date, formatStr)}
+    </span>
+  );
 }
 
 interface RelativeTimeProps {
@@ -86,25 +95,31 @@ export function MatchTime({ dateString, isUpcoming, className }: MatchTimeProps)
     return <span className={className}>--</span>;
   }
 
+  // Parse and validate date before rendering
+  let date: Date;
   try {
-    const date = parseISO(dateString);
-    const now = new Date();
-    const shouldShowRelative = isUpcoming ?? date > now;
-    
-    if (shouldShowRelative) {
-      return (
-        <span className={className} suppressHydrationWarning>
-          {formatDistanceToNow(date, { addSuffix: true })}
-        </span>
-      );
+    date = parseISO(dateString);
+    if (isNaN(date.getTime())) {
+      return <span className={className}>--</span>;
     }
-    
-    return (
-      <span className={className} suppressHydrationWarning>
-        {format(date, 'MMM d, HH:mm')}
-      </span>
-    );
   } catch {
     return <span className={className}>--</span>;
   }
+
+  const now = new Date();
+  const shouldShowRelative = isUpcoming ?? date > now;
+
+  if (shouldShowRelative) {
+    return (
+      <span className={className} suppressHydrationWarning>
+        {formatDistanceToNow(date, { addSuffix: true })}
+      </span>
+    );
+  }
+
+  return (
+    <span className={className} suppressHydrationWarning>
+      {format(date, 'MMM d, HH:mm')}
+    </span>
+  );
 }

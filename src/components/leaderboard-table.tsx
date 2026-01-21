@@ -40,7 +40,7 @@ interface LeaderboardTableProps {
 type SortColumn = 'displayName' | 'totalPredictions' | 'correctTendencies' | 'exactScores' | 'totalPoints' | 'averagePoints' | 'accuracy';
 type SortOrder = 'asc' | 'desc';
 
-export function LeaderboardTable({ entries, showBreakdown = false }: LeaderboardTableProps) {
+export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = false }: LeaderboardTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   

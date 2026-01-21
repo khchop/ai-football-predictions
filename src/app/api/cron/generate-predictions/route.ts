@@ -15,13 +15,9 @@ import {
 } from '@/lib/db/queries';
 import { getActiveProviders, ALL_PROVIDERS, OpenRouterProvider } from '@/lib/llm';
 import { shouldSkipProvider, recordPredictionCost, getBudgetStatus } from '@/lib/llm/budget';
-import { buildBatchPrompt, BatchMatchContext } from '@/lib/football/prompt-builder';
+import { buildBatchPrompt } from '@/lib/football/prompt-builder';
 import { BaseLLMProvider, BatchPredictionResult } from '@/lib/llm/providers/base';
 import { validateCronRequest } from '@/lib/auth/cron-auth';
-import pLimit from 'p-limit';
-
-// Concurrency limit for parallel provider processing
-const PROVIDER_CONCURRENCY = 5;
 
 // Batch size for grouping matches (10 matches per API call)
 const BATCH_SIZE = 10;
@@ -198,8 +194,6 @@ export async function POST(request: NextRequest) {
     let successfulRetries = 0;
 
     // Process each model with its missing matches
-    const limit = pLimit(PROVIDER_CONCURRENCY);
-
     for (const [modelId, matchesToPredict] of Array.from(pairsByModel.entries())) {
       const provider = activeProviders.find(p => p.id === modelId);
       if (!provider) continue;

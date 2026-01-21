@@ -72,6 +72,7 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
       (match.homeScore !== prevScore.home || match.awayScore !== prevScore.away) &&
       prevScore.home !== null // Don't animate on initial load
     ) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowGoalAnimation(true);
       const timer = setTimeout(() => setShowGoalAnimation(false), 2000);
       setPrevScore({ home: match.homeScore, away: match.awayScore });

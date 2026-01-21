@@ -50,7 +50,7 @@ function getEventIcon(type: string, detail: string): string {
   return '•';
 }
 
-export function MatchEvents({ events, homeTeam, awayTeam }: MatchEventsProps) {
+export function MatchEvents({ events, homeTeam, awayTeam: _awayTeam }: MatchEventsProps) {
   // Filter to only show goals and cards (skip substitutions for cleaner display)
   const significantEvents = events.filter(e => 
     e.type === 'Goal' || 

@@ -205,8 +205,8 @@ interface APIFootballH2HMatch {
 
 function extractH2HStats(
   h2hData: APIFootballH2HMatch[] | undefined,
-  homeTeamId: number,
-  awayTeamId: number
+  _homeTeamId: number,
+  _awayTeamId: number
 ): H2HStats {
   const result: H2HStats = {
     total: 0,

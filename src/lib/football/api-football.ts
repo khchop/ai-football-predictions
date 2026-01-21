@@ -131,7 +131,6 @@ export async function getUpcomingFixtures(
   console.log(`[API-Football] Total fixtures fetched: ${allFixtures.length}`);
 
   // Filter to only our tracked competitions and group by competition
-  const competitionIds = new Set(COMPETITIONS.map(c => c.apiFootballId));
   const results: { competition: CompetitionConfig; fixtures: APIFootballFixture[] }[] = [];
 
   for (const competition of COMPETITIONS) {

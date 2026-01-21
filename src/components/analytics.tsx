@@ -18,6 +18,7 @@ export function Analytics() {
         }}
       />
       <noscript>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="http://swetrixapi-hw4so40800cgw004wg0cs44c.188.245.241.135.sslip.io/log/noscript?pid=7xsX0euF1mZy"
           alt=""

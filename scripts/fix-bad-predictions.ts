@@ -33,7 +33,7 @@ async function fixBadPredictions() {
   
   if (badPredictions.length > 0) {
     // Delete bad predictions - they'll be regenerated next time if the match hasn't started
-    const result = await db
+    await db
       .delete(predictions)
       .where(
         or(
