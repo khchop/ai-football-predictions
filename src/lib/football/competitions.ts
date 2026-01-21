@@ -36,11 +36,47 @@ export const COMPETITIONS: CompetitionConfig[] = [
     category: 'club-europe',
   },
   
-  // Club - Domestic
+  // Club - Domestic (Top 5 Leagues)
   {
     id: 'epl',
     name: 'Premier League',
     apiFootballId: 39,
+    season: CURRENT_SEASON,
+    category: 'club-domestic',
+  },
+  {
+    id: 'laliga',
+    name: 'La Liga',
+    apiFootballId: 140,
+    season: CURRENT_SEASON,
+    category: 'club-domestic',
+  },
+  {
+    id: 'bundesliga',
+    name: 'Bundesliga',
+    apiFootballId: 78,
+    season: CURRENT_SEASON,
+    category: 'club-domestic',
+  },
+  {
+    id: 'seriea',
+    name: 'Serie A',
+    apiFootballId: 135,
+    season: CURRENT_SEASON,
+    category: 'club-domestic',
+  },
+  {
+    id: 'ligue1',
+    name: 'Ligue 1',
+    apiFootballId: 61,
+    season: CURRENT_SEASON,
+    category: 'club-domestic',
+  },
+  // Club - Domestic (Other)
+  {
+    id: 'eredivisie',
+    name: 'Eredivisie',
+    apiFootballId: 88,
     season: CURRENT_SEASON,
     category: 'club-domestic',
   },
