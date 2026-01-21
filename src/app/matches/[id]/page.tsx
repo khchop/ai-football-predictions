@@ -6,11 +6,14 @@ import { PredictionTable } from '@/components/prediction-table';
 import { MatchEvents } from '@/components/match-events';
 import { getMatchWithAnalysis } from '@/lib/db/queries';
 import { getMatchEvents } from '@/lib/football/api-football';
+import { getStandingByTeamName } from '@/lib/football/standings';
+import { getCompetitionById } from '@/lib/football/competitions';
 import { calculateEnhancedScores } from '@/lib/utils/scoring';
-import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, AlertTriangle, Users, Target } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, AlertTriangle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import type { KeyInjury, LikelyScore } from '@/types';
+import type { LeagueStanding } from '@/lib/db/schema';
 import { Collapsible } from '@/components/ui/collapsible';
 
 // Helper to render form letters (WWDLW) with color coding
@@ -34,6 +37,67 @@ function FormLetters({ form }: { form: string }) {
       })}
     </div>
   );
+}
+
+// Helper to get team abbreviation (3-4 chars)
+function getTeamAbbr(teamName: string): string {
+  // Common abbreviations
+  const abbrevMap: Record<string, string> = {
+    'manchester united': 'MUN',
+    'manchester city': 'MCI',
+    'liverpool': 'LIV',
+    'arsenal': 'ARS',
+    'chelsea': 'CHE',
+    'tottenham': 'TOT',
+    'newcastle': 'NEW',
+    'west ham': 'WHU',
+    'aston villa': 'AVL',
+    'brighton': 'BHA',
+    'real madrid': 'RMA',
+    'barcelona': 'BAR',
+    'atletico madrid': 'ATM',
+    'atlético madrid': 'ATM',
+    'sevilla': 'SEV',
+    'bayern munich': 'BAY',
+    'bayern münchen': 'BAY',
+    'borussia dortmund': 'BVB',
+    'dortmund': 'BVB',
+    'rb leipzig': 'RBL',
+    'juventus': 'JUV',
+    'inter milan': 'INT',
+    'inter': 'INT',
+    'ac milan': 'MIL',
+    'milan': 'MIL',
+    'napoli': 'NAP',
+    'roma': 'ROM',
+    'paris saint-germain': 'PSG',
+    'paris saint germain': 'PSG',
+    'psg': 'PSG',
+    'marseille': 'OM',
+    'olympique marseille': 'OM',
+    'lyon': 'OL',
+    'olympique lyonnais': 'OL',
+    'ajax': 'AJA',
+    'psv': 'PSV',
+    'feyenoord': 'FEY',
+    'galatasaray': 'GAL',
+    'fenerbahce': 'FEN',
+    'benfica': 'BEN',
+    'porto': 'POR',
+    'sporting': 'SCP',
+  };
+  
+  const normalized = teamName.toLowerCase().trim();
+  if (abbrevMap[normalized]) return abbrevMap[normalized];
+  
+  // Default: first 3 letters uppercase
+  return teamName.slice(0, 3).toUpperCase();
+}
+
+// H2H result type
+interface H2HResult {
+  home: number;
+  away: number;
 }
 
 // Helper to find the lowest odds (favorite)
@@ -84,6 +148,22 @@ export default async function MatchPage({ params }: MatchPageProps) {
   // Parse analysis data
   const keyInjuries = parseJson<KeyInjury[]>(analysis?.keyInjuries ?? null) || [];
   const likelyScores = parseJson<LikelyScore[]>(analysis?.likelyScores ?? null) || [];
+  const h2hResults = parseJson<H2HResult[]>(analysis?.h2hResults ?? null) || [];
+
+  // Fetch league standings for domestic league matches
+  let homeStanding: LeagueStanding | null = null;
+  let awayStanding: LeagueStanding | null = null;
+  
+  const competitionConfig = getCompetitionById(competition.id);
+  const isDomesticLeague = competitionConfig?.category === 'club-domestic';
+  
+  if (isDomesticLeague && competitionConfig) {
+    // Fetch standings for both teams in parallel
+    [homeStanding, awayStanding] = await Promise.all([
+      getStandingByTeamName(match.homeTeam, competitionConfig.apiFootballId),
+      getStandingByTeamName(match.awayTeam, competitionConfig.apiFootballId),
+    ]);
+  }
 
   // Fetch match events for finished/live matches
   const matchEvents = (isFinished || isLive) && match.externalId 
@@ -314,187 +394,331 @@ export default async function MatchPage({ params }: MatchPageProps) {
               Pre-Match Analysis
             </h2>
             
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Left Column: Odds & Prediction */}
-              <div className="space-y-6">
-                {/* Betting Odds - highlight lowest odds (favorite) */}
-                {analysis.oddsHome && analysis.oddsDraw && analysis.oddsAway && (() => {
-                  const favorite = getLowestOdds(analysis.oddsHome, analysis.oddsDraw, analysis.oddsAway);
-                  return (
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-3">Betting Odds</h3>
-                      <div className="flex items-center gap-2">
-                        <div className={cn(
-                          "flex-1 text-center py-3 px-2 rounded-lg transition-colors",
-                          favorite === 'home'
-                            ? "bg-primary/15 border border-primary/40"
-                            : "bg-muted/50"
-                        )}>
-                          <p className="text-xl font-bold font-mono">{analysis.oddsHome}</p>
-                          <p className="text-xs text-muted-foreground mt-1">Home</p>
-                        </div>
-                        <div className={cn(
-                          "flex-1 text-center py-3 px-2 rounded-lg transition-colors",
-                          favorite === 'draw'
-                            ? "bg-primary/15 border border-primary/40"
-                            : "bg-muted/50"
-                        )}>
-                          <p className="text-xl font-bold font-mono">{analysis.oddsDraw}</p>
-                          <p className="text-xs text-muted-foreground mt-1">Draw</p>
-                        </div>
-                        <div className={cn(
-                          "flex-1 text-center py-3 px-2 rounded-lg transition-colors",
-                          favorite === 'away'
-                            ? "bg-primary/15 border border-primary/40"
-                            : "bg-muted/50"
-                        )}>
-                          <p className="text-xl font-bold font-mono">{analysis.oddsAway}</p>
-                          <p className="text-xs text-muted-foreground mt-1">Away</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Win Probability - Three separate boxes */}
-                {analysis.homeWinPct != null && analysis.awayWinPct != null && (
+            {/* Row 1: Betting Odds + Head-to-Head */}
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+              {/* Betting Odds */}
+              {analysis.oddsHome && analysis.oddsDraw && analysis.oddsAway && (() => {
+                const favorite = getLowestOdds(analysis.oddsHome, analysis.oddsDraw, analysis.oddsAway);
+                return (
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Win Probability</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Betting Odds</h3>
                     <div className="flex items-center gap-2">
                       <div className={cn(
                         "flex-1 text-center py-3 px-2 rounded-lg transition-colors",
-                        analysis.homeWinPct >= (analysis.drawPct || 0) && analysis.homeWinPct >= analysis.awayWinPct
+                        favorite === 'home'
                           ? "bg-primary/15 border border-primary/40"
                           : "bg-muted/50"
                       )}>
-                        <p className="text-xl font-bold font-mono">{analysis.homeWinPct}%</p>
+                        <p className="text-xl font-bold font-mono">{analysis.oddsHome}</p>
                         <p className="text-xs text-muted-foreground mt-1">Home</p>
                       </div>
                       <div className={cn(
                         "flex-1 text-center py-3 px-2 rounded-lg transition-colors",
-                        (analysis.drawPct || 0) >= analysis.homeWinPct && (analysis.drawPct || 0) >= analysis.awayWinPct
+                        favorite === 'draw'
                           ? "bg-primary/15 border border-primary/40"
                           : "bg-muted/50"
                       )}>
-                        <p className="text-xl font-bold font-mono">{analysis.drawPct || 0}%</p>
+                        <p className="text-xl font-bold font-mono">{analysis.oddsDraw}</p>
                         <p className="text-xs text-muted-foreground mt-1">Draw</p>
                       </div>
                       <div className={cn(
                         "flex-1 text-center py-3 px-2 rounded-lg transition-colors",
-                        analysis.awayWinPct >= (analysis.drawPct || 0) && analysis.awayWinPct >= analysis.homeWinPct
+                        favorite === 'away'
                           ? "bg-primary/15 border border-primary/40"
                           : "bg-muted/50"
                       )}>
-                        <p className="text-xl font-bold font-mono">{analysis.awayWinPct}%</p>
+                        <p className="text-xl font-bold font-mono">{analysis.oddsAway}</p>
                         <p className="text-xs text-muted-foreground mt-1">Away</p>
                       </div>
                     </div>
                   </div>
-                )}
+                );
+              })()}
 
-                {/* Likely Scores */}
-                {likelyScores.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Likely Scores</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {likelyScores.slice(0, 4).map((score, i) => (
-                        <span key={i} className={cn(
-                          "px-3 py-1.5 rounded-lg text-sm font-mono",
-                          i === 0 ? "bg-primary/15 border border-primary/30" : "bg-muted/50"
-                        )}>
-                          {score.score} <span className="text-muted-foreground text-xs">({score.odds})</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Right Column: Team Stats */}
-              <div className="space-y-6">
-                {/* Team Comparison Bars - with team name headers */}
-                {analysis.formHomePct && analysis.formAwayPct && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Team Comparison</h3>
-                    {/* Team name headers */}
-                    <div className="flex items-center gap-3 text-xs mb-2">
-                      <span className="w-14"></span>
-                      <span className="w-10 text-right font-medium text-primary truncate" title={match.homeTeam}>
-                        {match.homeTeam.length > 8 ? match.homeTeam.slice(0, 8) + '.' : match.homeTeam}
-                      </span>
-                      <div className="flex-1"></div>
-                      <span className="w-10 font-medium text-accent truncate" title={match.awayTeam}>
-                        {match.awayTeam.length > 8 ? match.awayTeam.slice(0, 8) + '.' : match.awayTeam}
-                      </span>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3 text-xs">
-                        <span className="w-14 font-medium">Form</span>
-                        <span className="w-10 text-right font-mono">{analysis.formHomePct}%</span>
-                        <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden flex">
-                          <div className="h-full bg-primary rounded-l-full" style={{ width: `${analysis.formHomePct}%` }} />
-                          <div className="h-full bg-accent rounded-r-full" style={{ width: `${analysis.formAwayPct}%` }} />
-                        </div>
-                        <span className="w-10 font-mono">{analysis.formAwayPct}%</span>
-                      </div>
-                      {analysis.attackHomePct && analysis.attackAwayPct && (
-                        <div className="flex items-center gap-3 text-xs">
-                          <span className="w-14 font-medium">Attack</span>
-                          <span className="w-10 text-right font-mono">{analysis.attackHomePct}%</span>
-                          <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden flex">
-                            <div className="h-full bg-primary rounded-l-full" style={{ width: `${analysis.attackHomePct}%` }} />
-                            <div className="h-full bg-accent rounded-r-full" style={{ width: `${analysis.attackAwayPct}%` }} />
+              {/* Head-to-Head */}
+              {analysis.h2hTotal && analysis.h2hTotal > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                    Head-to-Head ({analysis.h2hTotal} matches)
+                  </h3>
+                  <div className="space-y-3">
+                    {/* Visual bar showing win distribution */}
+                    {(() => {
+                      const total = analysis.h2hTotal;
+                      const homeWins = analysis.h2hHomeWins || 0;
+                      const draws = analysis.h2hDraws || 0;
+                      const awayWins = analysis.h2hAwayWins || 0;
+                      const homePct = Math.round((homeWins / total) * 100);
+                      const drawPct = Math.round((draws / total) * 100);
+                      const awayPct = Math.round((awayWins / total) * 100);
+                      
+                      return (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <span className="w-10 text-xs font-bold text-primary">{getTeamAbbr(match.homeTeam)}</span>
+                            <div className="flex-1 h-4 rounded-full overflow-hidden flex bg-muted/30">
+                              {homePct > 0 && (
+                                <div 
+                                  className="h-full bg-primary flex items-center justify-center"
+                                  style={{ width: `${homePct}%` }}
+                                >
+                                  {homePct >= 15 && <span className="text-[10px] font-bold text-white">{homeWins}</span>}
+                                </div>
+                              )}
+                              {drawPct > 0 && (
+                                <div 
+                                  className="h-full bg-muted-foreground/40 flex items-center justify-center"
+                                  style={{ width: `${drawPct}%` }}
+                                >
+                                  {drawPct >= 15 && <span className="text-[10px] font-bold">{draws}</span>}
+                                </div>
+                              )}
+                              {awayPct > 0 && (
+                                <div 
+                                  className="h-full bg-accent flex items-center justify-center"
+                                  style={{ width: `${awayPct}%` }}
+                                >
+                                  {awayPct >= 15 && <span className="text-[10px] font-bold text-white">{awayWins}</span>}
+                                </div>
+                              )}
+                            </div>
+                            <span className="w-10 text-xs font-bold text-accent text-right">{getTeamAbbr(match.awayTeam)}</span>
                           </div>
-                          <span className="w-10 font-mono">{analysis.attackAwayPct}%</span>
-                        </div>
-                      )}
-                      {analysis.defenseHomePct && analysis.defenseAwayPct && (
-                        <div className="flex items-center gap-3 text-xs">
-                          <span className="w-14 font-medium">Defense</span>
-                          <span className="w-10 text-right font-mono">{analysis.defenseHomePct}%</span>
-                          <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden flex">
-                            <div className="h-full bg-primary rounded-l-full" style={{ width: `${analysis.defenseHomePct}%` }} />
-                            <div className="h-full bg-accent rounded-r-full" style={{ width: `${analysis.defenseAwayPct}%` }} />
+                          
+                          {/* Legend */}
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>{homeWins} wins</span>
+                            <span>{draws} draws</span>
+                            <span>{awayWins} wins</span>
                           </div>
-                          <span className="w-10 font-mono">{analysis.defenseAwayPct}%</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Recent Form - Shows WWDLW letters with color coding + goals */}
-                {(analysis.homeTeamForm || analysis.awayTeamForm) && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Recent Form (Last 5)</h3>
-                    <div className="space-y-3">
-                      {analysis.homeTeamForm && (
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-xs w-24 truncate font-medium" title={match.homeTeam}>{match.homeTeam}</span>
-                          <FormLetters form={analysis.homeTeamForm} />
-                          {analysis.homeGoalsScored != null && analysis.homeGoalsConceded != null && (
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">
-                              {analysis.homeGoalsScored} scored, {analysis.homeGoalsConceded} conceded
-                            </span>
+                          
+                          {/* Recent meetings as score pills */}
+                          {h2hResults.length > 0 && (
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <span className="text-xs text-muted-foreground mr-1">Recent:</span>
+                              {h2hResults.slice(0, 5).map((r, i) => (
+                                <span 
+                                  key={i} 
+                                  className={cn(
+                                    "px-2 py-0.5 rounded text-xs font-mono",
+                                    r.home > r.away ? "bg-primary/20 text-primary" :
+                                    r.away > r.home ? "bg-accent/20 text-accent" :
+                                    "bg-muted/50"
+                                  )}
+                                >
+                                  {r.home}-{r.away}
+                                </span>
+                              ))}
+                            </div>
                           )}
-                        </div>
-                      )}
-                      {analysis.awayTeamForm && (
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-xs w-24 truncate font-medium" title={match.awayTeam}>{match.awayTeam}</span>
-                          <FormLetters form={analysis.awayTeamForm} />
-                          {analysis.awayGoalsScored != null && analysis.awayGoalsConceded != null && (
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">
-                              {analysis.awayGoalsScored} scored, {analysis.awayGoalsConceded} conceded
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                        </>
+                      );
+                    })()}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
+
+            {/* Row 2: Recent Form (full width) */}
+            {(analysis.homeTeamForm || analysis.awayTeamForm) && (
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Recent Form (Last 5)</h3>
+                <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+                  {/* Home team row */}
+                  {analysis.homeTeamForm && (
+                    <div className="flex items-center gap-3">
+                      <span className="w-12 text-xs font-bold text-primary" title={match.homeTeam}>
+                        {getTeamAbbr(match.homeTeam)}
+                      </span>
+                      <FormLetters form={analysis.homeTeamForm} />
+                      <div className="flex items-center gap-3 ml-auto text-xs">
+                        {analysis.homeGoalsScored != null && (
+                          <span className="text-muted-foreground">
+                            <span className="text-foreground font-medium">{analysis.homeGoalsScored}</span> GF
+                          </span>
+                        )}
+                        {analysis.homeGoalsConceded != null && (
+                          <span className="text-muted-foreground">
+                            <span className="text-foreground font-medium">{analysis.homeGoalsConceded}</span> GA
+                          </span>
+                        )}
+                        {analysis.homeGoalsScored != null && analysis.homeGoalsConceded != null && (() => {
+                          const gd = analysis.homeGoalsScored - analysis.homeGoalsConceded;
+                          return (
+                            <span className={cn(
+                              "font-bold min-w-[32px] text-right",
+                              gd > 0 ? "text-green-400" : gd < 0 ? "text-red-400" : "text-muted-foreground"
+                            )}>
+                              {gd > 0 ? '+' : ''}{gd}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Away team row */}
+                  {analysis.awayTeamForm && (
+                    <div className="flex items-center gap-3">
+                      <span className="w-12 text-xs font-bold text-accent" title={match.awayTeam}>
+                        {getTeamAbbr(match.awayTeam)}
+                      </span>
+                      <FormLetters form={analysis.awayTeamForm} />
+                      <div className="flex items-center gap-3 ml-auto text-xs">
+                        {analysis.awayGoalsScored != null && (
+                          <span className="text-muted-foreground">
+                            <span className="text-foreground font-medium">{analysis.awayGoalsScored}</span> GF
+                          </span>
+                        )}
+                        {analysis.awayGoalsConceded != null && (
+                          <span className="text-muted-foreground">
+                            <span className="text-foreground font-medium">{analysis.awayGoalsConceded}</span> GA
+                          </span>
+                        )}
+                        {analysis.awayGoalsScored != null && analysis.awayGoalsConceded != null && (() => {
+                          const gd = analysis.awayGoalsScored - analysis.awayGoalsConceded;
+                          return (
+                            <span className={cn(
+                              "font-bold min-w-[32px] text-right",
+                              gd > 0 ? "text-green-400" : gd < 0 ? "text-red-400" : "text-muted-foreground"
+                            )}>
+                              {gd > 0 ? '+' : ''}{gd}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Row 3: League Standings (only for domestic leagues) */}
+            {(homeStanding || awayStanding) && (
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">League Position</h3>
+                <div className="bg-muted/30 rounded-lg overflow-hidden">
+                  {/* Desktop: Full table */}
+                  <div className="hidden sm:block">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-border/50">
+                          <th className="py-2 px-3 text-left font-medium text-muted-foreground">#</th>
+                          <th className="py-2 px-3 text-left font-medium text-muted-foreground">Team</th>
+                          <th className="py-2 px-2 text-center font-medium text-muted-foreground">P</th>
+                          <th className="py-2 px-2 text-center font-medium text-muted-foreground">W</th>
+                          <th className="py-2 px-2 text-center font-medium text-muted-foreground">D</th>
+                          <th className="py-2 px-2 text-center font-medium text-muted-foreground">L</th>
+                          <th className="py-2 px-2 text-center font-medium text-muted-foreground">GD</th>
+                          <th className="py-2 px-3 text-center font-medium text-muted-foreground">Pts</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {homeStanding && (
+                          <tr className="bg-primary/10">
+                            <td className="py-2 px-3 font-bold">{homeStanding.position}</td>
+                            <td className="py-2 px-3 font-medium">{homeStanding.teamName}</td>
+                            <td className="py-2 px-2 text-center text-muted-foreground">{homeStanding.played}</td>
+                            <td className="py-2 px-2 text-center text-muted-foreground">{homeStanding.won}</td>
+                            <td className="py-2 px-2 text-center text-muted-foreground">{homeStanding.drawn}</td>
+                            <td className="py-2 px-2 text-center text-muted-foreground">{homeStanding.lost}</td>
+                            <td className={cn(
+                              "py-2 px-2 text-center font-medium",
+                              homeStanding.goalDiff > 0 ? "text-green-400" : 
+                              homeStanding.goalDiff < 0 ? "text-red-400" : ""
+                            )}>
+                              {homeStanding.goalDiff > 0 ? '+' : ''}{homeStanding.goalDiff}
+                            </td>
+                            <td className="py-2 px-3 text-center font-bold">{homeStanding.points}</td>
+                          </tr>
+                        )}
+                        {awayStanding && (
+                          <tr className="bg-accent/10">
+                            <td className="py-2 px-3 font-bold">{awayStanding.position}</td>
+                            <td className="py-2 px-3 font-medium">{awayStanding.teamName}</td>
+                            <td className="py-2 px-2 text-center text-muted-foreground">{awayStanding.played}</td>
+                            <td className="py-2 px-2 text-center text-muted-foreground">{awayStanding.won}</td>
+                            <td className="py-2 px-2 text-center text-muted-foreground">{awayStanding.drawn}</td>
+                            <td className="py-2 px-2 text-center text-muted-foreground">{awayStanding.lost}</td>
+                            <td className={cn(
+                              "py-2 px-2 text-center font-medium",
+                              awayStanding.goalDiff > 0 ? "text-green-400" : 
+                              awayStanding.goalDiff < 0 ? "text-red-400" : ""
+                            )}>
+                              {awayStanding.goalDiff > 0 ? '+' : ''}{awayStanding.goalDiff}
+                            </td>
+                            <td className="py-2 px-3 text-center font-bold">{awayStanding.points}</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Mobile: Compact view */}
+                  <div className="sm:hidden p-3 space-y-2">
+                    {homeStanding && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded bg-primary/20 flex items-center justify-center text-xs font-bold">
+                            {homeStanding.position}
+                          </span>
+                          <span className="text-xs font-medium">{getTeamAbbr(match.homeTeam)}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs">
+                          <span className="text-muted-foreground">{homeStanding.played}P</span>
+                          <span className={cn(
+                            "font-medium",
+                            homeStanding.goalDiff > 0 ? "text-green-400" : 
+                            homeStanding.goalDiff < 0 ? "text-red-400" : ""
+                          )}>
+                            {homeStanding.goalDiff > 0 ? '+' : ''}{homeStanding.goalDiff}
+                          </span>
+                          <span className="font-bold">{homeStanding.points} pts</span>
+                        </div>
+                      </div>
+                    )}
+                    {awayStanding && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded bg-accent/20 flex items-center justify-center text-xs font-bold">
+                            {awayStanding.position}
+                          </span>
+                          <span className="text-xs font-medium">{getTeamAbbr(match.awayTeam)}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs">
+                          <span className="text-muted-foreground">{awayStanding.played}P</span>
+                          <span className={cn(
+                            "font-medium",
+                            awayStanding.goalDiff > 0 ? "text-green-400" : 
+                            awayStanding.goalDiff < 0 ? "text-red-400" : ""
+                          )}>
+                            {awayStanding.goalDiff > 0 ? '+' : ''}{awayStanding.goalDiff}
+                          </span>
+                          <span className="font-bold">{awayStanding.points} pts</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Row 4: Likely Scores (full width) */}
+            {likelyScores.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Likely Scores</h3>
+                <div className="flex flex-wrap gap-2">
+                  {likelyScores.slice(0, 4).map((score, i) => (
+                    <span key={i} className={cn(
+                      "px-3 py-1.5 rounded-lg text-sm font-mono",
+                      i === 0 ? "bg-primary/15 border border-primary/30" : "bg-muted/50"
+                    )}>
+                      {score.score} <span className="text-muted-foreground text-xs">@{score.odds}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Collapsible: Lineups */}
             {analysis.lineupsAvailable && analysis.homeStartingXI && analysis.awayStartingXI && (
