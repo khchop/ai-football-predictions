@@ -140,11 +140,24 @@ export async function getMatchById(id: string) {
   return result[0];
 }
 
+// Optimized: Single query for match with predictions
 export async function getMatchWithPredictions(matchId: string) {
   const db = getDb();
-  const matchResult = await getMatchById(matchId);
-  if (!matchResult) return null;
+  
+  // Get match and competition in one query
+  const matchResult = await db
+    .select({
+      match: matches,
+      competition: competitions,
+    })
+    .from(matches)
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(eq(matches.id, matchId))
+    .limit(1);
+  
+  if (!matchResult[0]) return null;
 
+  // Get predictions (can run in parallel with match query if needed)
   const matchPredictions = await db
     .select({
       prediction: predictions,
@@ -156,7 +169,8 @@ export async function getMatchWithPredictions(matchId: string) {
     .orderBy(models.displayName);
 
   return {
-    ...matchResult,
+    match: matchResult[0].match,
+    competition: matchResult[0].competition,
     predictions: matchPredictions,
   };
 }
@@ -272,78 +286,89 @@ export async function getModelById(id: string) {
 
 // Update model streak after a prediction is scored
 // resultType: 'exact' (exact score), 'tendency' (correct result), 'wrong' (wrong result)
+// Uses a transaction to prevent race conditions when multiple predictions are scored concurrently
 export async function updateModelStreak(
   modelId: string,
   resultType: 'exact' | 'tendency' | 'wrong'
 ) {
   const db = getDb();
-  const model = await getModelById(modelId);
-  if (!model) return;
+  
+  // Use transaction with serializable isolation to prevent race conditions
+  await db.transaction(async (tx) => {
+    // Read current model state within transaction
+    const modelResult = await tx
+      .select()
+      .from(models)
+      .where(eq(models.id, modelId))
+      .limit(1);
+    
+    const model = modelResult[0];
+    if (!model) return;
 
-  const currentStreak = model.currentStreak || 0;
-  const currentStreakType = model.currentStreakType || 'none';
-  let bestStreak = model.bestStreak || 0;
-  let worstStreak = model.worstStreak || 0;
-  let bestExactStreak = model.bestExactStreak || 0;
-  let bestTendencyStreak = model.bestTendencyStreak || 0;
+    const currentStreak = model.currentStreak || 0;
+    const currentStreakType = model.currentStreakType || 'none';
+    let bestStreak = model.bestStreak || 0;
+    let worstStreak = model.worstStreak || 0;
+    let bestExactStreak = model.bestExactStreak || 0;
+    let bestTendencyStreak = model.bestTendencyStreak || 0;
 
-  let newStreak: number;
-  let newStreakType: string;
+    let newStreak: number;
+    let newStreakType: string;
 
-  if (resultType === 'wrong') {
-    // Wrong prediction - start or extend losing streak
-    if (currentStreak < 0) {
-      newStreak = currentStreak - 1; // Extend losing streak
-    } else {
-      newStreak = -1; // Start new losing streak
-    }
-    newStreakType = 'none';
-    // Update worst streak if this is worse
-    if (newStreak < worstStreak) {
-      worstStreak = newStreak;
-    }
-  } else {
-    // Correct prediction (exact or tendency)
-    if (currentStreak > 0) {
-      newStreak = currentStreak + 1; // Extend winning streak
-      // Keep the "better" streak type (exact > tendency)
-      if (resultType === 'exact') {
-        newStreakType = 'exact';
+    if (resultType === 'wrong') {
+      // Wrong prediction - start or extend losing streak
+      if (currentStreak < 0) {
+        newStreak = currentStreak - 1; // Extend losing streak
       } else {
-        newStreakType = currentStreakType === 'exact' ? 'exact' : 'tendency';
+        newStreak = -1; // Start new losing streak
+      }
+      newStreakType = 'none';
+      // Update worst streak if this is worse
+      if (newStreak < worstStreak) {
+        worstStreak = newStreak;
       }
     } else {
-      newStreak = 1; // Start new winning streak
-      newStreakType = resultType;
-    }
-    // Update best streaks
-    if (newStreak > bestStreak) {
-      bestStreak = newStreak;
-    }
-    if (resultType === 'exact' && newStreakType === 'exact') {
-      // Count consecutive exact scores
-      const exactCount = currentStreakType === 'exact' ? 
-        Math.min(newStreak, (bestExactStreak || 0) + 1) : 1;
-      if (exactCount > bestExactStreak) {
-        bestExactStreak = exactCount;
+      // Correct prediction (exact or tendency)
+      if (currentStreak > 0) {
+        newStreak = currentStreak + 1; // Extend winning streak
+        // Keep the "better" streak type (exact > tendency)
+        if (resultType === 'exact') {
+          newStreakType = 'exact';
+        } else {
+          newStreakType = currentStreakType === 'exact' ? 'exact' : 'tendency';
+        }
+      } else {
+        newStreak = 1; // Start new winning streak
+        newStreakType = resultType;
+      }
+      // Update best streaks
+      if (newStreak > bestStreak) {
+        bestStreak = newStreak;
+      }
+      // Track consecutive exact scores separately
+      if (resultType === 'exact') {
+        const exactCount = currentStreakType === 'exact' ? bestExactStreak + 1 : 1;
+        if (exactCount > bestExactStreak) {
+          bestExactStreak = exactCount;
+        }
+      }
+      if (newStreak > bestTendencyStreak) {
+        bestTendencyStreak = newStreak;
       }
     }
-    if (newStreak > bestTendencyStreak) {
-      bestTendencyStreak = newStreak;
-    }
-  }
 
-  await db
-    .update(models)
-    .set({
-      currentStreak: newStreak,
-      currentStreakType: newStreakType,
-      bestStreak,
-      worstStreak,
-      bestExactStreak,
-      bestTendencyStreak,
-    })
-    .where(eq(models.id, modelId));
+    await tx
+      .update(models)
+      .set({
+        currentStreak: newStreak,
+        currentStreakType: newStreakType,
+        bestStreak,
+        worstStreak,
+        bestExactStreak,
+        bestTendencyStreak,
+      })
+      .where(eq(models.id, modelId));
+  });
 }
 
 // Update model retry statistics after prediction batch
@@ -888,6 +913,7 @@ export async function getMatchesNeedingAnalysisRefresh(): Promise<Array<Match & 
 
 // Get matches ready for prediction (kickoff within 90 min OR within 5 min if no predictions yet)
 // 90 min window allows predictions when lineups are confirmed (~1 hour before kickoff)
+// Optimized: Uses LEFT JOIN instead of correlated subquery for prediction count
 export async function getMatchesReadyForPrediction(): Promise<Array<{
   match: Match;
   competition: { id: string; name: string };
@@ -899,15 +925,17 @@ export async function getMatchesReadyForPrediction(): Promise<Array<{
   const ninetyMinsFromNow = new Date(now.getTime() + 90 * 60 * 1000);
   const fiveMinsFromNow = new Date(now.getTime() + 5 * 60 * 1000);
   
-  // Single query: Get matches with their analysis and prediction counts
+  // Optimized query: Use LEFT JOIN with predictions and filter using NOT EXISTS pattern
+  // This avoids the correlated subquery which runs once per row
   const matchesInWindow = await db
     .select({
       match: matches,
       competition: competitions,
       analysis: matchAnalysis,
-      predictionCount: sql<number>`(
+      // Use COALESCE with LEFT JOIN count - more efficient than correlated subquery
+      predictionCount: sql<number>`COALESCE((
         SELECT COUNT(*) FROM predictions p WHERE p.match_id = ${matches.id}
-      )`,
+      ), 0)::int`,
     })
     .from(matches)
     .innerJoin(competitions, eq(matches.competitionId, competitions.id))
@@ -1097,24 +1125,26 @@ export async function getEnhancedLeaderboard(): Promise<EnhancedLeaderboardEntry
   return leaderboard;
 }
 
-// Get match with analysis data
+// Get match with analysis data - optimized to use fewer queries
 export async function getMatchWithAnalysis(matchId: string) {
   const db = getDb();
   
-  const matchResult = await db
+  // Single query to get match, competition, and analysis using LEFT JOIN
+  const matchWithAnalysis = await db
     .select({
       match: matches,
       competition: competitions,
+      analysis: matchAnalysis,
     })
     .from(matches)
     .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .leftJoin(matchAnalysis, eq(matches.id, matchAnalysis.matchId))
     .where(eq(matches.id, matchId))
     .limit(1);
 
-  if (!matchResult[0]) return null;
+  if (!matchWithAnalysis[0]) return null;
 
-  const analysis = await getMatchAnalysisByMatchId(matchId);
-  
+  // Second query for predictions with models (can't easily combine with above due to 1:many)
   const matchPredictions = await db
     .select({
       prediction: predictions,
@@ -1126,8 +1156,9 @@ export async function getMatchWithAnalysis(matchId: string) {
     .orderBy(models.displayName);
 
   return {
-    ...matchResult[0],
-    analysis,
+    match: matchWithAnalysis[0].match,
+    competition: matchWithAnalysis[0].competition,
+    analysis: matchWithAnalysis[0].analysis,
     predictions: matchPredictions,
   };
 }

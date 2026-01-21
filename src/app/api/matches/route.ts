@@ -1,11 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUpcomingMatches, getRecentMatches, getFinishedMatches, getOverallStats } from '@/lib/db/queries';
+import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 
 export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitKey = getRateLimitKey(request);
+  const rateLimitResult = checkRateLimit(`matches:${rateLimitKey}`, RATE_LIMIT_PRESETS.standard);
+  
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      { success: false, error: 'Rate limit exceeded. Please try again later.' },
+      { 
+        status: 429,
+        headers: createRateLimitHeaders(rateLimitResult),
+      }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'upcoming';
-    const limit = parseInt(searchParams.get('limit') || '20', 10);
+    const limitParam = searchParams.get('limit') || '20';
+    
+    // Validate and bound the limit parameter
+    const parsedLimit = parseInt(limitParam, 10);
+    const limit = isNaN(parsedLimit) ? 20 : Math.min(Math.max(parsedLimit, 1), 100);
 
     let matches;
     
@@ -46,18 +65,23 @@ export async function GET(request: NextRequest) {
       },
     }));
 
-    return NextResponse.json({
-      success: true,
-      matches: formattedMatches,
-      stats,
-      count: formattedMatches.length,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        matches: formattedMatches,
+        stats,
+        count: formattedMatches.length,
+      },
+      { headers: createRateLimitHeaders(rateLimitResult) }
+    );
   } catch (error) {
     console.error('Error fetching matches:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+        error: process.env.NODE_ENV === 'development' 
+          ? (error instanceof Error ? error.message : 'Unknown error')
+          : 'An internal error occurred'
       },
       { status: 500 }
     );
