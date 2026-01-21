@@ -109,6 +109,7 @@ export const matchAnalysis = pgTable('match_analysis', {
   id: text('id').primaryKey(), // UUID
   matchId: text('match_id')
     .notNull()
+    .unique()  // Required for upsert on conflict
     .references(() => matches.id),
   
   // Winner prediction from API-Football /predictions endpoint
