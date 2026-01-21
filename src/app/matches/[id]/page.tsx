@@ -6,14 +6,14 @@ import { PredictionTable } from '@/components/prediction-table';
 import { MatchEvents } from '@/components/match-events';
 import { getMatchWithAnalysis } from '@/lib/db/queries';
 import { getMatchEvents } from '@/lib/football/api-football';
-import { getStandingByTeamName } from '@/lib/football/standings';
-import { getCompetitionById } from '@/lib/football/competitions';
+
+
 import { calculateEnhancedScores } from '@/lib/utils/scoring';
 import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, AlertTriangle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import type { KeyInjury, LikelyScore } from '@/types';
-import type { LeagueStanding } from '@/lib/db/schema';
+
 import { Collapsible } from '@/components/ui/collapsible';
 
 // Helper to get team abbreviation (3-4 chars)
@@ -121,22 +121,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const likelyScores = parseJson<LikelyScore[]>(analysis?.likelyScores ?? null) || [];
 
 
-  // Fetch league standings for domestic leagues and European league phase
-  let homeStanding: LeagueStanding | null = null;
-  let awayStanding: LeagueStanding | null = null;
-  
-  const competitionConfig = getCompetitionById(competition.id);
-  const canHaveStandings = competitionConfig?.category === 'club-domestic' || 
-                           competitionConfig?.category === 'club-europe';
-  
-  if (canHaveStandings && competitionConfig) {
-    // Fetch standings for both teams in parallel
-    // For European competitions, this will return null for knockout stages (no standings table)
-    [homeStanding, awayStanding] = await Promise.all([
-      getStandingByTeamName(match.homeTeam, competitionConfig.apiFootballId),
-      getStandingByTeamName(match.awayTeam, competitionConfig.apiFootballId),
-    ]);
-  }
+
 
   // Fetch match events for finished/live matches
   const matchEvents = (isFinished || isLive) && match.externalId 
@@ -472,55 +457,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
               )}
             </div>
 
-            {/* Row 2: League Position (compact table) - only show if BOTH teams found */}
-            {(homeStanding && awayStanding) && (
-              <div className="mb-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">League Position</h3>
-                <div className="bg-muted/30 rounded-lg overflow-hidden">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-border/50">
-                        <th className="py-2 px-3 text-left font-medium text-muted-foreground">#</th>
-                        <th className="py-2 px-3 text-left font-medium text-muted-foreground">Team</th>
-                        <th className="py-2 px-2 text-center font-medium text-muted-foreground">W-D-L</th>
-                        <th className="py-2 px-2 text-center font-medium text-muted-foreground">Pts</th>
-                        <th className="py-2 px-3 text-center font-medium text-muted-foreground">GF-GA</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {homeStanding && (
-                        <tr className="bg-primary/10">
-                          <td className="py-2 px-3 font-bold">{homeStanding.position}</td>
-                          <td className="py-2 px-3 font-medium">{homeStanding.teamName}</td>
-                          <td className="py-2 px-2 text-center font-mono">
-                            {homeStanding.won}-{homeStanding.drawn}-{homeStanding.lost}
-                          </td>
-                          <td className="py-2 px-2 text-center font-bold">{homeStanding.points}</td>
-                          <td className="py-2 px-3 text-center font-mono text-muted-foreground">
-                            {homeStanding.goalsFor}-{homeStanding.goalsAgainst}
-                          </td>
-                        </tr>
-                      )}
-                      {awayStanding && (
-                        <tr className="bg-accent/10">
-                          <td className="py-2 px-3 font-bold">{awayStanding.position}</td>
-                          <td className="py-2 px-3 font-medium">{awayStanding.teamName}</td>
-                          <td className="py-2 px-2 text-center font-mono">
-                            {awayStanding.won}-{awayStanding.drawn}-{awayStanding.lost}
-                          </td>
-                          <td className="py-2 px-2 text-center font-bold">{awayStanding.points}</td>
-                          <td className="py-2 px-3 text-center font-mono text-muted-foreground">
-                            {awayStanding.goalsFor}-{awayStanding.goalsAgainst}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* Row 3: Likely Scores (full width) */}
+            {/* Likely Scores */}
             {likelyScores.length > 0 && (
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">Likely Scores</h3>
