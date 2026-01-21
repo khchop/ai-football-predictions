@@ -5,21 +5,21 @@ import { scorePredictionsForMatch } from '@/lib/scoring/score-match';
 function validateAdminRequest(request: NextRequest): NextResponse | null {
   const password = request.headers.get('X-Admin-Password');
   
-  if (!process.env.CRON_SECRET) {
+  if (!process.env.ADMIN_PASSWORD) {
     // SECURITY: Fail closed in production
     if (process.env.NODE_ENV === 'production') {
-      console.error('[Admin Auth] CRITICAL: CRON_SECRET not configured in production!');
+      console.error('[Admin Auth] CRITICAL: ADMIN_PASSWORD not configured in production!');
       return NextResponse.json(
         { success: false, error: 'Server misconfigured' },
         { status: 500 }
       );
     }
     // Allow in development without password
-    console.warn('[Admin Auth] CRON_SECRET not configured - allowing in development mode');
+    console.warn('[Admin Auth] ADMIN_PASSWORD not configured - allowing in development mode');
     return null;
   }
   
-  if (password !== process.env.CRON_SECRET) {
+  if (password !== process.env.ADMIN_PASSWORD) {
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 401 }

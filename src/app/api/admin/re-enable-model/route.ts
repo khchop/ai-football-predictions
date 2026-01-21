@@ -4,17 +4,19 @@ import { reEnableModel } from '@/lib/db/queries';
 function validateAdminRequest(request: NextRequest): NextResponse | null {
   const password = request.headers.get('X-Admin-Password');
   
-  if (!process.env.CRON_SECRET) {
+  if (!process.env.ADMIN_PASSWORD) {
     if (process.env.NODE_ENV === 'production') {
+      console.error('[Admin Auth] CRITICAL: ADMIN_PASSWORD not configured in production!');
       return NextResponse.json(
         { success: false, error: 'Server misconfigured' },
         { status: 500 }
       );
     }
+    console.warn('[Admin Auth] ADMIN_PASSWORD not configured - allowing in development mode');
     return null;
   }
   
-  if (password !== process.env.CRON_SECRET) {
+  if (password !== process.env.ADMIN_PASSWORD) {
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 401 }

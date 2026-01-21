@@ -78,12 +78,12 @@ export const Llama33_70B_FreeProvider = new OpenRouterProvider(
   false
 );
 
-// 2. Mistral Small 3.1 24B - Mistral (Free)
-export const MistralSmall31Provider = new OpenRouterProvider(
-  'mistral-small-3.1',
+// 2. Gemini 2.0 Flash Experimental - Google (Free)
+export const Gemini20FlashExpProvider = new OpenRouterProvider(
+  'gemini-2.0-flash-exp-free',
   'openrouter',
-  'mistralai/mistral-small-3.1-24b-instruct:free',
-  'Mistral Small 3.1 (Mistral)',
+  'google/gemini-2.0-flash-exp:free',
+  'Gemini 2.0 Flash Exp (Google)',
   'free',
   { promptPer1M: 0, completionPer1M: 0 },
   false
@@ -100,82 +100,74 @@ export const Gemma3_27BProvider = new OpenRouterProvider(
   false
 );
 
-// 4. Qwen3 Next 80B - Alibaba (Free) - Optimized to remove thinking traces
-export const Qwen3Next80BProvider = new OpenRouterProvider(
-  'qwen3-next-80b',
+// 4. Devstral 2512 - Mistral (Free)
+export const Devstral2512Provider = new OpenRouterProvider(
+  'devstral-2512-free',
   'openrouter',
-  'qwen/qwen3-next-80b-a3b-instruct:free',
-  'Qwen3 Next 80B (Alibaba)',
+  'mistralai/devstral-2512:free',
+  'Devstral 2512 (Mistral)',
   'free',
   { promptPer1M: 0, completionPer1M: 0 },
   false
 );
 
-// 5. Nemotron Nano 9B V2 (Free) - NVIDIA
-export const NemotronNano9BFreeProvider = new OpenRouterProvider(
-  'nemotron-nano-9b-free',
+// 5. Qwen3 4B - Alibaba (Free)
+export const Qwen3_4BFreeProvider = new OpenRouterProvider(
+  'qwen3-4b-free',
   'openrouter',
-  'nvidia/nemotron-nano-9b-v2:free',
-  'Nemotron Nano 9B V2 Free (NVIDIA)',
+  'qwen/qwen3-4b:free',
+  'Qwen3 4B (Alibaba)',
   'free',
   { promptPer1M: 0, completionPer1M: 0 },
   false
 );
 
-// 6. GLM 4.5 Air - Zhipu AI (Free) - Open source under Apache-2.0
-export const GLM45AirProvider = new OpenRouterProvider(
-  'glm-4.5-air',
+// 6. Llama 3.1 405B - Meta (Free)
+export const Llama31_405B_FreeProvider = new OpenRouterProvider(
+  'llama-3.1-405b-free',
   'openrouter',
-  'z-ai/glm-4.5-air:free',
-  'GLM 4.5 Air (Zhipu AI)',
+  'meta-llama/llama-3.1-405b-instruct:free',
+  'Llama 3.1 405B Free (Meta)',
   'free',
   { promptPer1M: 0, completionPer1M: 0 },
   false
 );
 
-// 7. MiMo V2 Flash - Xiaomi (Free) - Hybrid model, defaults to fast/instruct mode
-export const MiMoV2FlashProvider = new OpenRouterProvider(
-  'mimo-v2-flash',
+// 7. GPT-OSS 20B - OpenAI (Free)
+export const GPTOSS20BFreeProvider = new OpenRouterProvider(
+  'gpt-oss-20b-free',
   'openrouter',
-  'xiaomi/mimo-v2-flash:free',
-  'MiMo V2 Flash (Xiaomi)',
+  'openai/gpt-oss-20b:free',
+  'GPT-OSS 20B (OpenAI)',
   'free',
   { promptPer1M: 0, completionPer1M: 0 },
   false
 );
 
-// 8. Dolphin Mistral 24B - Venice (Free)
-export const DolphinMistral24BProvider = new OpenRouterProvider(
-  'dolphin-mistral-24b',
+// 8. Kimi K2 - Moonshot (Free)
+export const KimiK2FreeProvider = new OpenRouterProvider(
+  'kimi-k2-free',
   'openrouter',
-  'cognitivecomputations/dolphin-mistral-24b-venice-edition:free',
-  'Dolphin Mistral 24B (Venice)',
+  'moonshotai/kimi-k2:free',
+  'Kimi K2 (Moonshot)',
   'free',
   { promptPer1M: 0, completionPer1M: 0 },
   false
 );
 
-// 9. Hermes 3 405B - NousResearch (Free)
-export const Hermes3_405B_FreeProvider = new OpenRouterProvider(
-  'hermes-3-405b-free',
+// 9. Gemini 3 Flash Preview - Google (Free)
+export const Gemini3FlashPreviewProvider = new OpenRouterProvider(
+  'gemini-3-flash-preview-free',
   'openrouter',
-  'nousresearch/hermes-3-llama-3.1-405b:free',
-  'Hermes 3 405B (NousResearch)',
+  'google/gemini-3-flash-preview:free',
+  'Gemini 3 Flash Preview (Google)',
   'free',
   { promptPer1M: 0, completionPer1M: 0 },
   false
 );
 
-// 10. Gemma 3 12B - Google (Free)
-export const Gemma3_12BFreeProvider = new OpenRouterProvider(
-  'gemma-3-12b-free',
-  'openrouter',
-  'google/gemma-3-12b-it:free',
-  'Gemma 3 12B (Google)',
-  'free',
-  { promptPer1M: 0, completionPer1M: 0 },
-  false
-);
+// 10. (Kept) Gemma 3 27B - Google (Free)
+// Already defined above as Gemma3_27BProvider
 
 // ============================================================================
 // TIER 2: ULTRA-BUDGET LOGIC (8)
@@ -237,14 +229,14 @@ export const Qwen25Coder32BProvider = new OpenRouterProvider(
   false
 );
 
-// 16. Nemotron Nano 9B - NVIDIA
-export const NemotronNano9BProvider = new OpenRouterProvider(
-  'nemotron-nano-9b',
+// 16. Gemini 2.5 Flash Lite - Google
+export const Gemini25FlashLiteProvider = new OpenRouterProvider(
+  'gemini-2.5-flash-lite',
   'openrouter',
-  'nvidia/nemotron-nano-9b-v2',
-  'Nemotron Nano 9B (NVIDIA)',
+  'google/gemini-2.5-flash-lite',
+  'Gemini 2.5 Flash Lite (Google)',
   'ultra-budget',
-  { promptPer1M: 0.04, completionPer1M: 0.16 },
+  { promptPer1M: 0.10, completionPer1M: 0.40 },
   false
 );
 
@@ -259,14 +251,14 @@ export const CommandR7BProvider = new OpenRouterProvider(
   false
 );
 
-// 18. GLM 4.7 Flash - Zhipu AI (31B, open source)
-export const GLM47FlashProvider = new OpenRouterProvider(
-  'glm-4.7-flash',
+// 18. GPT-4.1 Nano - OpenAI
+export const GPT41NanoProvider = new OpenRouterProvider(
+  'gpt-4.1-nano',
   'openrouter',
-  'z-ai/glm-4.7-flash',
-  'GLM 4.7 Flash (Zhipu AI)',
+  'openai/gpt-4.1-nano',
+  'GPT-4.1 Nano (OpenAI)',
   'ultra-budget',
-  { promptPer1M: 0.07, completionPer1M: 0.40 },
+  { promptPer1M: 0.10, completionPer1M: 0.40 },
   false
 );
 
@@ -391,83 +383,97 @@ export const CommandRPlusProvider = new OpenRouterProvider(
   true
 );
 
-// 29. Nemotron Ultra 253B - NVIDIA
-export const NemotronUltra253BProvider = new OpenRouterProvider(
-  'nemotron-ultra-253b',
+// 29. Claude 3.5 Haiku - Anthropic
+export const Claude35HaikuProvider = new OpenRouterProvider(
+  'claude-3.5-haiku',
   'openrouter',
-  'nvidia/llama-3.1-nemotron-ultra-253b-v1',
-  'Nemotron Ultra 253B (NVIDIA)',
+  'anthropic/claude-3.5-haiku',
+  'Claude 3.5 Haiku (Anthropic)',
   'premium',
-  { promptPer1M: 0.60, completionPer1M: 1.80 },
+  { promptPer1M: 0.80, completionPer1M: 4.00 },
   true
 );
 
-// 30. Hermes 3 405B (Paid) - NousResearch
-export const Hermes3_405BProvider = new OpenRouterProvider(
-  'hermes-3-405b',
+// 30. Grok 4.1 Fast - xAI
+export const Grok41FastProvider = new OpenRouterProvider(
+  'grok-4.1-fast',
   'openrouter',
-  'nousresearch/hermes-3-llama-3.1-405b',
-  'Hermes 3 405B Paid (NousResearch)',
+  'x-ai/grok-4.1-fast',
+  'Grok 4.1 Fast (xAI)',
   'premium',
-  { promptPer1M: 1.00, completionPer1M: 1.00 },
+  { promptPer1M: 0.20, completionPer1M: 0.50 },
   true
 );
+
+// 31. Llama 4 Maverick - Meta
+export const Llama4MaverickProvider = new OpenRouterProvider(
+  'llama-4-maverick',
+  'openrouter',
+  'meta-llama/llama-4-maverick',
+  'Llama 4 Maverick (Meta)',
+  'premium',
+  { promptPer1M: 0.15, completionPer1M: 0.60 },
+  true
+);
+
+
 
 // ============================================================================
 // Export all OpenRouter providers (30 open-source models)
 // ============================================================================
 
 export const OPENROUTER_PROVIDERS = [
-  // TIER 1: FREE (10)
+  // TIER 1: FREE (8)
   Llama33_70B_FreeProvider,      // 1  - FREE - Meta
-  MistralSmall31Provider,        // 2  - FREE - Mistral
+  Gemini20FlashExpProvider,      // 2  - FREE - Google
   Gemma3_27BProvider,            // 3  - FREE - Google
-  Qwen3Next80BProvider,          // 4  - FREE - Alibaba
-  NemotronNano9BFreeProvider,    // 5  - FREE - NVIDIA
-  GLM45AirProvider,              // 6  - FREE - Zhipu AI
-  MiMoV2FlashProvider,           // 7  - FREE - Xiaomi
-  DolphinMistral24BProvider,     // 8  - FREE - CognitiveComp
-  Hermes3_405B_FreeProvider,     // 9  - FREE - NousResearch
-  Gemma3_12BFreeProvider,        // 10 - FREE - Google
+  Devstral2512Provider,          // 4  - FREE - Mistral
+  Qwen3_4BFreeProvider,          // 5  - FREE - Alibaba
+  Llama31_405B_FreeProvider,     // 6  - FREE - Meta
+  GPTOSS20BFreeProvider,         // 7  - FREE - OpenAI
+  KimiK2FreeProvider,            // 8  - FREE - Moonshot
   
   // TIER 2: ULTRA-BUDGET (8)
-  Llama32_3BProvider,            // 11 - $0.02/$0.02 - Meta
-  Gemma3_4BProvider,             // 12 - $0.02/$0.07 - Google
-  Mistral7BProvider,             // 13 - $0.20/$0.20 - Mistral
-  Qwen25_7BProvider,             // 14 - $0.04/$0.10 - Alibaba
-  Qwen25Coder32BProvider,        // 15 - $0.03/$0.11 - Alibaba
-  NemotronNano9BProvider,        // 16 - $0.04/$0.16 - NVIDIA
-  CommandR7BProvider,            // 17 - $0.04/$0.15 - Cohere
-  GLM47FlashProvider,            // 18 - $0.07/$0.40 - Zhipu AI
+  Llama32_3BProvider,            // 9  - $0.02/$0.02 - Meta
+  Gemma3_4BProvider,             // 10 - $0.02/$0.07 - Google
+  Mistral7BProvider,             // 11 - $0.20/$0.20 - Mistral
+  Qwen25_7BProvider,             // 12 - $0.04/$0.10 - Alibaba
+  Qwen25Coder32BProvider,        // 13 - $0.03/$0.11 - Alibaba
+  CommandR7BProvider,            // 14 - $0.04/$0.15 - Cohere
+  Gemini25FlashLiteProvider,     // 15 - $0.10/$0.40 - Google
+  GPT41NanoProvider,             // 16 - $0.10/$0.40 - OpenAI
   
   // TIER 3: BUDGET (7)
-  Llama33_70BProvider,           // 19 - $0.10/$0.32 - Meta
-  Llama4ScoutProvider,           // 20 - $0.08/$0.30 - Meta
-  DeepSeekV32Provider,           // 21 - $0.25/$0.38 - DeepSeek
-  DeepSeekV31Provider,           // 22 - $0.15/$0.75 - DeepSeek
-  MistralSabaProvider,           // 23 - $0.20/$0.60 - Mistral
-  CommandRProvider,              // 24 - $0.15/$0.60 - Cohere
-  OLMo3_7BProvider,              // 25 - $0.10/$0.20 - AllenAI
+  Llama33_70BProvider,           // 17 - $0.10/$0.32 - Meta
+  Llama4ScoutProvider,           // 18 - $0.08/$0.30 - Meta
+  DeepSeekV32Provider,           // 19 - $0.25/$0.38 - DeepSeek
+  DeepSeekV31Provider,           // 20 - $0.15/$0.75 - DeepSeek
+  MistralSabaProvider,           // 21 - $0.20/$0.60 - Mistral
+  CommandRProvider,              // 22 - $0.15/$0.60 - Cohere
+  OLMo3_7BProvider,              // 23 - $0.10/$0.20 - AllenAI
   
-  // TIER 4: PREMIUM (5)
-  Llama31_405BProvider,          // 26 - $3.50/$3.50 - Meta
-  MistralLarge2Provider,         // 27 - $2.00/$6.00 - Mistral
-  CommandRPlusProvider,          // 28 - $2.50/$10.00 - Cohere
-  NemotronUltra253BProvider,     // 29 - $0.60/$1.80 - NVIDIA
-  Hermes3_405BProvider,          // 30 - $1.00/$1.00 - NousResearch
+  // TIER 4: PREMIUM (7)
+  Llama31_405BProvider,          // 24 - $3.50/$3.50 - Meta
+  MistralLarge2Provider,         // 25 - $2.00/$6.00 - Mistral
+  CommandRPlusProvider,          // 26 - $2.50/$10.00 - Cohere
+  Claude35HaikuProvider,         // 27 - $0.80/$4.00 - Anthropic
+  Grok41FastProvider,            // 28 - $0.20/$0.50 - xAI
+  Llama4MaverickProvider,        // 29 - $0.15/$0.60 - Meta
+  Gemini3FlashPreviewProvider,   // 30 - FREE - Google
 ];
 
 // ============================================================================
-// Summary:
-// - 10 FREE models (no cost) from 9 providers
+// Summary (Updated January 2025):
+// - 8 FREE models (no cost) from 6 providers
 // - 8 ULTRA-BUDGET models ($0.02-$0.40 per 1M tokens)
 // - 7 BUDGET models ($0.08-$0.75 per 1M tokens)
-// - 5 PREMIUM models ($0.60-$10.00 per 1M tokens)
-// - All 30 models are open-source/open-weights
-// - Provider diversity: 12 different providers, max 5 from any single provider
+// - 7 PREMIUM models ($0.15-$3.50 per 1M tokens)
+// - Mix of open-source and proprietary models (OpenAI, Google, Anthropic, xAI)
+// - Provider diversity: 12 different providers, max 6 from any single provider (Meta)
+// - All non-reasoning models (no o1, o3, r1, thinking models)
+// 
+// Estimated monthly cost at 25 matches/day: ~$4.67/month
 // 
 // Hybrid Model Notes (default to Instruct mode, don't send reasoning flags):
 // - deepseek/deepseek-v3.2, deepseek/deepseek-chat-v3.1
-// - xiaomi/mimo-v2-flash:free
-// - nvidia/nemotron-3-nano-30b-a3b:free
 // ============================================================================
