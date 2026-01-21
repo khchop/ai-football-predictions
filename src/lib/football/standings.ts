@@ -258,12 +258,25 @@ export async function getStandingByTeamName(
     .from(leagueStandings)
     .where(eq(leagueStandings.leagueId, leagueId));
 
-  // Simple fuzzy match: check if team name contains or is contained by search term
+  // Fuzzy match: check if team name contains or is contained by search term
   const normalizedSearch = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
   
   for (const standing of allInLeague) {
     const normalizedTeam = standing.teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    // Exact substring match
     if (normalizedTeam.includes(normalizedSearch) || normalizedSearch.includes(normalizedTeam)) {
+      return standing;
+    }
+    
+    // First word match (for cases like "Galatasaray" vs "Galatasaray SK")
+    const searchWords = teamName.toLowerCase().split(/\s+/);
+    const standingWords = standing.teamName.toLowerCase().split(/\s+/);
+    const searchFirstWord = searchWords[0].replace(/[^a-z0-9]/g, '');
+    const standingFirstWord = standingWords[0].replace(/[^a-z0-9]/g, '');
+    
+    // Match if first words are same and long enough (4+ chars to avoid false positives)
+    if (searchFirstWord.length >= 4 && searchFirstWord === standingFirstWord) {
       return standing;
     }
   }

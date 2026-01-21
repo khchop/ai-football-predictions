@@ -12,7 +12,7 @@ import { calculateEnhancedScores } from '@/lib/utils/scoring';
 import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, AlertTriangle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import type { KeyInjury, LikelyScore, H2HMatch } from '@/types';
+import type { KeyInjury, LikelyScore } from '@/types';
 import type { LeagueStanding } from '@/lib/db/schema';
 import { Collapsible } from '@/components/ui/collapsible';
 
@@ -119,7 +119,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
   // Parse analysis data
   const keyInjuries = parseJson<KeyInjury[]>(analysis?.keyInjuries ?? null) || [];
   const likelyScores = parseJson<LikelyScore[]>(analysis?.likelyScores ?? null) || [];
-  const h2hMatches = parseJson<H2HMatch[]>(analysis?.h2hResults ?? null) || [];
+
 
   // Fetch league standings for domestic leagues and European league phase
   let homeStanding: LeagueStanding | null = null;
@@ -467,64 +467,13 @@ export default async function MatchPage({ params }: MatchPageProps) {
                         </>
                       );
                     })()}
-                    
-                    {/* Match history table */}
-                    {h2hMatches.length > 0 && (
-                      <div className="mt-3 bg-muted/20 rounded-lg overflow-hidden">
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="border-b border-border/30">
-                              {h2hMatches.some(m => m.date) && (
-                                <th className="py-2 px-2 text-left font-medium text-muted-foreground">Date</th>
-                              )}
-                              <th className="py-2 px-2 text-left font-medium text-muted-foreground">Match</th>
-                              <th className="py-2 px-2 text-center font-medium text-muted-foreground">Score</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {h2hMatches.slice(0, 5).map((h2hMatch, i) => (
-                              <tr key={i} className="border-b border-border/20 last:border-0">
-                                {h2hMatches.some(m => m.date) && (
-                                  <td className="py-2 px-2 text-muted-foreground whitespace-nowrap">
-                                    {h2hMatch.date 
-                                      ? format(parseISO(h2hMatch.date), 'MMM d, yy')
-                                      : '—'}
-                                  </td>
-                                )}
-                                <td className="py-2 px-2">
-                                  <span className={cn(
-                                    h2hMatch.homeScore > h2hMatch.awayScore && "font-medium"
-                                  )}>
-                                    {h2hMatch.homeTeam}
-                                  </span>
-                                  <span className="text-muted-foreground mx-1">-</span>
-                                  <span className={cn(
-                                    h2hMatch.awayScore > h2hMatch.homeScore && "font-medium"
-                                  )}>
-                                    {h2hMatch.awayTeam}
-                                  </span>
-                                </td>
-                                <td className="py-2 px-2 text-center font-mono font-medium">
-                                  <span className={cn(
-                                    h2hMatch.homeScore > h2hMatch.awayScore ? "text-primary" :
-                                    h2hMatch.awayScore > h2hMatch.homeScore ? "text-accent" : ""
-                                  )}>
-                                    {h2hMatch.homeScore}-{h2hMatch.awayScore}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Row 2: League Position (compact table) */}
-            {(homeStanding || awayStanding) && (
+            {/* Row 2: League Position (compact table) - only show if BOTH teams found */}
+            {(homeStanding && awayStanding) && (
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">League Position</h3>
                 <div className="bg-muted/30 rounded-lg overflow-hidden">
