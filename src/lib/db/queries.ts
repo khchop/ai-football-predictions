@@ -1216,13 +1216,6 @@ export async function getMatchesReadyForPrediction(): Promise<Array<{
   }> = [];
 
   for (const row of matchesInWindow) {
-    const hasPredictions = (row.predictionCount || 0) > 0;
-    
-    // If match has predictions, skip (predictions already generated)
-    if (hasPredictions) {
-      continue;
-    }
-    
     // Check if we should generate predictions now
     const kickoff = new Date(row.match.kickoffTime);
     const isWithin5Mins = kickoff <= fiveMinsFromNow;
@@ -1236,7 +1229,7 @@ export async function getMatchesReadyForPrediction(): Promise<Array<{
         match: row.match,
         competition: { id: row.competition.id, name: row.competition.name },
         analysis: row.analysis,
-        hasPredictions: false,
+        hasPredictions: (row.predictionCount || 0) > 0,
       });
     }
   }
