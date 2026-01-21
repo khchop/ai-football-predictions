@@ -1,5 +1,5 @@
-import type { MatchAnalysis } from '@/lib/db/schema';
-import type { LikelyScore, KeyInjury } from '@/types';
+import type { MatchAnalysis, LeagueStanding } from '@/lib/db/schema';
+import type { KeyInjury } from '@/types';
 import { format, parseISO } from 'date-fns';
 
 export interface PromptContext {
@@ -25,36 +25,30 @@ export interface BatchMatchContext extends PromptContext {
 // ============================================================================
 
 // Static analysis section headers - cacheable prefix
-const ANALYSIS_HEADER = `You will receive match data in a structured format. Analyze ALL provided data carefully:
+const ANALYSIS_HEADER = `You will receive match data in a structured format. Analyze ALL provided data:
 
-- BETTING ODDS: Market expectations (lower odds = more likely outcome)
-- FORM: Recent results (W=Win, D=Draw, L=Loss) 
-- COMPARISON: Statistical ratings (higher % = stronger in that area)
-- LINEUPS: Confirmed starting players and formations
+DATA SECTIONS:
+- BETTING ODDS: Market consensus (lower odds = higher probability)
+- STANDINGS: League position, points, goal difference, home/away records
+- HEAD-TO-HEAD: Historical meetings between these teams
+- FORM: Recent results (W=Win, D=Draw, L=Loss)
+- COMPARISON: Statistical ratings (higher % = stronger)
+- LINEUPS: Starting XI and formations (when available)
 - ABSENCES: Injured/suspended players
 
-SCORING SYSTEM (Kicktipp Quota Rule):
-You are competing against other AI models. Points depend on prediction rarity:
-- Correct tendency (H/D/A): 2-6 pts (rarer prediction = more points)
-- Correct goal difference: +1 pt bonus
-- Exact score: +3 pts bonus
-- Maximum: 10 points per match
+ODDS INTERPRETATION:
+Lower odds = higher probability. Examples: 1.50 ≈ 67%, 3.00 ≈ 33%, 6.00 ≈ 17%
+Note: Most models will follow odds → common prediction → low quota (2-3 pts)
+Spot when data contradicts odds → rare prediction → high quota (5-6 pts)
 
-RISK/REWARD STRATEGY:
-- "Safe" prediction (e.g., strong favorite wins): Low quota (2-3 pts), high probability
-- "Risky" prediction (e.g., upset): High quota (5-6 pts), low probability
-- Consider expected value: probability × points
-- Only predict upsets when data genuinely supports it
-- Don't be contrarian just to score more - accuracy still matters!
-
-Key prediction factors:
+KEY FACTORS:
 1. Home advantage typically worth 0.3-0.5 goals
-2. Recent form indicates current confidence/momentum  
-3. Injury impact depends on player importance
-4. Odds reflect collective market intelligence
-5. Head-to-head history matters for derby matches
+2. League position and form indicate current strength
+3. Head-to-head matters especially for rivalries
+4. Key injuries can shift expected outcome
+5. Odds reflect market consensus but can be wrong
 
-Your task: Predict the most likely final score.
+Your task: Predict the final score based on the data provided.
 Response format: ONLY JSON {"home_score": X, "away_score": Y}
 
 `;
@@ -77,11 +71,16 @@ function buildComparisonBar(homePct: number | null, awayPct: number | null): str
   return `${homePct}% ${homeBar}${awayBar} ${awayPct}%`;
 }
 
-// Parse likely scores from JSON string
-function parseLikelyScores(json: string | null): LikelyScore[] {
+// Parse H2H results from JSON string
+interface H2HResult {
+  home: number;
+  away: number;
+}
+
+function parseH2HResults(json: string | null): H2HResult[] {
   if (!json) return [];
   try {
-    return JSON.parse(json) as LikelyScore[];
+    return JSON.parse(json) as H2HResult[];
   } catch {
     return [];
   }
@@ -116,10 +115,38 @@ function formatTeamInjuries(injuries: KeyInjury[], teamName: string, count: numb
   return shownStr;
 }
 
+// Extended context with optional standings data
+export interface EnhancedPromptContext extends PromptContext {
+  homeStanding?: LeagueStanding | null;
+  awayStanding?: LeagueStanding | null;
+}
+
+// Format standing for display
+function formatStanding(standing: LeagueStanding, isHome: boolean): string {
+  const location = isHome ? 'Home' : 'Away';
+  const record = `W${standing.won} D${standing.drawn} L${standing.lost}`;
+  const homeRecord = standing.homeWon !== null 
+    ? `${location}: W${isHome ? standing.homeWon : standing.awayWon} D${isHome ? standing.homeDrawn : standing.awayDrawn} L${isHome ? standing.homeLost : standing.awayLost} (${isHome ? standing.homeGoalsFor : standing.awayGoalsFor}-${isHome ? standing.homeGoalsAgainst : standing.awayGoalsAgainst})`
+    : '';
+  
+  return `${standing.position}${getOrdinalSuffix(standing.position)} (${standing.points} pts, ${record}, ${standing.goalDiff >= 0 ? '+' : ''}${standing.goalDiff} GD)${homeRecord ? `\n  ${homeRecord}` : ''}`;
+}
+
+// Get ordinal suffix (1st, 2nd, 3rd, etc.)
+function getOrdinalSuffix(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
+}
+
 // Build enhanced prompt with all available context
 // Structure: CACHEABLE PREFIX + DYNAMIC MATCH DATA
-export function buildEnhancedPrompt(context: PromptContext): string {
+// REMOVED: favoriteTeamName, homeWinPct/drawPct/awayWinPct, advice, likelyScores (biasing)
+// ADDED: H2H history, standings context
+export function buildEnhancedPrompt(context: PromptContext | EnhancedPromptContext): string {
   const { homeTeam, awayTeam, competition, kickoffTime, analysis } = context;
+  const homeStanding = 'homeStanding' in context ? context.homeStanding : null;
+  const awayStanding = 'awayStanding' in context ? context.awayStanding : null;
   
   const kickoff = parseISO(kickoffTime);
   const formattedDate = format(kickoff, "yyyy-MM-dd HH:mm 'UTC'");
@@ -141,35 +168,39 @@ export function buildEnhancedPrompt(context: PromptContext): string {
   
   // If we have analysis data, include it
   if (analysis) {
-    // Betting Odds
+    // Betting Odds (keep - this is consensus signal, not a prediction)
     if (analysis.oddsHome || analysis.oddsDraw || analysis.oddsAway) {
       lines.push('BETTING ODDS:');
       lines.push(`Home Win: ${analysis.oddsHome || 'N/A'} | Draw: ${analysis.oddsDraw || 'N/A'} | Away Win: ${analysis.oddsAway || 'N/A'}`);
+      lines.push('');
+    }
+    
+    // League Standings (NEW - factual data)
+    if (homeStanding || awayStanding) {
+      lines.push('LEAGUE STANDINGS:');
+      if (homeStanding) {
+        lines.push(`${homeTeam}: ${formatStanding(homeStanding, true)}`);
+      }
+      if (awayStanding) {
+        lines.push(`${awayTeam}: ${formatStanding(awayStanding, false)}`);
+      }
+      lines.push('');
+    }
+    
+    // Head-to-Head History (NEW - factual data, extracted from existing API response)
+    if (analysis.h2hTotal && analysis.h2hTotal > 0) {
+      lines.push('HEAD-TO-HEAD:');
+      lines.push(`Record (${analysis.h2hTotal} matches): ${homeTeam} ${analysis.h2hHomeWins} wins, ${analysis.h2hDraws} draws, ${awayTeam} ${analysis.h2hAwayWins} wins`);
       
-      // Likely scores
-      const likelyScores = parseLikelyScores(analysis.likelyScores);
-      if (likelyScores.length > 0) {
-        const scoresStr = likelyScores.slice(0, 3).map(s => `${s.score} (${s.odds})`).join(', ');
-        lines.push(`Likely scores: ${scoresStr}`);
+      const h2hResults = parseH2HResults(analysis.h2hResults);
+      if (h2hResults.length > 0) {
+        const resultsStr = h2hResults.map(r => `${r.home}-${r.away}`).join(', ');
+        lines.push(`Last ${h2hResults.length}: ${resultsStr} (home team score first)`);
       }
       lines.push('');
     }
     
-    // Pre-match analysis
-    if (analysis.favoriteTeamName || analysis.advice) {
-      lines.push('PRE-MATCH ANALYSIS:');
-      if (analysis.favoriteTeamName && analysis.homeWinPct && analysis.awayWinPct) {
-        const favoriteIsHome = analysis.favoriteTeamId && analysis.homeWinPct > analysis.awayWinPct;
-        const favoritePct = favoriteIsHome ? analysis.homeWinPct : analysis.awayWinPct;
-        lines.push(`Favorite: ${analysis.favoriteTeamName} (${favoritePct}% chance)`);
-      }
-      if (analysis.advice) {
-        lines.push(`Advice: "${analysis.advice}"`);
-      }
-      lines.push('');
-    }
-    
-    // Team comparison
+    // Team comparison (keep - derived stats but not predictive)
     if (analysis.formHomePct || analysis.attackHomePct || analysis.defenseHomePct) {
       lines.push('TEAM COMPARISON:');
       if (analysis.formHomePct && analysis.formAwayPct) {
@@ -273,37 +304,32 @@ export function buildSimplePrompt(
 // ============================================================================
 
 // Static header for batch prompts - cacheable across all batches
-const BATCH_ANALYSIS_HEADER = `You will receive MULTIPLE matches in a structured format. Analyze ALL provided data carefully for EACH match.
+const BATCH_ANALYSIS_HEADER = `You will receive MULTIPLE matches. Analyze ALL data for EACH match.
 
-DATA SECTIONS PER MATCH:
-- BETTING ODDS: Market expectations (lower odds = more likely outcome)
+DATA PER MATCH:
+- ODDS: Market consensus (lower = higher probability). 1.50≈67%, 3.00≈33%, 6.00≈17%
+- H2H: Historical head-to-head results
 - FORM: Recent results (W=Win, D=Draw, L=Loss)
-- COMPARISON: Statistical ratings (higher % = stronger in that area)
-- LINEUPS: Confirmed starting players and formations (if available)
+- STATS: Form/Attack/Defense comparison %
+- LINEUPS: Starting XI (when available)
 - ABSENCES: Injured/suspended players
 
-SCORING SYSTEM (Kicktipp Quota Rule):
-You are competing against other AI models. Points depend on prediction rarity:
-- Correct tendency (H/D/A): 2-6 pts (rarer prediction = more points)
-- Correct goal difference: +1 pt bonus
-- Exact score: +3 pts bonus
-- Maximum: 10 points per match
+ODDS NOTE: Most models follow odds → common prediction → low quota (2-3 pts)
+Spot when data contradicts odds → rare prediction → high quota (5-6 pts)
 
 STRATEGY:
-- Analyze each match independently based on its data
-- Don't predict upsets just to be different - only when data supports it
-- Consider expected value: probability × points
+- Analyze each match independently
+- Upset needs ~30%+ real probability to be worth predicting
+- Expected value = probability × quota points
 
-OUTPUT FORMAT - JSON ARRAY with ALL matches:
-[
-  {"match_id": "id1", "home_score": X, "away_score": Y},
-  {"match_id": "id2", "home_score": X, "away_score": Y},
-  ...
-]
+OUTPUT: JSON ARRAY with ALL matches:
+[{"match_id": "id1", "home_score": X, "away_score": Y}, ...]
 
 `;
 
 // Build a compact match summary for batch prompts
+// REMOVED: favoriteTeamName, winPct (biasing)
+// ADDED: H2H summary
 function buildCompactMatchSummary(context: BatchMatchContext, index: number): string {
   const { matchId, homeTeam, awayTeam, competition, kickoffTime, analysis } = context;
   
@@ -317,9 +343,16 @@ function buildCompactMatchSummary(context: BatchMatchContext, index: number): st
   lines.push(`    ${homeTeam} vs ${awayTeam} | ${competition} | ${formattedTime}`);
   
   if (analysis) {
-    // Odds (compact)
+    // Odds (compact) - consensus signal, not a prediction
     if (analysis.oddsHome || analysis.oddsDraw || analysis.oddsAway) {
       lines.push(`    Odds: H=${analysis.oddsHome || '-'} D=${analysis.oddsDraw || '-'} A=${analysis.oddsAway || '-'}`);
+    }
+    
+    // H2H (compact) - factual historical data
+    if (analysis.h2hTotal && analysis.h2hTotal > 0) {
+      const h2hResults = parseH2HResults(analysis.h2hResults);
+      const resultsStr = h2hResults.length > 0 ? h2hResults.slice(0, 3).map(r => `${r.home}-${r.away}`).join(',') : '';
+      lines.push(`    H2H: ${analysis.h2hHomeWins}W-${analysis.h2hDraws}D-${analysis.h2hAwayWins}L${resultsStr ? ` (last: ${resultsStr})` : ''}`);
     }
     
     // Form (compact)
@@ -330,14 +363,6 @@ function buildCompactMatchSummary(context: BatchMatchContext, index: number): st
     // Comparison (compact, only if available)
     if (analysis.formHomePct && analysis.formAwayPct) {
       lines.push(`    Stats: Form ${analysis.formHomePct}%-${analysis.formAwayPct}% | Atk ${analysis.attackHomePct || '-'}%-${analysis.attackAwayPct || '-'}% | Def ${analysis.defenseHomePct || '-'}%-${analysis.defenseAwayPct || '-'}%`);
-    }
-    
-    // Favorite (compact)
-    if (analysis.favoriteTeamName) {
-      const favPct = analysis.homeWinPct && analysis.awayWinPct 
-        ? Math.max(analysis.homeWinPct, analysis.awayWinPct)
-        : null;
-      lines.push(`    Favorite: ${analysis.favoriteTeamName}${favPct ? ` (${favPct}%)` : ''}`);
     }
     
     // Key absences (very compact)

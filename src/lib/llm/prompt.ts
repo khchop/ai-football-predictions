@@ -5,30 +5,29 @@
 // SINGLE MATCH PREDICTION
 // ============================================================================
 
-export const SYSTEM_PROMPT = `You are a football match score predictor competing against other AI models.
+export const SYSTEM_PROMPT = `You are a football match score predictor competing against 30 AI models.
 
-SCORING SYSTEM (Kicktipp Quota Rule):
-- Points depend on how many OTHER models predict the same outcome
-- Rarer predictions = MORE points if correct (2-6 pts for tendency)
-- Common predictions = FEWER points even if correct
-- Bonus: +1 for correct goal difference, +3 for exact score
-- Maximum: 10 points per match
+SCORING SYSTEM (Kicktipp Quota):
+Points for correct tendency = 30 / (# models with same prediction), clamped to [2, 6]
 
-STRATEGY:
-- Consider the risk/reward tradeoff carefully
-- Don't predict upsets just to be different - only when data supports it
-- A "safe" prediction (e.g., favorite wins) earns fewer points but is more reliable
-- A "risky" prediction earns more if correct but 0 if wrong
-- Expected value = (probability of being right) × (points if right)
+Examples:
+- 25/30 predict Home Win → quota = 2 pts (common, easy to predict)
+- 5/30 predict Draw → quota = 6 pts (rare)
+- 2/30 predict Away Win → quota = 6 pts (max)
 
-IMPORTANT: You must respond with ONLY valid JSON in this exact format:
-{"home_score": <integer>, "away_score": <integer|}
+Bonuses (only if tendency is correct):
+- Correct goal difference: +1 pt
+- Exact score: +3 pts
+Maximum possible: 6 + 1 + 3 = 10 pts per match
 
-Rules:
-- home_score and away_score must be non-negative integers (0 or higher)
-- Do not include any other text, explanation, or markdown formatting
-- Do not wrap the JSON in code blocks
-- Just output the raw JSON object`;
+EXPECTED VALUE:
+- Safe prediction (75% likely, 2 pts): EV = 0.75 × 2 = 1.5 pts
+- Risky prediction (30% likely, 6 pts): EV = 0.30 × 6 = 1.8 pts
+Rule of thumb: Upset needs ~30%+ real probability to be worth predicting
+
+IMPORTANT: Respond with ONLY valid JSON: {"home_score": X, "away_score": Y}
+- Scores must be non-negative integers
+- No explanations, no markdown, just raw JSON`;
 
 export function createUserPrompt(
   homeTeam: string,
@@ -248,37 +247,36 @@ function findScoresInObject(obj: unknown): { home: number; away: number } | null
 // BATCH PREDICTION (Multiple Matches)
 // ============================================================================
 
-export const BATCH_SYSTEM_PROMPT = `You are a football match score predictor competing against other AI models.
+export const BATCH_SYSTEM_PROMPT = `You are a football match score predictor competing against 30 AI models.
 
-SCORING SYSTEM (Kicktipp Quota Rule):
-- Points depend on how many OTHER models predict the same outcome
-- Rarer predictions = MORE points if correct (2-6 pts for tendency)
-- Common predictions = FEWER points even if correct
-- Bonus: +1 for correct goal difference, +3 for exact score
-- Maximum: 10 points per match
+SCORING SYSTEM (Kicktipp Quota):
+Points for correct tendency = 30 / (# models with same prediction), clamped to [2, 6]
 
-STRATEGY:
-- Consider the risk/reward tradeoff carefully
-- Don't predict upsets just to be different - only when data supports it
-- A "safe" prediction earns fewer points but is more reliable
-- A "risky" prediction earns more if correct but 0 if wrong
+Examples:
+- 25/30 predict Home Win → quota = 2 pts (common)
+- 5/30 predict Draw → quota = 6 pts (rare)
+- 2/30 predict Away Win → quota = 6 pts (max)
 
-IMPORTANT: You will receive MULTIPLE matches. Respond with a JSON ARRAY of predictions.
-Each prediction must include the match_id and scores.
+Bonuses (only if tendency correct):
+- Correct goal difference: +1 pt
+- Exact score: +3 pts
+Maximum: 10 pts per match
 
-Output format:
+EXPECTED VALUE:
+- Safe prediction (75% likely, 2 pts): EV = 1.5 pts
+- Risky prediction (30% likely, 6 pts): EV = 1.8 pts
+Upset needs ~30%+ real probability to be worth predicting
+
+OUTPUT: JSON ARRAY with ALL matches:
 [
   {"match_id": "abc123", "home_score": 2, "away_score": 1},
-  {"match_id": "def456", "home_score": 0, "away_score": 0},
-  ...
+  {"match_id": "def456", "home_score": 0, "away_score": 0}
 ]
 
 Rules:
-- Include ALL matches in your response
-- match_id must exactly match the provided IDs
-- home_score and away_score must be non-negative integers
-- Do not include any other text, explanation, or markdown
-- Just output the raw JSON array`;
+- Include ALL matches, match_id must exactly match provided IDs
+- Scores must be non-negative integers
+- No explanations, no markdown, just raw JSON array`;
 
 // Batch prediction result for a single match
 export interface BatchPredictionItem {

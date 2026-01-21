@@ -161,6 +161,64 @@ function extractMatchWinnerOdds(oddsResponse: APIFootballOddsResponse | null): {
   return result;
 }
 
+// Extract head-to-head stats from prediction response
+interface H2HResult {
+  home: number;
+  away: number;
+}
+
+interface H2HStats {
+  total: number;
+  homeWins: number;
+  draws: number;
+  awayWins: number;
+  lastResults: H2HResult[];
+}
+
+function extractH2HStats(
+  h2hData: Array<{ fixture: { id: number }; goals: { home: number; away: number } }> | undefined,
+  homeTeamId: number,
+  awayTeamId: number
+): H2HStats {
+  const result: H2HStats = {
+    total: 0,
+    homeWins: 0,
+    draws: 0,
+    awayWins: 0,
+    lastResults: [],
+  };
+
+  if (!h2hData || h2hData.length === 0) {
+    return result;
+  }
+
+  result.total = h2hData.length;
+
+  // Take last 5 results for display
+  const recentMatches = h2hData.slice(0, 5);
+  
+  for (const match of h2hData) {
+    const homeGoals = match.goals.home ?? 0;
+    const awayGoals = match.goals.away ?? 0;
+
+    if (homeGoals > awayGoals) {
+      result.homeWins++;
+    } else if (awayGoals > homeGoals) {
+      result.awayWins++;
+    } else {
+      result.draws++;
+    }
+  }
+
+  // Store last 5 results for prompt display
+  result.lastResults = recentMatches.map(m => ({
+    home: m.goals.home ?? 0,
+    away: m.goals.away ?? 0,
+  }));
+
+  return result;
+}
+
 // Extract injury info from injuries response
 function extractInjuries(
   injuriesResponse: APIFootballInjuryResponse | null,
@@ -236,6 +294,13 @@ export async function fetchAndStoreAnalysis(
     teams?.away?.id || 0
   );
 
+  // Extract H2H stats from prediction data
+  const h2h = extractH2HStats(
+    prediction?.h2h,
+    teams?.home?.id || 0,
+    teams?.away?.id || 0
+  );
+
   // Check if analysis already exists
   const existing = await getMatchAnalysisByMatchId(matchId);
 
@@ -278,6 +343,13 @@ export async function fetchAndStoreAnalysis(
     awayInjuriesCount: injuries.awayInjuriesCount,
     keyInjuries: injuries.keyInjuries.length > 0 ? JSON.stringify(injuries.keyInjuries) : null,
     
+    // Head-to-head history
+    h2hTotal: h2h.total > 0 ? h2h.total : null,
+    h2hHomeWins: h2h.total > 0 ? h2h.homeWins : null,
+    h2hDraws: h2h.total > 0 ? h2h.draws : null,
+    h2hAwayWins: h2h.total > 0 ? h2h.awayWins : null,
+    h2hResults: h2h.lastResults.length > 0 ? JSON.stringify(h2h.lastResults) : null,
+    
     // Keep existing lineup data if present
     homeFormation: existing?.homeFormation || null,
     awayFormation: existing?.awayFormation || null,
@@ -304,6 +376,7 @@ export async function fetchAndStoreAnalysis(
   console.log(`  - Favorite: ${analysisData.favoriteTeamName} (${analysisData.homeWinPct}% vs ${analysisData.awayWinPct}%)`);
   console.log(`  - Odds: ${analysisData.oddsHome} | ${analysisData.oddsDraw} | ${analysisData.oddsAway}`);
   console.log(`  - Injuries: Home ${analysisData.homeInjuriesCount}, Away ${analysisData.awayInjuriesCount}`);
+  console.log(`  - H2H: ${h2h.total} matches (H:${h2h.homeWins} D:${h2h.draws} A:${h2h.awayWins})`);
 
   return await getMatchAnalysisByMatchId(matchId);
 }

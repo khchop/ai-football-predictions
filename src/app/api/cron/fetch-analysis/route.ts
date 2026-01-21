@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMatchesNeedingAnalysis, getMatchesNeedingLineups, getMatchesNeedingAnalysisRefresh } from '@/lib/db/queries';
 import { fetchAndStoreAnalysis } from '@/lib/football/match-analysis';
 import { updateMatchLineups } from '@/lib/football/lineups';
+import { updateStandingsIfStale } from '@/lib/football/standings';
 
 // Helper for rate limiting
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest) {
       lineupsChecked: 0,
       lineupsFetched: 0,
       lineupsErrors: [] as string[],
+      standingsUpdated: 0,
     };
 
     // 1. Fetch analysis for matches within 6 hours of kickoff (if not already fetched)
@@ -107,13 +109,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 4. Update league standings if stale (older than 24 hours)
+    // This provides team context (position, points, form) for predictions
+    try {
+      results.standingsUpdated = await updateStandingsIfStale(24);
+      console.log(`[Cron] Standings: ${results.standingsUpdated} teams updated`);
+    } catch (error) {
+      console.error('[Cron] Error updating standings:', error);
+    }
+
     console.log(`[Cron] Analysis: ${results.analysisFetched}/${results.analysisChecked} fetched`);
     console.log(`[Cron] Analysis refresh: ${results.analysisRefreshed}/${results.analysisRefreshChecked} refreshed`);
     console.log(`[Cron] Lineups: ${results.lineupsFetched}/${results.lineupsChecked} fetched`);
 
     return NextResponse.json({
       success: true,
-      message: `Fetched analysis for ${results.analysisFetched} matches, refreshed ${results.analysisRefreshed} matches, lineups for ${results.lineupsFetched} matches`,
+      message: `Fetched analysis for ${results.analysisFetched} matches, refreshed ${results.analysisRefreshed} matches, lineups for ${results.lineupsFetched} matches, standings for ${results.standingsUpdated} teams`,
       results,
     });
   } catch (error) {

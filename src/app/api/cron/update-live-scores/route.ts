@@ -8,7 +8,7 @@ import {
   saveMatchQuotas,
 } from '@/lib/db/queries';
 import { getDb, matches } from '@/lib/db';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, and, or, gte, lte, inArray } from 'drizzle-orm';
 import { getLiveFixtures, mapFixtureStatus, formatMatchMinute } from '@/lib/football/api-football';
 import { COMPETITIONS } from '@/lib/football/competitions';
 import { calculateQuotas, calculateQuotaScores } from '@/lib/utils/scoring';
@@ -18,7 +18,45 @@ export async function POST(request: NextRequest) {
   // Note: Auth disabled for Coolify compatibility - these endpoints are internal only
 
   try {
-    console.log('[Live Scores] Fetching live fixtures...');
+    const db = getDb();
+    const now = new Date();
+    
+    // Smart polling: Check if any matches could possibly be live before calling API
+    // A match could be live if:
+    // - Already marked as 'live' in our DB
+    // - Kickoff was within last 3 hours (match + extra time + delays)
+    // - Kickoff is in next 5 minutes (about to start)
+    const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+    const fiveMinutesAhead = new Date(now.getTime() + 5 * 60 * 1000);
+    
+    const potentiallyLiveMatches = await db
+      .select({ id: matches.id, status: matches.status, kickoffTime: matches.kickoffTime })
+      .from(matches)
+      .where(
+        or(
+          eq(matches.status, 'live'),
+          and(
+            eq(matches.status, 'scheduled'),
+            gte(matches.kickoffTime, threeHoursAgo.toISOString()),
+            lte(matches.kickoffTime, fiveMinutesAhead.toISOString())
+          )
+        )
+      );
+    
+    // If no matches could possibly be live, skip the API call entirely
+    if (potentiallyLiveMatches.length === 0) {
+      console.log('[Live Scores] No matches in live window - skipping API call');
+      return NextResponse.json({
+        success: true,
+        message: 'No matches in live window - API call skipped',
+        liveCount: 0,
+        updated: 0,
+        finished: 0,
+        apiCallSkipped: true,
+      });
+    }
+    
+    console.log(`[Live Scores] ${potentiallyLiveMatches.length} matches in live window, fetching from API...`);
     
     // Single API call to get all live fixtures
     const liveFixtures = await getLiveFixtures();
@@ -53,7 +91,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Get our matches that might be live (by external ID)
-    const db = getDb();
     const externalIds = relevantFixtures.map(f => String(f.fixture.id));
     
     const ourMatches = await db

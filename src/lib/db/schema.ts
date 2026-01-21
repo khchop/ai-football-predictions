@@ -154,6 +154,13 @@ export const matchAnalysis = sqliteTable('match_analysis', {
   lineupsAvailable: integer('lineups_available', { mode: 'boolean' }).default(false),
   lineupsUpdatedAt: text('lineups_updated_at'),
   
+  // Head-to-head history (extracted from /predictions endpoint h2h data)
+  h2hTotal: integer('h2h_total'),           // Total H2H matches in data
+  h2hHomeWins: integer('h2h_home_wins'),    // Home team wins in H2H
+  h2hDraws: integer('h2h_draws'),           // Draws in H2H
+  h2hAwayWins: integer('h2h_away_wins'),    // Away team wins in H2H
+  h2hResults: text('h2h_results'),          // JSON: last 5 scores [{home:2,away:1}, ...]
+  
   // Raw API data for debugging
   rawPredictionsData: text('raw_predictions_data'),
   rawInjuriesData: text('raw_injuries_data'),
@@ -166,3 +173,36 @@ export const matchAnalysis = sqliteTable('match_analysis', {
 
 export type MatchAnalysis = typeof matchAnalysis.$inferSelect;
 export type NewMatchAnalysis = typeof matchAnalysis.$inferInsert;
+
+// League standings for team context
+export const leagueStandings = sqliteTable('league_standings', {
+  id: text('id').primaryKey(), // "{leagueId}-{season}-{teamId}"
+  leagueId: integer('league_id').notNull(),
+  season: integer('season').notNull(),
+  teamId: integer('team_id').notNull(),
+  teamName: text('team_name').notNull(),
+  position: integer('position').notNull(),
+  points: integer('points').notNull(),
+  played: integer('played').notNull(),
+  won: integer('won').notNull(),
+  drawn: integer('drawn').notNull(),
+  lost: integer('lost').notNull(),
+  goalsFor: integer('goals_for').notNull(),
+  goalsAgainst: integer('goals_against').notNull(),
+  goalDiff: integer('goal_diff').notNull(),
+  form: text('form'),                        // e.g., "WWDLW"
+  homeWon: integer('home_won'),
+  homeDrawn: integer('home_drawn'),
+  homeLost: integer('home_lost'),
+  homeGoalsFor: integer('home_goals_for'),
+  homeGoalsAgainst: integer('home_goals_against'),
+  awayWon: integer('away_won'),
+  awayDrawn: integer('away_drawn'),
+  awayLost: integer('away_lost'),
+  awayGoalsFor: integer('away_goals_for'),
+  awayGoalsAgainst: integer('away_goals_against'),
+  updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+});
+
+export type LeagueStanding = typeof leagueStandings.$inferSelect;
+export type NewLeagueStanding = typeof leagueStandings.$inferInsert;
