@@ -113,11 +113,11 @@ export function calculateQuotas(
   const rawDrawQuota = drawCount > 0 ? total / drawCount : MAX_QUOTA;
   const rawAwayQuota = awayCount > 0 ? total / awayCount : MAX_QUOTA;
   
-  // Clamp to [MIN_QUOTA, MAX_QUOTA] and round to 1 decimal
+  // Clamp to [MIN_QUOTA, MAX_QUOTA] and round to nearest integer
   return {
-    home: Math.round(Math.min(MAX_QUOTA, Math.max(MIN_QUOTA, rawHomeQuota)) * 10) / 10,
-    draw: Math.round(Math.min(MAX_QUOTA, Math.max(MIN_QUOTA, rawDrawQuota)) * 10) / 10,
-    away: Math.round(Math.min(MAX_QUOTA, Math.max(MIN_QUOTA, rawAwayQuota)) * 10) / 10,
+    home: Math.round(Math.min(MAX_QUOTA, Math.max(MIN_QUOTA, rawHomeQuota))),
+    draw: Math.round(Math.min(MAX_QUOTA, Math.max(MIN_QUOTA, rawDrawQuota))),
+    away: Math.round(Math.min(MAX_QUOTA, Math.max(MIN_QUOTA, rawAwayQuota))),
   };
 }
 

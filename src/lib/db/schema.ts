@@ -32,9 +32,9 @@ export const matches = pgTable('matches', {
   isUpset: boolean('is_upset').default(false), // Whether the underdog won
   // Kicktipp quota scoring: points for correct tendency (2-6 range)
   // Lower quota = more models predicted that outcome = less reward
-  quotaHome: doublePrecision('quota_home'), // Points for predicting home win (2-6)
-  quotaDraw: doublePrecision('quota_draw'), // Points for predicting draw (2-6)
-  quotaAway: doublePrecision('quota_away'), // Points for predicting away win (2-6)
+  quotaHome: integer('quota_home'), // Points for predicting home win (2-6)
+  quotaDraw: integer('quota_draw'), // Points for predicting draw (2-6)
+  quotaAway: integer('quota_away'), // Points for predicting away win (2-6)
   createdAt: text('created_at').default(sql`now()`),
   updatedAt: text('updated_at').default(sql`now()`),
 }, (table) => [
