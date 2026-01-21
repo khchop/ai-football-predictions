@@ -32,16 +32,16 @@ export function getPremiumProviders(): LLMProvider[] {
 export function getProviderStats(): {
   total: number;
   free: number;
-  cheap: number;
-  mid: number;
+  ultraBudget: number;
+  budget: number;
   premium: number;
 } {
   const providers = OPENROUTER_PROVIDERS;
   return {
     total: providers.length,
     free: providers.filter(p => p.tier === 'free').length,
-    cheap: providers.filter(p => p.tier === 'cheap').length,
-    mid: providers.filter(p => p.tier === 'mid').length,
+    ultraBudget: providers.filter(p => p.tier === 'ultra-budget').length,
+    budget: providers.filter(p => p.tier === 'budget').length,
     premium: providers.filter(p => p.tier === 'premium').length,
   };
 }
