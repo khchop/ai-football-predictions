@@ -64,6 +64,12 @@ export const models = pgTable('models', {
   totalRetryAttempts: integer('total_retry_attempts').default(0), // Lifetime retry attempts
   totalRetrySuccesses: integer('total_retry_successes').default(0), // Lifetime successful retries
   lastRetryAt: text('last_retry_at'), // ISO timestamp of last retry
+  // Health tracking (for auto-disable and admin monitoring)
+  consecutiveFailures: integer('consecutive_failures').default(0), // Number of consecutive API failures
+  lastFailureAt: text('last_failure_at'), // ISO timestamp of last failure
+  lastSuccessAt: text('last_success_at'), // ISO timestamp of last successful prediction
+  failureReason: text('failure_reason'), // Last error message/reason
+  autoDisabled: boolean('auto_disabled').default(false), // Auto-disabled after 3+ consecutive failures
 }, (table) => [
   index('idx_models_active').on(table.active),
 ]);

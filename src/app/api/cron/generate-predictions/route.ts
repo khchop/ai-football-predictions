@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMatchesReadyForPrediction, createPrediction, upsertModel, deactivateOldModels, updateModelRetryStats } from '@/lib/db/queries';
+import { getMatchesReadyForPrediction, createPrediction, upsertModel, deactivateOldModels, updateModelRetryStats, recordModelSuccess, recordModelFailure, getModelById } from '@/lib/db/queries';
 import { getActiveProviders, ALL_PROVIDERS, OpenRouterProvider } from '@/lib/llm';
 import { shouldSkipProvider, recordPredictionCost, getBudgetStatus } from '@/lib/llm/budget';
 import { buildBatchPrompt, BatchMatchContext } from '@/lib/football/prompt-builder';
@@ -183,9 +183,18 @@ export async function POST(request: NextRequest) {
       // Build batch prompt once per batch
       const batchPrompt = buildBatchPrompt(batch);
 
-      // Check budget for all providers first (sequential to avoid race conditions)
+      // Check budget and health for all providers first (sequential to avoid race conditions)
       const providersToProcess: typeof activeProviders = [];
+      let skippedDueToHealth = 0;
       for (const provider of activeProviders) {
+        // Check if model is auto-disabled due to health issues
+        const modelHealth = await getModelById(provider.id);
+        if (modelHealth?.autoDisabled) {
+          console.log(`  Skipping ${provider.id} - auto-disabled due to consecutive failures`);
+          skippedDueToHealth += batch.length;
+          continue;
+        }
+        
         const budgetCheck = await shouldSkipProvider(provider as OpenRouterProvider);
         if (budgetCheck.skip) {
           console.log(`  Skipping ${provider.id} - ${budgetCheck.reason}`);
@@ -255,6 +264,9 @@ export async function POST(request: NextRequest) {
                   }
                 }
                 
+                // Record success - resets consecutive failure count
+                await recordModelSuccess(provider.id);
+                
                 const retryInfo = retryCount > 0 ? `, retries: ${retryCount}` : '';
                 console.log(`    ${provider.id}: Saved ${predResult.predictions.size}/${batch.length} predictions (attempts: ${totalAttempts}${retryInfo})`);
                 
@@ -265,6 +277,12 @@ export async function POST(request: NextRequest) {
                 const retryInfo = retryCount > 0 ? ` (after ${retryCount} retries)` : '';
                 result.error = `${provider.id} batch failed${retryInfo}: ${predResult.error}`;
                 console.error(`    ${result.error}`);
+                
+                // Record failure - may auto-disable after 3 consecutive failures
+                const healthResult = await recordModelFailure(provider.id, predResult.error || 'Unknown error');
+                if (healthResult.autoDisabled) {
+                  console.log(`    ${provider.id}: AUTO-DISABLED after 3 consecutive failures`);
+                }
               }
             } catch (error) {
               // Record cost even on error (API was still called and billed)
@@ -274,8 +292,15 @@ export async function POST(request: NextRequest) {
                 const apiCost = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
                 await recordPredictionCost(provider.id, apiCost);
               }
-              result.error = `Error with ${provider.id} for batch ${batchIndex + 1}: ${error}`;
+              const errorMsg = error instanceof Error ? error.message : String(error);
+              result.error = `Error with ${provider.id} for batch ${batchIndex + 1}: ${errorMsg}`;
               console.error(`    ${result.error}`);
+              
+              // Record failure - may auto-disable after 3 consecutive failures
+              const healthResult = await recordModelFailure(provider.id, errorMsg);
+              if (healthResult.autoDisabled) {
+                console.log(`    ${provider.id}: AUTO-DISABLED after 3 consecutive failures`);
+              }
             }
 
             return result;

@@ -411,6 +411,92 @@ export async function updateModelRetryStats(
     .where(eq(models.id, modelId));
 }
 
+// ============= MODEL HEALTH TRACKING =============
+
+// Record a successful prediction for a model (resets failure count)
+export async function recordModelSuccess(modelId: string): Promise<void> {
+  const db = getDb();
+  await db
+    .update(models)
+    .set({
+      consecutiveFailures: 0,
+      lastSuccessAt: new Date().toISOString(),
+      failureReason: null,
+      // Re-enable if it was auto-disabled
+      autoDisabled: false,
+    })
+    .where(eq(models.id, modelId));
+}
+
+// Record a failed prediction attempt for a model
+// Auto-disables after 3 consecutive failures
+export async function recordModelFailure(
+  modelId: string,
+  reason: string
+): Promise<{ autoDisabled: boolean }> {
+  const db = getDb();
+  
+  // Get current failure count
+  const model = await db
+    .select({ consecutiveFailures: models.consecutiveFailures })
+    .from(models)
+    .where(eq(models.id, modelId))
+    .limit(1);
+  
+  const currentFailures = model[0]?.consecutiveFailures || 0;
+  const newFailures = currentFailures + 1;
+  const shouldAutoDisable = newFailures >= 3;
+  
+  await db
+    .update(models)
+    .set({
+      consecutiveFailures: newFailures,
+      lastFailureAt: new Date().toISOString(),
+      failureReason: reason.substring(0, 500), // Truncate long error messages
+      autoDisabled: shouldAutoDisable,
+    })
+    .where(eq(models.id, modelId));
+  
+  return { autoDisabled: shouldAutoDisable };
+}
+
+// Re-enable a model that was auto-disabled
+export async function reEnableModel(modelId: string): Promise<void> {
+  const db = getDb();
+  await db
+    .update(models)
+    .set({
+      autoDisabled: false,
+      consecutiveFailures: 0,
+      failureReason: null,
+    })
+    .where(eq(models.id, modelId));
+}
+
+// Get all models with their health status (for admin page)
+export async function getAllModelsWithHealth(): Promise<Model[]> {
+  const db = getDb();
+  return db
+    .select()
+    .from(models)
+    .orderBy(desc(models.active), models.displayName);
+}
+
+// Get models that are auto-disabled
+export async function getAutoDisabledModels(): Promise<Model[]> {
+  const db = getDb();
+  return db
+    .select()
+    .from(models)
+    .where(eq(models.autoDisabled, true))
+    .orderBy(models.displayName);
+}
+
+// Check if a model should be skipped due to health issues
+export function shouldSkipModelDueToHealth(model: Model): boolean {
+  return model.autoDisabled === true;
+}
+
 // ============= PREDICTIONS =============
 
 export async function createPrediction(data: Omit<NewPrediction, 'id'>) {
