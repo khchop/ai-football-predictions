@@ -37,9 +37,6 @@ yarn-error.log*
 # drizzle
 drizzle/*.sql
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
