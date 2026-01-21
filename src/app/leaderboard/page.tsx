@@ -3,22 +3,37 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LeaderboardTable } from '@/components/leaderboard-table';
 import { AccuracyChart } from '@/components/accuracy-chart';
+import { LeaderboardFilters } from '@/components/leaderboard-filters';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getLeaderboard } from '@/lib/db/queries';
+import { getLeaderboardFiltered } from '@/lib/db/queries';
 import { Trophy, BarChart3, Table } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
-async function LeaderboardContent() {
-  const leaderboard = await getLeaderboard();
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+async function LeaderboardContent({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+  // Parse filter params
+  const daysParam = searchParams.days;
+  const minPredictionsParam = searchParams.minPredictions;
+  
+  const filters = {
+    days: daysParam ? parseInt(String(daysParam), 10) : undefined,
+    minPredictions: minPredictionsParam ? parseInt(String(minPredictionsParam), 10) : 5,
+    activeOnly: true,
+  };
+
+  const leaderboard = await getLeaderboardFiltered(filters);
   
   if (leaderboard.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border/50 bg-card/30 p-12 text-center">
         <Trophy className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-        <p className="text-muted-foreground">No predictions have been scored yet.</p>
+        <p className="text-muted-foreground">No predictions match your filters.</p>
         <p className="text-sm text-muted-foreground/70 mt-1">
-          Rankings will appear once matches are completed.
+          Try adjusting the time period or minimum predictions filter.
         </p>
       </div>
     );
@@ -75,7 +90,9 @@ function LoadingSkeleton() {
   );
 }
 
-export default function LeaderboardPage() {
+export default async function LeaderboardPage({ searchParams }: PageProps) {
+  const resolvedParams = await searchParams;
+  
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -121,9 +138,14 @@ export default function LeaderboardPage() {
         </p>
       </div>
 
+      {/* Filters */}
+      <Suspense fallback={<div className="h-10" />}>
+        <LeaderboardFilters />
+      </Suspense>
+
       {/* Leaderboard Content */}
       <Suspense fallback={<LoadingSkeleton />}>
-        <LeaderboardContent />
+        <LeaderboardContent searchParams={resolvedParams} />
       </Suspense>
     </div>
   );

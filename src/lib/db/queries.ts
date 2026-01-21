@@ -408,6 +408,135 @@ export async function getLeaderboard() {
   return leaderboard;
 }
 
+// Leaderboard with filters (date range, minimum predictions, active models only)
+export interface LeaderboardFilters {
+  days?: number;           // 7, 30, or undefined (all time)
+  minPredictions?: number; // Minimum predictions to appear (default 5)
+  activeOnly?: boolean;    // Only show currently active models (default true)
+}
+
+export async function getLeaderboardFiltered(filters: LeaderboardFilters = {}) {
+  const { days, minPredictions = 5, activeOnly = true } = filters;
+  const db = getDb();
+  
+  // Calculate date cutoff if days filter is set
+  let dateCutoff: string | null = null;
+  if (days) {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    dateCutoff = cutoffDate.toISOString();
+  }
+
+  // Build where conditions
+  const conditions = [
+    eq(matches.status, 'finished'),
+    isNotNull(matches.homeScore),
+    isNotNull(matches.awayScore),
+  ];
+  
+  // Add date filter if specified
+  if (dateCutoff) {
+    conditions.push(sql`${matches.kickoffTime} >= ${dateCutoff}`);
+  }
+  
+  // Add active models filter
+  if (activeOnly) {
+    conditions.push(eq(models.active, true));
+  }
+
+  // Get all predictions for finished matches with filters
+  const finishedPredictions = await db
+    .select({
+      modelId: predictions.modelId,
+      displayName: models.displayName,
+      provider: models.provider,
+      modelActive: models.active,
+      predictedHomeScore: predictions.predictedHomeScore,
+      predictedAwayScore: predictions.predictedAwayScore,
+      actualHomeScore: matches.homeScore,
+      actualAwayScore: matches.awayScore,
+      kickoffTime: matches.kickoffTime,
+    })
+    .from(predictions)
+    .innerJoin(models, eq(predictions.modelId, models.id))
+    .innerJoin(matches, eq(predictions.matchId, matches.id))
+    .where(and(...conditions));
+
+  // Calculate stats per model
+  const modelStats = new Map<string, {
+    modelId: string;
+    displayName: string;
+    provider: string;
+    totalPredictions: number;
+    exactScores: number;
+    correctResults: number;
+    totalPoints: number;
+  }>();
+
+  for (const pred of finishedPredictions) {
+    if (pred.actualHomeScore === null || pred.actualAwayScore === null) continue;
+
+    const stats = modelStats.get(pred.modelId) || {
+      modelId: pred.modelId,
+      displayName: pred.displayName,
+      provider: pred.provider,
+      totalPredictions: 0,
+      exactScores: 0,
+      correctResults: 0,
+      totalPoints: 0,
+    };
+
+    stats.totalPredictions++;
+
+    const isExact = 
+      pred.predictedHomeScore === pred.actualHomeScore && 
+      pred.predictedAwayScore === pred.actualAwayScore;
+    
+    const predictedResult = pred.predictedHomeScore > pred.predictedAwayScore ? 'H' : 
+                           pred.predictedHomeScore < pred.predictedAwayScore ? 'A' : 'D';
+    const actualResult = pred.actualHomeScore > pred.actualAwayScore ? 'H' :
+                        pred.actualHomeScore < pred.actualAwayScore ? 'A' : 'D';
+    
+    const isCorrectResult = predictedResult === actualResult;
+
+    if (isExact) {
+      stats.exactScores++;
+      stats.totalPoints += 3;
+    } else if (isCorrectResult) {
+      stats.correctResults++;
+      stats.totalPoints += 1;
+    }
+
+    modelStats.set(pred.modelId, stats);
+  }
+
+  // Convert to array, filter by min predictions, and calculate percentages
+  const leaderboard = Array.from(modelStats.values())
+    .filter(stats => stats.totalPredictions >= minPredictions)
+    .map(stats => ({
+      ...stats,
+      // For backward compatibility, map correctResults to correctTendencies
+      correctTendencies: stats.exactScores + stats.correctResults,
+      exactScorePercent: stats.totalPredictions > 0 
+        ? Math.round((stats.exactScores / stats.totalPredictions) * 1000) / 10 
+        : 0,
+      correctResultPercent: stats.totalPredictions > 0 
+        ? Math.round(((stats.exactScores + stats.correctResults) / stats.totalPredictions) * 1000) / 10 
+        : 0,
+      averagePoints: stats.totalPredictions > 0 
+        ? Math.round((stats.totalPoints / stats.totalPredictions) * 100) / 100 
+        : 0,
+    }))
+    .sort((a, b) => {
+      // Sort by average points, then by total points, then by total predictions
+      if (b.averagePoints !== a.averagePoints) return b.averagePoints - a.averagePoints;
+      if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+      return b.totalPredictions - a.totalPredictions;
+    });
+
+  return leaderboard;
+}
+
 // ============= STATS =============
 
 export async function getOverallStats() {

@@ -16,11 +16,12 @@ interface LeaderboardEntry {
   displayName: string;
   provider: string;
   totalPredictions: number;
-  exactScores: number;
-  correctResults: number;
+  exactScores?: number;
+  correctResults?: number;
+  correctTendencies?: number;
   totalPoints: number;
-  exactScorePercent: number;
-  correctResultPercent: number;
+  exactScorePercent?: number;
+  correctResultPercent?: number;
   averagePoints: number;
 }
 
@@ -38,12 +39,20 @@ export function AccuracyChart({ data }: AccuracyChartProps) {
   }
 
   // Transform data for the chart
-  const chartData = data.map(entry => ({
-    name: entry.displayName.split(' (')[0], // Shorten name
-    'Exact Score %': entry.exactScorePercent,
-    'Correct Result %': entry.correctResultPercent,
-    'Avg Points': entry.averagePoints,
-  }));
+  const chartData = data.map(entry => {
+    // Calculate accuracy if not provided
+    const correctCount = entry.correctTendencies ?? entry.correctResults ?? 0;
+    const accuracy = entry.totalPredictions > 0 
+      ? Math.round((correctCount / entry.totalPredictions) * 100) / 10
+      : 0;
+    
+    return {
+      name: entry.displayName.split(' (')[0], // Shorten name
+      'Exact Score %': entry.exactScorePercent ?? 0,
+      'Accuracy %': entry.correctResultPercent ?? accuracy,
+      'Avg Points': entry.averagePoints,
+    };
+  });
 
   return (
     <ResponsiveContainer width="100%" height={400}>
@@ -75,7 +84,7 @@ export function AccuracyChart({ data }: AccuracyChartProps) {
         />
         <Legend />
         <Bar yAxisId="left" dataKey="Exact Score %" fill="#22c55e" radius={[4, 4, 0, 0]} />
-        <Bar yAxisId="left" dataKey="Correct Result %" fill="#eab308" radius={[4, 4, 0, 0]} />
+        <Bar yAxisId="left" dataKey="Accuracy %" fill="#eab308" radius={[4, 4, 0, 0]} />
         <Bar yAxisId="right" dataKey="Avg Points" fill="#3b82f6" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
