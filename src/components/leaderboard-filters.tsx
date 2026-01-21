@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
-import { Calendar, Filter } from 'lucide-react';
+import { Calendar, Filter, Trophy } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -10,6 +10,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
+// Competition options - matches COMPETITIONS in src/lib/football/competitions.ts
+const COMPETITION_OPTIONS = [
+  { id: 'all', name: 'All Competitions' },
+  { id: 'ucl', name: 'Champions League' },
+  { id: 'uel', name: 'Europa League' },
+  { id: 'uecl', name: 'Conference League' },
+  { id: 'epl', name: 'Premier League' },
+  { id: 'nations-league', name: 'Nations League' },
+];
 
 interface LeaderboardFiltersProps {
   className?: string;
@@ -21,6 +31,7 @@ export function LeaderboardFilters({ className }: LeaderboardFiltersProps) {
   
   const currentDays = searchParams.get('days') || 'all';
   const currentMinPredictions = searchParams.get('minPredictions') || '5';
+  const currentCompetition = searchParams.get('competition') || 'all';
 
   const updateParams = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -43,6 +54,26 @@ export function LeaderboardFilters({ className }: LeaderboardFiltersProps) {
 
   return (
     <div className={`flex flex-wrap items-center gap-4 ${className}`}>
+      {/* Competition Filter */}
+      <div className="flex items-center gap-2">
+        <Trophy className="h-4 w-4 text-muted-foreground" />
+        <Select
+          value={currentCompetition}
+          onValueChange={(value: string) => updateParams('competition', value)}
+        >
+          <SelectTrigger className="w-[170px] bg-card/50 border-border/50">
+            <SelectValue placeholder="Competition" />
+          </SelectTrigger>
+          <SelectContent>
+            {COMPETITION_OPTIONS.map((comp) => (
+              <SelectItem key={comp.id} value={comp.id}>
+                {comp.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Time Period Filter */}
       <div className="flex items-center gap-2">
         <Calendar className="h-4 w-4 text-muted-foreground" />

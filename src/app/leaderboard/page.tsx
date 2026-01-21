@@ -18,11 +18,13 @@ async function LeaderboardContent({ searchParams }: { searchParams: { [key: stri
   // Parse filter params
   const daysParam = searchParams.days;
   const minPredictionsParam = searchParams.minPredictions;
+  const competitionParam = searchParams.competition;
   
   const filters = {
     days: daysParam ? parseInt(String(daysParam), 10) : undefined,
     minPredictions: minPredictionsParam !== undefined ? parseInt(String(minPredictionsParam), 10) : 5,
     activeOnly: true,
+    competitionId: competitionParam ? String(competitionParam) : undefined,
   };
 
   const leaderboard = await getLeaderboardFiltered(filters);

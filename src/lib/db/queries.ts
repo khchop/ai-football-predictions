@@ -408,15 +408,16 @@ export async function getLeaderboard() {
   return leaderboard;
 }
 
-// Leaderboard with filters (date range, minimum predictions, active models only)
+// Leaderboard with filters (date range, minimum predictions, active models only, competition)
 export interface LeaderboardFilters {
   days?: number;           // 7, 30, or undefined (all time)
   minPredictions?: number; // Minimum predictions to appear (default 5)
   activeOnly?: boolean;    // Only show currently active models (default true)
+  competitionId?: string;  // Filter by specific competition (e.g., "ucl", "epl")
 }
 
 export async function getLeaderboardFiltered(filters: LeaderboardFilters = {}) {
-  const { days, minPredictions = 5, activeOnly = true } = filters;
+  const { days, minPredictions = 5, activeOnly = true, competitionId } = filters;
   const db = getDb();
   
   // Calculate date cutoff if days filter is set
@@ -442,6 +443,11 @@ export async function getLeaderboardFiltered(filters: LeaderboardFilters = {}) {
   // Add active models filter
   if (activeOnly) {
     conditions.push(eq(models.active, true));
+  }
+  
+  // Add competition filter if specified
+  if (competitionId) {
+    conditions.push(eq(matches.competitionId, competitionId));
   }
 
   // Get all predictions for finished matches with filters
