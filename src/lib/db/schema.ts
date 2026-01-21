@@ -220,11 +220,21 @@ export const matchAnalysis = pgTable('match_analysis', {
   h2hAwayWins: integer('h2h_away_wins'),    // Away team wins in H2H
   h2hResults: text('h2h_results'),          // JSON: last 5 scores [{home:2,away:1}, ...]
   
+  // Enhanced team season statistics
+  homeSeasonStats: text('home_season_stats'),  // JSON: TeamSeasonStats for home team
+  awaySeasonStats: text('away_season_stats'),  // JSON: TeamSeasonStats for away team
+  
+  // Enhanced H2H data (last 10 matches instead of 5)
+  h2hDetailed: text('h2h_detailed'),        // JSON: Extended H2H with halftime scores
+  
   // Raw API data for debugging
   rawPredictionsData: text('raw_predictions_data'),
   rawInjuriesData: text('raw_injuries_data'),
   rawOddsData: text('raw_odds_data'),
   rawLineupsData: text('raw_lineups_data'),
+  rawTeamStatsHome: text('raw_team_stats_home'),     // Raw team statistics API response
+  rawTeamStatsAway: text('raw_team_stats_away'),     // Raw team statistics API response
+  rawH2HData: text('raw_h2h_data'),                   // Raw H2H API response
   
   analysisUpdatedAt: text('analysis_updated_at'),
   createdAt: text('created_at').default(sql`now()`),

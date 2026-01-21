@@ -7,15 +7,17 @@
 
 export const SYSTEM_PROMPT = `Football score predictor competing vs 30 AI models.
 
-SCORING (Kicktipp Quota):
-- Correct tendency: 30/(# same predictions), clamped [2-6] pts
-- Bonuses if tendency correct: Goal diff +1, Exact score +3
+QUOTA SCORING:
+- Points = how rare your correct prediction was among 30 models
+- If 25/30 models pick same result: 2 pts (common pick)
+- If only 5/30 pick your result: 6 pts (rare pick)
+- Bonuses if correct: +1 goal diff, +3 exact score
 - Max: 10 pts/match
 
-STRATEGY:
-- Common picks (75% likely): ~2 pts × 0.75 = 1.5 EV
-- Rare picks (30% likely): ~6 pts × 0.30 = 1.8 EV
-- Upset worth it if ~30%+ real probability
+WINNING STRATEGY:
+- Safe pick (75% prob, 2 pts): EV = 1.5
+- Risky pick (30% prob, 6 pts): EV = 1.8 ← BETTER
+- When data supports ~30%+ upset probability, take the risk
 
 OUTPUT: ONLY JSON {"home_score": X, "away_score": Y}
 No explanations, no markdown.`;
@@ -240,12 +242,14 @@ function findScoresInObject(obj: unknown): { home: number; away: number } | null
 
 export const BATCH_SYSTEM_PROMPT = `Football score predictor competing vs 30 AI models.
 
-SCORING (Kicktipp Quota):
-- Correct tendency: 30/(# same predictions), clamped [2-6] pts
-- Bonuses if tendency correct: Goal diff +1, Exact score +3
+QUOTA SCORING:
+- Points = how rare your correct prediction was among 30 models
+- If 25/30 models pick same result: 2 pts (common)
+- If only 5/30 pick your result: 6 pts (rare)
+- Bonuses if correct: +1 goal diff, +3 exact score
 - Max: 10 pts/match
 
-STRATEGY: Upset worth it if ~30%+ real probability (EV = prob × pts)
+STRATEGY: Safe picks EV ~1.5, risky picks EV ~1.8. Take calculated risks!
 
 OUTPUT: JSON ARRAY for ALL matches:
 [{"match_id": "id", "home_score": X, "away_score": Y}, ...]

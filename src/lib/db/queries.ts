@@ -1250,7 +1250,7 @@ export async function getMatchesNeedingAnalysisRefresh(): Promise<Array<Match & 
 // Optimized: Uses LEFT JOIN instead of correlated subquery for prediction count
 export async function getMatchesReadyForPrediction(): Promise<Array<{
   match: Match;
-  competition: { id: string; name: string };
+  competition: { id: string; name: string; apiFootballId: number };
   analysis: MatchAnalysis | null;
   hasPredictions: boolean;
 }>> {
@@ -1284,7 +1284,7 @@ export async function getMatchesReadyForPrediction(): Promise<Array<{
 
   const result: Array<{
     match: Match;
-    competition: { id: string; name: string };
+    competition: { id: string; name: string; apiFootballId: number };
     analysis: MatchAnalysis | null;
     hasPredictions: boolean;
   }> = [];
@@ -1301,7 +1301,11 @@ export async function getMatchesReadyForPrediction(): Promise<Array<{
     if (hasLineups || isWithin5Mins) {
       result.push({
         match: row.match,
-        competition: { id: row.competition.id, name: row.competition.name },
+        competition: { 
+          id: row.competition.id, 
+          name: row.competition.name, 
+          apiFootballId: row.competition.apiFootballId 
+        },
         analysis: row.analysis,
         hasPredictions: (row.predictionCount || 0) > 0,
       });

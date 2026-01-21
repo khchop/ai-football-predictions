@@ -10,6 +10,14 @@ import { upsertMatchAnalysis, getMatchAnalysisByMatchId } from '@/lib/db/queries
 import { v4 as uuidv4 } from 'uuid';
 import type { MatchAnalysis, NewMatchAnalysis } from '@/lib/db/schema';
 import { fetchWithRetry, APIError } from '@/lib/utils/api-client';
+import { 
+  fetchTeamStatistics, 
+  extractTeamStatistics 
+} from '@/lib/football/team-statistics';
+import { 
+  fetchH2HDetailed, 
+  extractH2HStatistics 
+} from '@/lib/football/h2h';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 const API_TIMEOUT_MS = 30000;
@@ -297,7 +305,7 @@ export async function fetchAndStoreAnalysis(
 ): Promise<MatchAnalysis | null> {
   console.log(`[Match Analysis] Fetching analysis for match ${matchId} (fixture ${fixtureId})`);
 
-  // Fetch all data in parallel
+  // Fetch basic data in parallel
   const [predictionData, injuriesData, oddsData] = await Promise.all([
     fetchPrediction(fixtureId),
     fetchInjuries(fixtureId),
@@ -314,6 +322,51 @@ export async function fetchAndStoreAnalysis(
   const teams = prediction?.teams;
   const comparison = prediction?.comparison;
   const predictions = prediction?.predictions;
+
+  // Extract team IDs, league ID, and season for enhanced data
+  const homeTeamId = teams?.home?.id;
+  const awayTeamId = teams?.away?.id;
+  const leagueId = prediction?.league?.id;
+  
+  // Determine current season (European seasons: mid-year to mid-year)
+  // January-June = previous year's season, July-December = current year's season
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth(); // 0-11
+  const season = currentMonth < 6 ? currentYear - 1 : currentYear;
+
+  // Fetch enhanced data in parallel (team statistics and detailed H2H)
+  let teamStatsHomeData = null;
+  let teamStatsAwayData = null;
+  let h2hDetailedData = null;
+
+  if (homeTeamId && awayTeamId && leagueId && season) {
+    console.log(`[Match Analysis] Fetching enhanced data for teams ${homeTeamId} vs ${awayTeamId}, league ${leagueId}, season ${season}`);
+    
+    try {
+      [teamStatsHomeData, teamStatsAwayData, h2hDetailedData] = await Promise.all([
+        fetchTeamStatistics(homeTeamId, leagueId, season),
+        fetchTeamStatistics(awayTeamId, leagueId, season),
+        fetchH2HDetailed(homeTeamId, awayTeamId, 10),
+      ]);
+    } catch (error) {
+      console.error(`[Match Analysis] Error fetching enhanced data:`, error);
+      // Continue with basic data even if enhanced data fails
+    }
+  } else {
+    console.log(`[Match Analysis] Missing data for enhanced fetch (home:${homeTeamId}, away:${awayTeamId}, league:${leagueId}, season:${season})`);
+  }
+
+  // Extract enhanced statistics
+  const homeSeasonStats = homeTeamId && teamStatsHomeData 
+    ? extractTeamStatistics(teamStatsHomeData) 
+    : null;
+  const awaySeasonStats = awayTeamId && teamStatsAwayData 
+    ? extractTeamStatistics(teamStatsAwayData) 
+    : null;
+  const h2hDetailed = homeTeamId && awayTeamId && h2hDetailedData 
+    ? extractH2HStatistics(h2hDetailedData, homeTeamId, awayTeamId) 
+    : null;
 
   // Extract odds
   const odds = extractMatchWinnerOdds(oddsData);
@@ -374,12 +427,24 @@ export async function fetchAndStoreAnalysis(
     awayInjuriesCount: injuries.awayInjuriesCount,
     keyInjuries: injuries.keyInjuries.length > 0 ? JSON.stringify(injuries.keyInjuries) : null,
     
-    // Head-to-head history
+    // Head-to-head history (basic from predictions)
     h2hTotal: h2h.total > 0 ? h2h.total : null,
     h2hHomeWins: h2h.total > 0 ? h2h.homeWins : null,
     h2hDraws: h2h.total > 0 ? h2h.draws : null,
     h2hAwayWins: h2h.total > 0 ? h2h.awayWins : null,
     h2hResults: h2h.matches.length > 0 ? JSON.stringify(h2h.matches) : null,
+    
+    // Enhanced data: Team season statistics
+    homeSeasonStats: homeSeasonStats ? JSON.stringify(homeSeasonStats) : null,
+    awaySeasonStats: awaySeasonStats ? JSON.stringify(awaySeasonStats) : null,
+    
+    // Enhanced data: Detailed H2H with 10 matches
+    h2hDetailed: h2hDetailed ? JSON.stringify(h2hDetailed) : null,
+    
+    // Raw enhanced data for debugging
+    rawTeamStatsHome: teamStatsHomeData ? JSON.stringify(teamStatsHomeData) : null,
+    rawTeamStatsAway: teamStatsAwayData ? JSON.stringify(teamStatsAwayData) : null,
+    rawH2HData: h2hDetailedData ? JSON.stringify(h2hDetailedData) : null,
     
     // Keep existing lineup data if present
     homeFormation: existing?.homeFormation || null,
@@ -407,7 +472,15 @@ export async function fetchAndStoreAnalysis(
   console.log(`  - Favorite: ${analysisData.favoriteTeamName} (${analysisData.homeWinPct}% vs ${analysisData.awayWinPct}%)`);
   console.log(`  - Odds: ${analysisData.oddsHome} | ${analysisData.oddsDraw} | ${analysisData.oddsAway}`);
   console.log(`  - Injuries: Home ${analysisData.homeInjuriesCount}, Away ${analysisData.awayInjuriesCount}`);
-  console.log(`  - H2H: ${h2h.total} matches (H:${h2h.homeWins} D:${h2h.draws} A:${h2h.awayWins})`);
+  console.log(`  - H2H (basic): ${h2h.total} matches (H:${h2h.homeWins} D:${h2h.draws} A:${h2h.awayWins})`);
+  
+  if (h2hDetailed) {
+    console.log(`  - H2H (detailed): ${h2hDetailed.total} matches (H:${h2hDetailed.homeWins} D:${h2hDetailed.draws} A:${h2hDetailed.awayWins})`);
+  }
+  
+  if (homeSeasonStats && awaySeasonStats) {
+    console.log(`  - Season stats: Home ${homeSeasonStats.totalGoalsFor}GF/${homeSeasonStats.totalGoalsAgainst}GA, Away ${awaySeasonStats.totalGoalsFor}GF/${awaySeasonStats.totalGoalsAgainst}GA`);
+  }
 
   return await getMatchAnalysisByMatchId(matchId);
 }

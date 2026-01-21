@@ -18,10 +18,11 @@ import {
 } from '@/lib/db/queries';
 import { getActiveProviders, ALL_PROVIDERS, OpenRouterProvider } from '@/lib/llm';
 import { shouldSkipProvider, recordPredictionCost, getBudgetStatus } from '@/lib/llm/budget';
-import { buildBatchPrompt } from '@/lib/football/prompt-builder';
+import { buildBatchPrompt, BatchMatchContextWithStandings } from '@/lib/football/prompt-builder';
 import { BaseLLMProvider, BatchPredictionResult } from '@/lib/llm/providers/base';
 import { validateCronRequest } from '@/lib/auth/cron-auth';
 import type { NewPrediction } from '@/lib/db/schema';
+import { getStandingByTeamName } from '@/lib/football/standings';
 
 // Concurrency settings
 const MODEL_CONCURRENCY = 5; // Process 5 models in parallel
@@ -253,16 +254,46 @@ async function processModelPredictions(
 
     console.log(`  Batch ${batchIdx + 1}/${batches.length}: ${batchMatches.map(m => `${m.match.homeTeam} vs ${m.match.awayTeam}`).join(', ')}`);
 
-    // Build batch prompt for only these matches
+    // Fetch standings for all matches in batch (in parallel)
+    const standingsPromises = batchMatches.map(async (m) => {
+      const leagueId = m.competition.apiFootballId;
+      if (!leagueId) return { matchId: m.match.id, homeStanding: null, awayStanding: null };
+      
+      try {
+        const [homeStanding, awayStanding] = await Promise.all([
+          getStandingByTeamName(m.match.homeTeam, leagueId),
+          getStandingByTeamName(m.match.awayTeam, leagueId),
+        ]);
+        
+        return {
+          matchId: m.match.id,
+          homeStanding,
+          awayStanding,
+        };
+      } catch (error) {
+        console.error(`  Error fetching standings for ${m.match.homeTeam} vs ${m.match.awayTeam}:`, error);
+        return { matchId: m.match.id, homeStanding: null, awayStanding: null };
+      }
+    });
+
+    const standingsResults = await Promise.all(standingsPromises);
+    const standingsMap = new Map(standingsResults.map(s => [s.matchId, { home: s.homeStanding, away: s.awayStanding }]));
+
+    // Build batch prompt with standings
     const batchPrompt = buildBatchPrompt(
-      batchMatches.map(m => ({
-        matchId: m.match.id,
-        homeTeam: m.match.homeTeam,
-        awayTeam: m.match.awayTeam,
-        competition: m.competition.name,
-        kickoffTime: m.match.kickoffTime,
-        analysis: m.analysis,
-      }))
+      batchMatches.map(m => {
+        const standings = standingsMap.get(m.match.id);
+        return {
+          matchId: m.match.id,
+          homeTeam: m.match.homeTeam,
+          awayTeam: m.match.awayTeam,
+          competition: m.competition.name,
+          kickoffTime: m.match.kickoffTime,
+          analysis: m.analysis,
+          homeStanding: standings?.home || null,
+          awayStanding: standings?.away || null,
+        } as BatchMatchContextWithStandings;
+      })
     );
 
     try {

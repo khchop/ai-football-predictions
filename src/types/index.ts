@@ -343,6 +343,100 @@ export interface APIFootballLineupsResponse {
   }>;
 }
 
+// API-Football Team Statistics Response
+export interface APIFootballTeamStatisticsResponse {
+  response: {
+    league: {
+      id: number;
+      name: string;
+      season: number;
+    };
+    team: {
+      id: number;
+      name: string;
+      logo: string;
+    };
+    form: string;
+    fixtures: {
+      played: { home: number; away: number; total: number };
+      wins: { home: number; away: number; total: number };
+      draws: { home: number; away: number; total: number };
+      loses: { home: number; away: number; total: number };
+    };
+    goals: {
+      for: {
+        total: { home: number; away: number; total: number };
+        average: { home: string; away: string; total: string };
+        minute: {
+          [key: string]: { total: number | null; percentage: string | null };
+        };
+      };
+      against: {
+        total: { home: number; away: number; total: number };
+        average: { home: string; away: string; total: string };
+        minute: {
+          [key: string]: { total: number | null; percentage: string | null };
+        };
+      };
+    };
+    biggest: {
+      streak: { wins: number; draws: number; loses: number };
+      wins: { home: string | null; away: string | null };
+      loses: { home: string | null; away: string | null };
+      goals: {
+        for: { home: number; away: number };
+        against: { home: number; away: number };
+      };
+    };
+    clean_sheet: { home: number; away: number; total: number };
+    failed_to_score: { home: number; away: number; total: number };
+    penalty: {
+      scored: { total: number; percentage: string };
+      missed: { total: number; percentage: string };
+      total: number;
+    };
+    lineups: Array<{
+      formation: string;
+      played: number;
+    }>;
+    cards: {
+      yellow: {
+        [key: string]: { total: number | null; percentage: string | null };
+      };
+      red: {
+        [key: string]: { total: number | null; percentage: string | null };
+      };
+    };
+  };
+}
+
+// API-Football H2H Response
+export interface APIFootballH2HResponse {
+  response: Array<{
+    fixture: {
+      id: number;
+      date: string;
+      timestamp: number;
+      venue: { name: string | null; city: string | null };
+      status: { short: string; long: string; elapsed: number | null };
+    };
+    league: {
+      id: number;
+      name: string;
+      round: string;
+    };
+    teams: {
+      home: { id: number; name: string; logo: string };
+      away: { id: number; name: string; logo: string };
+    };
+    goals: { home: number | null; away: number | null };
+    score: {
+      halftime: { home: number | null; away: number | null };
+      fulltime: { home: number | null; away: number | null };
+    };
+  }>;
+}
+
 // Likely score from odds
 export interface LikelyScore {
   score: string;

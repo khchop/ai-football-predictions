@@ -74,6 +74,58 @@ function parseKeyInjuries(json: string | null): KeyInjury[] {
   }
 }
 
+// Parse team season statistics
+interface TeamSeasonStats {
+  homeWins: number | null;
+  homeDraws: number | null;
+  homeLosses: number | null;
+  awayWins: number | null;
+  awayDraws: number | null;
+  awayLosses: number | null;
+  homeGoalsFor: number | null;
+  homeGoalsAgainst: number | null;
+  awayGoalsFor: number | null;
+  awayGoalsAgainst: number | null;
+  totalGoalsFor: number | null;
+  totalGoalsAgainst: number | null;
+  cleanSheetsHome: number | null;
+  cleanSheetsAway: number | null;
+  cleanSheetsTotal: number | null;
+  failedToScoreTotal: number | null;
+  winStreak: number | null;
+  goalsFor0to15: number | null;
+  goalsFor76to90: number | null;
+  goalsAgainst0to15: number | null;
+  goalsAgainst76to90: number | null;
+}
+
+function parseTeamSeasonStats(json: string | null): TeamSeasonStats | null {
+  if (!json) return null;
+  try {
+    return JSON.parse(json) as TeamSeasonStats;
+  } catch {
+    return null;
+  }
+}
+
+// Parse detailed H2H
+interface H2HDetailed {
+  total: number;
+  homeWins: number;
+  draws: number;
+  awayWins: number;
+  matches: H2HResult[];
+}
+
+function parseH2HDetailed(json: string | null): H2HDetailed | null {
+  if (!json) return null;
+  try {
+    return JSON.parse(json) as H2HDetailed;
+  } catch {
+    return null;
+  }
+}
+
 // Format injuries for a team
 function formatTeamInjuries(injuries: KeyInjury[], teamName: string, count: number): string {
   const teamInjuries = injuries.filter(i => i.teamName === teamName);
@@ -148,7 +200,7 @@ export function buildEnhancedPrompt(context: PromptContext | EnhancedPromptConte
       lines.push('');
     }
     
-    // League Standings (NEW - factual data)
+    // League Standings (factual data)
     if (homeStanding || awayStanding) {
       lines.push('LEAGUE STANDINGS:');
       if (homeStanding) {
@@ -160,15 +212,71 @@ export function buildEnhancedPrompt(context: PromptContext | EnhancedPromptConte
       lines.push('');
     }
     
-    // Head-to-Head History (NEW - factual data, extracted from existing API response)
-    if (analysis.h2hTotal && analysis.h2hTotal > 0) {
+    // Season Statistics (NEW - enhanced data from team-statistics API)
+    const homeSeasonStats = parseTeamSeasonStats(analysis.homeSeasonStats);
+    const awaySeasonStats = parseTeamSeasonStats(analysis.awaySeasonStats);
+    
+    if (homeSeasonStats && awaySeasonStats) {
+      lines.push('SEASON STATISTICS:');
+      
+      // Overall goals and clean sheets
+      lines.push(`${homeTeam}: ${homeSeasonStats.totalGoalsFor}GF/${homeSeasonStats.totalGoalsAgainst}GA, ${homeSeasonStats.cleanSheetsTotal} clean sheets${homeSeasonStats.winStreak ? `, ${homeSeasonStats.winStreak}W streak` : ''}`);
+      lines.push(`${awayTeam}: ${awaySeasonStats.totalGoalsFor}GF/${awaySeasonStats.totalGoalsAgainst}GA, ${awaySeasonStats.cleanSheetsTotal} clean sheets${awaySeasonStats.winStreak ? `, ${awaySeasonStats.winStreak}W streak` : ''}`);
+      
+      // Home/Away splits
+      if (homeSeasonStats.homeWins !== null && awaySeasonStats.awayWins !== null) {
+        lines.push(`${homeTeam} at home: ${homeSeasonStats.homeWins}W-${homeSeasonStats.homeDraws}D-${homeSeasonStats.homeLosses}L (${homeSeasonStats.homeGoalsFor}GF/${homeSeasonStats.homeGoalsAgainst}GA)`);
+        lines.push(`${awayTeam} away: ${awaySeasonStats.awayWins}W-${awaySeasonStats.awayDraws}D-${awaySeasonStats.awayLosses}L (${awaySeasonStats.awayGoalsFor}GF/${awaySeasonStats.awayGoalsAgainst}GA)`);
+      }
+      
+      // Goal timing patterns (if significant)
+      const homeEarlyGoals = homeSeasonStats.goalsFor0to15;
+      const homeLateGoals = homeSeasonStats.goalsFor76to90;
+      const awayEarlyConceded = awaySeasonStats.goalsAgainst0to15;
+      const awayLateConceded = awaySeasonStats.goalsAgainst76to90;
+      
+      const timingNotes: string[] = [];
+      if (homeLateGoals && homeSeasonStats.totalGoalsFor && homeLateGoals / homeSeasonStats.totalGoalsFor > 0.25) {
+        timingNotes.push(`${homeTeam} scores ${Math.round(homeLateGoals / homeSeasonStats.totalGoalsFor * 100)}% of goals in final 15min`);
+      }
+      if (homeEarlyGoals && homeSeasonStats.totalGoalsFor && homeEarlyGoals / homeSeasonStats.totalGoalsFor > 0.25) {
+        timingNotes.push(`${homeTeam} scores ${Math.round(homeEarlyGoals / homeSeasonStats.totalGoalsFor * 100)}% in first 15min`);
+      }
+      if (awayEarlyConceded && awaySeasonStats.totalGoalsAgainst && awayEarlyConceded / awaySeasonStats.totalGoalsAgainst > 0.25) {
+        timingNotes.push(`${awayTeam} concedes ${Math.round(awayEarlyConceded / awaySeasonStats.totalGoalsAgainst * 100)}% early`);
+      }
+      if (awayLateConceded && awaySeasonStats.totalGoalsAgainst && awayLateConceded / awaySeasonStats.totalGoalsAgainst > 0.25) {
+        timingNotes.push(`${awayTeam} concedes ${Math.round(awayLateConceded / awaySeasonStats.totalGoalsAgainst * 100)}% late`);
+      }
+      
+      if (timingNotes.length > 0) {
+        lines.push(`Goal timing: ${timingNotes.join('; ')}`);
+      }
+      
+      lines.push('');
+    }
+    
+    // Head-to-Head History - Enhanced with detailed H2H
+    const h2hDetailed = parseH2HDetailed(analysis.h2hDetailed);
+    if (h2hDetailed && h2hDetailed.total > 0) {
+      lines.push('HEAD-TO-HEAD:');
+      lines.push(`Record (${h2hDetailed.total} matches): ${homeTeam} ${h2hDetailed.homeWins} wins, ${h2hDetailed.draws} draws, ${awayTeam} ${h2hDetailed.awayWins} wins`);
+      
+      if (h2hDetailed.matches.length > 0) {
+        const last5 = h2hDetailed.matches.slice(0, 5);
+        const resultsStr = last5.map(r => `${r.homeScore}-${r.awayScore}`).join(', ');
+        lines.push(`Last ${last5.length}: ${resultsStr}`);
+      }
+      lines.push('');
+    } else if (analysis.h2hTotal && analysis.h2hTotal > 0) {
+      // Fallback to basic H2H if detailed not available
       lines.push('HEAD-TO-HEAD:');
       lines.push(`Record (${analysis.h2hTotal} matches): ${homeTeam} ${analysis.h2hHomeWins} wins, ${analysis.h2hDraws} draws, ${awayTeam} ${analysis.h2hAwayWins} wins`);
       
       const h2hResults = parseH2HResults(analysis.h2hResults);
       if (h2hResults.length > 0) {
         const resultsStr = h2hResults.map(r => `${r.homeScore}-${r.awayScore}`).join(', ');
-        lines.push(`Last ${h2hResults.length}: ${resultsStr} (home team score first)`);
+        lines.push(`Last ${h2hResults.length}: ${resultsStr}`);
       }
       lines.push('');
     }
@@ -266,9 +374,8 @@ DATA: Odds (lower=likely), H2H, Form, Stats %, Lineups, Absences
 `;
 
 // Build a compact match summary for batch prompts
-// REMOVED: favoriteTeamName, winPct (biasing)
-// ADDED: H2H summary
-function buildCompactMatchSummary(context: BatchMatchContext, index: number): string {
+// Enhanced with detailed H2H and season statistics
+function buildCompactMatchSummary(context: BatchMatchContext, index: number, homeStanding?: LeagueStanding | null, awayStanding?: LeagueStanding | null): string {
   const { matchId, homeTeam, awayTeam, competition, kickoffTime, analysis } = context;
   
   const kickoff = parseISO(kickoffTime);
@@ -286,17 +393,62 @@ function buildCompactMatchSummary(context: BatchMatchContext, index: number): st
       lines.push(`    Odds: H=${analysis.oddsHome || '-'} D=${analysis.oddsDraw || '-'} A=${analysis.oddsAway || '-'}`);
     }
     
-    // H2H (compact) - factual historical data
-    if (analysis.h2hTotal && analysis.h2hTotal > 0) {
+    // League position (NEW - very compact)
+    if (homeStanding && awayStanding) {
+      lines.push(`    Table: ${homeTeam} ${homeStanding.position}${getOrdinalSuffix(homeStanding.position)} (${homeStanding.points}pts, ${homeStanding.goalDiff >= 0 ? '+' : ''}${homeStanding.goalDiff}GD) | ${awayTeam} ${awayStanding.position}${getOrdinalSuffix(awayStanding.position)} (${awayStanding.points}pts, ${awayStanding.goalDiff >= 0 ? '+' : ''}${awayStanding.goalDiff}GD)`);
+    }
+    
+    // Home/Away records (NEW - compact)
+    if (homeStanding && awayStanding && homeStanding.homeWon !== null && awayStanding.awayWon !== null) {
+      lines.push(`    Home/Away: ${homeTeam} ${homeStanding.homeWon}W-${homeStanding.homeDrawn}D-${homeStanding.homeLost}L (${homeStanding.homeGoalsFor}GF/${homeStanding.homeGoalsAgainst}GA) | ${awayTeam} ${awayStanding.awayWon}W-${awayStanding.awayDrawn}D-${awayStanding.awayLost}L (${awayStanding.awayGoalsFor}GF/${awayStanding.awayGoalsAgainst}GA)`);
+    }
+    
+    // H2H - Enhanced with detailed data
+    const h2hDetailed = parseH2HDetailed(analysis.h2hDetailed);
+    if (h2hDetailed && h2hDetailed.total > 0) {
+      const last5 = h2hDetailed.matches.slice(0, 5);
+      const resultsStr = last5.map(r => `${r.homeScore}-${r.awayScore}`).join(',');
+      lines.push(`    H2H (${h2hDetailed.total}): ${h2hDetailed.homeWins}W-${h2hDetailed.draws}D-${h2hDetailed.awayWins}L (last 5: ${resultsStr})`);
+    } else if (analysis.h2hTotal && analysis.h2hTotal > 0) {
+      // Fallback to basic H2H
       const h2hResults = parseH2HResults(analysis.h2hResults);
       const resultsStr = h2hResults.length > 0 ? h2hResults.slice(0, 3).map(r => `${r.homeScore}-${r.awayScore}`).join(',') : '';
       lines.push(`    H2H: ${analysis.h2hHomeWins}W-${analysis.h2hDraws}D-${analysis.h2hAwayWins}L${resultsStr ? ` (last: ${resultsStr})` : ''}`);
     }
     
-    // Form (compact - just the letters)
+    // Form with goal data (enhanced)
     const homeForm = analysis.homeTeamForm || '-';
     const awayForm = analysis.awayTeamForm || '-';
-    lines.push(`    Form: H=${homeForm} A=${awayForm}`);
+    const homeGoals = analysis.homeGoalsScored !== null && analysis.homeGoalsConceded !== null 
+      ? ` (${analysis.homeGoalsScored}GF/${analysis.homeGoalsConceded}GA)` 
+      : '';
+    const awayGoals = analysis.awayGoalsScored !== null && analysis.awayGoalsConceded !== null 
+      ? ` (${analysis.awayGoalsScored}GF/${analysis.awayGoalsConceded}GA)` 
+      : '';
+    lines.push(`    Form: H=${homeForm}${homeGoals} | A=${awayForm}${awayGoals}`);
+    
+    // Season statistics (NEW - compact)
+    const homeSeasonStats = parseTeamSeasonStats(analysis.homeSeasonStats);
+    const awaySeasonStats = parseTeamSeasonStats(analysis.awaySeasonStats);
+    
+    if (homeSeasonStats && awaySeasonStats) {
+      lines.push(`    Season: ${homeTeam} ${homeSeasonStats.totalGoalsFor}GF/${homeSeasonStats.totalGoalsAgainst}GA, ${homeSeasonStats.cleanSheetsTotal} CS${homeSeasonStats.winStreak ? `, ${homeSeasonStats.winStreak}W streak` : ''} | ${awayTeam} ${awaySeasonStats.totalGoalsFor}GF/${awaySeasonStats.totalGoalsAgainst}GA, ${awaySeasonStats.cleanSheetsTotal} CS${awaySeasonStats.winStreak ? `, ${awaySeasonStats.winStreak}W streak` : ''}`);
+      
+      // Goal timing (only if significant)
+      const homeLate = homeSeasonStats.goalsFor76to90 && homeSeasonStats.totalGoalsFor 
+        ? Math.round(homeSeasonStats.goalsFor76to90 / homeSeasonStats.totalGoalsFor * 100) 
+        : 0;
+      const awayEarly = awaySeasonStats.goalsAgainst0to15 && awaySeasonStats.totalGoalsAgainst 
+        ? Math.round(awaySeasonStats.goalsAgainst0to15 / awaySeasonStats.totalGoalsAgainst * 100) 
+        : 0;
+      
+      if (homeLate > 25 || awayEarly > 25) {
+        const timings: string[] = [];
+        if (homeLate > 25) timings.push(`${homeTeam} ${homeLate}% goals 76-90'`);
+        if (awayEarly > 25) timings.push(`${awayTeam} ${awayEarly}% concedes 0-15'`);
+        lines.push(`    Timing: ${timings.join(' | ')}`);
+      }
+    }
     
     // Comparison (compact, only if available)
     if (analysis.formHomePct && analysis.formAwayPct) {
@@ -322,8 +474,14 @@ function buildCompactMatchSummary(context: BatchMatchContext, index: number): st
   return lines.join('\n');
 }
 
+// Extended context for batch with standings
+export interface BatchMatchContextWithStandings extends BatchMatchContext {
+  homeStanding?: LeagueStanding | null;
+  awayStanding?: LeagueStanding | null;
+}
+
 // Build batch prompt for multiple matches - OPTIMIZED for tokens
-export function buildBatchPrompt(matches: BatchMatchContext[]): string {
+export function buildBatchPrompt(matches: BatchMatchContext[] | BatchMatchContextWithStandings[]): string {
   if (matches.length === 0) {
     return '';
   }
@@ -337,7 +495,10 @@ export function buildBatchPrompt(matches: BatchMatchContext[]): string {
   
   // Add each match summary
   for (let i = 0; i < matches.length; i++) {
-    lines.push(buildCompactMatchSummary(matches[i], i));
+    const match = matches[i];
+    const homeStanding = 'homeStanding' in match ? match.homeStanding : null;
+    const awayStanding = 'awayStanding' in match ? match.awayStanding : null;
+    lines.push(buildCompactMatchSummary(match, i, homeStanding, awayStanding));
     lines.push('');
   }
   
