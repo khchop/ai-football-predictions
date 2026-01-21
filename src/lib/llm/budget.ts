@@ -9,10 +9,10 @@ function getTodayDate(): string {
   return new Date().toISOString().split('T')[0];
 }
 
-// Get daily budget from environment (default €1.80 = ~$1.90 for €50/month budget)
+// Get daily budget from environment (default $1.00/day)
 export function getDailyBudget(): number {
   const budget = process.env.DAILY_BUDGET;
-  return budget ? parseFloat(budget) : 1.80;
+  return budget ? parseFloat(budget) : 1.00;
 }
 
 // Get total spent today across all models
