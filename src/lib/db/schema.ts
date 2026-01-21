@@ -48,6 +48,13 @@ export const models = pgTable('models', {
   isPremium: boolean('is_premium').default(false),
   active: boolean('active').default(true),
   createdAt: text('created_at').default(sql`now()`),
+  // Streak tracking (updated in real-time when matches are scored)
+  currentStreak: integer('current_streak').default(0), // Positive = wins, negative = losses
+  currentStreakType: text('current_streak_type').default('none'), // 'exact', 'tendency', 'none'
+  bestStreak: integer('best_streak').default(0), // Best winning streak ever
+  worstStreak: integer('worst_streak').default(0), // Worst losing streak ever (stored as negative)
+  bestExactStreak: integer('best_exact_streak').default(0), // Best exact score streak
+  bestTendencyStreak: integer('best_tendency_streak').default(0), // Best tendency streak (including exact)
 });
 
 // Predictions made by models

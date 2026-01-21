@@ -270,6 +270,82 @@ export async function getModelById(id: string) {
   return result[0];
 }
 
+// Update model streak after a prediction is scored
+// resultType: 'exact' (exact score), 'tendency' (correct result), 'wrong' (wrong result)
+export async function updateModelStreak(
+  modelId: string,
+  resultType: 'exact' | 'tendency' | 'wrong'
+) {
+  const db = getDb();
+  const model = await getModelById(modelId);
+  if (!model) return;
+
+  const currentStreak = model.currentStreak || 0;
+  const currentStreakType = model.currentStreakType || 'none';
+  let bestStreak = model.bestStreak || 0;
+  let worstStreak = model.worstStreak || 0;
+  let bestExactStreak = model.bestExactStreak || 0;
+  let bestTendencyStreak = model.bestTendencyStreak || 0;
+
+  let newStreak: number;
+  let newStreakType: string;
+
+  if (resultType === 'wrong') {
+    // Wrong prediction - start or extend losing streak
+    if (currentStreak < 0) {
+      newStreak = currentStreak - 1; // Extend losing streak
+    } else {
+      newStreak = -1; // Start new losing streak
+    }
+    newStreakType = 'none';
+    // Update worst streak if this is worse
+    if (newStreak < worstStreak) {
+      worstStreak = newStreak;
+    }
+  } else {
+    // Correct prediction (exact or tendency)
+    if (currentStreak > 0) {
+      newStreak = currentStreak + 1; // Extend winning streak
+      // Keep the "better" streak type (exact > tendency)
+      if (resultType === 'exact') {
+        newStreakType = 'exact';
+      } else {
+        newStreakType = currentStreakType === 'exact' ? 'exact' : 'tendency';
+      }
+    } else {
+      newStreak = 1; // Start new winning streak
+      newStreakType = resultType;
+    }
+    // Update best streaks
+    if (newStreak > bestStreak) {
+      bestStreak = newStreak;
+    }
+    if (resultType === 'exact' && newStreakType === 'exact') {
+      // Count consecutive exact scores
+      const exactCount = currentStreakType === 'exact' ? 
+        Math.min(newStreak, (bestExactStreak || 0) + 1) : 1;
+      if (exactCount > bestExactStreak) {
+        bestExactStreak = exactCount;
+      }
+    }
+    if (newStreak > bestTendencyStreak) {
+      bestTendencyStreak = newStreak;
+    }
+  }
+
+  await db
+    .update(models)
+    .set({
+      currentStreak: newStreak,
+      currentStreakType: newStreakType,
+      bestStreak,
+      worstStreak,
+      bestExactStreak,
+      bestTendencyStreak,
+    })
+    .where(eq(models.id, modelId));
+}
+
 // ============= PREDICTIONS =============
 
 export async function createPrediction(data: Omit<NewPrediction, 'id'>) {
@@ -462,6 +538,11 @@ export async function getLeaderboardFiltered(filters: LeaderboardFilters = {}) {
       actualHomeScore: matches.homeScore,
       actualAwayScore: matches.awayScore,
       kickoffTime: matches.kickoffTime,
+      // Streak data
+      currentStreak: models.currentStreak,
+      currentStreakType: models.currentStreakType,
+      bestStreak: models.bestStreak,
+      worstStreak: models.worstStreak,
     })
     .from(predictions)
     .innerJoin(models, eq(predictions.modelId, models.id))
@@ -477,6 +558,10 @@ export async function getLeaderboardFiltered(filters: LeaderboardFilters = {}) {
     exactScores: number;
     correctResults: number;
     totalPoints: number;
+    currentStreak: number;
+    currentStreakType: string;
+    bestStreak: number;
+    worstStreak: number;
   }>();
 
   for (const pred of finishedPredictions) {
@@ -490,6 +575,10 @@ export async function getLeaderboardFiltered(filters: LeaderboardFilters = {}) {
       exactScores: 0,
       correctResults: 0,
       totalPoints: 0,
+      currentStreak: pred.currentStreak || 0,
+      currentStreakType: pred.currentStreakType || 'none',
+      bestStreak: pred.bestStreak || 0,
+      worstStreak: pred.worstStreak || 0,
     };
 
     stats.totalPredictions++;
@@ -519,7 +608,15 @@ export async function getLeaderboardFiltered(filters: LeaderboardFilters = {}) {
   // If minPredictions is 0, include all active models (even those with no predictions)
   if (minPredictions === 0 && activeOnly) {
     const allActiveModels = await db
-      .select({ id: models.id, displayName: models.displayName, provider: models.provider })
+      .select({ 
+        id: models.id, 
+        displayName: models.displayName, 
+        provider: models.provider,
+        currentStreak: models.currentStreak,
+        currentStreakType: models.currentStreakType,
+        bestStreak: models.bestStreak,
+        worstStreak: models.worstStreak,
+      })
       .from(models)
       .where(eq(models.active, true));
     
@@ -533,6 +630,10 @@ export async function getLeaderboardFiltered(filters: LeaderboardFilters = {}) {
           exactScores: 0,
           correctResults: 0,
           totalPoints: 0,
+          currentStreak: model.currentStreak || 0,
+          currentStreakType: model.currentStreakType || 'none',
+          bestStreak: model.bestStreak || 0,
+          worstStreak: model.worstStreak || 0,
         });
       }
     }

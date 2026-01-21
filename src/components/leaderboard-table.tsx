@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Trophy, Medal, Award, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { Trophy, Medal, Award, ArrowUp, ArrowDown, ArrowUpDown, Flame, Snowflake, Minus } from 'lucide-react';
 
 export interface LeaderboardEntry {
   modelId: string;
@@ -24,6 +24,11 @@ export interface LeaderboardEntry {
   correctResults?: number;
   exactScorePercent?: number;
   correctResultPercent?: number;
+  // Streak data
+  currentStreak?: number;
+  currentStreakType?: string;
+  bestStreak?: number;
+  worstStreak?: number;
 }
 
 interface LeaderboardTableProps {
@@ -134,6 +139,48 @@ export function LeaderboardTable({ entries, showBreakdown = false }: Leaderboard
     }
   };
 
+  // Get streak indicator (hot/cold/neutral)
+  const getStreakIndicator = (entry: LeaderboardEntry) => {
+    const streak = entry.currentStreak || 0;
+    
+    if (streak >= 3) {
+      // Hot streak: 3+ correct in a row
+      return (
+        <div className="flex items-center gap-1" title={`${streak} correct in a row`}>
+          <Flame className="h-4 w-4 text-orange-500" />
+          <span className="text-xs font-bold text-orange-500">+{streak}</span>
+        </div>
+      );
+    } else if (streak <= -3) {
+      // Cold streak: 3+ wrong in a row
+      return (
+        <div className="flex items-center gap-1" title={`${Math.abs(streak)} wrong in a row`}>
+          <Snowflake className="h-4 w-4 text-blue-400" />
+          <span className="text-xs font-bold text-blue-400">{streak}</span>
+        </div>
+      );
+    } else if (streak > 0) {
+      // Small winning streak
+      return (
+        <span className="text-xs font-medium text-green-500" title={`${streak} correct in a row`}>
+          +{streak}
+        </span>
+      );
+    } else if (streak < 0) {
+      // Small losing streak
+      return (
+        <span className="text-xs font-medium text-red-400" title={`${Math.abs(streak)} wrong in a row`}>
+          {streak}
+        </span>
+      );
+    } else {
+      // Neutral
+      return (
+        <Minus className="h-3 w-3 text-muted-foreground" />
+      );
+    }
+  };
+
   if (entries.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -157,7 +204,7 @@ export function LeaderboardTable({ entries, showBreakdown = false }: Leaderboard
           index === 2 && "bg-orange-500/5 border-orange-500/30"
         )}
       >
-        {/* Header: Rank + Model Name */}
+        {/* Header: Rank + Model Name + Streak */}
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center w-8 h-8">
             {getRankIcon(index)}
@@ -165,6 +212,9 @@ export function LeaderboardTable({ entries, showBreakdown = false }: Leaderboard
           <div className="flex-1 min-w-0">
             <p className="font-medium truncate">{entry.displayName}</p>
             <p className="text-xs text-muted-foreground capitalize">{entry.provider}</p>
+          </div>
+          <div className="flex items-center">
+            {getStreakIndicator(entry)}
           </div>
         </div>
         
@@ -303,6 +353,12 @@ export function LeaderboardTable({ entries, showBreakdown = false }: Leaderboard
                   {getSortIcon('accuracy')}
                 </span>
               </th>
+              <th 
+                className="text-center py-4 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider"
+                title="Current Prediction Streak"
+              >
+                Streak
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -381,6 +437,9 @@ export function LeaderboardTable({ entries, showBreakdown = false }: Leaderboard
                         {accuracy}%
                       </span>
                     </div>
+                  </td>
+                  <td className="py-4 px-3 text-center">
+                    {getStreakIndicator(entry)}
                   </td>
                 </tr>
               );

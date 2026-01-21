@@ -4,6 +4,7 @@ import {
   setMatchUpset,
   getMatchAnalysisByMatchId,
   saveMatchQuotas,
+  updateModelStreak,
 } from '@/lib/db/queries';
 import { calculateQuotas, calculateQuotaScores } from '@/lib/utils/scoring';
 import { isUpsetResult } from '@/lib/utils/upset';
@@ -62,7 +63,7 @@ export async function scorePredictionsForMatch(
     let scoredCount = 0;
     let totalPoints = 0;
 
-    for (const { prediction } of matchPredictions) {
+    for (const { prediction, model } of matchPredictions) {
       // Calculate quota-based scores
       const scores = calculateQuotaScores({
         predictedHome: prediction.predictedHomeScore,
@@ -76,6 +77,14 @@ export async function scorePredictionsForMatch(
 
       // Update prediction with scores
       await updatePredictionScores(prediction.id, scores);
+      
+      // Update model streak
+      const isExact = scores.exactScoreBonus > 0;
+      const isCorrectTendency = scores.tendencyPoints > 0;
+      const streakResult: 'exact' | 'tendency' | 'wrong' = 
+        isExact ? 'exact' : 
+        isCorrectTendency ? 'tendency' : 'wrong';
+      await updateModelStreak(model.id, streakResult);
       
       scoredCount++;
       totalPoints += scores.total;
