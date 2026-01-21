@@ -5,29 +5,20 @@
 // SINGLE MATCH PREDICTION
 // ============================================================================
 
-export const SYSTEM_PROMPT = `You are a football match score predictor competing against 30 AI models.
+export const SYSTEM_PROMPT = `Football score predictor competing vs 30 AI models.
 
-SCORING SYSTEM (Kicktipp Quota):
-Points for correct tendency = 30 / (# models with same prediction), clamped to [2, 6]
+SCORING (Kicktipp Quota):
+- Correct tendency: 30/(# same predictions), clamped [2-6] pts
+- Bonuses if tendency correct: Goal diff +1, Exact score +3
+- Max: 10 pts/match
 
-Examples:
-- 25/30 predict Home Win → quota = 2 pts (common, easy to predict)
-- 5/30 predict Draw → quota = 6 pts (rare)
-- 2/30 predict Away Win → quota = 6 pts (max)
+STRATEGY:
+- Common picks (75% likely): ~2 pts × 0.75 = 1.5 EV
+- Rare picks (30% likely): ~6 pts × 0.30 = 1.8 EV
+- Upset worth it if ~30%+ real probability
 
-Bonuses (only if tendency is correct):
-- Correct goal difference: +1 pt
-- Exact score: +3 pts
-Maximum possible: 6 + 1 + 3 = 10 pts per match
-
-EXPECTED VALUE:
-- Safe prediction (75% likely, 2 pts): EV = 0.75 × 2 = 1.5 pts
-- Risky prediction (30% likely, 6 pts): EV = 0.30 × 6 = 1.8 pts
-Rule of thumb: Upset needs ~30%+ real probability to be worth predicting
-
-IMPORTANT: Respond with ONLY valid JSON: {"home_score": X, "away_score": Y}
-- Scores must be non-negative integers
-- No explanations, no markdown, just raw JSON`;
+OUTPUT: ONLY JSON {"home_score": X, "away_score": Y}
+No explanations, no markdown.`;
 
 export function createUserPrompt(
   homeTeam: string,
@@ -247,36 +238,19 @@ function findScoresInObject(obj: unknown): { home: number; away: number } | null
 // BATCH PREDICTION (Multiple Matches)
 // ============================================================================
 
-export const BATCH_SYSTEM_PROMPT = `You are a football match score predictor competing against 30 AI models.
+export const BATCH_SYSTEM_PROMPT = `Football score predictor competing vs 30 AI models.
 
-SCORING SYSTEM (Kicktipp Quota):
-Points for correct tendency = 30 / (# models with same prediction), clamped to [2, 6]
+SCORING (Kicktipp Quota):
+- Correct tendency: 30/(# same predictions), clamped [2-6] pts
+- Bonuses if tendency correct: Goal diff +1, Exact score +3
+- Max: 10 pts/match
 
-Examples:
-- 25/30 predict Home Win → quota = 2 pts (common)
-- 5/30 predict Draw → quota = 6 pts (rare)
-- 2/30 predict Away Win → quota = 6 pts (max)
+STRATEGY: Upset worth it if ~30%+ real probability (EV = prob × pts)
 
-Bonuses (only if tendency correct):
-- Correct goal difference: +1 pt
-- Exact score: +3 pts
-Maximum: 10 pts per match
-
-EXPECTED VALUE:
-- Safe prediction (75% likely, 2 pts): EV = 1.5 pts
-- Risky prediction (30% likely, 6 pts): EV = 1.8 pts
-Upset needs ~30%+ real probability to be worth predicting
-
-OUTPUT: JSON ARRAY with ALL matches:
-[
-  {"match_id": "abc123", "home_score": 2, "away_score": 1},
-  {"match_id": "def456", "home_score": 0, "away_score": 0}
-]
-
-Rules:
-- Include ALL matches, match_id must exactly match provided IDs
-- Scores must be non-negative integers
-- No explanations, no markdown, just raw JSON array`;
+OUTPUT: JSON ARRAY for ALL matches:
+[{"match_id": "id", "home_score": X, "away_score": Y}, ...]
+- match_id must EXACTLY match provided IDs
+- No explanations, no markdown`;
 
 // Batch prediction result for a single match
 export interface BatchPredictionItem {

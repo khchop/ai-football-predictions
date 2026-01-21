@@ -15,6 +15,7 @@ const OPTIONAL_ENV_VARS = {
   DAILY_BUDGET: '1.00',
   DB_POOL_MAX: '10',
   DB_POOL_MIN: '2',
+  REDIS_URL: '', // Optional - caching disabled if not set
 } as const;
 
 // Validate required env vars at module load time
@@ -69,6 +70,7 @@ export const env = {
   // Optional (may be undefined)
   CRON_SECRET: process.env.CRON_SECRET,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  REDIS_URL: process.env.REDIS_URL,
   
   // Helpers
   get isProduction() {

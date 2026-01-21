@@ -5,6 +5,10 @@ import { shouldSkipProvider, recordPredictionCost, getBudgetStatus } from '@/lib
 import { buildBatchPrompt, BatchMatchContext } from '@/lib/football/prompt-builder';
 import { BaseLLMProvider, BatchPredictionResult } from '@/lib/llm/providers/base';
 import { validateCronRequest } from '@/lib/auth/cron-auth';
+import pLimit from 'p-limit';
+
+// Concurrency limit for parallel provider processing
+const PROVIDER_CONCURRENCY = 5;
 
 // Batch size for grouping matches (10 matches per API call)
 const BATCH_SIZE = 10;
@@ -166,7 +170,9 @@ export async function POST(request: NextRequest) {
     let totalRetries = 0;
     let successfulRetries = 0;
 
-    // Process each batch with each provider
+    // Process each batch with providers in parallel (controlled concurrency)
+    const limit = pLimit(PROVIDER_CONCURRENCY);
+
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
       const batch = batches[batchIndex];
       const matchIds = batch.map(m => m.matchId);
@@ -177,107 +183,122 @@ export async function POST(request: NextRequest) {
       // Build batch prompt once per batch
       const batchPrompt = buildBatchPrompt(batch);
 
-      // Process providers sequentially to prevent budget race conditions
+      // Check budget for all providers first (sequential to avoid race conditions)
+      const providersToProcess: typeof activeProviders = [];
       for (const provider of activeProviders) {
-        // Check budget BEFORE API call
         const budgetCheck = await shouldSkipProvider(provider as OpenRouterProvider);
         if (budgetCheck.skip) {
           console.log(`  Skipping ${provider.id} - ${budgetCheck.reason}`);
-          skippedDueToBudget += batch.length; // Count all matches in batch as skipped
-          continue;
+          skippedDueToBudget += batch.length;
+        } else {
+          providersToProcess.push(provider);
+          totalPredictions += batch.length;
         }
+      }
 
-        totalPredictions += batch.length;
-        
-        // Estimate cost for batch (more input tokens, proportionally more output)
-        const hasAnalysis = batch.some(m => m.analysis);
-        
-        try {
-          console.log(`  ${provider.id}: Generating batch prediction...`);
-          
-          // Use batch prediction method WITH RETRY LOGIC
-          const baseProvider = provider as BaseLLMProvider;
-          const { result, retryCount } = await predictBatchWithRetry(
-            baseProvider,
-            batchPrompt,
-            matchIds,
-            MAX_RETRIES
-          );
+      // Process providers in parallel with controlled concurrency
+      const hasAnalysis = batch.some(m => m.analysis);
+      
+      const providerResults = await Promise.all(
+        providersToProcess.map(provider =>
+          limit(async () => {
+            const result = {
+              providerId: provider.id,
+              successCount: 0,
+              retryCount: 0,
+              error: null as string | null,
+            };
 
-          // Track retry statistics
-          if (retryCount > 0) {
-            totalRetries += retryCount;
-            const wasSuccessful = result.success ? 1 : 0;
-            successfulRetries += wasSuccessful;
-            
-            // Update per-provider stats
-            const existing = retryStatsByProvider.get(provider.id) || { attempts: 0, successes: 0 };
-            retryStatsByProvider.set(provider.id, {
-              attempts: existing.attempts + retryCount,
-              successes: existing.successes + wasSuccessful,
-            });
-          }
-
-          // Record cost for ALL attempts (initial + retries)
-          // Each API call is billed regardless of parse success
-          const totalAttempts = 1 + retryCount;
-          if ('estimateCost' in provider && typeof provider.estimateCost === 'function') {
-            const inputTokens = hasAnalysis ? 400 * batch.length : 200 * batch.length;
-            const outputTokens = 50 * batch.length;
-            const costPerAttempt = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
-            const totalCost = costPerAttempt * totalAttempts;
-            await recordPredictionCost(provider.id, totalCost);
-          }
-
-          if (result.success && result.predictions.size > 0) {
-            // Save individual predictions from batch result
-            for (const batchItem of batch) {
-              const prediction = result.predictions.get(batchItem.matchId);
+            try {
+              console.log(`  ${provider.id}: Generating batch prediction...`);
               
-              if (prediction) {
-                await createPrediction({
-                  matchId: batchItem.matchDbId,
-                  modelId: provider.id,
-                  predictedHomeScore: prediction.homeScore,
-                  predictedAwayScore: prediction.awayScore,
-                  rawResponse: `[batch] ${prediction.homeScore}-${prediction.awayScore}`,
-                  processingTimeMs: Math.round(result.processingTimeMs / batch.length),
-                });
-                successfulPredictions++;
-              } else {
-                // Match not found in response - log error
-                const errorMsg = `${provider.id}: No prediction for ${batchItem.homeTeam} vs ${batchItem.awayTeam}`;
-                console.error(`    ${errorMsg}`);
-                errors.push(errorMsg);
-              }
-            }
-            
-            const retryInfo = retryCount > 0 ? `, retries: ${retryCount}` : '';
-            console.log(`    Saved ${result.predictions.size}/${batch.length} predictions (attempts: ${totalAttempts}${retryInfo})`);
-            
-            if (result.failedMatchIds && result.failedMatchIds.length > 0) {
-              console.log(`    Missing: ${result.failedMatchIds.length} matches`);
-            }
-          } else {
-            const retryInfo = retryCount > 0 ? ` (after ${retryCount} retries)` : '';
-            const errorMsg = `${provider.id} batch failed${retryInfo}: ${result.error}`;
-            console.error(`    ${errorMsg}`);
-            errors.push(errorMsg);
-          }
+              // Use batch prediction method WITH RETRY LOGIC
+              const baseProvider = provider as BaseLLMProvider;
+              const { result: predResult, retryCount } = await predictBatchWithRetry(
+                baseProvider,
+                batchPrompt,
+                matchIds,
+                MAX_RETRIES
+              );
 
-          // Small delay between provider calls to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 300));
-        } catch (error) {
-          // Record cost even on error (API was still called and billed)
-          if ('estimateCost' in provider && typeof provider.estimateCost === 'function') {
-            const inputTokens = hasAnalysis ? 400 * batch.length : 200 * batch.length;
-            const outputTokens = 50 * batch.length;
-            const apiCost = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
-            await recordPredictionCost(provider.id, apiCost);
-          }
-          const errorMsg = `Error with ${provider.id} for batch ${batchIndex + 1}: ${error}`;
-          console.error(`    ${errorMsg}`);
-          errors.push(errorMsg);
+              result.retryCount = retryCount;
+
+              // Record cost for ALL attempts (initial + retries)
+              const totalAttempts = 1 + retryCount;
+              if ('estimateCost' in provider && typeof provider.estimateCost === 'function') {
+                const inputTokens = hasAnalysis ? 400 * batch.length : 200 * batch.length;
+                const outputTokens = 50 * batch.length;
+                const costPerAttempt = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
+                const totalCost = costPerAttempt * totalAttempts;
+                await recordPredictionCost(provider.id, totalCost);
+              }
+
+              if (predResult.success && predResult.predictions.size > 0) {
+                // Save individual predictions from batch result
+                for (const batchItem of batch) {
+                  const prediction = predResult.predictions.get(batchItem.matchId);
+                  
+                  if (prediction) {
+                    await createPrediction({
+                      matchId: batchItem.matchDbId,
+                      modelId: provider.id,
+                      predictedHomeScore: prediction.homeScore,
+                      predictedAwayScore: prediction.awayScore,
+                      rawResponse: `[batch] ${prediction.homeScore}-${prediction.awayScore}`,
+                      processingTimeMs: Math.round(predResult.processingTimeMs / batch.length),
+                    });
+                    result.successCount++;
+                  } else {
+                    const errorMsg = `${provider.id}: No prediction for ${batchItem.homeTeam} vs ${batchItem.awayTeam}`;
+                    console.error(`    ${errorMsg}`);
+                    errors.push(errorMsg);
+                  }
+                }
+                
+                const retryInfo = retryCount > 0 ? `, retries: ${retryCount}` : '';
+                console.log(`    ${provider.id}: Saved ${predResult.predictions.size}/${batch.length} predictions (attempts: ${totalAttempts}${retryInfo})`);
+                
+                if (predResult.failedMatchIds && predResult.failedMatchIds.length > 0) {
+                  console.log(`    ${provider.id}: Missing: ${predResult.failedMatchIds.length} matches`);
+                }
+              } else {
+                const retryInfo = retryCount > 0 ? ` (after ${retryCount} retries)` : '';
+                result.error = `${provider.id} batch failed${retryInfo}: ${predResult.error}`;
+                console.error(`    ${result.error}`);
+              }
+            } catch (error) {
+              // Record cost even on error (API was still called and billed)
+              if ('estimateCost' in provider && typeof provider.estimateCost === 'function') {
+                const inputTokens = hasAnalysis ? 400 * batch.length : 200 * batch.length;
+                const outputTokens = 50 * batch.length;
+                const apiCost = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
+                await recordPredictionCost(provider.id, apiCost);
+              }
+              result.error = `Error with ${provider.id} for batch ${batchIndex + 1}: ${error}`;
+              console.error(`    ${result.error}`);
+            }
+
+            return result;
+          })
+        )
+      );
+
+      // Aggregate results from parallel processing
+      for (const provResult of providerResults) {
+        successfulPredictions += provResult.successCount;
+        if (provResult.error) {
+          errors.push(provResult.error);
+        }
+        if (provResult.retryCount > 0) {
+          totalRetries += provResult.retryCount;
+          const wasSuccessful = provResult.successCount > 0 ? 1 : 0;
+          successfulRetries += wasSuccessful;
+          
+          const existing = retryStatsByProvider.get(provResult.providerId) || { attempts: 0, successes: 0 };
+          retryStatsByProvider.set(provResult.providerId, {
+            attempts: existing.attempts + provResult.retryCount,
+            successes: existing.successes + wasSuccessful,
+          });
         }
       }
     }

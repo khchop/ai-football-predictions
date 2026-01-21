@@ -4,9 +4,10 @@ import { fetchAndStoreAnalysis } from '@/lib/football/match-analysis';
 import { updateMatchLineups } from '@/lib/football/lineups';
 import { updateStandingsIfStale } from '@/lib/football/standings';
 import { validateCronRequest } from '@/lib/auth/cron-auth';
+import pLimit from 'p-limit';
 
-// Helper for rate limiting
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// Concurrency limit for API calls (API-Football rate limit is 10/min on free tier, ~30/min on paid)
+const API_CONCURRENCY = 3;
 
 export async function POST(request: NextRequest) {
   const authError = validateCronRequest(request);
@@ -28,57 +29,81 @@ export async function POST(request: NextRequest) {
       standingsUpdated: 0,
     };
 
+    // Create concurrency limiter for API calls
+    const limit = pLimit(API_CONCURRENCY);
+
     // 1. Fetch analysis for matches within 6 hours of kickoff (if not already fetched)
     const matchesNeedingAnalysis = await getMatchesNeedingAnalysis();
     console.log(`[Cron] Found ${matchesNeedingAnalysis.length} matches needing analysis`);
     
     results.analysisChecked = matchesNeedingAnalysis.length;
-
-    for (const match of matchesNeedingAnalysis) {
-      if (!match.externalId) {
-        console.log(`[Cron] Skipping match ${match.id} - no external ID`);
-        continue;
+    
+    const validAnalysisMatches = matchesNeedingAnalysis.filter(m => {
+      if (!m.externalId) {
+        console.log(`[Cron] Skipping match ${m.id} - no external ID`);
+        return false;
       }
+      return true;
+    });
 
-      try {
-        const fixtureId = parseInt(match.externalId, 10);
-        await fetchAndStoreAnalysis(match.id, fixtureId);
+    const analysisResults = await Promise.all(
+      validAnalysisMatches.map(match =>
+        limit(async () => {
+          try {
+            const fixtureId = parseInt(match.externalId!, 10);
+            await fetchAndStoreAnalysis(match.id, fixtureId);
+            return { success: true, match };
+          } catch (error) {
+            return { success: false, match, error: `Failed to fetch analysis for ${match.homeTeam} vs ${match.awayTeam}: ${error}` };
+          }
+        })
+      )
+    );
+
+    for (const res of analysisResults) {
+      if (res.success) {
         results.analysisFetched++;
-        
-        // Rate limit: 300ms between API calls
-        await sleep(300);
-      } catch (error) {
-        const errorMsg = `Failed to fetch analysis for ${match.homeTeam} vs ${match.awayTeam}: ${error}`;
-        console.error(`[Cron] ${errorMsg}`);
-        results.analysisErrors.push(errorMsg);
+      } else if (res.error) {
+        console.error(`[Cron] ${res.error}`);
+        results.analysisErrors.push(res.error);
       }
     }
 
     // 2. Refresh analysis for matches within 2 hours of kickoff (if analysis > 4 hours old)
-    // This ensures we have fresh odds/injuries data before generating predictions
     const matchesNeedingRefresh = await getMatchesNeedingAnalysisRefresh();
     console.log(`[Cron] Found ${matchesNeedingRefresh.length} matches needing analysis refresh`);
     
     results.analysisRefreshChecked = matchesNeedingRefresh.length;
 
-    for (const match of matchesNeedingRefresh) {
-      if (!match.externalId) {
-        console.log(`[Cron] Skipping refresh for match ${match.id} - no external ID`);
-        continue;
+    const validRefreshMatches = matchesNeedingRefresh.filter(m => {
+      if (!m.externalId) {
+        console.log(`[Cron] Skipping refresh for match ${m.id} - no external ID`);
+        return false;
       }
+      return true;
+    });
 
-      try {
-        const fixtureId = parseInt(match.externalId, 10);
-        await fetchAndStoreAnalysis(match.id, fixtureId);
+    const refreshResults = await Promise.all(
+      validRefreshMatches.map(match =>
+        limit(async () => {
+          try {
+            const fixtureId = parseInt(match.externalId!, 10);
+            await fetchAndStoreAnalysis(match.id, fixtureId);
+            console.log(`[Cron] Refreshed analysis for ${match.homeTeam} vs ${match.awayTeam}`);
+            return { success: true, match };
+          } catch (error) {
+            return { success: false, match, error: `Failed to refresh analysis for ${match.homeTeam} vs ${match.awayTeam}: ${error}` };
+          }
+        })
+      )
+    );
+
+    for (const res of refreshResults) {
+      if (res.success) {
         results.analysisRefreshed++;
-        console.log(`[Cron] Refreshed analysis for ${match.homeTeam} vs ${match.awayTeam}`);
-        
-        // Rate limit: 300ms between API calls
-        await sleep(300);
-      } catch (error) {
-        const errorMsg = `Failed to refresh analysis for ${match.homeTeam} vs ${match.awayTeam}: ${error}`;
-        console.error(`[Cron] ${errorMsg}`);
-        results.analysisRefreshErrors.push(errorMsg);
+      } else if (res.error) {
+        console.error(`[Cron] ${res.error}`);
+        results.analysisRefreshErrors.push(res.error);
       }
     }
 
@@ -88,26 +113,34 @@ export async function POST(request: NextRequest) {
     
     results.lineupsChecked = matchesNeedingLineups.length;
 
-    for (const match of matchesNeedingLineups) {
-      if (!match.externalId) {
-        console.log(`[Cron] Skipping match ${match.id} - no external ID`);
-        continue;
+    const validLineupMatches = matchesNeedingLineups.filter(m => {
+      if (!m.externalId) {
+        console.log(`[Cron] Skipping match ${m.id} - no external ID`);
+        return false;
       }
+      return true;
+    });
 
-      try {
-        const fixtureId = parseInt(match.externalId, 10);
-        const success = await updateMatchLineups(match.id, fixtureId);
-        
-        if (success) {
-          results.lineupsFetched++;
-        }
-        
-        // Rate limit: 300ms between API calls
-        await sleep(300);
-      } catch (error) {
-        const errorMsg = `Failed to fetch lineups for ${match.homeTeam} vs ${match.awayTeam}: ${error}`;
-        console.error(`[Cron] ${errorMsg}`);
-        results.lineupsErrors.push(errorMsg);
+    const lineupResults = await Promise.all(
+      validLineupMatches.map(match =>
+        limit(async () => {
+          try {
+            const fixtureId = parseInt(match.externalId!, 10);
+            const success = await updateMatchLineups(match.id, fixtureId);
+            return { success, match };
+          } catch (error) {
+            return { success: false, match, error: `Failed to fetch lineups for ${match.homeTeam} vs ${match.awayTeam}: ${error}` };
+          }
+        })
+      )
+    );
+
+    for (const res of lineupResults) {
+      if (res.success) {
+        results.lineupsFetched++;
+      } else if (res.error) {
+        console.error(`[Cron] ${res.error}`);
+        results.lineupsErrors.push(res.error);
       }
     }
 

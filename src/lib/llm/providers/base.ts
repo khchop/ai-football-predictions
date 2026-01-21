@@ -148,7 +148,10 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
     // Use longer timeout for batch requests (detected by system prompt)
     const isBatch = systemPrompt === BATCH_SYSTEM_PROMPT;
     const timeout = isBatch ? this.batchRequestTimeout : this.requestTimeout;
-    const maxTokens = isBatch ? 2000 : 500; // More tokens for batch responses
+    
+    // OPTIMIZED: Reduced max_tokens since JSON responses are small
+    // Single prediction: ~30 tokens, Batch of 10: ~300 tokens
+    const maxTokens = isBatch ? 800 : 100;
 
     // Create abort controller for timeout
     const controller = new AbortController();
@@ -167,7 +170,8 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
           ],
-          temperature: 0.7,
+          // OPTIMIZED: Lower temperature for more reliable JSON output
+          temperature: 0.3,
           max_tokens: maxTokens,
         }),
         signal: controller.signal,

@@ -1,13 +1,16 @@
 import { getDb, competitions, matches, models, predictions, matchAnalysis } from './index';
-import { eq, and, or, gte, lte, desc, sql, isNotNull, isNull, notInArray } from 'drizzle-orm';
+import { eq, and, or, gte, lte, desc, sql, isNotNull, isNull, notInArray, inArray } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
-import type { NewCompetition, NewMatch, NewModel, NewPrediction, Match, MatchAnalysis, NewMatchAnalysis } from './schema';
+import type { NewCompetition, NewMatch, NewModel, NewPrediction, Match, MatchAnalysis, NewMatchAnalysis, Model, Competition } from './schema';
 import type { ScoringBreakdown, EnhancedLeaderboardEntry } from '@/types';
+import { withCache, cacheKeys, CACHE_TTL, cacheDelete } from '@/lib/cache/redis';
 
 // ============= COMPETITIONS =============
 
 export async function upsertCompetition(data: NewCompetition) {
   const db = getDb();
+  // Invalidate cache on upsert
+  await cacheDelete(cacheKeys.activeCompetitions());
   return db
     .insert(competitions)
     .values(data)
@@ -22,9 +25,16 @@ export async function upsertCompetition(data: NewCompetition) {
     });
 }
 
-export async function getActiveCompetitions() {
-  const db = getDb();
-  return db.select().from(competitions).where(eq(competitions.active, true));
+// Cached version of getActiveCompetitions
+export async function getActiveCompetitions(): Promise<Competition[]> {
+  return withCache(
+    cacheKeys.activeCompetitions(),
+    CACHE_TTL.COMPETITIONS,
+    async () => {
+      const db = getDb();
+      return db.select().from(competitions).where(eq(competitions.active, true));
+    }
+  );
 }
 
 // ============= MATCHES =============
@@ -264,14 +274,23 @@ export async function upsertModel(data: NewModel) {
     });
 }
 
-export async function getActiveModels() {
-  const db = getDb();
-  return db.select().from(models).where(eq(models.active, true));
+// Cached version of getActiveModels
+export async function getActiveModels(): Promise<Model[]> {
+  return withCache(
+    cacheKeys.activeModels(),
+    CACHE_TTL.MODELS,
+    async () => {
+      const db = getDb();
+      return db.select().from(models).where(eq(models.active, true));
+    }
+  );
 }
 
 // Deactivate models not in the provided list of IDs
 export async function deactivateOldModels(activeModelIds: string[]) {
   const db = getDb();
+  // Invalidate cache on model changes
+  await cacheDelete(cacheKeys.activeModels());
   return db
     .update(models)
     .set({ active: false })
@@ -416,6 +435,23 @@ export async function getPredictionsForMatch(matchId: string) {
     .innerJoin(models, eq(predictions.modelId, models.id))
     .where(eq(predictions.matchId, matchId))
     .orderBy(models.displayName);
+}
+
+// Batch fetch predictions for multiple matches - eliminates N+1 queries
+export async function getPredictionsForMatches(matchIds: string[]) {
+  if (matchIds.length === 0) return [];
+  
+  const db = getDb();
+  return db
+    .select({
+      matchId: predictions.matchId,
+      prediction: predictions,
+      model: models,
+    })
+    .from(predictions)
+    .innerJoin(models, eq(predictions.modelId, models.id))
+    .where(inArray(predictions.matchId, matchIds))
+    .orderBy(predictions.matchId, models.displayName);
 }
 
 export async function getPredictionsByModel(modelId: string, limit: number = 100) {
@@ -714,32 +750,37 @@ export async function getLeaderboardFiltered(filters: LeaderboardFilters = {}) {
 
 // ============= STATS =============
 
+// Optimized: Single query instead of 4 separate queries, with caching
 export async function getOverallStats() {
-  const db = getDb();
-  const totalMatchesResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(matches);
-  
-  const finishedMatchesResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(matches)
-    .where(eq(matches.status, 'finished'));
-  
-  const totalPredictionsResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(predictions);
-  
-  const activeModelsResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(models)
-    .where(eq(models.active, true));
-
-  return {
-    totalMatches: totalMatchesResult[0]?.count || 0,
-    finishedMatches: finishedMatchesResult[0]?.count || 0,
-    totalPredictions: totalPredictionsResult[0]?.count || 0,
-    activeModels: activeModelsResult[0]?.count || 0,
-  };
+  return withCache(
+    cacheKeys.overallStats(),
+    CACHE_TTL.STATS,
+    async () => {
+      const db = getDb();
+      // Single query with subqueries instead of 4 separate queries
+      const result = await db.execute(sql`
+        SELECT 
+          (SELECT COUNT(*) FROM matches)::int as total_matches,
+          (SELECT COUNT(*) FROM matches WHERE status = 'finished')::int as finished_matches,
+          (SELECT COUNT(*) FROM predictions)::int as total_predictions,
+          (SELECT COUNT(*) FROM models WHERE active = true)::int as active_models
+      `);
+      
+      const row = result.rows[0] as {
+        total_matches: number;
+        finished_matches: number;
+        total_predictions: number;
+        active_models: number;
+      };
+      
+      return {
+        totalMatches: row?.total_matches || 0,
+        finishedMatches: row?.finished_matches || 0,
+        totalPredictions: row?.total_predictions || 0,
+        activeModels: row?.active_models || 0,
+      };
+    }
+  );
 }
 
 // ============= MATCH ANALYSIS =============

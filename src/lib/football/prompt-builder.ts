@@ -24,32 +24,13 @@ export interface BatchMatchContext extends PromptContext {
 // 3. The system prompt is handled separately and cached automatically
 // ============================================================================
 
-// Static analysis section headers - cacheable prefix
-const ANALYSIS_HEADER = `You will receive match data in a structured format. Analyze ALL provided data:
+// Static analysis section headers - OPTIMIZED for token efficiency
+// Scoring explanation is in system prompt - don't duplicate here
+const ANALYSIS_HEADER = `Analyze match data and predict final score.
 
-DATA SECTIONS:
-- BETTING ODDS: Market consensus (lower odds = higher probability)
-- STANDINGS: League position, points, goal difference, home/away records
-- HEAD-TO-HEAD: Historical meetings between these teams
-- FORM: Recent results (W=Win, D=Draw, L=Loss)
-- COMPARISON: Statistical ratings (higher % = stronger)
-- LINEUPS: Starting XI and formations (when available)
-- ABSENCES: Injured/suspended players
+DATA FORMAT: Odds (lower=more likely), H2H, Form (WDLWW), Stats (%), Lineups, Absences
 
-ODDS INTERPRETATION:
-Lower odds = higher probability. Examples: 1.50 ≈ 67%, 3.00 ≈ 33%, 6.00 ≈ 17%
-Note: Most models will follow odds → common prediction → low quota (2-3 pts)
-Spot when data contradicts odds → rare prediction → high quota (5-6 pts)
-
-KEY FACTORS:
-1. Home advantage typically worth 0.3-0.5 goals
-2. League position and form indicate current strength
-3. Head-to-head matters especially for rivalries
-4. Key injuries can shift expected outcome
-5. Odds reflect market consensus but can be wrong
-
-Your task: Predict the final score based on the data provided.
-Response format: ONLY JSON {"home_score": X, "away_score": Y}
+KEY FACTORS: Home advantage (~0.4 goals), form, H2H, key injuries, odds consensus
 
 `;
 
@@ -58,17 +39,10 @@ export function getCacheablePromptPrefix(): string {
   return ANALYSIS_HEADER;
 }
 
-// Build a simple comparison bar for display
+// Simple comparison format - numbers only (no visual bars to save tokens)
 function buildComparisonBar(homePct: number | null, awayPct: number | null): string {
   if (homePct === null || awayPct === null) return '';
-  
-  const homeBlocks = Math.round(homePct / 5); // 20 blocks total
-  const awayBlocks = 20 - homeBlocks;
-  
-  const homeBar = '█'.repeat(Math.max(0, homeBlocks));
-  const awayBar = '█'.repeat(Math.max(0, awayBlocks));
-  
-  return `${homePct}% ${homeBar}${awayBar} ${awayPct}%`;
+  return `${homePct}%-${awayPct}%`;
 }
 
 // Parse H2H results from JSON string
@@ -158,16 +132,11 @@ export function buildEnhancedPrompt(context: PromptContext | EnhancedPromptConte
   // Start with cacheable prefix (static instructions)
   const lines: string[] = [ANALYSIS_HEADER];
   
-  // Add separator before dynamic content
-  lines.push('═'.repeat(60));
-  lines.push('MATCH DATA:');
-  lines.push('═'.repeat(60));
-  lines.push('');
+  // Minimal separator (save tokens - was 60 chars = ~15 tokens)
+  lines.push('---');
   
-  // Dynamic content: Match header
-  lines.push(`Match: ${homeTeam} vs ${awayTeam}`);
-  lines.push(`Competition: ${competition}`);
-  lines.push(`Date: ${formattedDate}`);
+  // Dynamic content: Match header (compact)
+  lines.push(`${homeTeam} vs ${awayTeam} | ${competition} | ${formattedDate}`);
   lines.push('');
   
   // If we have analysis data, include it
@@ -204,60 +173,42 @@ export function buildEnhancedPrompt(context: PromptContext | EnhancedPromptConte
       lines.push('');
     }
     
-    // Team comparison (keep - derived stats but not predictive)
+    // Team comparison (compact format - no team names repeated)
     if (analysis.formHomePct || analysis.attackHomePct || analysis.defenseHomePct) {
-      lines.push('TEAM COMPARISON:');
+      lines.push('STATS (Home-Away):');
+      const stats: string[] = [];
       if (analysis.formHomePct && analysis.formAwayPct) {
-        lines.push(`Form: ${homeTeam} ${buildComparisonBar(analysis.formHomePct, analysis.formAwayPct)} ${awayTeam}`);
+        stats.push(`Form ${buildComparisonBar(analysis.formHomePct, analysis.formAwayPct)}`);
       }
       if (analysis.attackHomePct && analysis.attackAwayPct) {
-        lines.push(`Attack: ${homeTeam} ${buildComparisonBar(analysis.attackHomePct, analysis.attackAwayPct)} ${awayTeam}`);
+        stats.push(`Atk ${buildComparisonBar(analysis.attackHomePct, analysis.attackAwayPct)}`);
       }
       if (analysis.defenseHomePct && analysis.defenseAwayPct) {
-        lines.push(`Defense: ${homeTeam} ${buildComparisonBar(analysis.defenseHomePct, analysis.defenseAwayPct)} ${awayTeam}`);
+        stats.push(`Def ${buildComparisonBar(analysis.defenseHomePct, analysis.defenseAwayPct)}`);
       }
+      lines.push(stats.join(' | '));
       lines.push('');
     }
     
-    // Home team form
-    lines.push(`${homeTeam.toUpperCase()} (Home):`);
+    // Combined form section (compact)
+    lines.push('FORM (last 5):');
     if (analysis.homeTeamForm) {
-      const form = analysis.homeTeamForm.split('').join('-');
-      const goalsInfo = analysis.homeGoalsScored !== null && analysis.homeGoalsConceded !== null
-        ? ` (${analysis.homeGoalsScored} scored, ${analysis.homeGoalsConceded} conceded in last 5)`
+      const homeGoals = analysis.homeGoalsScored !== null && analysis.homeGoalsConceded !== null
+        ? ` (${analysis.homeGoalsScored}GF/${analysis.homeGoalsConceded}GA)`
         : '';
-      lines.push(`Recent Form: ${form}${goalsInfo}`);
+      lines.push(`Home: ${analysis.homeTeamForm}${homeGoals}`);
     }
-    if (analysis.lineupsAvailable && analysis.homeFormation) {
-      lines.push(`Formation: ${analysis.homeFormation}`);
-      if (analysis.homeCoach) {
-        lines.push(`Coach: ${analysis.homeCoach}`);
-      }
-    }
-    lines.push('');
-    
-    // Away team form
-    lines.push(`${awayTeam.toUpperCase()} (Away):`);
     if (analysis.awayTeamForm) {
-      const form = analysis.awayTeamForm.split('').join('-');
-      const goalsInfo = analysis.awayGoalsScored !== null && analysis.awayGoalsConceded !== null
-        ? ` (${analysis.awayGoalsScored} scored, ${analysis.awayGoalsConceded} conceded in last 5)`
+      const awayGoals = analysis.awayGoalsScored !== null && analysis.awayGoalsConceded !== null
+        ? ` (${analysis.awayGoalsScored}GF/${analysis.awayGoalsConceded}GA)`
         : '';
-      lines.push(`Recent Form: ${form}${goalsInfo}`);
-    }
-    if (analysis.lineupsAvailable && analysis.awayFormation) {
-      lines.push(`Formation: ${analysis.awayFormation}`);
-      if (analysis.awayCoach) {
-        lines.push(`Coach: ${analysis.awayCoach}`);
-      }
+      lines.push(`Away: ${analysis.awayTeamForm}${awayGoals}`);
     }
     lines.push('');
     
-    // Lineups (if available)
-    if (analysis.lineupsAvailable && analysis.homeStartingXI && analysis.awayStartingXI) {
-      lines.push('CONFIRMED LINEUPS:');
-      lines.push(`${homeTeam} XI: ${analysis.homeStartingXI}`);
-      lines.push(`${awayTeam} XI: ${analysis.awayStartingXI}`);
+    // Lineups - compressed format (formation + notable absences only)
+    if (analysis.lineupsAvailable && analysis.homeFormation && analysis.awayFormation) {
+      lines.push(`LINEUPS: ${analysis.homeFormation} vs ${analysis.awayFormation} (confirmed)`);
       lines.push('');
     }
     
@@ -280,9 +231,9 @@ export function buildEnhancedPrompt(context: PromptContext | EnhancedPromptConte
     lines.push('');
   }
   
-  // Final instruction (kept short)
-  lines.push('═'.repeat(60));
-  lines.push('Predict final score as JSON: {"home_score": X, "away_score": Y}');
+  // Final instruction (minimal separator)
+  lines.push('---');
+  lines.push('JSON: {"home_score": X, "away_score": Y}');
   
   return lines.join('\n');
 }
@@ -307,27 +258,10 @@ export function buildSimplePrompt(
 // BATCH PROMPT BUILDING (Multiple Matches in One API Call)
 // ============================================================================
 
-// Static header for batch prompts - cacheable across all batches
-const BATCH_ANALYSIS_HEADER = `You will receive MULTIPLE matches. Analyze ALL data for EACH match.
+// Static header for batch prompts - OPTIMIZED for token efficiency
+const BATCH_ANALYSIS_HEADER = `Predict scores for ALL matches. Output JSON array only.
 
-DATA PER MATCH:
-- ODDS: Market consensus (lower = higher probability). 1.50≈67%, 3.00≈33%, 6.00≈17%
-- H2H: Historical head-to-head results
-- FORM: Recent results (W=Win, D=Draw, L=Loss)
-- STATS: Form/Attack/Defense comparison %
-- LINEUPS: Starting XI (when available)
-- ABSENCES: Injured/suspended players
-
-ODDS NOTE: Most models follow odds → common prediction → low quota (2-3 pts)
-Spot when data contradicts odds → rare prediction → high quota (5-6 pts)
-
-STRATEGY:
-- Analyze each match independently
-- Upset needs ~30%+ real probability to be worth predicting
-- Expected value = probability × quota points
-
-OUTPUT: JSON ARRAY with ALL matches:
-[{"match_id": "id1", "home_score": X, "away_score": Y}, ...]
+DATA: Odds (lower=likely), H2H, Form, Stats %, Lineups, Absences
 
 `;
 
@@ -359,10 +293,10 @@ function buildCompactMatchSummary(context: BatchMatchContext, index: number): st
       lines.push(`    H2H: ${analysis.h2hHomeWins}W-${analysis.h2hDraws}D-${analysis.h2hAwayWins}L${resultsStr ? ` (last: ${resultsStr})` : ''}`);
     }
     
-    // Form (compact)
+    // Form (compact - just the letters)
     const homeForm = analysis.homeTeamForm || '-';
     const awayForm = analysis.awayTeamForm || '-';
-    lines.push(`    Form: ${homeTeam}=${homeForm} | ${awayTeam}=${awayForm}`);
+    lines.push(`    Form: H=${homeForm} A=${awayForm}`);
     
     // Comparison (compact, only if available)
     if (analysis.formHomePct && analysis.formAwayPct) {
@@ -388,7 +322,7 @@ function buildCompactMatchSummary(context: BatchMatchContext, index: number): st
   return lines.join('\n');
 }
 
-// Build batch prompt for multiple matches
+// Build batch prompt for multiple matches - OPTIMIZED for tokens
 export function buildBatchPrompt(matches: BatchMatchContext[]): string {
   if (matches.length === 0) {
     return '';
@@ -396,20 +330,10 @@ export function buildBatchPrompt(matches: BatchMatchContext[]): string {
   
   const lines: string[] = [BATCH_ANALYSIS_HEADER];
   
-  // Add competition/date context if all matches are same competition
-  const competitions = [...new Set(matches.map(m => m.competition))];
-  if (competitions.length === 1) {
-    lines.push(`Competition: ${competitions[0]}`);
-  }
-  
+  // Compact header
   const matchDate = matches[0] ? format(parseISO(matches[0].kickoffTime), 'yyyy-MM-dd') : '';
-  lines.push(`Match Date: ${matchDate}`);
-  lines.push(`Total Matches: ${matches.length}`);
-  lines.push('');
-  lines.push('═'.repeat(60));
-  lines.push('MATCHES:');
-  lines.push('═'.repeat(60));
-  lines.push('');
+  lines.push(`Date: ${matchDate} | Matches: ${matches.length}`);
+  lines.push('---');
   
   // Add each match summary
   for (let i = 0; i < matches.length; i++) {
@@ -417,10 +341,9 @@ export function buildBatchPrompt(matches: BatchMatchContext[]): string {
     lines.push('');
   }
   
-  // Final instruction
-  lines.push('═'.repeat(60));
-  lines.push(`Predict ALL ${matches.length} matches. Output JSON array only:`);
-  lines.push('[{"match_id": "...", "home_score": X, "away_score": Y}, ...]');
+  // Final instruction (compact)
+  lines.push('---');
+  lines.push(`JSON: [{"match_id": "...", "home_score": X, "away_score": Y}, ...]`);
   
   return lines.join('\n');
 }
