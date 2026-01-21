@@ -1,13 +1,86 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMatchesReadyForPrediction, createPrediction, upsertModel, deactivateOldModels } from '@/lib/db/queries';
+import { getMatchesReadyForPrediction, createPrediction, upsertModel, deactivateOldModels, updateModelRetryStats } from '@/lib/db/queries';
 import { getActiveProviders, ALL_PROVIDERS, OpenRouterProvider } from '@/lib/llm';
 import { shouldSkipProvider, recordPredictionCost, getBudgetStatus } from '@/lib/llm/budget';
 import { buildBatchPrompt, BatchMatchContext } from '@/lib/football/prompt-builder';
-import { BaseLLMProvider } from '@/lib/llm/providers/base';
+import { BaseLLMProvider, BatchPredictionResult } from '@/lib/llm/providers/base';
 import { validateCronRequest } from '@/lib/auth/cron-auth';
 
 // Batch size for grouping matches (10 matches per API call)
 const BATCH_SIZE = 10;
+
+// Retry configuration
+const MAX_RETRIES = 2;
+const RETRY_DELAYS = [1000, 2000]; // Exponential backoff: 1s, 2s
+
+// Errors that indicate JSON parsing failed (retryable)
+const RETRYABLE_ERROR_PATTERNS = [
+  'No JSON array found',
+  'Failed to parse batch JSON',
+  'No predictions parsed',
+  'Parsed result is not an array',
+  'API response contained no usable content',
+  'No JSON object found',
+];
+
+// Check if an error is retryable (JSON parse failure vs network/timeout)
+function isRetryableError(error: string | undefined): boolean {
+  if (!error) return false;
+  return RETRYABLE_ERROR_PATTERNS.some(pattern => error.includes(pattern));
+}
+
+// Retry stats tracking per provider
+interface ProviderRetryStats {
+  attempts: number;
+  successes: number;
+}
+
+// Predict with retry logic
+async function predictBatchWithRetry(
+  provider: BaseLLMProvider,
+  batchPrompt: string,
+  matchIds: string[],
+  maxRetries: number = MAX_RETRIES
+): Promise<{
+  result: BatchPredictionResult;
+  retryCount: number;
+}> {
+  let lastResult: BatchPredictionResult;
+  let retryCount = 0;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    // Delay before retry (not on first attempt)
+    if (attempt > 0) {
+      const delay = RETRY_DELAYS[attempt - 1] || RETRY_DELAYS[RETRY_DELAYS.length - 1];
+      console.log(`    Retry ${attempt}/${maxRetries} in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      retryCount++;
+    }
+
+    lastResult = await provider.predictBatch(batchPrompt, matchIds);
+
+    // Success - return immediately
+    if (lastResult.success) {
+      if (attempt > 0) {
+        console.log(`    Retry ${attempt} succeeded`);
+      }
+      return { result: lastResult, retryCount };
+    }
+
+    // Check if error is retryable
+    if (!isRetryableError(lastResult.error)) {
+      console.log(`    Non-retryable error: ${lastResult.error}`);
+      break;
+    }
+
+    // Log the parse failure
+    if (attempt < maxRetries) {
+      console.log(`    Parse failed: ${lastResult.error}`);
+    }
+  }
+
+  return { result: lastResult!, retryCount };
+}
 
 export async function POST(request: NextRequest) {
   const authError = validateCronRequest(request);
@@ -87,6 +160,11 @@ export async function POST(request: NextRequest) {
     let successfulPredictions = 0;
     let skippedDueToBudget = 0;
     const errors: string[] = [];
+    
+    // Retry statistics tracking
+    const retryStatsByProvider = new Map<string, ProviderRetryStats>();
+    let totalRetries = 0;
+    let successfulRetries = 0;
 
     // Process each batch with each provider
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
@@ -112,23 +190,43 @@ export async function POST(request: NextRequest) {
         totalPredictions += batch.length;
         
         // Estimate cost for batch (more input tokens, proportionally more output)
-        let apiCost = 0;
         const hasAnalysis = batch.some(m => m.analysis);
         
         try {
           console.log(`  ${provider.id}: Generating batch prediction...`);
           
-          // Use batch prediction method
+          // Use batch prediction method WITH RETRY LOGIC
           const baseProvider = provider as BaseLLMProvider;
-          const result = await baseProvider.predictBatch(batchPrompt, matchIds);
+          const { result, retryCount } = await predictBatchWithRetry(
+            baseProvider,
+            batchPrompt,
+            matchIds,
+            MAX_RETRIES
+          );
 
-          // Record cost IMMEDIATELY after API call
+          // Track retry statistics
+          if (retryCount > 0) {
+            totalRetries += retryCount;
+            const wasSuccessful = result.success ? 1 : 0;
+            successfulRetries += wasSuccessful;
+            
+            // Update per-provider stats
+            const existing = retryStatsByProvider.get(provider.id) || { attempts: 0, successes: 0 };
+            retryStatsByProvider.set(provider.id, {
+              attempts: existing.attempts + retryCount,
+              successes: existing.successes + wasSuccessful,
+            });
+          }
+
+          // Record cost for ALL attempts (initial + retries)
+          // Each API call is billed regardless of parse success
+          const totalAttempts = 1 + retryCount;
           if ('estimateCost' in provider && typeof provider.estimateCost === 'function') {
-            // Batch cost estimation: ~200 tokens per match input, ~50 per match output
             const inputTokens = hasAnalysis ? 400 * batch.length : 200 * batch.length;
             const outputTokens = 50 * batch.length;
-            apiCost = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
-            await recordPredictionCost(provider.id, apiCost);
+            const costPerAttempt = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
+            const totalCost = costPerAttempt * totalAttempts;
+            await recordPredictionCost(provider.id, totalCost);
           }
 
           if (result.success && result.predictions.size > 0) {
@@ -154,13 +252,15 @@ export async function POST(request: NextRequest) {
               }
             }
             
-            console.log(`    Saved ${result.predictions.size}/${batch.length} predictions (cost: $${apiCost.toFixed(6)})`);
+            const retryInfo = retryCount > 0 ? `, retries: ${retryCount}` : '';
+            console.log(`    Saved ${result.predictions.size}/${batch.length} predictions (attempts: ${totalAttempts}${retryInfo})`);
             
             if (result.failedMatchIds && result.failedMatchIds.length > 0) {
               console.log(`    Missing: ${result.failedMatchIds.length} matches`);
             }
           } else {
-            const errorMsg = `${provider.id} batch failed: ${result.error}`;
+            const retryInfo = retryCount > 0 ? ` (after ${retryCount} retries)` : '';
+            const errorMsg = `${provider.id} batch failed${retryInfo}: ${result.error}`;
             console.error(`    ${errorMsg}`);
             errors.push(errorMsg);
           }
@@ -169,10 +269,10 @@ export async function POST(request: NextRequest) {
           await new Promise(resolve => setTimeout(resolve, 300));
         } catch (error) {
           // Record cost even on error (API was still called and billed)
-          if (apiCost === 0 && 'estimateCost' in provider && typeof provider.estimateCost === 'function') {
+          if ('estimateCost' in provider && typeof provider.estimateCost === 'function') {
             const inputTokens = hasAnalysis ? 400 * batch.length : 200 * batch.length;
             const outputTokens = 50 * batch.length;
-            apiCost = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
+            const apiCost = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
             await recordPredictionCost(provider.id, apiCost);
           }
           const errorMsg = `Error with ${provider.id} for batch ${batchIndex + 1}: ${error}`;
@@ -180,6 +280,11 @@ export async function POST(request: NextRequest) {
           errors.push(errorMsg);
         }
       }
+    }
+    
+    // Update retry stats in database for each provider that had retries
+    for (const [modelId, stats] of retryStatsByProvider) {
+      await updateModelRetryStats(modelId, stats.attempts, stats.successes);
     }
 
     // Get final budget status
@@ -189,6 +294,18 @@ export async function POST(request: NextRequest) {
     console.log(`Budget used: $${(budgetEnd.spent - budgetStart.spent).toFixed(4)}`);
     if (skippedDueToBudget > 0) {
       console.log(`Skipped ${skippedDueToBudget} predictions due to budget`);
+    }
+    if (totalRetries > 0) {
+      console.log(`Retry stats: ${totalRetries} attempts, ${successfulRetries} successful`);
+      for (const [modelId, stats] of retryStatsByProvider) {
+        console.log(`  ${modelId}: ${stats.attempts} retries, ${stats.successes} success`);
+      }
+    }
+
+    // Convert retry stats map to plain object for JSON response
+    const retryStatsByProviderObj: Record<string, ProviderRetryStats> = {};
+    for (const [modelId, stats] of retryStatsByProvider) {
+      retryStatsByProviderObj[modelId] = stats;
     }
 
     return NextResponse.json({
@@ -207,6 +324,11 @@ export async function POST(request: NextRequest) {
         remaining: budgetEnd.remaining,
         percentUsed: budgetEnd.percentUsed,
       },
+      retryStats: totalRetries > 0 ? {
+        totalRetries,
+        successfulRetries,
+        byProvider: retryStatsByProviderObj,
+      } : undefined,
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {

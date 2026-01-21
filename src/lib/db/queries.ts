@@ -346,6 +346,27 @@ export async function updateModelStreak(
     .where(eq(models.id, modelId));
 }
 
+// Update model retry statistics after prediction batch
+// Called when retries were attempted (successful or not)
+export async function updateModelRetryStats(
+  modelId: string,
+  retriesAttempted: number,
+  retriesSuccessful: number
+): Promise<void> {
+  if (retriesAttempted === 0) return; // No retries, nothing to update
+  
+  const db = getDb();
+  
+  await db
+    .update(models)
+    .set({
+      totalRetryAttempts: sql`COALESCE(${models.totalRetryAttempts}, 0) + ${retriesAttempted}`,
+      totalRetrySuccesses: sql`COALESCE(${models.totalRetrySuccesses}, 0) + ${retriesSuccessful}`,
+      lastRetryAt: new Date().toISOString(),
+    })
+    .where(eq(models.id, modelId));
+}
+
 // ============= PREDICTIONS =============
 
 export async function createPrediction(data: Omit<NewPrediction, 'id'>) {

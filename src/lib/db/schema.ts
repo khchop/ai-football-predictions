@@ -55,6 +55,10 @@ export const models = pgTable('models', {
   worstStreak: integer('worst_streak').default(0), // Worst losing streak ever (stored as negative)
   bestExactStreak: integer('best_exact_streak').default(0), // Best exact score streak
   bestTendencyStreak: integer('best_tendency_streak').default(0), // Best tendency streak (including exact)
+  // Retry statistics (tracks JSON parse failures and recovery)
+  totalRetryAttempts: integer('total_retry_attempts').default(0), // Lifetime retry attempts
+  totalRetrySuccesses: integer('total_retry_successes').default(0), // Lifetime successful retries
+  lastRetryAt: text('last_retry_at'), // ISO timestamp of last retry
 });
 
 // Predictions made by models
