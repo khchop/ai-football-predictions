@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, doublePrecision } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, doublePrecision, unique } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Competitions we track (Champions League, Premier League, etc.)
@@ -84,7 +84,9 @@ export const modelUsage = pgTable('model_usage', {
   totalCost: text('total_cost').default('0'), // Stored as string for precision
   createdAt: text('created_at').default(sql`now()`),
   updatedAt: text('updated_at').default(sql`now()`),
-});
+}, (table) => [
+  unique('model_usage_date_model_unique').on(table.date, table.modelId),
+]);
 
 // Type exports for use in application
 export type Competition = typeof competitions.$inferSelect;

@@ -72,45 +72,35 @@ export async function shouldSkipProvider(
   return { skip: false };
 }
 
-// Record a prediction's cost
+// Record a prediction's cost (atomic upsert to prevent race conditions)
 export async function recordPredictionCost(
   modelId: string,
   cost: number
 ): Promise<void> {
   const db = getDb();
   const today = getTodayDate();
+  const now = new Date().toISOString();
 
-  // Try to update existing record
-  const existing = await db
-    .select()
-    .from(modelUsage)
-    .where(and(eq(modelUsage.date, today), eq(modelUsage.modelId, modelId)))
-    .limit(1);
-
-  if (existing.length > 0) {
-    const currentCost = parseFloat(existing[0].totalCost || '0');
-    const currentCount = existing[0].predictionsCount || 0;
-    
-    await db
-      .update(modelUsage)
-      .set({
-        predictionsCount: currentCount + 1,
-        totalCost: (currentCost + cost).toFixed(6),
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(modelUsage.id, existing[0].id));
-  } else {
-    // Create new record
-    await db.insert(modelUsage).values({
+  // Atomic upsert: insert or update in a single operation
+  await db
+    .insert(modelUsage)
+    .values({
       id: uuidv4(),
       date: today,
       modelId,
       predictionsCount: 1,
       totalCost: cost.toFixed(6),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [modelUsage.date, modelUsage.modelId],
+      set: {
+        predictionsCount: sql`${modelUsage.predictionsCount} + 1`,
+        totalCost: sql`CAST(CAST(${modelUsage.totalCost} AS NUMERIC) + ${cost} AS TEXT)`,
+        updatedAt: now,
+      },
     });
-  }
 }
 
 // Get budget status for display

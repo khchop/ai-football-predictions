@@ -3,12 +3,14 @@ import { getMatchesNeedingAnalysis, getMatchesNeedingLineups, getMatchesNeedingA
 import { fetchAndStoreAnalysis } from '@/lib/football/match-analysis';
 import { updateMatchLineups } from '@/lib/football/lineups';
 import { updateStandingsIfStale } from '@/lib/football/standings';
+import { validateCronRequest } from '@/lib/auth/cron-auth';
 
 // Helper for rate limiting
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function POST(request: NextRequest) {
-  // Note: Auth disabled for Coolify compatibility - these endpoints are internal only
+  const authError = validateCronRequest(request);
+  if (authError) return authError;
 
   try {
     console.log('[Cron] Fetching analysis and lineups...');

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUpcomingFixtures, mapFixtureStatus } from '@/lib/football/api-football';
 import { upsertMatch, upsertCompetition } from '@/lib/db/queries';
+import { validateCronRequest } from '@/lib/auth/cron-auth';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
-  // Note: Auth disabled for Coolify compatibility - these endpoints are internal only
+  const authError = validateCronRequest(request);
+  if (authError) return authError;
 
   try {
     console.log('Fetching upcoming fixtures...');

@@ -4,12 +4,14 @@ import { getActiveProviders, ALL_PROVIDERS, OpenRouterProvider } from '@/lib/llm
 import { shouldSkipProvider, recordPredictionCost, getBudgetStatus } from '@/lib/llm/budget';
 import { buildBatchPrompt, BatchMatchContext } from '@/lib/football/prompt-builder';
 import { BaseLLMProvider } from '@/lib/llm/providers/base';
+import { validateCronRequest } from '@/lib/auth/cron-auth';
 
 // Batch size for grouping matches (10 matches per API call)
 const BATCH_SIZE = 10;
 
 export async function POST(request: NextRequest) {
-  // Note: Auth disabled for Coolify compatibility - these endpoints are internal only
+  const authError = validateCronRequest(request);
+  if (authError) return authError;
 
   try {
     console.log('Generating predictions (batch mode)...');
