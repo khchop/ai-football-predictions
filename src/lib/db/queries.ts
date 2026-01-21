@@ -135,6 +135,35 @@ export async function getMatchesPendingResults() {
     );
 }
 
+export async function getFinishedMatchesWithUnscoredPredictions() {
+  const db = getDb();
+  
+  // Find finished matches that have predictions with pointsTotal = 0
+  // This catches matches where scoring was missed or failed
+  const result = await db
+    .selectDistinct({
+      id: matches.id,
+      homeTeam: matches.homeTeam,
+      awayTeam: matches.awayTeam,
+      homeScore: matches.homeScore,
+      awayScore: matches.awayScore,
+      kickoffTime: matches.kickoffTime,
+    })
+    .from(matches)
+    .innerJoin(predictions, eq(predictions.matchId, matches.id))
+    .where(
+      and(
+        eq(matches.status, 'finished'),
+        isNotNull(matches.homeScore),
+        isNotNull(matches.awayScore),
+        eq(predictions.pointsTotal, 0)
+      )
+    )
+    .orderBy(desc(matches.kickoffTime));
+  
+  return result;
+}
+
 export async function getMatchById(id: string) {
   const db = getDb();
   const result = await db

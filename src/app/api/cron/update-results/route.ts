@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMatchesPendingResults, updateMatchResult } from '@/lib/db/queries';
+import { getMatchesPendingResults, getFinishedMatchesWithUnscoredPredictions, updateMatchResult } from '@/lib/db/queries';
 import { getFinishedFixtures, mapFixtureStatus } from '@/lib/football/api-football';
 import { validateCronRequest } from '@/lib/auth/cron-auth';
 import { scorePredictionsForMatch } from '@/lib/scoring/score-match';
@@ -96,12 +96,40 @@ export async function POST(request: NextRequest) {
 
     console.log(`Updated ${updated} matches`);
 
+    // ============================================================================
+    // Check for finished matches with unscored predictions and rescore them
+    // This catches matches that finished but scoring was missed/failed
+    // ============================================================================
+    const unscoredMatches = await getFinishedMatchesWithUnscoredPredictions();
+
+    let rescored = 0;
+    if (unscoredMatches.length > 0) {
+      console.log(`[Results] Found ${unscoredMatches.length} finished matches with unscored predictions`);
+      
+      for (const match of unscoredMatches) {
+        if (match.homeScore !== null && match.awayScore !== null) {
+          try {
+            console.log(`[Results] Rescoring: ${match.homeTeam} vs ${match.awayTeam} (${match.homeScore}-${match.awayScore})`);
+            await scorePredictionsForMatch(match.id, match.homeScore, match.awayScore);
+            rescored++;
+          } catch (error) {
+            const errorMsg = `Failed to rescore match ${match.id}: ${error}`;
+            console.error(`[Results] ${errorMsg}`);
+            errors.push(errorMsg);
+          }
+        }
+      }
+      
+      console.log(`[Results] Rescored ${rescored} matches`);
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Updated ${updated} of ${pendingMatches.length} pending matches`,
+      message: `Updated ${updated} of ${pendingMatches.length} pending matches, rescored ${rescored} unscored matches`,
       pending: pendingMatches.length,
       fetched: fixtures.length,
       updated,
+      rescored,
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {

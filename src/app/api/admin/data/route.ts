@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllModelsWithHealth } from '@/lib/db/queries';
+import { getAllModelsWithHealth, getFinishedMatchesWithUnscoredPredictions } from '@/lib/db/queries';
 import { getBudgetStatus } from '@/lib/llm/budget';
 import { OPENROUTER_PROVIDERS } from '@/lib/llm/providers/openrouter';
 
@@ -36,9 +36,10 @@ export async function GET(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const [modelsWithHealth, budgetStatus] = await Promise.all([
+    const [modelsWithHealth, budgetStatus, unscoredMatches] = await Promise.all([
       getAllModelsWithHealth(),
       getBudgetStatus(),
+      getFinishedMatchesWithUnscoredPredictions(),
     ]);
 
     // Count health statuses
@@ -72,6 +73,7 @@ export async function GET(request: NextRequest) {
       budgetStatus,
       providerConfig,
       healthCounts,
+      unscoredMatches,
     });
   } catch (error) {
     console.error('Error fetching admin data:', error);
