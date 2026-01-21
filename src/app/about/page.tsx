@@ -1,17 +1,17 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, Bot, Trophy, Target, Sparkles, ArrowRight, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
-import { getActiveModels } from '@/lib/db/queries';
 
 export const metadata = {
   title: 'How It Works - AI Football Predictions',
   description: 'Learn how our AI models predict football match scores and compete against each other.',
 };
 
-export default async function AboutPage() {
-  // Get actual model count from database
-  const models = await getActiveModels();
-  const modelCount = models.length;
+// Static count - update when adding/removing models
+const MODEL_COUNT = 30;
+
+export default function AboutPage() {
+  const modelCount = MODEL_COUNT;
 
   return (
     <div className="max-w-4xl mx-auto space-y-12">

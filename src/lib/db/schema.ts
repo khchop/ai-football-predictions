@@ -1,18 +1,18 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { pgTable, text, integer, boolean, doublePrecision } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Competitions we track (Champions League, Premier League, etc.)
-export const competitions = sqliteTable('competitions', {
+export const competitions = pgTable('competitions', {
   id: text('id').primaryKey(), // e.g., "ucl", "epl"
   name: text('name').notNull(), // e.g., "UEFA Champions League"
   apiFootballId: integer('api_football_id').notNull(), // API-Football league ID
   season: integer('season').notNull(), // e.g., 2024
-  active: integer('active', { mode: 'boolean' }).default(true),
-  createdAt: text('created_at').default(sql`(datetime('now'))`),
+  active: boolean('active').default(true),
+  createdAt: text('created_at').default(sql`now()`),
 });
 
 // Individual matches
-export const matches = sqliteTable('matches', {
+export const matches = pgTable('matches', {
   id: text('id').primaryKey(), // UUID
   externalId: text('external_id').unique(), // API-Football fixture ID
   competitionId: text('competition_id')
@@ -22,36 +22,36 @@ export const matches = sqliteTable('matches', {
   awayTeam: text('away_team').notNull(),
   homeTeamLogo: text('home_team_logo'),
   awayTeamLogo: text('away_team_logo'),
-  kickoffTime: text('kickoff_time').notNull(), // ISO datetime
+  kickoffTime: text('kickoff_time').notNull(), // ISO datetime string
   homeScore: integer('home_score'), // NULL until match finished
   awayScore: integer('away_score'),
   status: text('status').default('scheduled'), // scheduled, live, finished, postponed, cancelled
   matchMinute: text('match_minute'), // Live match time: "45'", "HT", "67'", "90'+3"
   round: text('round'), // e.g., "Group A - Matchday 1", "Quarter-finals"
   venue: text('venue'),
-  isUpset: integer('is_upset', { mode: 'boolean' }).default(false), // Whether the underdog won
+  isUpset: boolean('is_upset').default(false), // Whether the underdog won
   // Kicktipp quota scoring: points for correct tendency (2-6 range)
   // Lower quota = more models predicted that outcome = less reward
-  quotaHome: real('quota_home'), // Points for predicting home win (2-6)
-  quotaDraw: real('quota_draw'), // Points for predicting draw (2-6)
-  quotaAway: real('quota_away'), // Points for predicting away win (2-6)
-  createdAt: text('created_at').default(sql`(datetime('now'))`),
-  updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+  quotaHome: doublePrecision('quota_home'), // Points for predicting home win (2-6)
+  quotaDraw: doublePrecision('quota_draw'), // Points for predicting draw (2-6)
+  quotaAway: doublePrecision('quota_away'), // Points for predicting away win (2-6)
+  createdAt: text('created_at').default(sql`now()`),
+  updatedAt: text('updated_at').default(sql`now()`),
 });
 
 // LLM models we test
-export const models = sqliteTable('models', {
+export const models = pgTable('models', {
   id: text('id').primaryKey(), // e.g., "groq-llama-70b"
   provider: text('provider').notNull(), // e.g., "groq"
   modelName: text('model_name').notNull(), // e.g., "llama-3.3-70b-versatile"
   displayName: text('display_name').notNull(), // e.g., "Llama 3.3 70B (Groq)"
-  isPremium: integer('is_premium', { mode: 'boolean' }).default(false),
-  active: integer('active', { mode: 'boolean' }).default(true),
-  createdAt: text('created_at').default(sql`(datetime('now'))`),
+  isPremium: boolean('is_premium').default(false),
+  active: boolean('active').default(true),
+  createdAt: text('created_at').default(sql`now()`),
 });
 
 // Predictions made by models
-export const predictions = sqliteTable('predictions', {
+export const predictions = pgTable('predictions', {
   id: text('id').primaryKey(), // UUID
   matchId: text('match_id')
     .notNull()
@@ -72,18 +72,18 @@ export const predictions = sqliteTable('predictions', {
   pointsBtts: integer('points_btts').default(0), // 1 pt if correct both teams to score
   pointsUpsetBonus: integer('points_upset_bonus').default(0), // 2 pts if predicted underdog win
   pointsTotal: integer('points_total').default(0), // Sum of all points (max 10)
-  createdAt: text('created_at').default(sql`(datetime('now'))`),
+  createdAt: text('created_at').default(sql`now()`),
 });
 
 // Daily usage tracking for budget control
-export const modelUsage = sqliteTable('model_usage', {
+export const modelUsage = pgTable('model_usage', {
   id: text('id').primaryKey(), // UUID
   date: text('date').notNull(), // YYYY-MM-DD
   modelId: text('model_id').notNull(),
   predictionsCount: integer('predictions_count').default(0),
   totalCost: text('total_cost').default('0'), // Stored as string for precision
-  createdAt: text('created_at').default(sql`(datetime('now'))`),
-  updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+  createdAt: text('created_at').default(sql`now()`),
+  updatedAt: text('updated_at').default(sql`now()`),
 });
 
 // Type exports for use in application
@@ -103,7 +103,7 @@ export type ModelUsage = typeof modelUsage.$inferSelect;
 export type NewModelUsage = typeof modelUsage.$inferInsert;
 
 // Pre-match analysis data from API-Football
-export const matchAnalysis = sqliteTable('match_analysis', {
+export const matchAnalysis = pgTable('match_analysis', {
   id: text('id').primaryKey(), // UUID
   matchId: text('match_id')
     .notNull()
@@ -151,7 +151,7 @@ export const matchAnalysis = sqliteTable('match_analysis', {
   awayStartingXI: text('away_starting_xi'),
   homeCoach: text('home_coach'),
   awayCoach: text('away_coach'),
-  lineupsAvailable: integer('lineups_available', { mode: 'boolean' }).default(false),
+  lineupsAvailable: boolean('lineups_available').default(false),
   lineupsUpdatedAt: text('lineups_updated_at'),
   
   // Head-to-head history (extracted from /predictions endpoint h2h data)
@@ -168,14 +168,14 @@ export const matchAnalysis = sqliteTable('match_analysis', {
   rawLineupsData: text('raw_lineups_data'),
   
   analysisUpdatedAt: text('analysis_updated_at'),
-  createdAt: text('created_at').default(sql`(datetime('now'))`),
+  createdAt: text('created_at').default(sql`now()`),
 });
 
 export type MatchAnalysis = typeof matchAnalysis.$inferSelect;
 export type NewMatchAnalysis = typeof matchAnalysis.$inferInsert;
 
 // League standings for team context
-export const leagueStandings = sqliteTable('league_standings', {
+export const leagueStandings = pgTable('league_standings', {
   id: text('id').primaryKey(), // "{leagueId}-{season}-{teamId}"
   leagueId: integer('league_id').notNull(),
   season: integer('season').notNull(),
@@ -201,7 +201,7 @@ export const leagueStandings = sqliteTable('league_standings', {
   awayLost: integer('away_lost'),
   awayGoalsFor: integer('away_goals_for'),
   awayGoalsAgainst: integer('away_goals_against'),
-  updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+  updatedAt: text('updated_at').default(sql`now()`),
 });
 
 export type LeagueStanding = typeof leagueStandings.$inferSelect;
