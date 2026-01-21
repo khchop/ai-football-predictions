@@ -1,7 +1,9 @@
 import { APIFootballLineupsResponse } from '@/types';
 import { updateMatchAnalysisLineups, getMatchAnalysisByMatchId, getMatchById } from '@/lib/db/queries';
+import { fetchWithRetry, APIError } from '@/lib/utils/api-client';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
+const API_TIMEOUT_MS = 30000;
 
 // Fetch lineups from API-Football
 export async function fetchLineups(fixtureId: number): Promise<APIFootballLineupsResponse | null> {
@@ -17,16 +19,28 @@ export async function fetchLineups(fixtureId: number): Promise<APIFootballLineup
   console.log(`[Lineups] Fetching: ${url.toString()}`);
 
   try {
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'x-apisports-key': apiKey,
+    const response = await fetchWithRetry(
+      url.toString(),
+      {
+        method: 'GET',
+        headers: {
+          'x-apisports-key': apiKey,
+        },
       },
-      next: { revalidate: 0 },
-    });
+      {
+        maxRetries: 2,
+        baseDelayMs: 1000,
+        retryableStatusCodes: [408, 429, 500, 502, 503, 504],
+      },
+      API_TIMEOUT_MS
+    );
 
     if (!response.ok) {
-      throw new Error(`API-Football error: ${response.status} ${response.statusText}`);
+      throw new APIError(
+        `API-Football lineups error: ${response.status} ${response.statusText}`,
+        response.status,
+        '/fixtures/lineups'
+      );
     }
 
     const data = await response.json();
@@ -51,8 +65,9 @@ export async function fetchLineups(fixtureId: number): Promise<APIFootballLineup
 }
 
 // Extract starting XI player names as a simple string
-function formatStartingXI(startXI: Array<{ player: { name: string; pos: string } }>): string {
-  return startXI.map(p => p.player.name).join(', ');
+function formatStartingXI(startXI: Array<{ player: { name: string; pos: string } }> | null | undefined): string {
+  if (!startXI || !Array.isArray(startXI)) return '';
+  return startXI.map(p => p.player?.name || 'Unknown').join(', ');
 }
 
 // Update match analysis with lineup data

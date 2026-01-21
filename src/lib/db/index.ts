@@ -14,7 +14,15 @@ function getPool(): Pool {
     }
     pool = new Pool({
       connectionString,
-      max: 10, // Maximum number of connections in the pool
+      max: parseInt(process.env.DB_POOL_MAX || '10', 10),
+      min: parseInt(process.env.DB_POOL_MIN || '2', 10),
+      idleTimeoutMillis: 30000, // Close idle connections after 30s
+      connectionTimeoutMillis: 5000, // Timeout after 5s if can't connect
+    });
+    
+    // Handle pool errors
+    pool.on('error', (err) => {
+      console.error('[DB] Unexpected pool error:', err);
     });
   }
   return pool;
@@ -26,6 +34,16 @@ export function getDb() {
     dbInstance = drizzle(getPool(), { schema });
   }
   return dbInstance;
+}
+
+// Close the pool gracefully (for shutdown)
+export async function closePool(): Promise<void> {
+  if (pool) {
+    await pool.end();
+    pool = null;
+    dbInstance = null;
+    console.log('[DB] Pool closed');
+  }
 }
 
 // Export schema for convenience

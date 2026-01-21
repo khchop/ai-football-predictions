@@ -72,9 +72,13 @@ function buildComparisonBar(homePct: number | null, awayPct: number | null): str
 }
 
 // Parse H2H results from JSON string
+// Matches the H2HMatch structure from match-analysis.ts
 interface H2HResult {
-  home: number;
-  away: number;
+  date: string | null;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number;
+  awayScore: number;
 }
 
 function parseH2HResults(json: string | null): H2HResult[] {
@@ -194,7 +198,7 @@ export function buildEnhancedPrompt(context: PromptContext | EnhancedPromptConte
       
       const h2hResults = parseH2HResults(analysis.h2hResults);
       if (h2hResults.length > 0) {
-        const resultsStr = h2hResults.map(r => `${r.home}-${r.away}`).join(', ');
+        const resultsStr = h2hResults.map(r => `${r.homeScore}-${r.awayScore}`).join(', ');
         lines.push(`Last ${h2hResults.length}: ${resultsStr} (home team score first)`);
       }
       lines.push('');
@@ -351,7 +355,7 @@ function buildCompactMatchSummary(context: BatchMatchContext, index: number): st
     // H2H (compact) - factual historical data
     if (analysis.h2hTotal && analysis.h2hTotal > 0) {
       const h2hResults = parseH2HResults(analysis.h2hResults);
-      const resultsStr = h2hResults.length > 0 ? h2hResults.slice(0, 3).map(r => `${r.home}-${r.away}`).join(',') : '';
+      const resultsStr = h2hResults.length > 0 ? h2hResults.slice(0, 3).map(r => `${r.homeScore}-${r.awayScore}`).join(',') : '';
       lines.push(`    H2H: ${analysis.h2hHomeWins}W-${analysis.h2hDraws}D-${analysis.h2hAwayWins}L${resultsStr ? ` (last: ${resultsStr})` : ''}`);
     }
     

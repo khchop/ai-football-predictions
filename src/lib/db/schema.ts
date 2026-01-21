@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, doublePrecision, unique } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, doublePrecision, unique, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Competitions we track (Champions League, Premier League, etc.)
@@ -37,7 +37,12 @@ export const matches = pgTable('matches', {
   quotaAway: doublePrecision('quota_away'), // Points for predicting away win (2-6)
   createdAt: text('created_at').default(sql`now()`),
   updatedAt: text('updated_at').default(sql`now()`),
-});
+}, (table) => [
+  index('idx_matches_competition_id').on(table.competitionId),
+  index('idx_matches_status').on(table.status),
+  index('idx_matches_kickoff_time').on(table.kickoffTime),
+  index('idx_matches_status_kickoff').on(table.status, table.kickoffTime),
+]);
 
 // LLM models we test
 export const models = pgTable('models', {
@@ -59,7 +64,9 @@ export const models = pgTable('models', {
   totalRetryAttempts: integer('total_retry_attempts').default(0), // Lifetime retry attempts
   totalRetrySuccesses: integer('total_retry_successes').default(0), // Lifetime successful retries
   lastRetryAt: text('last_retry_at'), // ISO timestamp of last retry
-});
+}, (table) => [
+  index('idx_models_active').on(table.active),
+]);
 
 // Predictions made by models
 export const predictions = pgTable('predictions', {
@@ -76,27 +83,35 @@ export const predictions = pgTable('predictions', {
   rawResponse: text('raw_response'), // Full LLM response for debugging
   processingTimeMs: integer('processing_time_ms'), // How long the API call took
   // Points breakdown (calculated after match finishes)
-  pointsExactScore: integer('points_exact_score').default(0), // 5 pts if exact match
-  pointsResult: integer('points_result').default(0), // 2 pts if correct result (H/D/A)
-  pointsGoalDiff: integer('points_goal_diff').default(0), // 1 pt if correct goal difference
-  pointsOverUnder: integer('points_over_under').default(0), // 1 pt if correct over/under 2.5
-  pointsBtts: integer('points_btts').default(0), // 1 pt if correct both teams to score
-  pointsUpsetBonus: integer('points_upset_bonus').default(0), // 2 pts if predicted underdog win
-  pointsTotal: integer('points_total').default(0), // Sum of all points (max 10)
+  // Note: Using quota-based scoring - pointsResult stores tendencyPoints (2-6)
+  pointsExactScore: integer('points_exact_score').default(0), // Exact score bonus (0-3)
+  pointsResult: integer('points_result').default(0), // Tendency points (2-6)
+  pointsGoalDiff: integer('points_goal_diff').default(0), // Goal diff bonus (0-1)
+  pointsOverUnder: integer('points_over_under').default(0), // Unused (legacy)
+  pointsBtts: integer('points_btts').default(0), // Unused (legacy)
+  pointsUpsetBonus: integer('points_upset_bonus').default(0), // Unused (legacy)
+  pointsTotal: integer('points_total').default(0), // Sum of all points
   createdAt: text('created_at').default(sql`now()`),
-});
+}, (table) => [
+  index('idx_predictions_match_id').on(table.matchId),
+  index('idx_predictions_model_id').on(table.modelId),
+  unique('predictions_match_model_unique').on(table.matchId, table.modelId),
+]);
 
 // Daily usage tracking for budget control
 export const modelUsage = pgTable('model_usage', {
   id: text('id').primaryKey(), // UUID
   date: text('date').notNull(), // YYYY-MM-DD
-  modelId: text('model_id').notNull(),
+  modelId: text('model_id')
+    .notNull()
+    .references(() => models.id),
   predictionsCount: integer('predictions_count').default(0),
   totalCost: text('total_cost').default('0'), // Stored as string for precision
   createdAt: text('created_at').default(sql`now()`),
   updatedAt: text('updated_at').default(sql`now()`),
 }, (table) => [
   unique('model_usage_date_model_unique').on(table.date, table.modelId),
+  index('idx_model_usage_date').on(table.date),
 ]);
 
 // Type exports for use in application
@@ -216,7 +231,11 @@ export const leagueStandings = pgTable('league_standings', {
   awayGoalsFor: integer('away_goals_for'),
   awayGoalsAgainst: integer('away_goals_against'),
   updatedAt: text('updated_at').default(sql`now()`),
-});
+}, (table) => [
+  index('idx_league_standings_league_id').on(table.leagueId),
+  index('idx_league_standings_team_name').on(table.teamName),
+  index('idx_league_standings_league_position').on(table.leagueId, table.position),
+]);
 
 export type LeagueStanding = typeof leagueStandings.$inferSelect;
 export type NewLeagueStanding = typeof leagueStandings.$inferInsert;

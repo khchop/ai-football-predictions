@@ -14,8 +14,17 @@ export function validateCronRequest(request: NextRequest): NextResponse | null {
   const secret = request.headers.get('X-Cron-Secret');
   
   if (!process.env.CRON_SECRET) {
-    console.warn('CRON_SECRET not configured - cron endpoints are unprotected!');
-    return null; // Allow request if no secret configured (dev mode)
+    // SECURITY: Fail closed in production - never allow unauthenticated access
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[Cron Auth] CRITICAL: CRON_SECRET not configured in production!');
+      return NextResponse.json(
+        { success: false, error: 'Server misconfigured' },
+        { status: 500 }
+      );
+    }
+    // Only allow unauthenticated access in development
+    console.warn('[Cron Auth] CRON_SECRET not configured - allowing in development mode');
+    return null;
   }
   
   if (secret !== process.env.CRON_SECRET) {

@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { format, parseISO, formatDistanceToNow, isAfter } from 'date-fns';
+import { format, parseISO, isAfter } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { MapPin, Star, AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { MatchTime } from '@/components/client-date';
 
 interface MatchCardProps {
   match: {
@@ -303,11 +304,11 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
 
           {/* Time info */}
           <div className="mt-3 text-center">
-            <span className="text-xs text-muted-foreground">
-              {isUpcoming 
-                ? formatDistanceToNow(kickoff, { addSuffix: true })
-                : format(kickoff, 'MMM d, HH:mm')}
-            </span>
+            <MatchTime 
+              dateString={match.kickoffTime} 
+              isUpcoming={isUpcoming}
+              className="text-xs text-muted-foreground"
+            />
           </div>
 
           {/* Predictions preview */}

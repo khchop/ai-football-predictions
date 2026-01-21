@@ -9,8 +9,10 @@ import {
 import { upsertMatchAnalysis, getMatchAnalysisByMatchId } from '@/lib/db/queries';
 import { v4 as uuidv4 } from 'uuid';
 import type { MatchAnalysis, NewMatchAnalysis } from '@/lib/db/schema';
+import { fetchWithRetry, APIError } from '@/lib/utils/api-client';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
+const API_TIMEOUT_MS = 30000;
 
 interface FetchOptions {
   endpoint: string;
@@ -32,27 +34,39 @@ async function fetchFromAPI<T>({ endpoint, params }: FetchOptions): Promise<T> {
     });
   }
 
-  console.log(`[API-Football] Fetching: ${url.toString()}`);
+  console.log(`[Match Analysis] Fetching: ${url.toString()}`);
 
-  const response = await fetch(url.toString(), {
-    method: 'GET',
-    headers: {
-      'x-apisports-key': apiKey,
+  const response = await fetchWithRetry(
+    url.toString(),
+    {
+      method: 'GET',
+      headers: {
+        'x-apisports-key': apiKey,
+      },
     },
-    next: { revalidate: 0 },
-  });
+    {
+      maxRetries: 3,
+      baseDelayMs: 1000,
+      retryableStatusCodes: [408, 429, 500, 502, 503, 504],
+    },
+    API_TIMEOUT_MS
+  );
 
   if (!response.ok) {
-    throw new Error(`API-Football error: ${response.status} ${response.statusText}`);
+    throw new APIError(
+      `API-Football error: ${response.status} ${response.statusText}`,
+      response.status,
+      endpoint
+    );
   }
 
   const data = await response.json();
   
   if (data.errors && Object.keys(data.errors).length > 0) {
-    console.error('[API-Football] API Errors:', data.errors);
+    console.error('[Match Analysis] API Errors:', data.errors);
   }
   
-  console.log(`[API-Football] Results: ${data.results || 0}`);
+  console.log(`[Match Analysis] Results: ${data.results || 0}`);
 
   return data;
 }

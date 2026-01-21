@@ -2,8 +2,11 @@ import { getDb, leagueStandings } from '@/lib/db';
 import { eq, and } from 'drizzle-orm';
 import type { NewLeagueStanding, LeagueStanding } from '@/lib/db/schema';
 import { COMPETITIONS } from './competitions';
+import { fetchWithRetry, APIError, sleep } from '@/lib/utils/api-client';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
+const API_TIMEOUT_MS = 30000;
+const RATE_LIMIT_DELAY_MS = 300;
 
 interface APIStandingTeam {
   id: number;
@@ -58,16 +61,28 @@ async function fetchStandingsFromAPI(leagueId: number, season: number): Promise<
 
   console.log(`[Standings] Fetching: ${url.toString()}`);
 
-  const response = await fetch(url.toString(), {
-    method: 'GET',
-    headers: {
-      'x-apisports-key': apiKey,
+  const response = await fetchWithRetry(
+    url.toString(),
+    {
+      method: 'GET',
+      headers: {
+        'x-apisports-key': apiKey,
+      },
     },
-    next: { revalidate: 0 },
-  });
+    {
+      maxRetries: 3,
+      baseDelayMs: 1000,
+      retryableStatusCodes: [408, 429, 500, 502, 503, 504],
+    },
+    API_TIMEOUT_MS
+  );
 
   if (!response.ok) {
-    throw new Error(`API-Football error: ${response.status} ${response.statusText}`);
+    throw new APIError(
+      `API-Football standings error: ${response.status} ${response.statusText}`,
+      response.status,
+      '/standings'
+    );
   }
 
   const data: APIStandingsResponse = await response.json();
@@ -76,8 +91,10 @@ async function fetchStandingsFromAPI(leagueId: number, season: number): Promise<
   // Flatten them all into one array
   const allStandings: APIStandingEntry[] = [];
   for (const leagueData of data.response || []) {
-    for (const group of leagueData.league.standings || []) {
-      allStandings.push(...group);
+    if (leagueData?.league?.standings) {
+      for (const group of leagueData.league.standings) {
+        allStandings.push(...group);
+      }
     }
   }
 
@@ -177,8 +194,8 @@ export async function updateAllStandings(): Promise<{ updated: number; leagues: 
       totalUpdated += updated;
       if (updated > 0) leaguesProcessed++;
       
-      // Rate limit: 300ms between API calls
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Rate limit delay between API calls
+      await sleep(RATE_LIMIT_DELAY_MS);
     } catch (error) {
       console.error(`[Standings] Failed to update ${competition.name}:`, error);
     }

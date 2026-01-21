@@ -4,16 +4,14 @@ import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { PredictionTable } from '@/components/prediction-table';
 import { MatchEvents } from '@/components/match-events';
-import { getMatchWithAnalysis } from '@/lib/db/queries';
+import { getMatchWithAnalysis, getMatchById } from '@/lib/db/queries';
 import { getMatchEvents } from '@/lib/football/api-football';
-
-
 import { calculateEnhancedScores } from '@/lib/utils/scoring';
 import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, AlertTriangle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import type { KeyInjury, LikelyScore } from '@/types';
-
+import type { Metadata } from 'next';
 import { Collapsible } from '@/components/ui/collapsible';
 
 // Helper to get team abbreviation (3-4 chars)
@@ -91,6 +89,32 @@ export const dynamic = 'force-dynamic';
 
 interface MatchPageProps {
   params: Promise<{ id: string }>;
+}
+
+// Generate metadata for SEO
+export async function generateMetadata({ params }: MatchPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const result = await getMatchById(id);
+  
+  if (!result) {
+    return {
+      title: 'Match Not Found',
+      description: 'The requested match could not be found.',
+    };
+  }
+  
+  const { match, competition } = result;
+  const kickoff = format(parseISO(match.kickoffTime), 'MMM d, yyyy HH:mm');
+  
+  return {
+    title: `${match.homeTeam} vs ${match.awayTeam} - AI Predictions`,
+    description: `AI predictions for ${match.homeTeam} vs ${match.awayTeam} in ${competition.name}. Kickoff: ${kickoff}. See what 30 AI models predict for this match.`,
+    openGraph: {
+      title: `${match.homeTeam} vs ${match.awayTeam}`,
+      description: `AI predictions for ${competition.name} match`,
+      type: 'website',
+    },
+  };
 }
 
 // Helper to parse JSON safely
