@@ -908,6 +908,8 @@ export async function getLeaderboardFiltered(filters: LeaderboardFilters = {}) {
       actualHomeScore: matches.homeScore,
       actualAwayScore: matches.awayScore,
       kickoffTime: matches.kickoffTime,
+      // Quota-based scoring
+      pointsTotal: predictions.pointsTotal,
       // Streak data
       currentStreak: models.currentStreak,
       currentStreakType: models.currentStreakType,
@@ -964,13 +966,16 @@ export async function getLeaderboardFiltered(filters: LeaderboardFilters = {}) {
     
     const isCorrectResult = predictedResult === actualResult;
 
+    // Count categories for display (but don't calculate points manually)
     if (isExact) {
       stats.exactScores++;
-      stats.totalPoints += 3;
-    } else if (isCorrectResult) {
-      stats.correctResults++;
-      stats.totalPoints += 1;
     }
+    if (isCorrectResult && !isExact) {
+      stats.correctResults++;
+    }
+    
+    // Use quota-based points from database instead of recalculating
+    stats.totalPoints += pred.pointsTotal || 0;
 
     modelStats.set(pred.modelId, stats);
   }
