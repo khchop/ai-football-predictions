@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import pLimit from 'p-limit';
 import { 
   getMatchesReadyForPrediction, 
   createPrediction, 
@@ -12,20 +13,27 @@ import {
   recordPredictionAttemptFailure,
   clearPredictionAttempt,
   cleanupOldPredictionAttempts,
+  createPredictionsBatch,
+  clearPredictionAttemptsBatch,
 } from '@/lib/db/queries';
 import { getActiveProviders, ALL_PROVIDERS, OpenRouterProvider } from '@/lib/llm';
 import { shouldSkipProvider, recordPredictionCost, getBudgetStatus } from '@/lib/llm/budget';
 import { buildBatchPrompt } from '@/lib/football/prompt-builder';
 import { BaseLLMProvider, BatchPredictionResult } from '@/lib/llm/providers/base';
 import { validateCronRequest } from '@/lib/auth/cron-auth';
+import type { NewPrediction } from '@/lib/db/schema';
+
+// Concurrency settings
+const MODEL_CONCURRENCY = 5; // Process 5 models in parallel
+const MAX_RUNTIME_MS = 4 * 60 * 1000; // 4 minute time budget (leave 1 min buffer for overhead)
 
 // Batch size for grouping matches (10 matches per API call)
 const BATCH_SIZE = 10;
 
-// Retry configuration
-const MAX_RETRIES = 2;
-const RETRY_DELAYS = [1000, 2000]; // Exponential backoff: 1s, 2s
-const RATE_LIMIT_RETRY_DELAYS = [3000, 5000]; // Longer delays for rate limits
+// Retry configuration - REDUCED for faster failure detection
+const MAX_RETRIES = 1; // Changed from 2
+const RETRY_DELAYS = [500, 1000]; // Changed from [1000, 2000]
+const RATE_LIMIT_RETRY_DELAYS = [1000, 2000]; // Changed from [3000, 5000]
 
 // Errors that indicate JSON parsing failed (retryable)
 const JSON_PARSE_ERROR_PATTERNS = [
@@ -88,6 +96,18 @@ interface ProviderRetryStats {
   successes: number;
 }
 
+// Result from processing a single model
+interface ModelProcessingResult {
+  modelId: string;
+  success: boolean;
+  successfulPredictions: number;
+  gaveUpPredictions: number;
+  errors: string[];
+  retryStats?: ProviderRetryStats;
+  skipped?: boolean;
+  reason?: string;
+}
+
 // Predict with retry logic
 async function predictBatchWithRetry(
   provider: BaseLLMProvider,
@@ -137,6 +157,243 @@ async function predictBatchWithRetry(
   }
 
   return { result: lastResult!, retryCount };
+}
+
+// Process predictions for a single model (extracted for parallel execution)
+async function processModelPredictions(
+  modelId: string,
+  matchesToPredict: string[],
+  matchesReadyForPrediction: Awaited<ReturnType<typeof getMatchesReadyForPrediction>>,
+  activeProviders: ReturnType<typeof getActiveProviders>,
+  startTime: number
+): Promise<ModelProcessingResult> {
+  // Check time budget at start
+  if (Date.now() - startTime > MAX_RUNTIME_MS) {
+    return {
+      modelId,
+      success: false,
+      successfulPredictions: 0,
+      gaveUpPredictions: matchesToPredict.length,
+      errors: [],
+      skipped: true,
+      reason: 'time_budget_exceeded',
+    };
+  }
+
+  const provider = activeProviders.find(p => p.id === modelId);
+  if (!provider) {
+    return {
+      modelId,
+      success: false,
+      successfulPredictions: 0,
+      gaveUpPredictions: matchesToPredict.length,
+      errors: [`Provider ${modelId} not found`],
+      skipped: true,
+      reason: 'provider_not_found',
+    };
+  }
+
+  // Check if model is auto-disabled
+  const modelHealth = await getModelById(modelId);
+  if (modelHealth?.autoDisabled) {
+    console.log(`Skipping ${modelId} - auto-disabled due to consecutive failures`);
+    return {
+      modelId,
+      success: false,
+      successfulPredictions: 0,
+      gaveUpPredictions: matchesToPredict.length,
+      errors: [],
+      skipped: true,
+      reason: 'auto_disabled',
+    };
+  }
+
+  // Check budget
+  const budgetCheck = await shouldSkipProvider(provider as OpenRouterProvider);
+  if (budgetCheck.skip) {
+    console.log(`Skipping ${modelId} - ${budgetCheck.reason}`);
+    return {
+      modelId,
+      success: false,
+      successfulPredictions: 0,
+      gaveUpPredictions: matchesToPredict.length,
+      errors: [],
+      skipped: true,
+      reason: budgetCheck.reason,
+    };
+  }
+
+  // Group matches into batches for this model
+  const batches: string[][] = [];
+  for (let i = 0; i < matchesToPredict.length; i += BATCH_SIZE) {
+    batches.push(matchesToPredict.slice(i, i + BATCH_SIZE));
+  }
+
+  console.log(`\n${modelId}: Processing ${matchesToPredict.length} missing predictions in ${batches.length} batch(es)`);
+
+  let successfulPredictions = 0;
+  let gaveUpPredictions = 0;
+  const errors: string[] = [];
+  let totalRetries = 0;
+  let successfulRetries = 0;
+
+  // Process batches for this model in sequence
+  for (let batchIdx = 0; batchIdx < batches.length; batchIdx++) {
+    // Check time budget before each batch
+    if (Date.now() - startTime > MAX_RUNTIME_MS) {
+      console.log(`  ${modelId}: Time budget exceeded, stopping after batch ${batchIdx}`);
+      gaveUpPredictions += batches.slice(batchIdx).flat().length;
+      break;
+    }
+
+    const batchMatchIds = batches[batchIdx];
+    const batchMatches = matchesReadyForPrediction.filter(m => batchMatchIds.includes(m.match.id));
+
+    if (batchMatches.length === 0) continue;
+
+    console.log(`  Batch ${batchIdx + 1}/${batches.length}: ${batchMatches.map(m => `${m.match.homeTeam} vs ${m.match.awayTeam}`).join(', ')}`);
+
+    // Build batch prompt for only these matches
+    const batchPrompt = buildBatchPrompt(
+      batchMatches.map(m => ({
+        matchId: m.match.id,
+        homeTeam: m.match.homeTeam,
+        awayTeam: m.match.awayTeam,
+        competition: m.competition.name,
+        kickoffTime: m.match.kickoffTime,
+        analysis: m.analysis,
+      }))
+    );
+
+    try {
+      const hasAnalysis = batchMatches.some(m => m.analysis);
+
+      // Predict with retry logic
+      const baseProvider = provider as BaseLLMProvider;
+      const { result: predResult, retryCount } = await predictBatchWithRetry(
+        baseProvider,
+        batchPrompt,
+        batchMatchIds,
+        MAX_RETRIES
+      );
+
+      // Record cost for ALL attempts (initial + retries)
+      const totalAttempts = 1 + retryCount;
+      if ('estimateCost' in provider && typeof provider.estimateCost === 'function') {
+        const inputTokens = hasAnalysis ? 400 * batchMatches.length : 200 * batchMatches.length;
+        const outputTokens = 50 * batchMatches.length;
+        const costPerAttempt = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
+        const totalCost = costPerAttempt * totalAttempts;
+        await recordPredictionCost(provider.id, totalCost);
+      }
+
+      if (predResult.success && predResult.predictions.size > 0) {
+        // Collect predictions for batch insert
+        const predictionsToInsert: Array<Omit<NewPrediction, 'id'>> = [];
+        const attemptsToClean: Array<{ matchId: string; modelId: string }> = [];
+
+        // Collect all successful predictions
+        for (const batchMatch of batchMatches) {
+          const prediction = predResult.predictions.get(batchMatch.match.id);
+
+          if (prediction) {
+            predictionsToInsert.push({
+              matchId: batchMatch.match.id,
+              modelId: provider.id,
+              predictedHomeScore: prediction.homeScore,
+              predictedAwayScore: prediction.awayScore,
+              rawResponse: `[batch] ${prediction.homeScore}-${prediction.awayScore}`,
+              processingTimeMs: Math.round(predResult.processingTimeMs / batchMatches.length),
+            });
+            attemptsToClean.push({ matchId: batchMatch.match.id, modelId: provider.id });
+          } else {
+            const errorMsg = `${modelId}: No prediction for ${batchMatch.match.homeTeam} vs ${batchMatch.match.awayTeam}`;
+            console.error(`    ${errorMsg}`);
+            errors.push(errorMsg);
+
+            // Record failed attempt
+            await recordPredictionAttemptFailure(batchMatch.match.id, provider.id, errorMsg);
+          }
+        }
+
+        // Batch save all predictions and clear attempts
+        if (predictionsToInsert.length > 0) {
+          await createPredictionsBatch(predictionsToInsert);
+          await clearPredictionAttemptsBatch(attemptsToClean);
+          successfulPredictions += predictionsToInsert.length;
+        }
+
+        // Record success - resets consecutive failure count
+        await recordModelSuccess(provider.id);
+
+        const retryInfo = retryCount > 0 ? `, retries: ${retryCount}` : '';
+        console.log(`    Success: Saved ${predResult.predictions.size}/${batchMatches.length} predictions (attempts: ${totalAttempts}${retryInfo})`);
+
+        if (predResult.failedMatchIds && predResult.failedMatchIds.length > 0) {
+          console.log(`    Missing: ${predResult.failedMatchIds.length} matches`);
+        }
+
+        if (retryCount > 0) {
+          totalRetries += retryCount;
+          successfulRetries++;
+        }
+      } else {
+        const retryInfo = retryCount > 0 ? ` (after ${retryCount} retries)` : '';
+        const errorMsg = `${modelId} batch failed${retryInfo}: ${predResult.error}`;
+        console.error(`    ${errorMsg}`);
+        errors.push(errorMsg);
+
+        // Record failure for all matches in batch
+        for (const batchMatch of batchMatches) {
+          await recordPredictionAttemptFailure(batchMatch.match.id, provider.id, predResult.error || 'Unknown error');
+        }
+
+        gaveUpPredictions += batchMatches.length;
+
+        // Record model failure - may auto-disable after 3 consecutive failures
+        const healthResult = await recordModelFailure(provider.id, predResult.error || 'Unknown error');
+        if (healthResult.autoDisabled) {
+          console.log(`    ${modelId}: AUTO-DISABLED after 3 consecutive failures`);
+        }
+      }
+    } catch (error) {
+      // Record cost even on error (API was still called and billed)
+      if ('estimateCost' in provider && typeof provider.estimateCost === 'function') {
+        const hasAnalysis = batchMatches.some(m => m.analysis);
+        const inputTokens = hasAnalysis ? 400 * batchMatches.length : 200 * batchMatches.length;
+        const outputTokens = 50 * batchMatches.length;
+        const apiCost = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
+        await recordPredictionCost(provider.id, apiCost);
+      }
+
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      const msg = `Error with ${modelId} for batch ${batchIdx + 1}: ${errorMsg}`;
+      console.error(`    ${msg}`);
+      errors.push(msg);
+
+      // Record failure for all matches in batch
+      for (const batchMatch of batchMatches) {
+        await recordPredictionAttemptFailure(batchMatch.match.id, provider.id, errorMsg);
+      }
+
+      gaveUpPredictions += batchMatches.length;
+
+      // Record model failure
+      const healthResult = await recordModelFailure(provider.id, errorMsg);
+      if (healthResult.autoDisabled) {
+        console.log(`    ${modelId}: AUTO-DISABLED after 3 consecutive failures`);
+      }
+    }
+  }
+
+  return {
+    modelId,
+    success: successfulPredictions > 0,
+    successfulPredictions,
+    gaveUpPredictions,
+    errors,
+    retryStats: totalRetries > 0 ? { attempts: totalRetries, successes: successfulRetries } : undefined,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -237,181 +494,45 @@ export async function POST(request: NextRequest) {
     let totalRetries = 0;
     let successfulRetries = 0;
 
-    // Process each model with its missing matches
-    for (const [modelId, matchesToPredict] of Array.from(pairsByModel.entries())) {
-      const provider = activeProviders.find(p => p.id === modelId);
-      if (!provider) continue;
+    // Create parallel processing with concurrency limit
+    const limit = pLimit(MODEL_CONCURRENCY);
+    const startTime = Date.now();
 
-      // Check if model is auto-disabled
-      const modelHealth = await getModelById(modelId);
-      if (modelHealth?.autoDisabled) {
-        console.log(`Skipping ${modelId} - auto-disabled due to consecutive failures`);
-        gaveUpPredictions += matchesToPredict.length;
-        continue;
-      }
-
-      // Check budget
-      const budgetCheck = await shouldSkipProvider(provider as OpenRouterProvider);
-      if (budgetCheck.skip) {
-        console.log(`Skipping ${modelId} - ${budgetCheck.reason}`);
-        continue;
-      }
-
-      totalPredictions += matchesToPredict.length;
-
-      // Group matches into batches for this model
-      const batches: string[][] = [];
-      for (let i = 0; i < matchesToPredict.length; i += BATCH_SIZE) {
-        batches.push(matchesToPredict.slice(i, i + BATCH_SIZE));
-      }
-
-      console.log(`\n${modelId}: Processing ${matchesToPredict.length} missing predictions in ${batches.length} batch(es)`);
-
-      // Process batches for this model in sequence
-      for (let batchIdx = 0; batchIdx < batches.length; batchIdx++) {
-        const batchMatchIds = batches[batchIdx];
-        const batchMatches = matchesReadyForPrediction.filter(m => batchMatchIds.includes(m.match.id));
-
-        if (batchMatches.length === 0) continue;
-
-        console.log(`  Batch ${batchIdx + 1}/${batches.length}: ${batchMatches.map(m => `${m.match.homeTeam} vs ${m.match.awayTeam}`).join(', ')}`);
-
-        // Build batch prompt for only these matches
-        const batchPrompt = buildBatchPrompt(
-          batchMatches.map(m => ({
-            matchId: m.match.id,
-            homeTeam: m.match.homeTeam,
-            awayTeam: m.match.awayTeam,
-            competition: m.competition.name,
-            kickoffTime: m.match.kickoffTime,
-            analysis: m.analysis,
-          }))
+    // Create parallel tasks for all models
+    const modelTasks = Array.from(pairsByModel.entries()).map(([modelId, matchesToPredict]) =>
+      limit(async () => {
+        totalPredictions += matchesToPredict.length;
+        return processModelPredictions(
+          modelId,
+          matchesToPredict,
+          matchesReadyForPrediction,
+          activeProviders,
+          startTime
         );
+      })
+    );
 
-        try {
-          const hasAnalysis = batchMatches.some(m => m.analysis);
-          
-          // Predict with retry logic
-          const baseProvider = provider as BaseLLMProvider;
-          const { result: predResult, retryCount } = await predictBatchWithRetry(
-            baseProvider,
-            batchPrompt,
-            batchMatchIds,
-            MAX_RETRIES
-          );
+    // Execute all tasks with controlled concurrency
+    console.log(`\nProcessing ${modelTasks.length} models with concurrency ${MODEL_CONCURRENCY}...`);
+    const results = await Promise.all(modelTasks);
 
-          // Record cost for ALL attempts (initial + retries)
-          const totalAttempts = 1 + retryCount;
-          if ('estimateCost' in provider && typeof provider.estimateCost === 'function') {
-            const inputTokens = hasAnalysis ? 400 * batchMatches.length : 200 * batchMatches.length;
-            const outputTokens = 50 * batchMatches.length;
-            const costPerAttempt = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
-            const totalCost = costPerAttempt * totalAttempts;
-            await recordPredictionCost(provider.id, totalCost);
-          }
-
-          if (predResult.success && predResult.predictions.size > 0) {
-            // Save individual predictions from batch result
-            for (const batchMatch of batchMatches) {
-              const prediction = predResult.predictions.get(batchMatch.match.id);
-              
-              if (prediction) {
-                await createPrediction({
-                  matchId: batchMatch.match.id,
-                  modelId: provider.id,
-                  predictedHomeScore: prediction.homeScore,
-                  predictedAwayScore: prediction.awayScore,
-                  rawResponse: `[batch] ${prediction.homeScore}-${prediction.awayScore}`,
-                  processingTimeMs: Math.round(predResult.processingTimeMs / batchMatches.length),
-                });
-                successfulPredictions++;
-                retriedPredictions++;
-                
-                // Clear attempt record on success
-                await clearPredictionAttempt(batchMatch.match.id, provider.id);
-              } else {
-                const errorMsg = `${modelId}: No prediction for ${batchMatch.match.homeTeam} vs ${batchMatch.match.awayTeam}`;
-                console.error(`    ${errorMsg}`);
-                errors.push(errorMsg);
-                
-                // Record failed attempt
-                await recordPredictionAttemptFailure(batchMatch.match.id, provider.id, errorMsg);
-              }
-            }
-            
-            // Record success - resets consecutive failure count
-            await recordModelSuccess(provider.id);
-            
-            const retryInfo = retryCount > 0 ? `, retries: ${retryCount}` : '';
-            console.log(`    Success: Saved ${predResult.predictions.size}/${batchMatches.length} predictions (attempts: ${totalAttempts}${retryInfo})`);
-            
-            if (predResult.failedMatchIds && predResult.failedMatchIds.length > 0) {
-              console.log(`    Missing: ${predResult.failedMatchIds.length} matches`);
-            }
-
-            if (retryCount > 0) {
-              totalRetries += retryCount;
-              successfulRetries++;
-              const existing = retryStatsByProvider.get(modelId) || { attempts: 0, successes: 0 };
-              retryStatsByProvider.set(modelId, {
-                attempts: existing.attempts + retryCount,
-                successes: existing.successes + 1,
-              });
-            }
-          } else {
-            const retryInfo = retryCount > 0 ? ` (after ${retryCount} retries)` : '';
-            const errorMsg = `${modelId} batch failed${retryInfo}: ${predResult.error}`;
-            console.error(`    ${errorMsg}`);
-            errors.push(errorMsg);
-            
-            // Record failure for all matches in batch
-            for (const batchMatch of batchMatches) {
-              await recordPredictionAttemptFailure(batchMatch.match.id, provider.id, predResult.error || 'Unknown error');
-            }
-            
-            gaveUpPredictions += batchMatches.length;
-            
-            // Record model failure - may auto-disable after 3 consecutive failures
-            const healthResult = await recordModelFailure(provider.id, predResult.error || 'Unknown error');
-            if (healthResult.autoDisabled) {
-              console.log(`    ${modelId}: AUTO-DISABLED after 3 consecutive failures`);
-            }
-          }
-        } catch (error) {
-          // Record cost even on error (API was still called and billed)
-          if ('estimateCost' in provider && typeof provider.estimateCost === 'function') {
-            const hasAnalysis = batchMatches.some(m => m.analysis);
-            const inputTokens = hasAnalysis ? 400 * batchMatches.length : 200 * batchMatches.length;
-            const outputTokens = 50 * batchMatches.length;
-            const apiCost = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
-            await recordPredictionCost(provider.id, apiCost);
-          }
-          
-          const errorMsg = error instanceof Error ? error.message : String(error);
-          const msg = `Error with ${modelId} for batch ${batchIdx + 1}: ${errorMsg}`;
-          console.error(`    ${msg}`);
-          errors.push(msg);
-          
-          // Record failure for all matches in batch
-          for (const batchMatch of batchMatches) {
-            await recordPredictionAttemptFailure(batchMatch.match.id, provider.id, errorMsg);
-          }
-          
-          gaveUpPredictions += batchMatches.length;
-          
-          // Record model failure
-          const healthResult = await recordModelFailure(provider.id, errorMsg);
-          if (healthResult.autoDisabled) {
-            console.log(`    ${modelId}: AUTO-DISABLED after 3 consecutive failures`);
-          }
-        }
+    // Aggregate results from all models
+    for (const result of results) {
+      if (result.skipped) {
+        console.log(`Skipped ${result.modelId}: ${result.reason}`);
+        gaveUpPredictions += result.gaveUpPredictions;
+        continue;
       }
 
-      // Small delay after processing each model to avoid rate limits, especially for free tier
-      const castedProvider = provider as unknown as OpenRouterProvider;
-      if (castedProvider.tier === 'free') {
-        console.log(`  Waiting 500ms before next model...`);
-        await new Promise(resolve => setTimeout(resolve, 500));
+      successfulPredictions += result.successfulPredictions;
+      retriedPredictions += result.successfulPredictions; // All successful predictions went through retry logic
+      gaveUpPredictions += result.gaveUpPredictions;
+      errors.push(...result.errors);
+
+      if (result.retryStats) {
+        retryStatsByProvider.set(result.modelId, result.retryStats);
+        totalRetries += result.retryStats.attempts;
+        if (result.retryStats.successes > 0) successfulRetries++;
       }
     }
 

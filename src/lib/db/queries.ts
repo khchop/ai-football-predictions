@@ -625,6 +625,28 @@ export async function clearPredictionAttempt(
     );
 }
 
+// Batch clear prediction attempts (for parallel processing optimization)
+export async function clearPredictionAttemptsBatch(
+  pairs: Array<{ matchId: string; modelId: string }>
+): Promise<void> {
+  if (pairs.length === 0) return;
+  
+  const db = getDb();
+  // Build OR conditions for batch delete
+  await db
+    .delete(predictionAttempts)
+    .where(
+      or(
+        ...pairs.map(p => 
+          and(
+            eq(predictionAttempts.matchId, p.matchId),
+            eq(predictionAttempts.modelId, p.modelId)
+          )
+        )
+      )
+    );
+}
+
 // Get current attempt count for a match/model pair
 export async function getPredictionAttemptCount(
   matchId: string,
@@ -669,6 +691,23 @@ export async function createPrediction(data: Omit<NewPrediction, 'id'>) {
   return db
     .insert(predictions)
     .values({ ...data, id })
+    .onConflictDoNothing();
+}
+
+// Batch insert predictions (for parallel processing optimization)
+export async function createPredictionsBatch(data: Array<Omit<NewPrediction, 'id'>>) {
+  if (data.length === 0) return;
+  
+  const db = getDb();
+  const values = data.map(d => ({
+    ...d,
+    id: uuidv4(),
+  }));
+  
+  // Use onConflictDoNothing to prevent duplicate predictions for same match+model
+  return db
+    .insert(predictions)
+    .values(values)
     .onConflictDoNothing();
 }
 
