@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "@/components/navigation";
+import { Analytics } from "@/components/analytics";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 
@@ -24,26 +25,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.className} antialiased min-h-screen bg-background flex flex-col`}>
         {/* Swetrix Analytics */}
-        <script src="https://swetrix.org/swetrix.js" defer></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              document.addEventListener('DOMContentLoaded', function() {
-                swetrix.init('7xsX0euF1mZy', {
-                  apiURL: 'http://swetrixapi-hw4so40800cgw004wg0cs44c.188.245.241.135.sslip.io/log',
-                })
-                swetrix.trackViews()
-              })
-            `,
-          }}
-        />
-        <noscript>
-          <img
-            src="http://swetrixapi-hw4so40800cgw004wg0cs44c.188.245.241.135.sslip.io/log/noscript?pid=7xsX0euF1mZy"
-            alt=""
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-        </noscript>
+        <Analytics />
         {/* Background gradient effect */}
         <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl" />
