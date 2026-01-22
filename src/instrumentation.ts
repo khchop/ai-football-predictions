@@ -13,7 +13,11 @@ export async function register() {
     console.log('\n🚀 [Instrumentation] Initializing event-driven betting system...\n');
 
     try {
-      // 0. Sync models from code to database (auto-sync on startup)
+      // 0. Validate environment variables
+      const { validateEnvironmentOrThrow } = await import('./lib/utils/env-validation');
+      validateEnvironmentOrThrow();
+      
+      // 1. Sync models from code to database (auto-sync on startup)
       try {
         const { syncModelsToDatabase } = await import('./lib/db/sync-models');
         const result = await syncModelsToDatabase();
@@ -23,16 +27,16 @@ export async function register() {
         // Continue startup even if sync fails
       }
 
-      // 1. Setup repeatable jobs (fetch-fixtures every 6h)
+      // 2. Setup repeatable jobs (fetch-fixtures every 6h)
       const { setupRepeatableJobs } = await import('./lib/queue/setup');
       await setupRepeatableJobs();
 
-      // 2. Start all workers
+      // 3. Start all workers
       const { startAllWorkers } = await import('./lib/queue/workers');
       const workers = startAllWorkers();
       console.log(`[Instrumentation] Started ${workers.length} workers`);
 
-      // 3. Catch-up scheduling for existing matches
+      // 4. Catch-up scheduling for existing matches
       const { catchUpScheduling } = await import('./lib/queue/catch-up');
       const { scheduled, matches } = await catchUpScheduling();
       console.log(`[Instrumentation] Catch-up: Scheduled ${scheduled} jobs for ${matches} matches`);

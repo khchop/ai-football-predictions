@@ -13,8 +13,9 @@ import {
   getMatchById, 
   getMatchAnalysisByMatchId,
   getPredictionsForMatch,
-  createPrediction,
+  createPredictionsBatch,
 } from '@/lib/db/queries';
+import type { NewPrediction } from '@/lib/db/schema';
 import { getActiveProviders } from '@/lib/llm';
 import { buildBatchPrompt } from '@/lib/football/prompt-builder';
 import { parseBatchPredictionResponse, BATCH_SYSTEM_PROMPT } from '@/lib/llm/prompt';
@@ -82,6 +83,9 @@ export function createPredictionsWorker() {
         let successCount = 0;
         let failCount = 0;
         
+        // Collect all predictions to insert in batch
+        const predictionsToInsert: NewPrediction[] = [];
+        
         // Generate predictions for each model
         for (const provider of providers) {
           try {
@@ -114,8 +118,8 @@ export function createPredictionsWorker() {
             // Determine result tendency (H/D/A)
             const result = getResult(prediction.homeScore, prediction.awayScore);
             
-            // Save prediction
-            await createPrediction({
+            // Collect prediction for batch insert
+            predictionsToInsert.push({
               id: uuidv4(),
               matchId,
               modelId: provider.id,
@@ -133,6 +137,12 @@ export function createPredictionsWorker() {
           }
         }
         
+        // Batch insert all predictions at once (1 query instead of N)
+        if (predictionsToInsert.length > 0) {
+          await createPredictionsBatch(predictionsToInsert);
+          console.log(`[Predictions Worker] Inserted ${predictionsToInsert.length} predictions in batch`);
+        }
+        
         console.log(`[Predictions Worker] Complete: ${successCount} success, ${failCount} failed`);
         
         return { 
@@ -143,10 +153,16 @@ export function createPredictionsWorker() {
         };
       } catch (error: any) {
         console.error(`[Predictions Worker] Error processing match ${matchId}:`, error);
-        return { 
-          success: false, 
-          error: error.message,
-        };
+        // Throw error to enable BullMQ retry logic
+        // Only transient errors should retry (network, timeout, rate limit)
+        if (error.message?.includes('timeout') || 
+            error.message?.includes('ECONNREFUSED') ||
+            error.message?.includes('rate limit') ||
+            error.message?.includes('429')) {
+          throw new Error(`Retryable error for match ${matchId}: ${error.message}`);
+        }
+        // Non-retryable errors (business logic) should not retry
+        throw error;
       }
     },
     {

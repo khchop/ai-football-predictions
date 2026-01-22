@@ -43,6 +43,25 @@ export async function getActiveCompetitions(): Promise<Competition[]> {
 export async function upsertMatch(data: Omit<NewMatch, 'id'> & { id?: string }) {
   const db = getDb();
   const id = data.id || uuidv4();
+  
+  // Validate kickoffTime is a valid date
+  const kickoffDate = new Date(data.kickoffTime);
+  if (isNaN(kickoffDate.getTime())) {
+    throw new Error(`Invalid kickoffTime: ${data.kickoffTime}`);
+  }
+  
+  // Validate kickoffTime is not too far in the past (more than 7 days)
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  if (kickoffDate < sevenDaysAgo) {
+    throw new Error(`kickoffTime is too far in the past: ${data.kickoffTime}`);
+  }
+  
+  // Validate kickoffTime is not too far in the future (more than 1 year)
+  const oneYearFromNow = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+  if (kickoffDate > oneYearFromNow) {
+    throw new Error(`kickoffTime is too far in the future: ${data.kickoffTime}`);
+  }
+  
   return db
     .insert(matches)
     .values({ ...data, id })
@@ -1178,6 +1197,13 @@ export async function getPredictionsForMatchWithDetails(matchId: string) {
 
 // Create a single prediction
 export async function createPrediction(data: NewPrediction) {
+  const db = getDb();
+  return db.insert(predictions).values(data).returning();
+}
+
+// Create multiple predictions in a single query (batch insert)
+export async function createPredictionsBatch(data: NewPrediction[]) {
+  if (data.length === 0) return [];
   const db = getDb();
   return db.insert(predictions).values(data).returning();
 }
