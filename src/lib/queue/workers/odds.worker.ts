@@ -56,7 +56,7 @@ export function createOddsWorker() {
     },
     {
       connection: getQueueConnection(),
-      concurrency: 3, // Process 3 odds refreshes in parallel
+      concurrency: 1, // Process 1 at a time to avoid rate limits
     }
   );
 }

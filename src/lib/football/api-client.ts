@@ -3,7 +3,7 @@
  * All external API calls should go through this module
  */
 
-import { fetchWithRetry, APIError } from '@/lib/utils/api-client';
+import { fetchWithRetry, APIError, RateLimitError } from '@/lib/utils/api-client';
 import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
@@ -70,6 +70,18 @@ export async function fetchFromAPIFootball<T>({ endpoint, params }: FetchOptions
   if (data.errors && Object.keys(data.errors).length > 0) {
     console.error('[API-Football] API Errors:', data.errors);
     const errorMsg = Object.values(data.errors).join(', ');
+    
+    // Detect rate limit errors
+    if (errorMsg.toLowerCase().includes('rate limit') || 
+        errorMsg.toLowerCase().includes('too many requests') ||
+        errorMsg.toLowerCase().includes('exceeded the limit')) {
+      throw new RateLimitError(
+        `API-Football rate limit exceeded: ${errorMsg}`,
+        endpoint,
+        60 // Suggest retry after 60 seconds
+      );
+    }
+    
     throw new APIError(`API-Football API error: ${errorMsg}`, undefined, endpoint);
   }
   

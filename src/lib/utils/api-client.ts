@@ -173,3 +173,17 @@ export class APIError extends Error {
     this.name = 'APIError';
   }
 }
+
+/**
+ * Rate limit error for API throttling
+ */
+export class RateLimitError extends APIError {
+  constructor(
+    message: string,
+    public readonly endpoint?: string,
+    public readonly retryAfter?: number
+  ) {
+    super(message, 429, endpoint);
+    this.name = 'RateLimitError';
+  }
+}

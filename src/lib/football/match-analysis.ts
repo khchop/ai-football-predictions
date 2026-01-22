@@ -651,6 +651,11 @@ export async function refreshOddsForMatch(
     console.log(`[Match Analysis] Refreshed odds for match ${matchId}`);
     return true;
   } catch (error) {
+    // Re-throw rate limit errors so BullMQ can retry with backoff
+    if (error instanceof Error && error.name === 'RateLimitError') {
+      console.error(`[Match Analysis] Rate limit hit for match ${matchId}, will retry`);
+      throw error;
+    }
     console.error(`[Match Analysis] Error refreshing odds for match ${matchId}:`, error);
     return false;
   }
