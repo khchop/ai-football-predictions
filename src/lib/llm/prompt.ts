@@ -517,12 +517,14 @@ export function parseBatchBettingResponse(
     
     const bets: BatchBettingItem[] = [];
     const foundMatchIds = new Set<string>();
+    const rawMatchIds: string[] = []; // For debug logging
     
     for (const item of parsed) {
       const matchId = item.match_id ?? item.matchId ?? item.id;
       if (!matchId) continue;
       
-      const matchIdStr = String(matchId);
+      let matchIdStr = String(matchId);
+      rawMatchIds.push(matchIdStr); // Track what models are returning
       
       const resultBet = item.result_bet ?? item.resultBet ?? item.result;
       const overUnderBet = item.over_under_bet ?? item.overUnderBet ?? item.over_under;
@@ -530,16 +532,49 @@ export function parseBatchBettingResponse(
       
       if (!resultBet || !overUnderBet || !bttsBet) continue;
       
+      // Try exact match first
+      let matchedId = matchIdStr;
+      if (expectedMatchIds.includes(matchIdStr)) {
+        foundMatchIds.add(matchIdStr);
+      } else {
+        // Try flexible matching for truncated UUIDs or partial matches
+        const partialMatch = expectedMatchIds.find(expected => 
+          expected.startsWith(matchIdStr) || // Model returned truncated UUID
+          matchIdStr.startsWith(expected) || // Model returned longer version
+          expected.includes(matchIdStr) ||   // Model returned substring
+          matchIdStr.includes(expected)      // Expected is substring of returned
+        );
+        
+        if (partialMatch) {
+          matchedId = partialMatch;
+          foundMatchIds.add(partialMatch);
+        }
+      }
+      
       bets.push({
-        matchId: matchIdStr,
+        matchId: matchedId,
         resultBet: String(resultBet),
         overUnderBet: normalizeOverUnder(String(overUnderBet)),
         bttsBet: String(bttsBet),
       });
-      foundMatchIds.add(matchIdStr);
+    }
+    
+    // SINGLE-MATCH FALLBACK: If we only expected 1 match and got 1+ bet(s), assume first bet is for that match
+    if (expectedMatchIds.length === 1 && bets.length > 0 && !foundMatchIds.has(expectedMatchIds[0])) {
+      console.log(`[Parse] Single-match fallback: Assigning bet to ${expectedMatchIds[0]} (model returned: ${rawMatchIds[0]})`);
+      bets[0].matchId = expectedMatchIds[0];
+      foundMatchIds.add(expectedMatchIds[0]);
     }
     
     const failedMatchIds = expectedMatchIds.filter(id => !foundMatchIds.has(id));
+    
+    // Debug logging when matches are missing
+    if (failedMatchIds.length > 0) {
+      console.log(`[Parse] Expected match IDs: ${expectedMatchIds.join(', ')}`);
+      console.log(`[Parse] Model returned IDs: ${rawMatchIds.join(', ')}`);
+      console.log(`[Parse] Successfully matched: ${Array.from(foundMatchIds).join(', ')}`);
+      console.log(`[Parse] Missing matches: ${failedMatchIds.join(', ')}`);
+    }
     
     return {
       bets,

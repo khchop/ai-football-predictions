@@ -122,43 +122,10 @@ export const Qwen3_4BFreeProvider = new OpenRouterProvider(
   false
 );
 
-// 6. Llama 3.1 405B - Meta (Free)
-export const Llama31_405B_FreeProvider = new OpenRouterProvider(
-  'llama-3.1-405b-free',
-  'openrouter',
-  'meta-llama/llama-3.1-405b-instruct:free',
-  'Llama 3.1 405B Free (Meta)',
-  'free',
-  { promptPer1M: 0, completionPer1M: 0 },
-  false
-);
-
-// 7. GPT-OSS 20B - OpenAI (Free)
-export const GPTOSS20BFreeProvider = new OpenRouterProvider(
-  'gpt-oss-20b-free',
-  'openrouter',
-  'openai/gpt-oss-20b:free',
-  'GPT-OSS 20B (OpenAI)',
-  'free',
-  { promptPer1M: 0, completionPer1M: 0 },
-  false
-);
-
-// 8. Kimi K2 - Moonshot (Free)
-export const KimiK2FreeProvider = new OpenRouterProvider(
-  'kimi-k2-free',
-  'openrouter',
-  'moonshotai/kimi-k2:free',
-  'Kimi K2 (Moonshot)',
-  'free',
-  { promptPer1M: 0, completionPer1M: 0 },
-  false
-);
-
-// (Moved to PREMIUM tier - see below)
-
-// 10. (Kept) Gemma 3 27B - Google (Free)
-// Already defined above as Gemma3_27BProvider
+// Note: Removed 3 models that consistently fail with 404 errors:
+// - llama-3.1-405b-free (ModelRun gateway not configured)
+// - gpt-oss-20b-free (Data policy error)
+// - kimi-k2-free (Data policy error)
 
 // ============================================================================
 // TIER 2: ULTRA-BUDGET LOGIC (8)
@@ -425,55 +392,58 @@ export const Gemini3FlashPreviewProvider = new OpenRouterProvider(
 // ============================================================================
 
 export const OPENROUTER_PROVIDERS = [
-  // TIER 1: FREE (8)
+  // TIER 1: FREE (5) - Removed 3 models with persistent 404 errors
   Llama33_70B_FreeProvider,      // 1  - FREE - Meta
   Gemini20FlashExpProvider,      // 2  - FREE - Google
   Gemma3_27BProvider,            // 3  - FREE - Google
   Devstral2512Provider,          // 4  - FREE - Mistral
-  Qwen3_4BFreeProvider,          // 5  - FREE - Alibaba
-  Llama31_405B_FreeProvider,     // 6  - FREE - Meta
-  GPTOSS20BFreeProvider,         // 7  - FREE - OpenAI
-  KimiK2FreeProvider,            // 8  - FREE - Moonshot
+  Qwen3_4BFreeProvider,          // 5  - FREE - Alibaba (may have temp rate limits)
   
   // TIER 2: ULTRA-BUDGET (8)
-  Llama32_3BProvider,            // 9  - $0.02/$0.02 - Meta
-  Gemma3_4BProvider,             // 10 - $0.02/$0.07 - Google
-  Mistral7BProvider,             // 11 - $0.20/$0.20 - Mistral
-  Qwen25_7BProvider,             // 12 - $0.04/$0.10 - Alibaba
-  Qwen25Coder32BProvider,        // 13 - $0.03/$0.11 - Alibaba
-  CommandR7BProvider,            // 14 - $0.04/$0.15 - Cohere
-  Gemini25FlashLiteProvider,     // 15 - $0.10/$0.40 - Google
-  GPT41NanoProvider,             // 16 - $0.10/$0.40 - OpenAI
+  Llama32_3BProvider,            // 6  - $0.02/$0.02 - Meta
+  Gemma3_4BProvider,             // 7  - $0.02/$0.07 - Google
+  Mistral7BProvider,             // 8  - $0.20/$0.20 - Mistral
+  Qwen25_7BProvider,             // 9  - $0.04/$0.10 - Alibaba
+  Qwen25Coder32BProvider,        // 10 - $0.03/$0.11 - Alibaba
+  CommandR7BProvider,            // 11 - $0.04/$0.15 - Cohere
+  Gemini25FlashLiteProvider,     // 12 - $0.10/$0.40 - Google
+  GPT41NanoProvider,             // 13 - $0.10/$0.40 - OpenAI
   
   // TIER 3: BUDGET (7)
-  Llama33_70BProvider,           // 17 - $0.10/$0.32 - Meta
-  Llama4ScoutProvider,           // 18 - $0.08/$0.30 - Meta
-  DeepSeekV32Provider,           // 19 - $0.25/$0.38 - DeepSeek
-  DeepSeekV31Provider,           // 20 - $0.15/$0.75 - DeepSeek
-  MistralSabaProvider,           // 21 - $0.20/$0.60 - Mistral
-  CommandRProvider,              // 22 - $0.15/$0.60 - Cohere
-  OLMo3_7BProvider,              // 23 - $0.10/$0.20 - AllenAI
+  Llama33_70BProvider,           // 14 - $0.10/$0.32 - Meta
+  Llama4ScoutProvider,           // 15 - $0.08/$0.30 - Meta
+  DeepSeekV32Provider,           // 16 - $0.25/$0.38 - DeepSeek
+  DeepSeekV31Provider,           // 17 - $0.15/$0.75 - DeepSeek
+  MistralSabaProvider,           // 18 - $0.20/$0.60 - Mistral
+  CommandRProvider,              // 19 - $0.15/$0.60 - Cohere
+  OLMo3_7BProvider,              // 20 - $0.10/$0.20 - AllenAI
   
   // TIER 4: PREMIUM (7)
-  Llama31_405BProvider,          // 24 - $3.50/$3.50 - Meta
-  MistralLarge2Provider,         // 25 - $2.00/$6.00 - Mistral
-  CommandRPlusProvider,          // 26 - $2.50/$10.00 - Cohere
-  ClaudeHaiku45Provider,         // 27 - $1.00/$5.00 - Anthropic
-  Grok41FastProvider,            // 28 - $0.20/$0.50 - xAI
-  Llama4MaverickProvider,        // 29 - $0.15/$0.60 - Meta
-  Gemini3FlashPreviewProvider,   // 30 - $0.50/$3.00 - Google
+  Llama31_405BProvider,          // 21 - $3.50/$3.50 - Meta (paid version)
+  MistralLarge2Provider,         // 22 - $2.00/$6.00 - Mistral
+  CommandRPlusProvider,          // 23 - $2.50/$10.00 - Cohere
+  ClaudeHaiku45Provider,         // 24 - $1.00/$5.00 - Anthropic
+  Grok41FastProvider,            // 25 - $0.20/$0.50 - xAI
+  Llama4MaverickProvider,        // 26 - $0.15/$0.60 - Meta
+  Gemini3FlashPreviewProvider,   // 27 - $0.50/$3.00 - Google
 ];
 
 // ============================================================================
 // Summary (Updated January 2025):
-// - 8 FREE models (no cost) from 6 providers
+// - 5 FREE models (no cost) from 4 providers
 // - 8 ULTRA-BUDGET models ($0.02-$0.40 per 1M tokens)
 // - 7 BUDGET models ($0.08-$0.75 per 1M tokens)
 // - 7 PREMIUM models ($0.15-$5.00 per 1M tokens)
-// - Mix of open-source and proprietary models (OpenAI, Google, Anthropic, xAI)
-// - Provider diversity: 12 different providers, max 6 from any single provider (Meta)
+// - Total: 27 models (down from 30, removed 3 with persistent 404 errors)
+// - Mix of open-source and proprietary models (Google, Anthropic, xAI)
+// - Provider diversity: 9 different providers, max 6 from any single provider (Meta)
 // - All non-reasoning models (no o1, o3, r1, thinking models)
-// - All model IDs verified against OpenRouter API as of January 21, 2025
+// - Model IDs verified against OpenRouter API as of January 22, 2026
+// 
+// Removed models (persistent failures):
+// - llama-3.1-405b-free (404 ModelRun gateway error)
+// - gpt-oss-20b-free (404 data policy error)
+// - kimi-k2-free (404 data policy error)
 // 
 // Estimated monthly cost at 25 matches/day: ~$5.40/month
 // 
