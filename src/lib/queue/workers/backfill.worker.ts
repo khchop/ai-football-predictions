@@ -41,6 +41,26 @@ export function createBackfillWorker() {
           if (!match.externalId) continue;
           
           try {
+            // Check for failed jobs with same match ID and remove them
+            // This allows us to retry with new configuration (5 attempts, 30s backoff, null safety)
+            const oldJobIds = [
+              `analyze-${match.id}`,
+              `backfill-analyze-${match.id}`,
+            ];
+            
+            for (const oldJobId of oldJobIds) {
+              try {
+                const oldJob = await analysisQueue.getJob(oldJobId);
+                if (oldJob && await oldJob.isFailed()) {
+                  await oldJob.remove();
+                  console.log(`[Backfill Worker] Removed failed job ${oldJobId} for retry`);
+                }
+              } catch (err) {
+                // Job doesn't exist, that's fine
+              }
+            }
+            
+            // Create new job with timestamp to avoid ID collision
             await analysisQueue.add(
               JOB_TYPES.ANALYZE_MATCH,
               {
@@ -51,7 +71,7 @@ export function createBackfillWorker() {
               },
               {
                 delay: 1000,
-                jobId: `backfill-analyze-${match.id}`,
+                jobId: `backfill-analyze-${match.id}-${Date.now()}`,
               }
             );
             results.analysisTriggered++;
@@ -69,6 +89,28 @@ export function createBackfillWorker() {
           if (!match.externalId) continue;
           
           try {
+            // Check for failed odds jobs and remove them
+            const oldOddsJobIds = [
+              `refresh-odds-2h-${match.id}`,
+              `refresh-odds-95m-${match.id}`,
+              `refresh-odds-35m-${match.id}`,
+              `refresh-odds-10m-${match.id}`,
+              `backfill-odds-${match.id}`,
+            ];
+            
+            for (const oldJobId of oldOddsJobIds) {
+              try {
+                const oldJob = await oddsQueue.getJob(oldJobId);
+                if (oldJob && await oldJob.isFailed()) {
+                  await oldJob.remove();
+                  console.log(`[Backfill Worker] Removed failed odds job ${oldJobId} for retry`);
+                }
+              } catch (err) {
+                // Job doesn't exist, that's fine
+              }
+            }
+            
+            // Create new odds job with timestamp
             await oddsQueue.add(
               JOB_TYPES.REFRESH_ODDS,
               {
@@ -77,7 +119,7 @@ export function createBackfillWorker() {
               },
               {
                 delay: 1000,
-                jobId: `backfill-odds-${match.id}`,
+                jobId: `backfill-odds-${match.id}-${Date.now()}`,
               }
             );
             results.oddsTriggered++;
