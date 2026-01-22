@@ -719,24 +719,6 @@ export async function updateModelBalanceAfterBets(
     );
 }
 
-  return db
-    .update(modelBalances)
-    .set({
-      currentBalance: (balance.currentBalance || 0) + amountChange,
-      totalWagered: (balance.totalWagered || 0) + (amountChange < 0 ? Math.abs(amountChange) : 0),
-      totalWon: (balance.totalWon || 0) + (amountChange > 0 ? amountChange : 0),
-      totalBets: (balance.totalBets || 0) + betsCount,
-      winningBets: (balance.winningBets || 0) + winsCount,
-      updatedAt: new Date().toISOString(),
-    })
-    .where(
-      and(
-        eq(modelBalances.modelId, modelId),
-        eq(modelBalances.season, season)
-      )
-    );
-}
-
 // Get model betting history
 export async function getModelBettingHistory(
   modelId: string,
