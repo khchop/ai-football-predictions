@@ -7,6 +7,7 @@ import type { MatchAnalysis } from '@/lib/db/schema';
 export function getResultOdds(analysis: MatchAnalysis, selection: string): number | null {
   const oddsMap: Record<string, string | null> = {
     '1': analysis.oddsHome,
+    'X': analysis.oddsDraw,
     '2': analysis.oddsAway,
     '1X': analysis.odds1X,
     'X2': analysis.oddsX2,

@@ -10,6 +10,13 @@ export type {
   NewPrediction,
   MatchAnalysis,
   NewMatchAnalysis,
+  // Betting system types
+  Season,
+  NewSeason,
+  ModelBalance,
+  NewModelBalance,
+  Bet,
+  NewBet,
 } from '@/lib/db/schema';
 
 // Match with related data

@@ -15,9 +15,8 @@ import {
   clearPredictionAttemptsBatch,
   // Betting system
   getCurrentSeason,
-  getModelBalance,
-  createBets,
-  updateModelBalanceAfterBets,
+  getOrCreateModelBalance,
+  createBetsWithBalanceUpdate,
 } from '@/lib/db/queries';
 import { getActiveProviders, ALL_PROVIDERS, OpenRouterProvider } from '@/lib/llm';
 import { shouldSkipProvider, recordPredictionCost, getBudgetStatus } from '@/lib/llm/budget';
@@ -413,6 +412,9 @@ async function processModelPredictions(
         // Get current season name
         const seasonName = await getCurrentSeason();
 
+        // Ensure model balance exists (lazy initialization)
+        await getOrCreateModelBalance(provider.id, seasonName);
+
         // Collect bets for batch insert
         const betsToInsert: NewBet[] = [];
         const attemptsToClean: Array<{ matchId: string; modelId: string }> = [];
@@ -498,11 +500,9 @@ async function processModelPredictions(
           }
         }
 
-        // Batch save all bets and update balance
+        // Batch save all bets and update balance (atomic transaction)
         if (betsToInsert.length > 0) {
-          await createBets(betsToInsert);
-          // Deduct stake from balance (negative amount, no wins yet)
-          await updateModelBalanceAfterBets(provider.id, seasonName, -totalStake, betsToInsert.length, 0);
+          await createBetsWithBalanceUpdate(betsToInsert, provider.id, seasonName, totalStake);
           await clearPredictionAttemptsBatch(attemptsToClean);
           successfulPredictions += attemptsToClean.length; // Count successful matches
         }

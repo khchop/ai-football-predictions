@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { NewCompetition, NewMatch, NewModel, NewPrediction, Match, MatchAnalysis, NewMatchAnalysis, Model, Competition, NewBet, Bet, ModelBalance, NewModelBalance } from './schema';
 import type { ScoringBreakdown, EnhancedLeaderboardEntry } from '@/types';
 import { withCache, cacheKeys, CACHE_TTL, cacheDelete } from '@/lib/cache/redis';
+import { BETTING_CONSTANTS } from '@/lib/betting/constants';
 
 // ============= COMPETITIONS =============
 
@@ -1832,6 +1833,40 @@ export async function getModelBalance(modelId: string, season: string): Promise<
   return result[0] || null;
 }
 
+// Get or create model balance (lazy initialization)
+export async function getOrCreateModelBalance(modelId: string, season: string): Promise<ModelBalance> {
+  const db = getDb();
+  
+  // Try to get existing balance
+  let balance = await getModelBalance(modelId, season);
+  
+  if (!balance) {
+    // Create new balance with defaults
+    const newBalance: NewModelBalance = {
+      id: crypto.randomUUID(),
+      modelId,
+      season,
+      startingBalance: BETTING_CONSTANTS.STARTING_BALANCE,
+      currentBalance: BETTING_CONSTANTS.STARTING_BALANCE,
+      totalWagered: 0,
+      totalWon: 0,
+      totalBets: 0,
+      winningBets: 0,
+    };
+    
+    await db.insert(modelBalances).values(newBalance).onConflictDoNothing();
+    
+    // Fetch the created/existing balance
+    balance = await getModelBalance(modelId, season);
+    
+    if (!balance) {
+      throw new Error(`Failed to create balance for model ${modelId} in season ${season}`);
+    }
+  }
+  
+  return balance;
+}
+
 // Create or update model balance
 export async function upsertModelBalance(data: NewModelBalance) {
   const db = getDb();
@@ -1898,6 +1933,49 @@ export async function getPendingBetsByMatch(matchId: string): Promise<Bet[]> {
     );
 }
 
+// Create bets and update balance atomically (transaction)
+export async function createBetsWithBalanceUpdate(
+  betsData: NewBet[],
+  modelId: string,
+  season: string,
+  totalStake: number
+) {
+  const db = getDb();
+  
+  return db.transaction(async (tx) => {
+    // Verify balance exists
+    const balanceResult = await tx
+      .select()
+      .from(modelBalances)
+      .where(and(
+        eq(modelBalances.modelId, modelId),
+        eq(modelBalances.season, season)
+      ))
+      .limit(1);
+    
+    if (!balanceResult[0]) {
+      throw new Error(`No balance found for model ${modelId} in season ${season}`);
+    }
+    
+    // Insert all bets
+    await tx.insert(bets).values(betsData);
+    
+    // Update balance with atomic SQL operations
+    await tx
+      .update(modelBalances)
+      .set({
+        currentBalance: sql`${modelBalances.currentBalance} - ${totalStake}`,
+        totalWagered: sql`${modelBalances.totalWagered} + ${totalStake}`,
+        totalBets: sql`${modelBalances.totalBets} + ${betsData.length}`,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(and(
+        eq(modelBalances.modelId, modelId),
+        eq(modelBalances.season, season)
+      ));
+  });
+}
+
 // Update bet outcome
 export async function settleBet(
   betId: string,
@@ -1915,6 +1993,51 @@ export async function settleBet(
       settledAt: new Date().toISOString(),
     })
     .where(eq(bets.id, betId));
+}
+
+// Settle multiple bets and update balances atomically (transaction)
+export async function settleBetsTransaction(
+  betsToSettle: Array<{
+    betId: string;
+    status: 'won' | 'lost' | 'void';
+    payout: number;
+    profit: number;
+  }>,
+  balanceUpdates: Map<string, { totalPayout: number; winsCount: number }>,
+  season: string
+) {
+  const db = getDb();
+  
+  return db.transaction(async (tx) => {
+    // Update all bets
+    for (const bet of betsToSettle) {
+      await tx
+        .update(bets)
+        .set({
+          status: bet.status,
+          payout: bet.payout,
+          profit: bet.profit,
+          settledAt: new Date().toISOString(),
+        })
+        .where(eq(bets.id, bet.betId));
+    }
+    
+    // Update all model balances
+    for (const [modelId, update] of balanceUpdates) {
+      await tx
+        .update(modelBalances)
+        .set({
+          currentBalance: sql`${modelBalances.currentBalance} + ${update.totalPayout}`,
+          totalWon: sql`${modelBalances.totalWon} + ${update.totalPayout}`,
+          winningBets: sql`${modelBalances.winningBets} + ${update.winsCount}`,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(and(
+          eq(modelBalances.modelId, modelId),
+          eq(modelBalances.season, season)
+        ));
+    }
+  });
 }
 
 // Update model balance after bets

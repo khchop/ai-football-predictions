@@ -626,8 +626,6 @@ export default async function MatchPage({ params }: MatchPageProps) {
             predictions={predictionsWithPoints}
             homeTeam={match.homeTeam}
             awayTeam={match.awayTeam}
-            actualHomeScore={match.homeScore}
-            actualAwayScore={match.awayScore}
             isFinished={isFinished}
           />
         </CardContent>

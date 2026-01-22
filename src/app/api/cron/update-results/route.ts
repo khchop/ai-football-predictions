@@ -4,8 +4,7 @@ import {
   getFinishedMatchesWithUnscoredPredictions, 
   updateMatchResult,
   getPendingBetsByMatch,
-  settleBet,
-  updateModelBalanceAfterBets,
+  settleBetsTransaction,
   getCurrentSeason,
 } from '@/lib/db/queries';
 import { getFinishedFixtures, mapFixtureStatus } from '@/lib/football/api-football';
@@ -36,12 +35,18 @@ async function settleBetsForMatch(
 
   console.log(`  Settling ${pendingBets.length} pending bets...`);
 
-  let settledCount = 0;
+  const betsToSettle: Array<{
+    betId: string;
+    status: 'won' | 'lost' | 'void';
+    payout: number;
+    profit: number;
+  }> = [];
+
   let wonCount = 0;
   let lostCount = 0;
 
   // Group bets by model to batch balance updates
-  const balanceUpdates = new Map<string, { totalPayout: number; betsCount: number; winsCount: number }>();
+  const balanceUpdates = new Map<string, { totalPayout: number; winsCount: number }>();
 
   for (const bet of pendingBets) {
     let won = false;
@@ -58,7 +63,14 @@ async function settleBetsForMatch(
         won = evaluateBttsBet(bet.selection, homeScore, awayScore);
         break;
       default:
-        console.error(`Unknown bet type: ${bet.betType}`);
+        console.error(`Unknown bet type: ${bet.betType}, marking as void`);
+        // Mark invalid bet type as void
+        betsToSettle.push({
+          betId: bet.id,
+          status: 'void',
+          payout: 0,
+          profit: 0,
+        });
         continue;
     }
 
@@ -66,9 +78,13 @@ async function settleBetsForMatch(
     const profit = calculateProfit(bet.stake || 1.0, payout);
     const status = won ? 'won' : 'lost';
 
-    // Settle the bet
-    await settleBet(bet.id, status, payout, profit);
-    settledCount++;
+    // Queue bet for settlement
+    betsToSettle.push({
+      betId: bet.id,
+      status,
+      payout,
+      profit,
+    });
 
     if (won) {
       wonCount++;
@@ -78,28 +94,19 @@ async function settleBetsForMatch(
 
     // Accumulate balance updates per model
     if (!balanceUpdates.has(bet.modelId)) {
-      balanceUpdates.set(bet.modelId, { totalPayout: 0, betsCount: 0, winsCount: 0 });
+      balanceUpdates.set(bet.modelId, { totalPayout: 0, winsCount: 0 });
     }
     const update = balanceUpdates.get(bet.modelId)!;
     update.totalPayout += payout;
-    update.betsCount++;
     if (won) update.winsCount++;
   }
 
-  // Apply balance updates in batch per model
-  for (const [modelId, update] of balanceUpdates) {
-    await updateModelBalanceAfterBets(
-      modelId,
-      seasonName,
-      update.totalPayout, // Add winnings to balance
-      0, // Don't increment bet count (already done when placing bets)
-      update.winsCount
-    );
-  }
+  // Settle all bets and update balances in a single transaction
+  await settleBetsTransaction(betsToSettle, balanceUpdates, seasonName);
 
   console.log(`  Settled: ${wonCount} won, ${lostCount} lost`);
 
-  return { settled: settledCount, won: wonCount, lost: lostCount };
+  return { settled: betsToSettle.length, won: wonCount, lost: lostCount };
 }
 
 export async function POST(request: NextRequest) {

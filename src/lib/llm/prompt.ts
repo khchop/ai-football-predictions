@@ -14,11 +14,13 @@ BETTING RULES:
 - Goal: Maximize profit through smart risk/reward decisions
 
 BET TYPES (all required):
-1. RESULT: Choose ONE of 1, 2, 1X, or X2
+1. RESULT: Choose ONE of 1, X, 2, 1X, X2, or 12
    - 1 = Home win
+   - X = Draw
    - 2 = Away win
    - 1X = Home win OR draw (safer, lower odds)
    - X2 = Away win OR draw (safer, lower odds)
+   - 12 = Home win OR away win (no draw)
 
 2. OVER/UNDER: Choose ONE line (e.g., O2.5, U1.5)
    - Pick the line and direction with best risk/reward
@@ -264,7 +266,7 @@ BETTING RULES:
 - Goal: Maximize profit
 
 BET TYPES (all required per match):
-1. RESULT: 1, 2, 1X, or X2
+1. RESULT: 1, X, 2, 1X, X2, or 12
 2. OVER/UNDER: O0.5, U0.5, O1.5, U1.5, O2.5, U2.5, O3.5, U3.5, O4.5, U4.5
 3. BTTS: Yes or No
 

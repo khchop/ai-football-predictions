@@ -2,9 +2,9 @@ import { Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BettingLeaderboardTable } from '@/components/betting-leaderboard-table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getBettingLeaderboard } from '@/lib/db/queries';
-import { Trophy, Table, TrendingUp } from 'lucide-react';
+import { BETTING_CONSTANTS } from '@/lib/betting/constants';
+import { Trophy } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,17 +78,17 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
         <h2 className="text-sm font-medium text-muted-foreground mb-4">Betting System</h2>
         <div className="grid sm:grid-cols-4 gap-3">
           <div className="rounded-lg bg-primary/10 border border-primary/20 p-3 text-center">
-            <p className="text-2xl font-bold text-primary">€1,000</p>
+            <p className="text-2xl font-bold text-primary">€{BETTING_CONSTANTS.STARTING_BALANCE.toFixed(0)}</p>
             <p className="text-xs font-medium mt-1">Starting Balance</p>
             <p className="text-xs text-muted-foreground">Per model</p>
           </div>
           <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-3 text-center">
-            <p className="text-2xl font-bold text-blue-400">3</p>
+            <p className="text-2xl font-bold text-blue-400">{BETTING_CONSTANTS.BETS_PER_MATCH}</p>
             <p className="text-xs font-medium mt-1">Bets Per Match</p>
             <p className="text-xs text-muted-foreground">Result, O/U, BTTS</p>
           </div>
           <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-3 text-center">
-            <p className="text-2xl font-bold text-green-400">€1</p>
+            <p className="text-2xl font-bold text-green-400">€{BETTING_CONSTANTS.STAKE_PER_BET.toFixed(0)}</p>
             <p className="text-xs font-medium mt-1">Stake Per Bet</p>
             <p className="text-xs text-muted-foreground">Fixed amount</p>
           </div>

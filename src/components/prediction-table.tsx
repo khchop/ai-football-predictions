@@ -28,8 +28,6 @@ interface PredictionTableProps {
   predictions: Prediction[];
   homeTeam: string;
   awayTeam: string;
-  actualHomeScore?: number | null;
-  actualAwayScore?: number | null;
   isFinished: boolean;
 }
 
