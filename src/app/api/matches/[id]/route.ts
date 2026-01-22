@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMatchWithAnalysis, getBetsForMatchWithDetails } from '@/lib/db/queries';
+import { getMatchWithAnalysis, getPredictionsForMatchWithDetails } from '@/lib/db/queries';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 
 // UUID regex for validation
@@ -45,8 +45,8 @@ export async function GET(
 
     const { match, competition, analysis } = result;
 
-    // Fetch bets for this match
-    const bets = await getBetsForMatchWithDetails(id);
+    // Fetch predictions for this match
+    const predictions = await getPredictionsForMatchWithDetails(id);
 
     return NextResponse.json(
       {
@@ -121,21 +121,21 @@ export async function GET(
           homeCoach: analysis.homeCoach,
           awayCoach: analysis.awayCoach,
         } : null,
-        predictions: [], // Legacy - removed
-        bets: bets.map(bet => ({
-          id: bet.betId,
-          modelId: bet.modelId,
-          modelDisplayName: bet.modelDisplayName,
-          provider: bet.provider,
-          betType: bet.betType,
-          selection: bet.selection,
-          odds: bet.odds,
-          stake: bet.stake,
-          status: bet.status,
-          payout: bet.payout,
-          profit: bet.profit,
-          createdAt: bet.createdAt,
-          settledAt: bet.settledAt,
+        predictions: predictions.map(pred => ({
+          id: pred.predictionId,
+          modelId: pred.modelId,
+          modelDisplayName: pred.modelDisplayName,
+          provider: pred.provider,
+          predictedHome: pred.predictedHome,
+          predictedAway: pred.predictedAway,
+          predictedResult: pred.predictedResult,
+          tendencyPoints: pred.tendencyPoints,
+          goalDiffBonus: pred.goalDiffBonus,
+          exactScoreBonus: pred.exactScoreBonus,
+          totalPoints: pred.totalPoints,
+          status: pred.status,
+          createdAt: pred.createdAt,
+          scoredAt: pred.scoredAt,
         })),
       },
       { headers: createRateLimitHeaders(rateLimitResult) }

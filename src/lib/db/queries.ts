@@ -983,21 +983,21 @@ export async function getOverallStats() {
         SELECT 
           (SELECT COUNT(*) FROM matches)::int as total_matches,
           (SELECT COUNT(*) FROM matches WHERE status = 'finished')::int as finished_matches,
-          (SELECT COUNT(*) FROM bets)::int as total_bets,
+          (SELECT COUNT(*) FROM predictions)::int as total_predictions,
           (SELECT COUNT(*) FROM models WHERE active = true)::int as active_models
       `);
       
       const row = result.rows[0] as {
         total_matches: number;
         finished_matches: number;
-        total_bets: number;
+        total_predictions: number;
         active_models: number;
       };
       
       return {
         totalMatches: row?.total_matches || 0,
         finishedMatches: row?.finished_matches || 0,
-        totalPredictions: row?.total_bets || 0, // Changed to use bets
+        totalPredictions: row?.total_predictions || 0,
         activeModels: row?.active_models || 0,
       };
     }
@@ -1112,57 +1112,14 @@ export async function getMatchesMissingLineups(hoursAhead: number = 2): Promise<
 }
 
 // Get matches missing bets (has lineups, < X hours to kickoff, no bets)
+// Deprecated: Use getMatchesMissingPredictions instead
 export async function getMatchesMissingBets(hoursAhead: number = 2): Promise<Match[]> {
-  const db = getDb();
-  const now = new Date();
-  const future = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
-  
-  const results = await db
-    .select({ match: matches })
-    .from(matches)
-    .innerJoin(matchAnalysis, eq(matches.id, matchAnalysis.matchId))
-    .leftJoin(bets, eq(matches.id, bets.matchId))
-    .where(
-      and(
-        eq(matches.status, 'scheduled'),
-        gte(matches.kickoffTime, now.toISOString()),
-        lte(matches.kickoffTime, future.toISOString()),
-        eq(matchAnalysis.lineupsAvailable, true), // Has lineups
-        isNull(bets.id) // No bets yet
-      )
-    )
-    .groupBy(matches.id, matches.externalId, matches.competitionId, matches.homeTeam, 
-             matches.awayTeam, matches.homeTeamLogo, matches.awayTeamLogo, matches.kickoffTime,
-             matches.homeScore, matches.awayScore, matches.status, matches.matchMinute, 
-             matches.round, matches.venue, matches.isUpset, matches.quotaHome, matches.quotaDraw,
-             matches.quotaAway, matches.createdAt, matches.updatedAt)
-    .orderBy(matches.kickoffTime);
-  
-  return results.map(r => r.match);
+  return getMatchesMissingPredictions(hoursAhead);
 }
 
-// Get finished matches with pending bets (need settlement)
+// Deprecated: Use getMatchesNeedingScoring instead
 export async function getMatchesNeedingSettlement(): Promise<Match[]> {
-  const db = getDb();
-  
-  const results = await db
-    .select({ match: matches })
-    .from(matches)
-    .innerJoin(bets, eq(matches.id, bets.matchId))
-    .where(
-      and(
-        eq(matches.status, 'finished'),
-        eq(bets.status, 'pending') // Bets not yet settled
-      )
-    )
-    .groupBy(matches.id, matches.externalId, matches.competitionId, matches.homeTeam, 
-             matches.awayTeam, matches.homeTeamLogo, matches.awayTeamLogo, matches.kickoffTime,
-             matches.homeScore, matches.awayScore, matches.status, matches.matchMinute, 
-             matches.round, matches.venue, matches.isUpset, matches.quotaHome, matches.quotaDraw,
-             matches.quotaAway, matches.createdAt, matches.updatedAt)
-    .orderBy(desc(matches.kickoffTime));
-  
-  return results.map(r => r.match);
+  return getMatchesNeedingScoring();
 }
 
 // ============= ADDITIONAL QUERIES =============
@@ -1191,6 +1148,33 @@ export async function getBetsForMatch(matchId: string) {
 }
 
 // ============= PREDICTIONS SYSTEM (Kicktipp Quota Scoring) =============
+
+// Get predictions for a match with model details
+export async function getPredictionsForMatchWithDetails(matchId: string) {
+  const db = getDb();
+  
+  return db
+    .select({
+      predictionId: predictions.id,
+      modelId: predictions.modelId,
+      modelDisplayName: models.displayName,
+      provider: models.provider,
+      predictedHome: predictions.predictedHome,
+      predictedAway: predictions.predictedAway,
+      predictedResult: predictions.predictedResult,
+      tendencyPoints: predictions.tendencyPoints,
+      goalDiffBonus: predictions.goalDiffBonus,
+      exactScoreBonus: predictions.exactScoreBonus,
+      totalPoints: predictions.totalPoints,
+      status: predictions.status,
+      createdAt: predictions.createdAt,
+      scoredAt: predictions.scoredAt,
+    })
+    .from(predictions)
+    .innerJoin(models, eq(predictions.modelId, models.id))
+    .where(eq(predictions.matchId, matchId))
+    .orderBy(desc(predictions.totalPoints), models.displayName);
+}
 
 // Create a single prediction
 export async function createPrediction(data: NewPrediction) {
@@ -1319,24 +1303,29 @@ export async function getMatchesMissingPredictions(hoursAhead: number = 2): Prom
   const now = new Date();
   const targetTime = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
   
-  // Get scheduled matches in the time window that don't have predictions
-  const matchesWithPredictions = db
-    .select({ matchId: predictions.matchId })
-    .from(predictions)
-    .groupBy(predictions.matchId);
-  
-  return db
-    .select()
+  // Find matches with analysis and lineups but no predictions
+  const results = await db
+    .select({ match: matches })
     .from(matches)
+    .innerJoin(matchAnalysis, eq(matches.id, matchAnalysis.matchId))
+    .leftJoin(predictions, eq(matches.id, predictions.matchId))
     .where(
       and(
         eq(matches.status, 'scheduled'),
-        sql`${matches.kickoffTime} <= ${targetTime.toISOString()}`,
-        sql`${matches.kickoffTime} > ${now.toISOString()}`,
-        notInArray(matches.id, matchesWithPredictions)
+        gte(matches.kickoffTime, now.toISOString()),
+        lte(matches.kickoffTime, targetTime.toISOString()),
+        eq(matchAnalysis.lineupsAvailable, true), // Has lineups
+        isNull(predictions.id) // No predictions yet
       )
     )
+    .groupBy(matches.id, matches.externalId, matches.competitionId, matches.homeTeam, 
+             matches.awayTeam, matches.homeTeamLogo, matches.awayTeamLogo, matches.kickoffTime,
+             matches.homeScore, matches.awayScore, matches.status, matches.matchMinute, 
+             matches.round, matches.venue, matches.isUpset, matches.quotaHome, matches.quotaDraw,
+             matches.quotaAway, matches.slug, matches.createdAt, matches.updatedAt)
     .orderBy(matches.kickoffTime);
+  
+  return results.map(r => r.match);
 }
 
 // Get finished matches with pending predictions (need scoring)

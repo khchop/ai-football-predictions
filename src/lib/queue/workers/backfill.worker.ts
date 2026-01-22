@@ -14,8 +14,8 @@ import {
   getMatchesMissingAnalysis,
   getMatchesMissingOdds,
   getMatchesMissingLineups,
-  getMatchesMissingBets,
-  getMatchesNeedingSettlement,
+  getMatchesMissingPredictions,
+  getMatchesNeedingScoring,
 } from '@/lib/db/queries';
 
 export function createBackfillWorker() {
@@ -30,8 +30,8 @@ export function createBackfillWorker() {
         analysisTriggered: 0,
         oddsTriggered: 0,
         lineupsTriggered: 0,
-        betsTriggered: 0,
-        settlementsTriggered: 0,
+        predictionsTriggered: 0,
+        scoringsTriggered: 0,
         errors: [] as string[],
       };
       
@@ -179,10 +179,10 @@ export function createBackfillWorker() {
           }
         }
         
-        // 4. Find matches missing bets (next 2h, has lineups, no bets)
-        const missingBets = await getMatchesMissingBets(2);
+        // 4. Find matches missing predictions (next 2h, has lineups, no predictions)
+        const missingPredictions = await getMatchesMissingPredictions(2);
         
-        for (const match of missingBets) {
+        for (const match of missingPredictions) {
           try {
             // Check for failed prediction jobs and remove them
             const oldPredictJobIds = [
@@ -219,7 +219,7 @@ export function createBackfillWorker() {
                 jobId: `backfill-predict-${match.id}-${Date.now()}`,
               }
             );
-            results.betsTriggered++;
+            results.predictionsTriggered++;
           } catch (error: any) {
             if (!error.message?.includes('already exists')) {
               results.errors.push(`Predict ${match.id}: ${error.message}`);
@@ -227,10 +227,10 @@ export function createBackfillWorker() {
           }
         }
         
-        // 5. Find finished matches with pending bets (need settlement)
-        const needingSettlement = await getMatchesNeedingSettlement();
+        // 5. Find finished matches with pending predictions (need scoring)
+        const needingScoring = await getMatchesNeedingScoring();
         
-        for (const match of needingSettlement) {
+        for (const match of needingScoring) {
           try {
             // Check for failed settlement jobs and remove them
             const oldSettlementJobIds = [
@@ -265,7 +265,7 @@ export function createBackfillWorker() {
                 jobId: `backfill-settle-${match.id}-${Date.now()}`,
               }
             );
-            results.settlementsTriggered++;
+            results.scoringsTriggered++;
           } catch (error: any) {
             if (!error.message?.includes('already exists')) {
               results.errors.push(`Settlement ${match.id}: ${error.message}`);
@@ -275,15 +275,15 @@ export function createBackfillWorker() {
         
         // Log summary
         const total = results.analysisTriggered + results.oddsTriggered + 
-                      results.lineupsTriggered + results.betsTriggered + results.settlementsTriggered;
+                      results.lineupsTriggered + results.predictionsTriggered + results.scoringsTriggered;
         
         if (total > 0 || results.errors.length > 0) {
           console.log(`[Backfill Worker] Triggered ${total} jobs:`, {
             analysis: results.analysisTriggered,
             odds: results.oddsTriggered,
             lineups: results.lineupsTriggered,
-            bets: results.betsTriggered,
-            settlements: results.settlementsTriggered,
+            predictions: results.predictionsTriggered,
+            scorings: results.scoringsTriggered,
           });
           
           if (results.errors.length > 0) {

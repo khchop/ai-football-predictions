@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBettingLeaderboard, getActiveModels } from '@/lib/db/queries';
+import { getLeaderboard, getActiveModels } from '@/lib/db/queries';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 
 export async function GET(request: NextRequest) {
@@ -22,12 +22,12 @@ export async function GET(request: NextRequest) {
     const activeOnlyParam = searchParams.get('activeOnly');
     const activeOnly = activeOnlyParam !== 'false'; // Default true
 
-    // Get betting leaderboard for current season
-    let leaderboard = await getBettingLeaderboard();
+    // Get leaderboard by total points (Kicktipp Quota Scoring)
+    let leaderboard = await getLeaderboard();
 
     // Filter to active models only if requested
     if (activeOnly) {
-      leaderboard = leaderboard.filter(m => m.active);
+      leaderboard = leaderboard.filter(m => m.model.active);
     }
 
     const activeModels = await getActiveModels();
