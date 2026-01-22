@@ -103,13 +103,16 @@ export async function recordPredictionCost(
     });
 }
 
-// Get budget status for display
-export async function getBudgetStatus(): Promise<{
+// Budget status type
+export type BudgetStatus = {
   dailyBudget: number;
   spent: number;
   remaining: number;
   percentUsed: number;
-}> {
+};
+
+// Get budget status for display
+export async function getBudgetStatus(): Promise<BudgetStatus> {
   const dailyBudget = getDailyBudget();
   const spent = await getTodaySpend();
   const remaining = Math.max(0, dailyBudget - spent);

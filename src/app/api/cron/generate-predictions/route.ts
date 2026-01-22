@@ -17,16 +17,18 @@ import {
   getCurrentSeason,
   getOrCreateModelBalance,
   createBetsWithBalanceUpdate,
+  // Batch queries
+  getModelHealthBatch,
 } from '@/lib/db/queries';
 import { getActiveProviders, ALL_PROVIDERS, OpenRouterProvider } from '@/lib/llm';
-import { shouldSkipProvider, recordPredictionCost, getBudgetStatus } from '@/lib/llm/budget';
+import { shouldSkipProvider, recordPredictionCost, getBudgetStatus, type BudgetStatus } from '@/lib/llm/budget';
 import { buildBatchPrompt, BatchMatchContextWithStandings } from '@/lib/football/prompt-builder';
 import { parseBatchBettingResponse, BATCH_SYSTEM_PROMPT } from '@/lib/llm/prompt';
 import { BaseLLMProvider } from '@/lib/llm/providers/base';
 import { validateCronRequest } from '@/lib/auth/cron-auth';
-import type { NewBet } from '@/lib/db/schema';
-import { getStandingByTeamName } from '@/lib/football/standings';
-import { refreshOddsForMatch, getAnalysisForMatch } from '@/lib/football/match-analysis';
+import type { NewBet, Model, MatchAnalysis } from '@/lib/db/schema';
+import { getStandingsForLeagues, getStandingFromMap, type LeagueStanding } from '@/lib/football/standings';
+import { refreshOddsBatch, getAnalysisForMatch } from '@/lib/football/match-analysis';
 import { getBetOdds } from '@/lib/betting/odds-lookup';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -217,12 +219,73 @@ async function generateBetsWithRetry(
   return { result: lastResult!, retryCount };
 }
 
+// Interface for pre-computed shared data
+interface PreComputedMatchData {
+  analysisMap: Map<string, MatchAnalysis>;
+  standingsMap: Map<string, LeagueStanding>;
+  oddsRefreshResults: Map<string, boolean>;
+}
+
+// Pre-compute all shared data ONCE before model processing (CRITICAL OPTIMIZATION)
+async function preComputeMatchData(
+  matches: Awaited<ReturnType<typeof getMatchesReadyForPrediction>>
+): Promise<PreComputedMatchData> {
+  console.log('\n=== Pre-computing shared match data ===');
+  
+  const matchIds = matches.map(m => m.match.id);
+  const fixtureIds = matches
+    .filter(m => m.match.externalId)
+    .map(m => ({
+      matchId: m.match.id,
+      fixtureId: parseInt(m.match.externalId!, 10),
+    }));
+  
+  // Collect unique league IDs
+  const leagueIds = [...new Set(
+    matches
+      .map(m => m.competition.apiFootballId)
+      .filter((id): id is number => id !== null)
+  )];
+  
+  // 1. Refresh odds for ALL matches in parallel (with caching)
+  console.log(`Pre-compute: Refreshing odds for ${fixtureIds.length} matches...`);
+  const oddsRefreshResults = await refreshOddsBatch(fixtureIds);
+  const successfulOdds = [...oddsRefreshResults.values()].filter(v => v).length;
+  console.log(`Pre-compute: Odds refreshed: ${successfulOdds}/${fixtureIds.length}`);
+  
+  // 2. Fetch all analysis data in parallel
+  console.log(`Pre-compute: Fetching analysis for ${matchIds.length} matches...`);
+  const analysisResults = await Promise.all(
+    matchIds.map(async id => ({
+      id,
+      analysis: await getAnalysisForMatch(id),
+    }))
+  );
+  const analysisMap = new Map<string, MatchAnalysis>();
+  for (const { id, analysis } of analysisResults) {
+    if (analysis) analysisMap.set(id, analysis);
+  }
+  console.log(`Pre-compute: Analysis fetched: ${analysisMap.size}/${matchIds.length}`);
+  
+  // 3. Batch-fetch all standings for relevant leagues (1 query)
+  console.log(`Pre-compute: Fetching standings for ${leagueIds.length} leagues...`);
+  const standingsMap = await getStandingsForLeagues(leagueIds);
+  console.log(`Pre-compute: Standings loaded: ${standingsMap.size} teams`);
+  
+  console.log('=== Pre-computation complete ===\n');
+  
+  return { analysisMap, standingsMap, oddsRefreshResults };
+}
+
 // Process predictions for a single model (extracted for parallel execution)
 async function processModelPredictions(
   modelId: string,
   matchesToPredict: string[],
   matchesReadyForPrediction: Awaited<ReturnType<typeof getMatchesReadyForPrediction>>,
   activeProviders: ReturnType<typeof getActiveProviders>,
+  modelHealthMap: Map<string, Model>,  // Pre-fetched model health
+  budgetStatus: BudgetStatus,          // Pre-fetched budget status
+  preComputed: PreComputedMatchData,   // Pre-computed shared data
   startTime: number
 ): Promise<ModelProcessingResult> {
   // Check time budget at start
@@ -251,8 +314,8 @@ async function processModelPredictions(
     };
   }
 
-  // Check if model is auto-disabled
-  const modelHealth = await getModelById(modelId);
+  // Check if model is auto-disabled (use pre-fetched health)
+  const modelHealth = modelHealthMap.get(modelId);
   if (modelHealth?.autoDisabled) {
     console.log(`Skipping ${modelId} - auto-disabled due to consecutive failures`);
     return {
@@ -266,10 +329,9 @@ async function processModelPredictions(
     };
   }
 
-  // Check budget
-  const budgetCheck = await shouldSkipProvider(provider as OpenRouterProvider);
-  if (budgetCheck.skip) {
-    console.log(`Skipping ${modelId} - ${budgetCheck.reason}`);
+  // Check budget (use pre-fetched budget status)
+  if (budgetStatus.percentUsed > 95) {
+    console.log(`Skipping ${modelId} - daily budget exceeded (${budgetStatus.percentUsed.toFixed(1)}%)`);
     return {
       modelId,
       success: false,
@@ -277,7 +339,7 @@ async function processModelPredictions(
       gaveUpPredictions: matchesToPredict.length,
       errors: [],
       skipped: true,
-      reason: budgetCheck.reason,
+      reason: 'budget_exceeded',
     };
   }
 
@@ -311,68 +373,17 @@ async function processModelPredictions(
 
     console.log(`  Batch ${batchIdx + 1}/${batches.length}: ${batchMatches.map(m => `${m.match.homeTeam} vs ${m.match.awayTeam}`).join(', ')}`);
 
-    // Refresh odds for all matches in batch BEFORE betting (in parallel)
-    console.log(`  Refreshing odds for ${batchMatches.length} matches...`);
-    const oddsRefreshPromises = batchMatches.map(async (m) => {
-      if (!m.match.externalId) return { matchId: m.match.id, success: false };
-      
-      try {
-        const fixtureId = parseInt(m.match.externalId, 10);
-        const success = await refreshOddsForMatch(m.match.id, fixtureId);
-        return { matchId: m.match.id, success };
-      } catch (error) {
-        console.error(`  Error refreshing odds for ${m.match.homeTeam} vs ${m.match.awayTeam}:`, error);
-        return { matchId: m.match.id, success: false };
-      }
-    });
-
-    const oddsResults = await Promise.all(oddsRefreshPromises);
-    const successfulOddsRefresh = oddsResults.filter(r => r.success).length;
-    console.log(`  Refreshed odds: ${successfulOddsRefresh}/${batchMatches.length} successful`);
-
-    // Reload analysis data to get fresh odds
-    const freshAnalysisPromises = batchMatches.map(async (m) => {
-      const freshAnalysis = await getAnalysisForMatch(m.match.id);
-      return { matchId: m.match.id, analysis: freshAnalysis };
-    });
-    const freshAnalysisResults = await Promise.all(freshAnalysisPromises);
-    const analysisMap = new Map(freshAnalysisResults.map(a => [a.matchId, a.analysis]));
-    
-    // Update batchMatches with fresh analysis containing new odds
-    const batchMatchesWithFreshOdds = batchMatches.map(m => ({
+    // Use pre-computed data (NO API CALLS, NO DB QUERIES!)
+    // Update batchMatches with pre-computed analysis
+    const batchMatchesWithData = batchMatches.map(m => ({
       ...m,
-      analysis: analysisMap.get(m.match.id) || m.analysis,
+      analysis: preComputed.analysisMap.get(m.match.id) || m.analysis,
     }));
 
-    // Fetch standings for all matches in batch (in parallel)
-    const standingsPromises = batchMatchesWithFreshOdds.map(async (m) => {
-      const leagueId = m.competition.apiFootballId;
-      if (!leagueId) return { matchId: m.match.id, homeStanding: null, awayStanding: null };
-      
-      try {
-        const [homeStanding, awayStanding] = await Promise.all([
-          getStandingByTeamName(m.match.homeTeam, leagueId),
-          getStandingByTeamName(m.match.awayTeam, leagueId),
-        ]);
-        
-        return {
-          matchId: m.match.id,
-          homeStanding,
-          awayStanding,
-        };
-      } catch (error) {
-        console.error(`  Error fetching standings for ${m.match.homeTeam} vs ${m.match.awayTeam}:`, error);
-        return { matchId: m.match.id, homeStanding: null, awayStanding: null };
-      }
-    });
-
-    const standingsResults = await Promise.all(standingsPromises);
-    const standingsMap = new Map(standingsResults.map(s => [s.matchId, { home: s.homeStanding, away: s.awayStanding }]));
-
-    // Build batch prompt with standings and fresh odds
+    // Build batch prompt with pre-computed standings and odds
     const batchPrompt = buildBatchPrompt(
-      batchMatchesWithFreshOdds.map(m => {
-        const standings = standingsMap.get(m.match.id);
+      batchMatchesWithData.map(m => {
+        const leagueId = m.competition.apiFootballId;
         return {
           matchId: m.match.id,
           homeTeam: m.match.homeTeam,
@@ -380,8 +391,12 @@ async function processModelPredictions(
           competition: m.competition.name,
           kickoffTime: m.match.kickoffTime,
           analysis: m.analysis,
-          homeStanding: standings?.home || null,
-          awayStanding: standings?.away || null,
+          homeStanding: leagueId 
+            ? getStandingFromMap(m.match.homeTeam, leagueId, preComputed.standingsMap)
+            : null,
+          awayStanding: leagueId
+            ? getStandingFromMap(m.match.awayTeam, leagueId, preComputed.standingsMap)
+            : null,
         } as BatchMatchContextWithStandings;
       })
     );
@@ -423,7 +438,7 @@ async function processModelPredictions(
         // Collect all bets from all successful matches
         for (const batchMatch of batchMatches) {
           const bets = betResult.bets.get(batchMatch.match.id);
-          const analysis = analysisMap.get(batchMatch.match.id);
+          const analysis = preComputed.analysisMap.get(batchMatch.match.id);
 
           if (bets && analysis) {
             const stake = 1.0; // €1 per bet
@@ -660,6 +675,13 @@ export async function POST(request: NextRequest) {
 
     console.log(`Found ${missingPairs.length} missing model/match pairs for betting`);
 
+    // PRE-COMPUTE ALL SHARED DATA (CRITICAL OPTIMIZATION - avoids 1000s of redundant calls)
+    const preComputed = await preComputeMatchData(matchesReadyForPrediction);
+    
+    // Batch-fetch model health for all active models (1 query instead of 30)
+    const modelHealthMap = await getModelHealthBatch(activeModelIds);
+    console.log(`Fetched health for ${modelHealthMap.size} models`);
+
     // Group missing pairs by model (for batching)
     const pairsByModel = new Map<string, string[]>();
     for (const { matchId, modelId } of missingPairs) {
@@ -684,7 +706,7 @@ export async function POST(request: NextRequest) {
     const limit = pLimit(MODEL_CONCURRENCY);
     const startTime = Date.now();
 
-    // Create parallel tasks for all models
+    // Create parallel tasks for all models (passing pre-computed data)
     const modelTasks = Array.from(pairsByModel.entries()).map(([modelId, matchesToPredict]) =>
       limit(async () => {
         totalPredictions += matchesToPredict.length;
@@ -693,6 +715,9 @@ export async function POST(request: NextRequest) {
           matchesToPredict,
           matchesReadyForPrediction,
           activeProviders,
+          modelHealthMap,    // Pre-fetched
+          budgetStart,       // Pre-fetched
+          preComputed,       // Pre-computed
           startTime
         );
       })

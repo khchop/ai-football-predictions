@@ -1,8 +1,11 @@
 import { getDb, leagueStandings } from '@/lib/db';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray, sql } from 'drizzle-orm';
 import type { NewLeagueStanding, LeagueStanding } from '@/lib/db/schema';
 import { COMPETITIONS } from './competitions';
 import { fetchWithRetry, APIError, sleep } from '@/lib/utils/api-client';
+
+// Re-export LeagueStanding for convenience
+export type { LeagueStanding };
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 const API_TIMEOUT_MS = 30000;
@@ -226,23 +229,57 @@ export async function areStandingsStale(leagueId: number, maxAgeHours: number = 
   return new Date(lastUpdate) < staleTime;
 }
 
-// Update standings only if stale
+// Get all stale league IDs in a single query (optimization)
+export async function getStaleLeagueIds(maxAgeHours: number = 24): Promise<number[]> {
+  const db = getDb();
+  const staleTime = new Date(Date.now() - maxAgeHours * 60 * 60 * 1000);
+  
+  // Get most recent update per league that we track
+  const trackedLeagueIds = COMPETITIONS.map(c => c.apiFootballId);
+  
+  const results = await db
+    .select({
+      leagueId: leagueStandings.leagueId,
+      maxUpdated: sql<string>`MAX(${leagueStandings.updatedAt})`,
+    })
+    .from(leagueStandings)
+    .where(inArray(leagueStandings.leagueId, trackedLeagueIds))
+    .groupBy(leagueStandings.leagueId);
+
+  // Find leagues that are fresh (updated within maxAgeHours)
+  const freshLeagueIds = new Set(
+    results
+      .filter(r => r.maxUpdated && new Date(r.maxUpdated) >= staleTime)
+      .map(r => r.leagueId)
+  );
+
+  // Stale = tracked but not fresh, or not in DB at all
+  return trackedLeagueIds.filter(id => !freshLeagueIds.has(id));
+}
+
+// Update standings only if stale (now uses batch staleness check)
 export async function updateStandingsIfStale(maxAgeHours: number = 24): Promise<number> {
-  let updated = 0;
-
-  for (const competition of COMPETITIONS) {
-    const isStale = await areStandingsStale(competition.apiFootballId, maxAgeHours);
-    
-    if (isStale) {
-      console.log(`[Standings] ${competition.name} is stale, updating...`);
-      const count = await updateLeagueStandings(competition.apiFootballId, competition.season);
-      updated += count;
-      
-      // Rate limit
-      await new Promise(resolve => setTimeout(resolve, 300));
-    }
+  const staleLeagueIds = await getStaleLeagueIds(maxAgeHours);
+  
+  if (staleLeagueIds.length === 0) {
+    console.log('[Standings] All leagues are fresh');
+    return 0;
   }
-
+  
+  console.log(`[Standings] ${staleLeagueIds.length} leagues are stale: ${staleLeagueIds.join(', ')}`);
+  
+  let updated = 0;
+  for (const leagueId of staleLeagueIds) {
+    const competition = COMPETITIONS.find(c => c.apiFootballId === leagueId);
+    if (!competition) continue;
+    
+    console.log(`[Standings] Updating ${competition.name}...`);
+    const count = await updateLeagueStandings(leagueId, competition.season);
+    updated += count;
+    
+    await new Promise(resolve => setTimeout(resolve, 300)); // Rate limit
+  }
+  
   return updated;
 }
 
@@ -310,4 +347,74 @@ export async function getStandingsForLeague(leagueId: number): Promise<LeagueSta
     .from(leagueStandings)
     .where(eq(leagueStandings.leagueId, leagueId))
     .orderBy(leagueStandings.position);
+}
+
+// Load all standings for multiple leagues at once (optimization for batch processing)
+export async function getStandingsForLeagues(leagueIds: number[]): Promise<Map<string, LeagueStanding>> {
+  const db = getDb();
+  
+  if (leagueIds.length === 0) {
+    return new Map();
+  }
+  
+  const results = await db
+    .select()
+    .from(leagueStandings)
+    .where(inArray(leagueStandings.leagueId, leagueIds));
+  
+  // Create lookup map with multiple key formats for flexible lookup
+  const standingsMap = new Map<string, LeagueStanding>();
+  
+  for (const standing of results) {
+    // Store with exact team name
+    standingsMap.set(`${standing.teamName}:${standing.leagueId}`, standing);
+    
+    // Also store with normalized name for fuzzy matching
+    const normalizedName = standing.teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    standingsMap.set(`${normalizedName}:${standing.leagueId}`, standing);
+  }
+  
+  return standingsMap;
+}
+
+// Look up standing from pre-loaded map with fuzzy matching (optimization)
+export function getStandingFromMap(
+  teamName: string,
+  leagueId: number,
+  standingsMap: Map<string, LeagueStanding>
+): LeagueStanding | null {
+  // Try exact match first
+  const exactKey = `${teamName}:${leagueId}`;
+  if (standingsMap.has(exactKey)) {
+    return standingsMap.get(exactKey)!;
+  }
+  
+  // Try normalized match
+  const normalizedName = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const normalizedKey = `${normalizedName}:${leagueId}`;
+  if (standingsMap.has(normalizedKey)) {
+    return standingsMap.get(normalizedKey)!;
+  }
+  
+  // Fuzzy match: iterate through all standings for this league
+  for (const [key, standing] of standingsMap.entries()) {
+    if (!key.endsWith(`:${leagueId}`)) continue;
+    
+    const standingNormalized = standing.teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    // Substring match
+    if (standingNormalized.includes(normalizedName) || normalizedName.includes(standingNormalized)) {
+      return standing;
+    }
+    
+    // First word match (4+ chars)
+    const searchFirstWord = teamName.toLowerCase().split(/\s+/)[0].replace(/[^a-z0-9]/g, '');
+    const standingFirstWord = standing.teamName.toLowerCase().split(/\s+/)[0].replace(/[^a-z0-9]/g, '');
+    
+    if (searchFirstWord.length >= 4 && searchFirstWord === standingFirstWord) {
+      return standing;
+    }
+  }
+  
+  return null;
 }

@@ -18,6 +18,8 @@ import {
   fetchH2HDetailed, 
   extractH2HStatistics 
 } from '@/lib/football/h2h';
+import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
+import pLimit from 'p-limit';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 const API_TIMEOUT_MS = 30000;
@@ -426,9 +428,9 @@ export async function fetchAndStoreAnalysis(
     
     try {
       [teamStatsHomeData, teamStatsAwayData, h2hDetailedData] = await Promise.all([
-        fetchTeamStatistics(homeTeamId, leagueId, season),
-        fetchTeamStatistics(awayTeamId, leagueId, season),
-        fetchH2HDetailed(homeTeamId, awayTeamId, 10),
+        fetchTeamStatisticsCached(homeTeamId, leagueId, season),
+        fetchTeamStatisticsCached(awayTeamId, leagueId, season),
+        fetchH2HDetailedCached(homeTeamId, awayTeamId, 10),
       ]);
     } catch (error) {
       console.error(`[Match Analysis] Error fetching enhanced data:`, error);
@@ -652,4 +654,99 @@ export async function refreshOddsForMatch(
     console.error(`[Match Analysis] Error refreshing odds for match ${matchId}:`, error);
     return false;
   }
+}
+
+// ===== CACHED VERSIONS FOR OPTIMIZATION =====
+
+// Cached version of fetchTeamStatistics (6-hour cache)
+export async function fetchTeamStatisticsCached(
+  teamId: number,
+  leagueId: number,
+  season: number
+) {
+  const cacheKey = cacheKeys.teamStats(teamId, leagueId, season.toString());
+  
+  return withCache(cacheKey, CACHE_TTL.TEAM_STATS, async () => {
+    return fetchTeamStatistics(teamId, leagueId, season);
+  });
+}
+
+// Cached version of fetchH2HDetailed (7-day cache, H2H is static)
+export async function fetchH2HDetailedCached(
+  team1Id: number,
+  team2Id: number,
+  last: number = 10
+) {
+  // Use consistent key ordering (lower ID first)
+  const cacheKey = cacheKeys.h2h(team1Id, team2Id);
+  
+  return withCache(cacheKey, CACHE_TTL.H2H, async () => {
+    return fetchH2HDetailed(team1Id, team2Id, last);
+  });
+}
+
+// Cached version of fetchOdds (10-minute cache for betting)
+export async function fetchOddsCached(fixtureId: number): Promise<APIFootballOddsResponse | null> {
+  const cacheKey = cacheKeys.oddsBatch(fixtureId);
+  
+  return withCache(cacheKey, CACHE_TTL.ODDS_BATCH, async () => {
+    return fetchOdds(fixtureId);
+  });
+}
+
+// Batch refresh odds for multiple fixtures (optimization for generate-predictions)
+export async function refreshOddsBatch(
+  matchFixturePairs: { matchId: string; fixtureId: number }[]
+): Promise<Map<string, boolean>> {
+  if (matchFixturePairs.length === 0) {
+    return new Map();
+  }
+  
+  console.log(`[Odds Batch] Refreshing odds for ${matchFixturePairs.length} matches...`);
+  const results = new Map<string, boolean>();
+  
+  // Process in parallel with rate limiting (max 5 concurrent)
+  const limit = pLimit(5);
+  
+  const tasks = matchFixturePairs.map(({ matchId, fixtureId }) =>
+    limit(async () => {
+      try {
+        const oddsData = await fetchOddsCached(fixtureId);
+        
+        if (!oddsData?.response?.[0]?.bookmakers) {
+          results.set(matchId, false);
+          return;
+        }
+        
+        const odds = extractAllOdds(oddsData);
+        const existing = await getMatchAnalysisByMatchId(matchId);
+        
+        if (!existing) {
+          results.set(matchId, false);
+          return;
+        }
+        
+        // Update only odds fields
+        await upsertMatchAnalysis({
+          ...existing,
+          ...odds,
+          likelyScores: odds.likelyScores.length > 0 ? JSON.stringify(odds.likelyScores) : existing.likelyScores,
+          rawOddsData: JSON.stringify(oddsData),
+          analysisUpdatedAt: new Date().toISOString(),
+        });
+        
+        results.set(matchId, true);
+      } catch (error) {
+        console.error(`[Odds Batch] Error for match ${matchId}:`, error);
+        results.set(matchId, false);
+      }
+    })
+  );
+  
+  await Promise.all(tasks);
+  
+  const successCount = [...results.values()].filter(v => v).length;
+  console.log(`[Odds Batch] Complete: ${successCount}/${matchFixturePairs.length} successful`);
+  
+  return results;
 }

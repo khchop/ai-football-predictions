@@ -2222,3 +2222,24 @@ export async function getBettingLeaderboard() {
     };
   });
 }
+
+// Get health status for multiple models at once (batch query)
+export async function getModelHealthBatch(modelIds: string[]): Promise<Map<string, Model>> {
+  const db = getDb();
+  
+  if (modelIds.length === 0) {
+    return new Map();
+  }
+  
+  const results = await db
+    .select()
+    .from(models)
+    .where(inArray(models.id, modelIds));
+  
+  const healthMap = new Map<string, Model>();
+  for (const model of results) {
+    healthMap.set(model.id, model);
+  }
+  
+  return healthMap;
+}

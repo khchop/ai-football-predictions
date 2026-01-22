@@ -81,6 +81,11 @@ export const CACHE_TTL = {
   COMPETITIONS: 300,           // 5 minutes - rarely changes
   LEADERBOARD: 60,             // 1 minute - revalidate frequently
   STATS: 60,                   // 1 minute - overall stats
+  
+  // Team data caches (for optimization)
+  TEAM_STATS: 21600,           // 6 hours - team statistics don't change during match day
+  H2H: 604800,                 // 7 days - historical H2H data is static
+  ODDS_BATCH: 600,             // 10 minutes - pre-match odds for betting
 } as const;
 
 /**
@@ -175,6 +180,14 @@ export const cacheKeys = {
   leaderboard: (filters: string) => `db:leaderboard:${filters}`,
   overallStats: () => 'db:stats:overall',
   matchPredictions: (matchId: string) => `db:predictions:${matchId}`,
+  
+  // Team data (for optimization)
+  teamStats: (teamId: number, leagueId: number, season: string) => 
+    `api:team-stats:${teamId}:${leagueId}:${season}`,
+  h2h: (teamId1: number, teamId2: number) => 
+    `api:h2h:${Math.min(teamId1, teamId2)}:${Math.max(teamId1, teamId2)}`,
+  oddsBatch: (fixtureId: number) => `api:odds:batch:${fixtureId}`,
+  allModelHealth: () => 'db:models:health:all',
 } as const;
 
 /**
