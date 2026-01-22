@@ -13,7 +13,8 @@
     "db:studio": "drizzle-kit studio",
     "migrate:betting": "tsx scripts/migrate-betting-system.ts",
     "migrate:predictions": "tsx scripts/migrate-predictions.ts",
-    "migrate:hotfix": "tsx scripts/migrate-hotfix.ts"
+    "migrate:hotfix": "tsx scripts/migrate-hotfix.ts",
+    "sync-models": "tsx scripts/sync-models.ts"
   },
   "dependencies": {
     "@bull-board/api": "^6.16.2",
