@@ -12,6 +12,7 @@ import { getUpcomingFixtures, mapFixtureStatus } from '@/lib/football/api-footba
 import { upsertMatch, upsertCompetition } from '@/lib/db/queries';
 import { scheduleMatchJobs } from '../scheduler';
 import { v4 as uuidv4 } from 'uuid';
+import { generateMatchSlug, generateCompetitionSlug } from '@/lib/utils/slugify';
 
 export function createFixturesWorker() {
   return new Worker<FetchFixturesPayload>(
@@ -38,6 +39,7 @@ export function createFixturesWorker() {
             apiFootballId: competition.apiFootballId,
             season: competition.season,
             active: true,
+            slug: generateCompetitionSlug(competition.name),
           });
 
           for (const fixture of fixtures) {
@@ -45,6 +47,13 @@ export function createFixturesWorker() {
             
             try {
               const matchId = uuidv4();
+              
+              // Generate SEO-friendly slug
+              const slug = generateMatchSlug(
+                fixture.teams.home.name,
+                fixture.teams.away.name,
+                fixture.fixture.date
+              );
               
               // Save match to DB
               await upsertMatch({
@@ -61,6 +70,7 @@ export function createFixturesWorker() {
                 status: mapFixtureStatus(fixture.fixture.status.short),
                 round: fixture.league.round,
                 venue: fixture.fixture.venue.name,
+                slug,
               });
               
               savedFixtures++;
@@ -82,6 +92,7 @@ export function createFixturesWorker() {
                     status: mapFixtureStatus(fixture.fixture.status.short),
                     round: fixture.league.round,
                     venue: fixture.fixture.venue.name,
+                    slug,
                     matchMinute: null,
                     isUpset: false,
                     quotaHome: null,
@@ -96,6 +107,7 @@ export function createFixturesWorker() {
                     apiFootballId: competition.apiFootballId,
                     season: competition.season,
                     active: true,
+                    slug: generateCompetitionSlug(competition.name),
                     createdAt: null,
                   },
                 });

@@ -36,7 +36,7 @@ export const matches = pgTable('matches', {
   quotaHome: integer('quota_home'), // Points for predicting home win (2-6)
   quotaDraw: integer('quota_draw'), // Points for predicting draw (2-6)
   quotaAway: integer('quota_away'), // Points for predicting away win (2-6)
-  slug: text('slug').unique(), // SEO-friendly slug, e.g., "manchester-city-vs-arsenal-2026-01-22"
+  slug: text('slug'), // SEO-friendly slug, e.g., "manchester-city-vs-arsenal-2026-01-22" (nullable for backfill)
   createdAt: text('created_at').default(sql`now()`),
   updatedAt: text('updated_at').default(sql`now()`),
 }, (table) => [

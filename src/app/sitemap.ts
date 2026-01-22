@@ -2,6 +2,10 @@ import { MetadataRoute } from 'next';
 import { getDb, matches, models, competitions } from '@/lib/db';
 import { desc } from 'drizzle-orm';
 
+// Force dynamic rendering (don't pre-render at build time)
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // Revalidate every hour
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const db = getDb();
   const baseUrl = 'https://kroam.xyz';
