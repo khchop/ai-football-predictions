@@ -5,7 +5,7 @@
  * Call this once when the app starts (from instrumentation.ts).
  */
 
-import { fixturesQueue, backfillQueue, JOB_TYPES } from './index';
+import { fixturesQueue, backfillQueue, contentQueue, JOB_TYPES } from './index';
 
 export async function setupRepeatableJobs(): Promise<void> {
   console.log('[Queue Setup] Registering repeatable jobs...');
@@ -73,6 +73,29 @@ export async function setupRepeatableJobs(): Promise<void> {
     console.error('[Queue Setup] Failed to schedule startup backfill:', error);
   }
   
+  // Scan for matches needing previews every hour
+  try {
+    await contentQueue.add(
+      'scan-matches',
+      { type: 'scan_matches', data: {} },
+      {
+        repeat: {
+          pattern: '10 * * * *', // Every hour at :10 (after backfill at :05)
+          tz: 'Europe/Berlin',
+        },
+        jobId: 'scan-matches-repeatable',
+      }
+    );
+    console.log('[Queue Setup] ✓ Registered: scan-matches (every hour, Berlin TZ)');
+  } catch (error: any) {
+    if (error.message?.includes('already exists')) {
+      console.log('[Queue Setup] scan-matches already registered');
+    } else {
+      console.error('[Queue Setup] Failed to register scan-matches:', error);
+      throw error;
+    }
+  }
+  
   console.log('[Queue Setup] All repeatable jobs registered');
 }
 
@@ -94,6 +117,13 @@ export async function removeRepeatableJobs(): Promise<void> {
   for (const job of backfillRepeatableJobs) {
     await backfillQueue.removeRepeatableByKey(job.key);
     console.log(`[Queue Setup] Removed from backfill-queue: ${job.name} (${job.pattern})`);
+  }
+  
+  // Remove from content queue
+  const contentRepeatableJobs = await contentQueue.getRepeatableJobs();
+  for (const job of contentRepeatableJobs) {
+    await contentQueue.removeRepeatableByKey(job.key);
+    console.log(`[Queue Setup] Removed from content-queue: ${job.name} (${job.pattern})`);
   }
   
   console.log('[Queue Setup] All repeatable jobs removed');

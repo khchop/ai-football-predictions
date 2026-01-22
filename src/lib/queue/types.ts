@@ -64,6 +64,12 @@ export interface BackfillMissingPayload {
   hoursAhead?: number;  // How far ahead to look (default 12)
 }
 
+// Generate AI content (match previews, league roundups, model reports)
+export interface GenerateContentPayload {
+  type: 'match_preview' | 'league_roundup' | 'model_report' | 'scan_matches';
+  data: Record<string, unknown>;
+}
+
 // Union type for all payloads
 export type JobPayload =
   | FetchFixturesPayload
@@ -74,4 +80,5 @@ export type JobPayload =
   | PredictMatchPayload
   | MonitorLivePayload
   | SettleMatchPayload
-  | CatchUpPayload;
+  | CatchUpPayload
+  | GenerateContentPayload;

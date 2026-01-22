@@ -78,6 +78,7 @@ export const QUEUE_NAMES = {
   ODDS: 'odds-queue',
   LIVE: 'live-queue',
   SETTLEMENT: 'settlement-queue',
+  CONTENT: 'content-queue',
   FIXTURES: 'fixtures-queue',
   BACKFILL: 'backfill-queue',
 } as const;
@@ -113,6 +114,7 @@ let _liveQueue: Queue;
 let _settlementQueue: Queue;
 let _fixturesQueue: Queue;
 let _backfillQueue: Queue;
+let _contentQueue: Queue;
 let _matchQueue: Queue;
 
 export const analysisQueue = new Proxy({} as Queue, {
@@ -171,6 +173,13 @@ export const backfillQueue = new Proxy({} as Queue, {
   }
 });
 
+export const contentQueue = new Proxy({} as Queue, {
+  get(target, prop) {
+    if (!_contentQueue) _contentQueue = new Queue(QUEUE_NAMES.CONTENT, createQueueOptions());
+    return (_contentQueue as any)[prop];
+  }
+});
+
 // Legacy queue (kept for backward compatibility during migration)
 export const matchQueue = new Proxy({} as Queue, {
   get(target, prop) {
@@ -178,6 +187,32 @@ export const matchQueue = new Proxy({} as Queue, {
     return (_matchQueue as any)[prop];
   }
 });
+
+// Helper to get a queue by name
+export function getQueue(queueName: string): Queue {
+  switch (queueName) {
+    case QUEUE_NAMES.ANALYSIS:
+      return analysisQueue;
+    case QUEUE_NAMES.PREDICTIONS:
+      return predictionsQueue;
+    case QUEUE_NAMES.LINEUPS:
+      return lineupsQueue;
+    case QUEUE_NAMES.ODDS:
+      return oddsQueue;
+    case QUEUE_NAMES.LIVE:
+      return liveQueue;
+    case QUEUE_NAMES.SETTLEMENT:
+      return settlementQueue;
+    case QUEUE_NAMES.FIXTURES:
+      return fixturesQueue;
+    case QUEUE_NAMES.BACKFILL:
+      return backfillQueue;
+    case QUEUE_NAMES.CONTENT:
+      return contentQueue;
+    default:
+      throw new Error(`Unknown queue name: ${queueName}`);
+  }
+}
 
 // Helper to get all queues (for monitoring/status)
 export function getAllQueues(): Queue[] {
@@ -191,6 +226,7 @@ export function getAllQueues(): Queue[] {
     settlementQueue,
     fixturesQueue,
     backfillQueue,
+    contentQueue,
   ];
   // Access a property to trigger initialization
   queues.forEach(q => q.name);

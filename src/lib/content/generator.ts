@@ -1,0 +1,251 @@
+/**
+ * Content Generation Service
+ * 
+ * Orchestrates AI content generation for match previews, league roundups,
+ * and model reports using OpenRouter and Gemini 3 Flash Preview.
+ */
+
+import { v4 as uuidv4 } from 'uuid';
+import { getDb, matchPreviews, blogPosts } from '@/lib/db';
+import type { NewMatchPreview, NewBlogPost } from '@/lib/db/schema';
+import { getOpenRouterClient } from './openrouter-client';
+import {
+  buildMatchPreviewPrompt,
+  buildLeagueRoundupPrompt,
+  buildModelReportPrompt,
+  type MatchPreviewResponse,
+  type ArticleResponse,
+} from './prompts';
+import { CONTENT_CONFIG } from './config';
+import { slugify } from '@/lib/utils/slugify';
+
+/**
+ * Generate a match preview using AI
+ */
+export async function generateMatchPreview(matchData: {
+  matchId: string;
+  homeTeam: string;
+  awayTeam: string;
+  competition: string;
+  kickoffTime: string;
+  venue?: string;
+  analysis?: Record<string, unknown>;
+  aiPredictions?: Array<{ model: string; prediction: string }>;
+}): Promise<string> {
+  console.log(`[ContentGen] Generating preview for ${matchData.homeTeam} vs ${matchData.awayTeam}`);
+  
+  const client = getOpenRouterClient();
+  const prompt = buildMatchPreviewPrompt({
+    homeTeam: matchData.homeTeam,
+    awayTeam: matchData.awayTeam,
+    competition: matchData.competition,
+    kickoffTime: matchData.kickoffTime,
+    venue: matchData.venue,
+    // Extract analysis data if available
+    homeWinPct: matchData.analysis?.homeWinPct as number | undefined,
+    drawPct: matchData.analysis?.drawPct as number | undefined,
+    awayWinPct: matchData.analysis?.awayWinPct as number | undefined,
+    advice: matchData.analysis?.advice as string | undefined,
+    homeTeamForm: matchData.analysis?.homeTeamForm as string | undefined,
+    awayTeamForm: matchData.analysis?.awayTeamForm as string | undefined,
+    homeGoalsScored: matchData.analysis?.homeGoalsScored as number | undefined,
+    homeGoalsConceded: matchData.analysis?.homeGoalsConceded as number | undefined,
+    awayGoalsScored: matchData.analysis?.awayGoalsScored as number | undefined,
+    awayGoalsConceded: matchData.analysis?.awayGoalsConceded as number | undefined,
+    oddsHome: matchData.analysis?.oddsHome as string | undefined,
+    oddsDraw: matchData.analysis?.oddsDraw as string | undefined,
+    oddsAway: matchData.analysis?.oddsAway as string | undefined,
+    oddsOver25: matchData.analysis?.oddsOver25 as string | undefined,
+    oddsUnder25: matchData.analysis?.oddsUnder25 as string | undefined,
+    oddsBttsYes: matchData.analysis?.oddsBttsYes as string | undefined,
+    aiPredictions: matchData.aiPredictions,
+  });
+
+  const result = await client.generate<MatchPreviewResponse>(prompt);
+  
+  // Save to database
+  const db = getDb();
+  const previewId = uuidv4();
+  
+  const newPreview: NewMatchPreview = {
+    id: previewId,
+    matchId: matchData.matchId,
+    introduction: result.content.introduction,
+    teamFormAnalysis: result.content.teamFormAnalysis,
+    headToHead: result.content.headToHead,
+    keyPlayers: result.content.keyPlayers,
+    tacticalAnalysis: result.content.tacticalAnalysis,
+    prediction: result.content.prediction,
+    bettingInsights: result.content.bettingInsights,
+    metaDescription: result.content.metaDescription,
+    keywords: result.content.keywords.join(', '),
+    status: 'published',
+    publishedAt: new Date().toISOString(),
+    generatedBy: CONTENT_CONFIG.model,
+    generationCost: result.cost.toFixed(4),
+    promptTokens: result.usage.promptTokens,
+    completionTokens: result.usage.completionTokens,
+  };
+
+  await db.insert(matchPreviews).values(newPreview).onConflictDoUpdate({
+    target: matchPreviews.matchId,
+    set: {
+      ...newPreview,
+      updatedAt: new Date().toISOString(),
+    },
+  });
+
+  console.log(
+    `[ContentGen] Preview generated successfully. Cost: $${result.cost.toFixed(4)}, Tokens: ${result.usage.totalTokens}`
+  );
+
+  return previewId;
+}
+
+/**
+ * Generate a league roundup article
+ */
+export async function generateLeagueRoundup(roundupData: {
+  competition: string;
+  competitionSlug: string;
+  competitionId: string;
+  week: string;
+  matches: Array<{
+    homeTeam: string;
+    awayTeam: string;
+    result?: string;
+    prediction?: string;
+    wasUpset?: boolean;
+  }>;
+  standings?: Array<{
+    position: number;
+    team: string;
+    points: number;
+    played: number;
+  }>;
+}): Promise<string> {
+  console.log(`[ContentGen] Generating ${roundupData.competition} roundup for ${roundupData.week}`);
+  
+  const client = getOpenRouterClient();
+  const prompt = buildLeagueRoundupPrompt({
+    competition: roundupData.competition,
+    competitionSlug: roundupData.competitionSlug,
+    week: roundupData.week,
+    matches: roundupData.matches,
+    standingsTop5: roundupData.standings?.slice(0, 5),
+  });
+
+  const result = await client.generate<ArticleResponse>(prompt);
+  
+  // Save to database
+  const db = getDb();
+  const postId = uuidv4();
+  const slug = slugify(
+    `${roundupData.competitionSlug}-${roundupData.week}-roundup`
+  );
+
+  const newPost: NewBlogPost = {
+    id: postId,
+    slug,
+    title: result.content.title,
+    excerpt: result.content.excerpt,
+    content: result.content.content,
+    contentType: 'league_roundup',
+    metaTitle: result.content.metaTitle,
+    metaDescription: result.content.metaDescription,
+    keywords: result.content.keywords.join(', '),
+    competitionId: roundupData.competitionId,
+    status: 'published',
+    publishedAt: new Date().toISOString(),
+    generatedBy: CONTENT_CONFIG.model,
+    generationCost: result.cost.toFixed(4),
+    promptTokens: result.usage.promptTokens,
+    completionTokens: result.usage.completionTokens,
+  };
+
+  await db.insert(blogPosts).values(newPost).onConflictDoUpdate({
+    target: blogPosts.slug,
+    set: {
+      ...newPost,
+      updatedAt: new Date().toISOString(),
+    },
+  });
+
+  console.log(
+    `[ContentGen] League roundup generated. Cost: $${result.cost.toFixed(4)}, Tokens: ${result.usage.totalTokens}`
+  );
+
+  return postId;
+}
+
+/**
+ * Generate a model performance report
+ */
+export async function generateModelReport(reportData: {
+  period: string;
+  topModels: Array<{
+    id: string;
+    name: string;
+    provider: string;
+    balance: number;
+    profit: number;
+    roi: number;
+    winRate: number;
+    totalBets: number;
+    streak: number;
+    streakType: string;
+  }>;
+  overallStats: {
+    totalMatches: number;
+    totalBets: number;
+    averageROI: number;
+  };
+}): Promise<string> {
+  console.log(`[ContentGen] Generating model performance report for ${reportData.period}`);
+  
+  const client = getOpenRouterClient();
+  const prompt = buildModelReportPrompt({
+    period: reportData.period,
+    topModels: reportData.topModels,
+    overallStats: reportData.overallStats,
+  });
+
+  const result = await client.generate<ArticleResponse>(prompt);
+  
+  // Save to database
+  const db = getDb();
+  const postId = uuidv4();
+  const slug = slugify(`ai-betting-models-report-${reportData.period}`);
+
+  const newPost: NewBlogPost = {
+    id: postId,
+    slug,
+    title: result.content.title,
+    excerpt: result.content.excerpt,
+    content: result.content.content,
+    contentType: 'model_report',
+    metaTitle: result.content.metaTitle,
+    metaDescription: result.content.metaDescription,
+    keywords: result.content.keywords.join(', '),
+    status: 'published',
+    publishedAt: new Date().toISOString(),
+    generatedBy: CONTENT_CONFIG.model,
+    generationCost: result.cost.toFixed(4),
+    promptTokens: result.usage.promptTokens,
+    completionTokens: result.usage.completionTokens,
+  };
+
+  await db.insert(blogPosts).values(newPost).onConflictDoUpdate({
+    target: blogPosts.slug,
+    set: {
+      ...newPost,
+      updatedAt: new Date().toISOString(),
+    },
+  });
+
+  console.log(
+    `[ContentGen] Model report generated. Cost: $${result.cost.toFixed(4)}, Tokens: ${result.usage.totalTokens}`
+  );
+
+  return postId;
+}

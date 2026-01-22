@@ -318,3 +318,86 @@ export const bets = pgTable('bets', {
 
 export type Bet = typeof bets.$inferSelect;
 export type NewBet = typeof bets.$inferInsert;
+
+// AI-generated blog posts for SEO/GEO
+export const blogPosts = pgTable('blog_posts', {
+  id: text('id').primaryKey(), // UUID
+  slug: text('slug').notNull().unique(), // SEO-friendly URL slug
+  title: text('title').notNull(),
+  excerpt: text('excerpt').notNull(), // Short summary (150-160 chars for meta description)
+  content: text('content').notNull(), // Full markdown content
+  contentType: text('content_type').notNull(), // 'league_roundup' | 'model_report' | 'analysis'
+  
+  // SEO metadata
+  metaTitle: text('meta_title'),
+  metaDescription: text('meta_description'),
+  keywords: text('keywords'), // Comma-separated
+  
+  // Relations
+  competitionId: text('competition_id').references(() => competitions.id), // For league roundups
+  modelId: text('model_id').references(() => models.id), // For model reports
+  
+  // Publishing
+  status: text('status').default('draft'), // 'draft' | 'published'
+  publishedAt: text('published_at'),
+  
+  // AI generation metadata
+  generatedBy: text('generated_by').notNull(), // 'gemini-3-flash-preview'
+  generationCost: text('generation_cost'), // Cost in USD
+  promptTokens: integer('prompt_tokens'),
+  completionTokens: integer('completion_tokens'),
+  
+  createdAt: text('created_at').default(sql`now()`),
+  updatedAt: text('updated_at').default(sql`now()`),
+}, (table) => [
+  index('idx_blog_posts_slug').on(table.slug),
+  index('idx_blog_posts_status').on(table.status),
+  index('idx_blog_posts_published_at').on(table.publishedAt),
+  index('idx_blog_posts_competition_id').on(table.competitionId),
+  index('idx_blog_posts_content_type').on(table.contentType),
+]);
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type NewBlogPost = typeof blogPosts.$inferInsert;
+
+// AI-generated match previews for SEO/GEO
+export const matchPreviews = pgTable('match_previews', {
+  id: text('id').primaryKey(), // UUID
+  matchId: text('match_id')
+    .notNull()
+    .unique()
+    .references(() => matches.id),
+  
+  // Content sections
+  introduction: text('introduction').notNull(), // Opening paragraph
+  teamFormAnalysis: text('team_form_analysis').notNull(), // Recent form comparison
+  headToHead: text('head_to_head'), // H2H history
+  keyPlayers: text('key_players'), // Star players to watch
+  tacticalAnalysis: text('tactical_analysis'), // Tactical breakdown
+  prediction: text('prediction').notNull(), // AI prediction summary
+  bettingInsights: text('betting_insights'), // Betting odds analysis
+  
+  // SEO
+  metaDescription: text('meta_description'),
+  keywords: text('keywords'), // Comma-separated
+  
+  // Publishing
+  status: text('status').default('draft'), // 'draft' | 'published'
+  publishedAt: text('published_at'),
+  
+  // AI generation metadata
+  generatedBy: text('generated_by').notNull(), // 'gemini-3-flash-preview'
+  generationCost: text('generation_cost'), // Cost in USD
+  promptTokens: integer('prompt_tokens'),
+  completionTokens: integer('completion_tokens'),
+  
+  createdAt: text('created_at').default(sql`now()`),
+  updatedAt: text('updated_at').default(sql`now()`),
+}, (table) => [
+  index('idx_match_previews_match_id').on(table.matchId),
+  index('idx_match_previews_status').on(table.status),
+  index('idx_match_previews_published_at').on(table.publishedAt),
+]);
+
+export type MatchPreview = typeof matchPreviews.$inferSelect;
+export type NewMatchPreview = typeof matchPreviews.$inferInsert;

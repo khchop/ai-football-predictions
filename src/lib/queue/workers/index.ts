@@ -14,6 +14,7 @@ import { createPredictionsWorker } from './predictions.worker';
 import { createLiveScoreWorker } from './live-score.worker';
 import { createSettlementWorker } from './settlement.worker';
 import { createBackfillWorker } from './backfill.worker';
+import { createContentWorker } from './content.worker';
 
 let workers: Worker[] = [];
 
@@ -65,6 +66,7 @@ export function startAllWorkers(): Worker[] {
     { name: 'live-score', create: createLiveScoreWorker },
     { name: 'settlement', create: createSettlementWorker },
     { name: 'backfill', create: createBackfillWorker },
+    { name: 'content', create: createContentWorker },
   ];
 
   workers = workerConfigs.map(({ name, create }) => {
