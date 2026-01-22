@@ -8,7 +8,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { getQueueConnection, JOB_TYPES } from '../index';
+import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { PredictMatchPayload } from '../types';
 import { 
   getMatchById, 
@@ -18,7 +18,6 @@ import {
   getOrCreateModelBalance,
   createBetsWithBalanceUpdate,
 } from '@/lib/db/queries';
-import { refreshOddsForMatch } from '@/lib/football/match-analysis';
 import { getActiveProviders } from '@/lib/llm';
 import { buildBatchPrompt } from '@/lib/football/prompt-builder';
 import { parseBatchBettingResponse, BATCH_SYSTEM_PROMPT } from '@/lib/llm/prompt';
@@ -29,10 +28,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 export function createPredictionsWorker() {
   return new Worker<PredictMatchPayload>(
-    'match-jobs',
+    QUEUE_NAMES.PREDICTIONS,
     async (job: Job<PredictMatchPayload>) => {
-      if (job.name !== JOB_TYPES.PREDICT_MATCH) return;
-
       const { matchId, attempt, skipIfDone = false, force = false } = job.data;
       
       console.log(`[Predictions Worker] Attempt ${attempt} for match ${matchId} (skipIfDone: ${skipIfDone}, force: ${force})`);
@@ -61,18 +58,7 @@ export function createPredictionsWorker() {
           return { skipped: true, reason: 'match_not_scheduled', status: match.status };
         }
         
-        // CRITICAL: Refresh odds first to ensure freshest data (uses 10-min cache, efficient)
-        if (match.externalId) {
-          console.log(`[Predictions Worker] Refreshing odds for ${match.homeTeam} vs ${match.awayTeam}`);
-          try {
-            await refreshOddsForMatch(matchId, parseInt(match.externalId, 10));
-          } catch (error: any) {
-            console.error(`[Predictions Worker] Failed to refresh odds:`, error.message);
-            // Continue anyway - we'll use existing odds if refresh fails
-          }
-        }
-        
-        // Get analysis (now includes refreshed odds)
+        // Get analysis (odds refreshed by scheduler before this job runs)
         const analysis = await getMatchAnalysisByMatchId(matchId);
         if (!analysis) {
           console.log(`[Predictions Worker] No analysis for match ${matchId}`);

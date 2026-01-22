@@ -2,9 +2,17 @@
  * Match Job Scheduler
  * 
  * Schedules all jobs for a match at precise times relative to kickoff.
+ * Routes jobs to appropriate queues for guaranteed processing.
  */
 
-import { matchQueue, JOB_TYPES } from './index';
+import { 
+  analysisQueue, 
+  predictionsQueue, 
+  lineupsQueue, 
+  oddsQueue, 
+  liveQueue,
+  JOB_TYPES 
+} from './index';
 import type { Match, Competition } from '@/lib/db/schema';
 
 interface MatchWithCompetition {
@@ -31,6 +39,7 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
   const jobsToSchedule = [
     // T-6h: Analyze match (fetch H2H, odds, injuries, team stats)
     {
+      queue: analysisQueue,
       name: JOB_TYPES.ANALYZE_MATCH,
       data: {
         matchId: match.id,
@@ -43,16 +52,29 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
     },
     // T-2h: Refresh odds
     {
+      queue: oddsQueue,
       name: JOB_TYPES.REFRESH_ODDS,
       data: {
         matchId: match.id,
         externalId: match.externalId,
       },
       delay: kickoff - 2 * 60 * 60 * 1000 - now,
-      jobId: `refresh-odds-${match.id}`,
+      jobId: `refresh-odds-2h-${match.id}`,
+    },
+    // T-95m: Refresh odds (before first prediction)
+    {
+      queue: oddsQueue,
+      name: JOB_TYPES.REFRESH_ODDS,
+      data: {
+        matchId: match.id,
+        externalId: match.externalId,
+      },
+      delay: kickoff - 95 * 60 * 1000 - now,
+      jobId: `refresh-odds-95m-${match.id}`,
     },
     // T-90m: First prediction attempt
     {
+      queue: predictionsQueue,
       name: JOB_TYPES.PREDICT_MATCH,
       data: {
         matchId: match.id,
@@ -65,6 +87,7 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
     },
     // T-60m: Fetch lineups
     {
+      queue: lineupsQueue,
       name: JOB_TYPES.FETCH_LINEUPS,
       data: {
         matchId: match.id,
@@ -75,8 +98,20 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
       delay: kickoff - 60 * 60 * 1000 - now,
       jobId: `lineups-${match.id}`,
     },
+    // T-35m: Refresh odds (before second prediction)
+    {
+      queue: oddsQueue,
+      name: JOB_TYPES.REFRESH_ODDS,
+      data: {
+        matchId: match.id,
+        externalId: match.externalId,
+      },
+      delay: kickoff - 35 * 60 * 1000 - now,
+      jobId: `refresh-odds-35m-${match.id}`,
+    },
     // T-30m: Second prediction attempt
     {
+      queue: predictionsQueue,
       name: JOB_TYPES.PREDICT_MATCH,
       data: {
         matchId: match.id,
@@ -87,8 +122,20 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
       delay: kickoff - 30 * 60 * 1000 - now,
       jobId: `predict-2-${match.id}`,
     },
+    // T-10m: Refresh odds (before final prediction)
+    {
+      queue: oddsQueue,
+      name: JOB_TYPES.REFRESH_ODDS,
+      data: {
+        matchId: match.id,
+        externalId: match.externalId,
+      },
+      delay: kickoff - 10 * 60 * 1000 - now,
+      jobId: `refresh-odds-10m-${match.id}`,
+    },
     // T-5m: Final prediction attempt (force)
     {
+      queue: predictionsQueue,
       name: JOB_TYPES.PREDICT_MATCH,
       data: {
         matchId: match.id,
@@ -101,6 +148,7 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
     },
     // Kickoff: Start live monitoring
     {
+      queue: liveQueue,
       name: JOB_TYPES.MONITOR_LIVE,
       data: {
         matchId: match.id,
@@ -127,7 +175,7 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
     if (job.delay > 0) {
       // Schedule for future
       try {
-        await matchQueue.add(job.name, job.data, {
+        await job.queue.add(job.name, job.data, {
           delay: job.delay,
           jobId: job.jobId,
         });
@@ -142,7 +190,7 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
     } else if (kickoff > now && lateRunnableJobs.has(job.name as any)) {
       // Job time passed but match hasn't started - run immediately
       try {
-        await matchQueue.add(job.name, job.data, {
+        await job.queue.add(job.name, job.data, {
           delay: 1000, // 1 second delay to avoid duplicate processing
           jobId: job.jobId,
         });
@@ -166,21 +214,24 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
 
 // Cancel all jobs for a match (if postponed/cancelled)
 export async function cancelMatchJobs(matchId: string): Promise<number> {
-  const jobIds = [
-    `analyze-${matchId}`,
-    `refresh-odds-${matchId}`,
-    `predict-1-${matchId}`,
-    `predict-2-${matchId}`,
-    `predict-3-${matchId}`,
-    `lineups-${matchId}`,
-    `live-${matchId}`,
+  const jobsToCancel = [
+    { queue: analysisQueue, jobId: `analyze-${matchId}` },
+    { queue: oddsQueue, jobId: `refresh-odds-2h-${matchId}` },
+    { queue: oddsQueue, jobId: `refresh-odds-95m-${matchId}` },
+    { queue: predictionsQueue, jobId: `predict-1-${matchId}` },
+    { queue: lineupsQueue, jobId: `lineups-${matchId}` },
+    { queue: oddsQueue, jobId: `refresh-odds-35m-${matchId}` },
+    { queue: predictionsQueue, jobId: `predict-2-${matchId}` },
+    { queue: oddsQueue, jobId: `refresh-odds-10m-${matchId}` },
+    { queue: predictionsQueue, jobId: `predict-3-${matchId}` },
+    { queue: liveQueue, jobId: `live-${matchId}` },
   ];
   
   let cancelled = 0;
   
-  for (const jobId of jobIds) {
+  for (const { queue, jobId } of jobsToCancel) {
     try {
-      const job = await matchQueue.getJob(jobId);
+      const job = await queue.getJob(jobId);
       if (job && (await job.isDelayed() || await job.isWaiting())) {
         await job.remove();
         cancelled++;

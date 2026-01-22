@@ -6,17 +6,15 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { getQueueConnection, JOB_TYPES, matchQueue } from '../index';
+import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, predictionsQueue } from '../index';
 import type { FetchLineupsPayload } from '../types';
 import { updateMatchLineups } from '@/lib/football/lineups';
 import { getMatchById } from '@/lib/db/queries';
 
 export function createLineupsWorker() {
   return new Worker<FetchLineupsPayload>(
-    'match-jobs',
+    QUEUE_NAMES.LINEUPS,
     async (job: Job<FetchLineupsPayload>) => {
-      if (job.name !== JOB_TYPES.FETCH_LINEUPS) return;
-
       const { matchId, externalId, homeTeam, awayTeam } = job.data;
       
       console.log(`[Lineups Worker] Fetching lineups for ${homeTeam} vs ${awayTeam} (match: ${matchId})`);
@@ -50,7 +48,7 @@ export function createLineupsWorker() {
         // Lineups are available! Trigger immediate high-priority prediction
         // This ensures we generate predictions as soon as lineups are confirmed
         try {
-          await matchQueue.add(
+          await predictionsQueue.add(
             JOB_TYPES.PREDICT_MATCH,
             {
               matchId,

@@ -8,7 +8,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { getQueueConnection, matchQueue, JOB_TYPES } from '../index';
+import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, analysisQueue, oddsQueue, lineupsQueue, predictionsQueue } from '../index';
 import type { BackfillMissingPayload } from '../types';
 import { 
   getMatchesMissingAnalysis,
@@ -19,10 +19,8 @@ import {
 
 export function createBackfillWorker() {
   return new Worker<BackfillMissingPayload>(
-    'match-jobs',
+    QUEUE_NAMES.BACKFILL,
     async (job: Job<BackfillMissingPayload>) => {
-      if (job.name !== JOB_TYPES.BACKFILL_MISSING) return;
-
       const { hoursAhead = 12 } = job.data;
       
       console.log(`[Backfill Worker] Checking for matches with missing data (next ${hoursAhead}h)...`);
@@ -43,7 +41,7 @@ export function createBackfillWorker() {
           if (!match.externalId) continue;
           
           try {
-            await matchQueue.add(
+            await analysisQueue.add(
               JOB_TYPES.ANALYZE_MATCH,
               {
                 matchId: match.id,
@@ -71,7 +69,7 @@ export function createBackfillWorker() {
           if (!match.externalId) continue;
           
           try {
-            await matchQueue.add(
+            await oddsQueue.add(
               JOB_TYPES.REFRESH_ODDS,
               {
                 matchId: match.id,
@@ -97,7 +95,7 @@ export function createBackfillWorker() {
           if (!match.externalId) continue;
           
           try {
-            await matchQueue.add(
+            await lineupsQueue.add(
               JOB_TYPES.FETCH_LINEUPS,
               {
                 matchId: match.id,
@@ -123,7 +121,7 @@ export function createBackfillWorker() {
         
         for (const match of missingBets) {
           try {
-            await matchQueue.add(
+            await predictionsQueue.add(
               JOB_TYPES.PREDICT_MATCH,
               {
                 matchId: match.id,

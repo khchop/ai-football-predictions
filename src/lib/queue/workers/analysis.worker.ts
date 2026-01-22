@@ -6,17 +6,15 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { getQueueConnection, JOB_TYPES } from '../index';
+import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { AnalyzeMatchPayload } from '../types';
 import { fetchAndStoreAnalysis } from '@/lib/football/match-analysis';
 import { getMatchById } from '@/lib/db/queries';
 
 export function createAnalysisWorker() {
   return new Worker<AnalyzeMatchPayload>(
-    'match-jobs',
+    QUEUE_NAMES.ANALYSIS,
     async (job: Job<AnalyzeMatchPayload>) => {
-      if (job.name !== JOB_TYPES.ANALYZE_MATCH) return;
-
       const { matchId, externalId, homeTeam, awayTeam } = job.data;
       
       console.log(`[Analysis Worker] Analyzing ${homeTeam} vs ${awayTeam} (match: ${matchId})`);

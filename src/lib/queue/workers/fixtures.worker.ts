@@ -6,7 +6,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { getQueueConnection, JOB_TYPES } from '../index';
+import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { FetchFixturesPayload } from '../types';
 import { getUpcomingFixtures, mapFixtureStatus } from '@/lib/football/api-football';
 import { upsertMatch, upsertCompetition } from '@/lib/db/queries';
@@ -15,10 +15,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 export function createFixturesWorker() {
   return new Worker<FetchFixturesPayload>(
-    'match-jobs',
+    QUEUE_NAMES.FIXTURES,
     async (job: Job<FetchFixturesPayload>) => {
-      if (job.name !== JOB_TYPES.FETCH_FIXTURES) return;
-
       const { manual = false } = job.data;
       
       console.log(`[Fixtures Worker] Starting fetch (manual: ${manual})...`);

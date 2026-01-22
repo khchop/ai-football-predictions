@@ -5,14 +5,14 @@
  * Call this once when the app starts (from instrumentation.ts).
  */
 
-import { matchQueue, JOB_TYPES } from './index';
+import { fixturesQueue, backfillQueue, JOB_TYPES } from './index';
 
 export async function setupRepeatableJobs(): Promise<void> {
   console.log('[Queue Setup] Registering repeatable jobs...');
   
   try {
     // Fetch fixtures every 6 hours (00:00, 06:00, 12:00, 18:00 Berlin time)
-    await matchQueue.add(
+    await fixturesQueue.add(
       JOB_TYPES.FETCH_FIXTURES,
       { manual: false },
       {
@@ -37,7 +37,7 @@ export async function setupRepeatableJobs(): Promise<void> {
   
   try {
     // Backfill missing data every hour
-    await matchQueue.add(
+    await backfillQueue.add(
       JOB_TYPES.BACKFILL_MISSING,
       { manual: false, hoursAhead: 12 },
       {
@@ -60,7 +60,7 @@ export async function setupRepeatableJobs(): Promise<void> {
   
   // One-time immediate backfill on startup
   try {
-    await matchQueue.add(
+    await backfillQueue.add(
       JOB_TYPES.BACKFILL_MISSING,
       { manual: false, hoursAhead: 24 }, // Look further ahead on startup
       {
@@ -82,11 +82,18 @@ export async function setupRepeatableJobs(): Promise<void> {
 export async function removeRepeatableJobs(): Promise<void> {
   console.log('[Queue Setup] Removing repeatable jobs...');
   
-  const repeatableJobs = await matchQueue.getRepeatableJobs();
+  // Remove from fixtures queue
+  const fixturesRepeatableJobs = await fixturesQueue.getRepeatableJobs();
+  for (const job of fixturesRepeatableJobs) {
+    await fixturesQueue.removeRepeatableByKey(job.key);
+    console.log(`[Queue Setup] Removed from fixtures-queue: ${job.name} (${job.pattern})`);
+  }
   
-  for (const job of repeatableJobs) {
-    await matchQueue.removeRepeatableByKey(job.key);
-    console.log(`[Queue Setup] Removed: ${job.name} (${job.pattern})`);
+  // Remove from backfill queue
+  const backfillRepeatableJobs = await backfillQueue.getRepeatableJobs();
+  for (const job of backfillRepeatableJobs) {
+    await backfillQueue.removeRepeatableByKey(job.key);
+    console.log(`[Queue Setup] Removed from backfill-queue: ${job.name} (${job.pattern})`);
   }
   
   console.log('[Queue Setup] All repeatable jobs removed');

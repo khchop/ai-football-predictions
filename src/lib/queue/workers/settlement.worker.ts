@@ -6,7 +6,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { getQueueConnection, JOB_TYPES } from '../index';
+import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { SettleMatchPayload } from '../types';
 import { 
   getPendingBetsByMatch,
@@ -23,10 +23,8 @@ import {
 
 export function createSettlementWorker() {
   return new Worker<SettleMatchPayload>(
-    'match-jobs',
+    QUEUE_NAMES.SETTLEMENT,
     async (job: Job<SettleMatchPayload>) => {
-      if (job.name !== JOB_TYPES.SETTLE_MATCH) return;
-
       const { matchId, homeScore, awayScore, status } = job.data;
       
       console.log(`[Settlement Worker] Settling bets for match ${matchId} (${homeScore}-${awayScore}, ${status})`);

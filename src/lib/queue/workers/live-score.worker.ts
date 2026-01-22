@@ -7,7 +7,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { getQueueConnection, JOB_TYPES, matchQueue } from '../index';
+import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, liveQueue, settlementQueue } from '../index';
 import type { MonitorLivePayload } from '../types';
 import { getMatchById, updateMatchResult } from '@/lib/db/queries';
 import { getFixtureById, mapFixtureStatus, formatMatchMinute } from '@/lib/football/api-football';
@@ -17,10 +17,8 @@ const MAX_POLLS = 150; // Stop after 150 polls (2.5 hours) to prevent infinite l
 
 export function createLiveScoreWorker() {
   return new Worker<MonitorLivePayload>(
-    'match-jobs',
+    QUEUE_NAMES.LIVE,
     async (job: Job<MonitorLivePayload>) => {
-      if (job.name !== JOB_TYPES.MONITOR_LIVE) return;
-
       const { matchId, externalId, pollCount = 0 } = job.data;
       
       console.log(`[Live Score Worker] Poll ${pollCount + 1} for match ${matchId}`);
@@ -55,7 +53,7 @@ export function createLiveScoreWorker() {
           console.log(`[Live Score Worker] No fixture data from API for ${externalId}`);
           
           // Schedule next poll anyway (might be temporary API issue)
-          await matchQueue.add(
+          await liveQueue.add(
             JOB_TYPES.MONITOR_LIVE,
             {
               matchId,
@@ -93,7 +91,7 @@ export function createLiveScoreWorker() {
           console.log(`[Live Score Worker] ✓ Match ${matchId} finished! Triggering settlement...`);
           
           // Trigger settlement job
-          await matchQueue.add(
+          await settlementQueue.add(
             JOB_TYPES.SETTLE_MATCH,
             {
               matchId,
@@ -117,7 +115,7 @@ export function createLiveScoreWorker() {
         }
         
         // Match still ongoing - schedule next poll
-        await matchQueue.add(
+        await liveQueue.add(
           JOB_TYPES.MONITOR_LIVE,
           {
             matchId,
@@ -145,7 +143,7 @@ export function createLiveScoreWorker() {
         
         // Don't throw - schedule next poll even on error (to recover from transient issues)
         try {
-          await matchQueue.add(
+          await liveQueue.add(
             JOB_TYPES.MONITOR_LIVE,
             {
               matchId,
