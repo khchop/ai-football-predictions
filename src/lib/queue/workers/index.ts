@@ -15,6 +15,7 @@ import { createLiveScoreWorker } from './live-score.worker';
 import { createScoringWorker } from './scoring.worker';
 import { createBackfillWorker } from './backfill.worker';
 import { createContentWorker } from './content.worker';
+import { addToDeadLetterQueue } from '../dead-letter';
 
 let workers: Worker[] = [];
 
@@ -35,8 +36,18 @@ function attachWorkerEvents(worker: Worker, name: string): void {
     console.log(`[Worker:${name}] ✓ Completed job: ${job.name} (id: ${job.id}) =>`, resultStr);
   });
 
-  worker.on('failed', (job, err) => {
+  worker.on('failed', async (job, err) => {
     console.error(`[Worker:${name}] ✗ Failed job: ${job?.name} (id: ${job?.id}):`, err.message);
+    
+    // If job has exhausted all retry attempts, add to DLQ
+    if (job && job.attemptsMade >= (job.opts.attempts || 5)) {
+      console.error(`[Worker:${name}] Job ${job.id} exhausted all retries, adding to DLQ`);
+      try {
+        await addToDeadLetterQueue(job, err);
+      } catch (dlqError) {
+        console.error(`[Worker:${name}] Failed to add job to DLQ:`, dlqError);
+      }
+    }
   });
 
   worker.on('error', (err) => {

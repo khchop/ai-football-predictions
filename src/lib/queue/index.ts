@@ -100,6 +100,7 @@ function createQueueOptions() {
       removeOnFail: {
         age: 7 * 24 * 60 * 60, // Keep failed jobs for 7 days
       },
+      timeout: 120000, // 2 minute timeout per job (individual workers may have shorter timeouts)
     },
   };
 }
