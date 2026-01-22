@@ -4,13 +4,40 @@
  * Provides a web UI for monitoring the job queue.
  * Access at: http://localhost:3000/api/admin/queues
  * 
- * Note: In production, protect this route with proper authentication!
+ * SECURITY: Requires admin authentication via X-Admin-Password header
  */
 
 import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 import { NextRequest, NextResponse } from 'next/server';
+
+function validateAdminRequest(request: NextRequest): NextResponse | null {
+  const password = request.headers.get('X-Admin-Password');
+  
+  if (!process.env.ADMIN_PASSWORD) {
+    // SECURITY: Fail closed in production
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[Bull Board] CRITICAL: ADMIN_PASSWORD not configured in production!');
+      return NextResponse.json(
+        { success: false, error: 'Server misconfigured' },
+        { status: 500 }
+      );
+    }
+    // Allow in development without password
+    console.warn('[Bull Board] ADMIN_PASSWORD not configured - allowing in development mode');
+    return null;
+  }
+  
+  if (password !== process.env.ADMIN_PASSWORD) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+  
+  return null;
+}
 
 // Lazy initialization to avoid build-time errors
 let serverAdapter: ExpressAdapter | null = null;
@@ -50,11 +77,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
 }
 
 async function handleRequest(req: NextRequest, params: { path?: string[] }) {
-  // TODO: Add authentication check here in production
-  // const authHeader = req.headers.get('authorization');
-  // if (!authHeader || authHeader !== `Bearer ${process.env.ADMIN_SECRET}`) {
-  //   return new NextResponse('Unauthorized', { status: 401 });
-  // }
+  // Validate password
+  const authError = validateAdminRequest(req);
+  if (authError) return authError;
 
   const path = params.path ? params.path.join('/') : '';
   const url = new URL(req.url);

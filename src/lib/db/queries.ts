@@ -386,28 +386,25 @@ export async function recordModelFailure(
 ): Promise<{ autoDisabled: boolean }> {
   const db = getDb();
   
-  // Get current failure count
-  const model = await db
-    .select({ consecutiveFailures: models.consecutiveFailures })
-    .from(models)
-    .where(eq(models.id, modelId))
-    .limit(1);
-  
-  const currentFailures = model[0]?.consecutiveFailures || 0;
-  const newFailures = currentFailures + 1;
-  const shouldAutoDisable = newFailures >= 3;
-  
-  await db
+  // Use atomic SQL to avoid race condition
+  const result = await db
     .update(models)
     .set({
-      consecutiveFailures: newFailures,
+      consecutiveFailures: sql`COALESCE(${models.consecutiveFailures}, 0) + 1`,
       lastFailureAt: new Date().toISOString(),
       failureReason: reason.substring(0, 500), // Truncate long error messages
-      autoDisabled: shouldAutoDisable,
+      // Auto-disable if failures >= 3 (evaluated atomically)
+      autoDisabled: sql`CASE WHEN COALESCE(${models.consecutiveFailures}, 0) + 1 >= 3 THEN TRUE ELSE ${models.autoDisabled} END`,
     })
-    .where(eq(models.id, modelId));
+    .where(eq(models.id, modelId))
+    .returning({ 
+      newFailures: models.consecutiveFailures,
+      autoDisabled: models.autoDisabled,
+    });
   
-  return { autoDisabled: shouldAutoDisable };
+  return { 
+    autoDisabled: result[0]?.autoDisabled || false,
+  };
 }
 
 // Re-enable a model that was auto-disabled
@@ -655,28 +652,35 @@ export async function settleBetsTransaction(
   const db = getDb();
   
   return db.transaction(async (tx) => {
-    // Update all bets
-    for (const bet of betsToSettle) {
-      await tx
-        .update(bets)
-        .set({
-          status: bet.status,
-          payout: bet.payout,
-          profit: bet.profit,
-          settledAt: new Date().toISOString(),
-        })
-        .where(eq(bets.id, bet.betId));
+    const settledAt = new Date().toISOString();
+    
+    // Batch update all bets (instead of N individual queries)
+    if (betsToSettle.length > 0) {
+      // Note: Drizzle doesn't support batch updates with different values easily,
+      // so we'll update them one by one within the transaction for now.
+      // This is still better than separate transactions and avoids the main race condition.
+      for (const bet of betsToSettle) {
+        await tx
+          .update(bets)
+          .set({
+            status: bet.status,
+            payout: bet.payout,
+            profit: bet.profit,
+            settledAt,
+          })
+          .where(eq(bets.id, bet.betId));
+      }
     }
     
-    // Update all model balances
+    // Update all model balances (atomic SQL prevents race conditions)
     for (const [modelId, update] of balanceUpdates) {
       await tx
         .update(modelBalances)
         .set({
-          currentBalance: sql`${modelBalances.currentBalance} + ${update.totalPayout}`,
-          totalWon: sql`${modelBalances.totalWon} + ${update.totalPayout}`,
-          winningBets: sql`${modelBalances.winningBets} + ${update.winsCount}`,
-          updatedAt: new Date().toISOString(),
+          currentBalance: sql`COALESCE(${modelBalances.currentBalance}, 0) + ${update.totalPayout}`,
+          totalWon: sql`COALESCE(${modelBalances.totalWon}, 0) + ${update.totalPayout}`,
+          winningBets: sql`COALESCE(${modelBalances.winningBets}, 0) + ${update.winsCount}`,
+          updatedAt: settledAt,
         })
         .where(and(
           eq(modelBalances.modelId, modelId),
@@ -690,16 +694,30 @@ export async function settleBetsTransaction(
 export async function updateModelBalanceAfterBets(
   modelId: string,
   season: string,
-  amountChange: number, // Positive for wins, negative for losses
+  amountChange: number,
   betsCount: number,
   winsCount: number
 ) {
   const db = getDb();
-  const balance = await getModelBalance(modelId, season);
   
-  if (!balance) {
-    throw new Error(`No balance found for model ${modelId} in season ${season}`);
-  }
+  // Use atomic SQL operations to avoid race condition
+  return db
+    .update(modelBalances)
+    .set({
+      currentBalance: sql`COALESCE(${modelBalances.currentBalance}, 0) + ${amountChange}`,
+      totalWagered: sql`COALESCE(${modelBalances.totalWagered}, 0) + ${amountChange < 0 ? Math.abs(amountChange) : 0}`,
+      totalWon: sql`COALESCE(${modelBalances.totalWon}, 0) + ${amountChange > 0 ? amountChange : 0}`,
+      totalBets: sql`COALESCE(${modelBalances.totalBets}, 0) + ${betsCount}`,
+      winningBets: sql`COALESCE(${modelBalances.winningBets}, 0) + ${winsCount}`,
+      updatedAt: new Date().toISOString(),
+    })
+    .where(
+      and(
+        eq(modelBalances.modelId, modelId),
+        eq(modelBalances.season, season)
+      )
+    );
+}
 
   return db
     .update(modelBalances)

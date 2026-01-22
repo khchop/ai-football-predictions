@@ -3,11 +3,40 @@
  * 
  * Provides visibility into the BullMQ queue state without Bull Board.
  * Shows job counts, active jobs, and upcoming scheduled jobs across all queues.
+ * 
+ * SECURITY: Requires admin authentication via X-Admin-Password header
  */
 
 import { getAllQueues, QUEUE_NAMES } from '@/lib/queue';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import type { Queue } from 'bullmq';
+
+function validateAdminRequest(request: NextRequest): NextResponse | null {
+  const password = request.headers.get('X-Admin-Password');
+  
+  if (!process.env.ADMIN_PASSWORD) {
+    // SECURITY: Fail closed in production
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[Queue Status] CRITICAL: ADMIN_PASSWORD not configured in production!');
+      return NextResponse.json(
+        { success: false, error: 'Server misconfigured' },
+        { status: 500 }
+      );
+    }
+    // Allow in development without password
+    console.warn('[Queue Status] ADMIN_PASSWORD not configured - allowing in development mode');
+    return null;
+  }
+  
+  if (password !== process.env.ADMIN_PASSWORD) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+  
+  return null;
+}
 
 async function getQueueStats(queue: Queue) {
   const [waiting, active, completed, failed, delayed, paused] = await Promise.all([
@@ -22,7 +51,11 @@ async function getQueueStats(queue: Queue) {
   return { waiting, active, completed, failed, delayed, paused };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Validate password
+  const authError = validateAdminRequest(request);
+  if (authError) return authError;
+
   try {
     const queues = getAllQueues();
     
@@ -106,15 +139,23 @@ export async function GET() {
 }
 
 function formatJob(job: any) {
+  // Sanitize job data to prevent sensitive info leakage
+  const sanitizedData = job.data ? {
+    matchId: job.data.matchId,
+    type: job.data.type,
+    // Omit potentially sensitive fields like API keys, full payloads
+  } : null;
+
   return {
     id: job.id,
     name: job.name,
-    data: job.data,
+    data: sanitizedData,
     timestamp: job.timestamp,
     processedOn: job.processedOn,
     finishedOn: job.finishedOn,
     delay: job.delay,
     attemptsMade: job.attemptsMade,
-    failedReason: job.failedReason,
+    // Only show first 200 chars of error to avoid stack trace leakage
+    failedReason: job.failedReason ? job.failedReason.substring(0, 200) : null,
   };
 }
