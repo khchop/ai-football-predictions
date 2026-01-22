@@ -3,69 +3,13 @@ import Image from 'next/image';
 import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { MatchEvents } from '@/components/match-events';
-import { getMatchWithAnalysis, getMatchById, getBetsForMatchWithDetails } from '@/lib/db/queries';
+import { getMatchWithAnalysis, getBetsForMatchWithDetails } from '@/lib/db/queries';
 import { getMatchEvents } from '@/lib/football/api-football';
-import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, AlertTriangle, Users } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, Target, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import type { KeyInjury, LikelyScore } from '@/types';
+import type { LikelyScore } from '@/types';
 import type { Metadata } from 'next';
-import { Collapsible } from '@/components/ui/collapsible';
-
-// Helper to get team abbreviation (3-4 chars)
-function getTeamAbbr(teamName: string): string {
-  // Common abbreviations
-  const abbrevMap: Record<string, string> = {
-    'manchester united': 'MUN',
-    'manchester city': 'MCI',
-    'liverpool': 'LIV',
-    'arsenal': 'ARS',
-    'chelsea': 'CHE',
-    'tottenham': 'TOT',
-    'newcastle': 'NEW',
-    'west ham': 'WHU',
-    'aston villa': 'AVL',
-    'brighton': 'BHA',
-    'real madrid': 'RMA',
-    'barcelona': 'BAR',
-    'atletico madrid': 'ATM',
-    'atlético madrid': 'ATM',
-    'sevilla': 'SEV',
-    'bayern munich': 'BAY',
-    'bayern münchen': 'BAY',
-    'borussia dortmund': 'BVB',
-    'dortmund': 'BVB',
-    'rb leipzig': 'RBL',
-    'juventus': 'JUV',
-    'inter milan': 'INT',
-    'inter': 'INT',
-    'ac milan': 'MIL',
-    'milan': 'MIL',
-    'napoli': 'NAP',
-    'roma': 'ROM',
-    'paris saint-germain': 'PSG',
-    'paris saint germain': 'PSG',
-    'psg': 'PSG',
-    'marseille': 'OM',
-    'olympique marseille': 'OM',
-    'lyon': 'OL',
-    'olympique lyonnais': 'OL',
-    'ajax': 'AJA',
-    'psv': 'PSV',
-    'feyenoord': 'FEY',
-    'galatasaray': 'GAL',
-    'fenerbahce': 'FEN',
-    'benfica': 'BEN',
-    'porto': 'POR',
-    'sporting': 'SCP',
-  };
-  
-  const normalized = teamName.toLowerCase().trim();
-  if (abbrevMap[normalized]) return abbrevMap[normalized];
-  
-  // Default: first 3 letters uppercase
-  return teamName.slice(0, 3).toUpperCase();
-}
 
 // Helper to find the lowest odds (favorite)
 function getLowestOdds(home: string, draw: string, away: string): 'home' | 'draw' | 'away' {
@@ -77,12 +21,6 @@ function getLowestOdds(home: string, draw: string, away: string): 'home' | 'draw
   return 'draw';
 }
 
-// Helper to format lineup players into a cleaner list
-function formatLineup(lineup: string | null): string[] {
-  if (!lineup) return [];
-  return lineup.split(',').map(p => p.trim()).filter(Boolean);
-}
-
 export const dynamic = 'force-dynamic';
 
 interface MatchPageProps {
@@ -92,7 +30,7 @@ interface MatchPageProps {
 // Generate metadata for SEO
 export async function generateMetadata({ params }: MatchPageProps): Promise<Metadata> {
   const { id } = await params;
-  const result = await getMatchById(id);
+  const result = await getMatchWithAnalysis(id);
   
   if (!result) {
     return {
@@ -105,11 +43,11 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
   const kickoff = format(parseISO(match.kickoffTime), 'MMM d, yyyy HH:mm');
   
   return {
-    title: `${match.homeTeam} vs ${match.awayTeam} - AI Predictions`,
-    description: `AI predictions for ${match.homeTeam} vs ${match.awayTeam} in ${competition.name}. Kickoff: ${kickoff}. See what 30 AI models predict for this match.`,
+    title: `${match.homeTeam} vs ${match.awayTeam} - AI Betting Predictions`,
+    description: `AI betting predictions for ${match.homeTeam} vs ${match.awayTeam} in ${competition.name}. Kickoff: ${kickoff}. See odds and AI model bets.`,
     openGraph: {
       title: `${match.homeTeam} vs ${match.awayTeam}`,
-      description: `AI predictions for ${competition.name} match`,
+      description: `AI betting predictions for ${competition.name} match`,
       type: 'website',
     },
   };
@@ -141,8 +79,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const isFinished = match.status === 'finished';
   const isLive = match.status === 'live';
 
-  // Parse analysis data
-  const keyInjuries = parseJson<KeyInjury[]>(analysis?.keyInjuries ?? null) || [];
+  // Parse likely scores
   const likelyScores = parseJson<LikelyScore[]>(analysis?.likelyScores ?? null) || [];
 
   // Fetch match events for finished/live matches
@@ -150,11 +87,10 @@ export default async function MatchPage({ params }: MatchPageProps) {
     ? await getMatchEvents(parseInt(match.externalId, 10))
     : [];
 
-  // No predictions - using betting system now
-  const predictionsWithPoints: any[] = [];
-  const exactCount = 0;
-  const correctResultCount = 0;
-  const wrongCount = 0;
+  // Check if we have any analysis data
+  const hasAnalysis = analysis && (
+    analysis.oddsHome || analysis.homeWinPct || analysis.advice
+  );
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -322,275 +258,277 @@ export default async function MatchPage({ params }: MatchPageProps) {
         </Card>
       )}
 
-      {/* Pre-Match Analysis Panel */}
-      {analysis && (
+      {/* Betting Odds & Predictions Panel */}
+      {hasAnalysis ? (
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-6">
             <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
-              Pre-Match Analysis
+              Betting Odds & Predictions
             </h2>
             
-            {/* Row 1: Betting Odds + Head-to-Head */}
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              {/* Betting Odds */}
+            <div className="space-y-6">
+              {/* API-Football Prediction */}
+              {(analysis.advice || analysis.homeWinPct) && (
+                <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Target className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">API-Football Prediction</span>
+                  </div>
+                  
+                  {analysis.advice && (
+                    <p className="text-lg font-semibold mb-4">{analysis.advice}</p>
+                  )}
+                  
+                  {analysis.homeWinPct && analysis.drawPct && analysis.awayWinPct && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <span className="w-16 text-sm text-muted-foreground">Home</span>
+                        <div className="flex-1 h-8 rounded-full overflow-hidden bg-muted/30">
+                          <div 
+                            className="h-full bg-primary flex items-center justify-end pr-2"
+                            style={{ width: `${analysis.homeWinPct}%` }}
+                          >
+                            <span className="text-xs font-bold text-white">{analysis.homeWinPct}%</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="w-16 text-sm text-muted-foreground">Draw</span>
+                        <div className="flex-1 h-8 rounded-full overflow-hidden bg-muted/30">
+                          <div 
+                            className="h-full bg-muted-foreground/50 flex items-center justify-end pr-2"
+                            style={{ width: `${analysis.drawPct}%` }}
+                          >
+                            <span className="text-xs font-bold">{analysis.drawPct}%</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="w-16 text-sm text-muted-foreground">Away</span>
+                        <div className="flex-1 h-8 rounded-full overflow-hidden bg-muted/30">
+                          <div 
+                            className="h-full bg-accent flex items-center justify-end pr-2"
+                            style={{ width: `${analysis.awayWinPct}%` }}
+                          >
+                            <span className="text-xs font-bold text-white">{analysis.awayWinPct}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Match Result (1X2) Odds */}
               {analysis.oddsHome && analysis.oddsDraw && analysis.oddsAway && (() => {
                 const favorite = getLowestOdds(analysis.oddsHome, analysis.oddsDraw, analysis.oddsAway);
                 return (
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Betting Odds</h3>
-                    <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Match Result (1X2)</h3>
+                    <div className="grid grid-cols-3 gap-3">
                       <div className={cn(
-                        "flex-1 text-center py-3 px-2 rounded-lg transition-colors",
+                        "text-center py-4 px-3 rounded-lg transition-colors",
                         favorite === 'home'
-                          ? "bg-primary/15 border border-primary/40"
-                          : "bg-muted/50"
+                          ? "bg-primary/15 border-2 border-primary/40"
+                          : "bg-muted/50 border-2 border-transparent"
                       )}>
-                        <p className="text-xl font-bold font-mono">{analysis.oddsHome}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Home</p>
+                        <p className="text-2xl font-bold font-mono">{analysis.oddsHome}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Home Win</p>
                       </div>
                       <div className={cn(
-                        "flex-1 text-center py-3 px-2 rounded-lg transition-colors",
+                        "text-center py-4 px-3 rounded-lg transition-colors",
                         favorite === 'draw'
-                          ? "bg-primary/15 border border-primary/40"
-                          : "bg-muted/50"
+                          ? "bg-primary/15 border-2 border-primary/40"
+                          : "bg-muted/50 border-2 border-transparent"
                       )}>
-                        <p className="text-xl font-bold font-mono">{analysis.oddsDraw}</p>
+                        <p className="text-2xl font-bold font-mono">{analysis.oddsDraw}</p>
                         <p className="text-xs text-muted-foreground mt-1">Draw</p>
                       </div>
                       <div className={cn(
-                        "flex-1 text-center py-3 px-2 rounded-lg transition-colors",
+                        "text-center py-4 px-3 rounded-lg transition-colors",
                         favorite === 'away'
-                          ? "bg-primary/15 border border-primary/40"
-                          : "bg-muted/50"
+                          ? "bg-primary/15 border-2 border-primary/40"
+                          : "bg-muted/50 border-2 border-transparent"
                       )}>
-                        <p className="text-xl font-bold font-mono">{analysis.oddsAway}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Away</p>
+                        <p className="text-2xl font-bold font-mono">{analysis.oddsAway}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Away Win</p>
                       </div>
                     </div>
                   </div>
                 );
               })()}
 
-              {/* Head-to-Head */}
-              {analysis.h2hTotal && analysis.h2hTotal > 0 && (
+              {/* Double Chance Odds */}
+              {analysis.odds1X && analysis.oddsX2 && analysis.odds12 && (
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                    Head-to-Head ({analysis.h2hTotal} matches)
-                  </h3>
-                  <div className="space-y-3">
-                    {/* Visual bar showing win distribution */}
-                    {(() => {
-                      const total = analysis.h2hTotal;
-                      const homeWins = analysis.h2hHomeWins || 0;
-                      const draws = analysis.h2hDraws || 0;
-                      const awayWins = analysis.h2hAwayWins || 0;
-                      const homePct = Math.round((homeWins / total) * 100);
-                      const drawPct = Math.round((draws / total) * 100);
-                      const awayPct = Math.round((awayWins / total) * 100);
-                      
-                      return (
-                        <>
-                          <div className="flex items-center gap-2">
-                            <span className="w-10 text-xs font-bold text-primary">{getTeamAbbr(match.homeTeam)}</span>
-                            <div className="flex-1 h-4 rounded-full overflow-hidden flex bg-muted/30">
-                              {homePct > 0 && (
-                                <div 
-                                  className="h-full bg-primary flex items-center justify-center"
-                                  style={{ width: `${homePct}%` }}
-                                >
-                                  {homePct >= 15 && <span className="text-[10px] font-bold text-white">{homeWins}</span>}
-                                </div>
-                              )}
-                              {drawPct > 0 && (
-                                <div 
-                                  className="h-full bg-muted-foreground/40 flex items-center justify-center"
-                                  style={{ width: `${drawPct}%` }}
-                                >
-                                  {drawPct >= 15 && <span className="text-[10px] font-bold">{draws}</span>}
-                                </div>
-                              )}
-                              {awayPct > 0 && (
-                                <div 
-                                  className="h-full bg-accent flex items-center justify-center"
-                                  style={{ width: `${awayPct}%` }}
-                                >
-                                  {awayPct >= 15 && <span className="text-[10px] font-bold text-white">{awayWins}</span>}
-                                </div>
-                              )}
-                            </div>
-                            <span className="w-10 text-xs font-bold text-accent text-right">{getTeamAbbr(match.awayTeam)}</span>
-                          </div>
-                          
-                          {/* Legend */}
-                          <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>{homeWins} wins</span>
-                            <span>{draws} draws</span>
-                            <span>{awayWins} wins</span>
-                          </div>
-                        </>
-                      );
-                    })()}
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Double Chance</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="text-center py-3 px-3 rounded-lg bg-muted/50">
+                      <p className="text-xl font-bold font-mono">{analysis.odds1X}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Home or Draw</p>
+                    </div>
+                    <div className="text-center py-3 px-3 rounded-lg bg-muted/50">
+                      <p className="text-xl font-bold font-mono">{analysis.oddsX2}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Draw or Away</p>
+                    </div>
+                    <div className="text-center py-3 px-3 rounded-lg bg-muted/50">
+                      <p className="text-xl font-bold font-mono">{analysis.odds12}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Home or Away</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Over/Under Goals */}
+              {(analysis.oddsOver15 || analysis.oddsOver25 || analysis.oddsOver35) && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Over/Under Goals</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {analysis.oddsOver05 && analysis.oddsUnder05 && (
+                      <div className="rounded-lg bg-muted/50 p-3">
+                        <p className="text-xs text-muted-foreground mb-1">0.5 Goals</p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-mono">O {analysis.oddsOver05}</span>
+                          <span className="text-xs text-muted-foreground">|</span>
+                          <span className="text-sm font-mono">U {analysis.oddsUnder05}</span>
+                        </div>
+                      </div>
+                    )}
+                    {analysis.oddsOver15 && analysis.oddsUnder15 && (
+                      <div className="rounded-lg bg-muted/50 p-3">
+                        <p className="text-xs text-muted-foreground mb-1">1.5 Goals</p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-mono">O {analysis.oddsOver15}</span>
+                          <span className="text-xs text-muted-foreground">|</span>
+                          <span className="text-sm font-mono">U {analysis.oddsUnder15}</span>
+                        </div>
+                      </div>
+                    )}
+                    {analysis.oddsOver25 && analysis.oddsUnder25 && (
+                      <div className="rounded-lg bg-muted/50 p-3">
+                        <p className="text-xs text-muted-foreground mb-1">2.5 Goals</p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-mono">O {analysis.oddsOver25}</span>
+                          <span className="text-xs text-muted-foreground">|</span>
+                          <span className="text-sm font-mono">U {analysis.oddsUnder25}</span>
+                        </div>
+                      </div>
+                    )}
+                    {analysis.oddsOver35 && analysis.oddsUnder35 && (
+                      <div className="rounded-lg bg-muted/50 p-3">
+                        <p className="text-xs text-muted-foreground mb-1">3.5 Goals</p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-mono">O {analysis.oddsOver35}</span>
+                          <span className="text-xs text-muted-foreground">|</span>
+                          <span className="text-sm font-mono">U {analysis.oddsUnder35}</span>
+                        </div>
+                      </div>
+                    )}
+                    {analysis.oddsOver45 && analysis.oddsUnder45 && (
+                      <div className="rounded-lg bg-muted/50 p-3">
+                        <p className="text-xs text-muted-foreground mb-1">4.5 Goals</p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-mono">O {analysis.oddsOver45}</span>
+                          <span className="text-xs text-muted-foreground">|</span>
+                          <span className="text-sm font-mono">U {analysis.oddsUnder45}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Both Teams To Score */}
+              {analysis.oddsBttsYes && analysis.oddsBttsNo && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Both Teams To Score</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="text-center py-3 px-3 rounded-lg bg-muted/50">
+                      <p className="text-xl font-bold font-mono">{analysis.oddsBttsYes}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Yes</p>
+                    </div>
+                    <div className="text-center py-3 px-3 rounded-lg bg-muted/50">
+                      <p className="text-xl font-bold font-mono">{analysis.oddsBttsNo}</p>
+                      <p className="text-xs text-muted-foreground mt-1">No</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Likely Scores */}
+              {likelyScores.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Likely Scores</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {likelyScores.slice(0, 6).map((score, i) => (
+                      <span key={i} className={cn(
+                        "px-4 py-2 rounded-lg text-sm font-mono",
+                        i === 0 ? "bg-primary/15 border border-primary/30 font-semibold" : "bg-muted/50"
+                      )}>
+                        {score.score} <span className="text-muted-foreground text-xs">@{score.odds}</span>
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}
             </div>
-
-            {/* Likely Scores */}
-            {likelyScores.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Likely Scores</h3>
-                <div className="flex flex-wrap gap-2">
-                  {likelyScores.slice(0, 4).map((score, i) => (
-                    <span key={i} className={cn(
-                      "px-3 py-1.5 rounded-lg text-sm font-mono",
-                      i === 0 ? "bg-primary/15 border border-primary/30" : "bg-muted/50"
-                    )}>
-                      {score.score} <span className="text-muted-foreground text-xs">@{score.odds}</span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Collapsible: Lineups */}
-            {analysis.lineupsAvailable && analysis.homeStartingXI && analysis.awayStartingXI && (
-              <Collapsible
-                title={`Confirmed Lineups`}
-                icon={<Users className="h-4 w-4" />}
-                defaultOpen={false}
-                className="mt-4"
-              >
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="font-medium text-sm">{match.homeTeam}</span>
-                      {analysis.homeFormation && (
-                        <span className="text-xs px-2 py-0.5 bg-primary/10 rounded-full text-primary">
-                          {analysis.homeFormation}
-                        </span>
-                      )}
-                    </div>
-                    {analysis.homeCoach && (
-                      <p className="text-xs text-muted-foreground mb-3">Coach: {analysis.homeCoach}</p>
-                    )}
-                    <div className="grid grid-cols-2 gap-1">
-                      {formatLineup(analysis.homeStartingXI).map((player, i) => (
-                        <span key={i} className="text-xs text-muted-foreground py-0.5">
-                          {player}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="font-medium text-sm">{match.awayTeam}</span>
-                      {analysis.awayFormation && (
-                        <span className="text-xs px-2 py-0.5 bg-accent/10 rounded-full text-accent">
-                          {analysis.awayFormation}
-                        </span>
-                      )}
-                    </div>
-                    {analysis.awayCoach && (
-                      <p className="text-xs text-muted-foreground mb-3">Coach: {analysis.awayCoach}</p>
-                    )}
-                    <div className="grid grid-cols-2 gap-1">
-                      {formatLineup(analysis.awayStartingXI).map((player, i) => (
-                        <span key={i} className="text-xs text-muted-foreground py-0.5">
-                          {player}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </Collapsible>
-            )}
-
-            {/* Collapsible: Key Absences */}
-            {keyInjuries.length > 0 && (
-              <Collapsible
-                title={`Key Absences (${(analysis.homeInjuriesCount || 0) + (analysis.awayInjuriesCount || 0)})`}
-                icon={<AlertTriangle className="h-4 w-4 text-red-400" />}
-                defaultOpen={false}
-                className="mt-0"
-              >
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <p className="text-sm font-medium mb-2">{match.homeTeam} ({analysis.homeInjuriesCount || 0})</p>
-                    <div className="space-y-1.5">
-                      {keyInjuries
-                        .filter(i => i.teamName === match.homeTeam)
-                        .slice(0, 5)
-                        .map((injury, i) => (
-                          <div key={i} className="flex items-center gap-2 text-xs">
-                            <span className="text-muted-foreground">{injury.playerName}</span>
-                            <span className="text-red-400">- {injury.reason}</span>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium mb-2">{match.awayTeam} ({analysis.awayInjuriesCount || 0})</p>
-                    <div className="space-y-1.5">
-                      {keyInjuries
-                        .filter(i => i.teamName === match.awayTeam)
-                        .slice(0, 5)
-                        .map((injury, i) => (
-                          <div key={i} className="flex items-center gap-2 text-xs">
-                            <span className="text-muted-foreground">{injury.playerName}</span>
-                            <span className="text-red-400">- {injury.reason}</span>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                </div>
-              </Collapsible>
-            )}
+          </CardContent>
+        </Card>
+      ) : !isFinished && !isLive && (
+        <Card className="bg-card/50 border-border/50">
+          <CardContent className="p-8 text-center">
+            <TrendingUp className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+            <p className="text-muted-foreground">
+              Pre-match analysis and betting odds will be available closer to kickoff (~6 hours before the match).
+            </p>
           </CardContent>
         </Card>
       )}
 
-      {/* Predictions Table - Removed, using betting system now */}
-
-      {/* Bets Placed on This Match */}
-      {bets && bets.length > 0 && (
+      {/* AI Model Bets */}
+      {bets && bets.length > 0 ? (
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-6">
-            <h2 className="text-xl font-bold mb-2">Bets Placed</h2>
+            <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-primary" />
+              AI Model Bets
+            </h2>
             <p className="text-sm text-muted-foreground mb-6">
-              {bets.length} bets from AI models on this match
+              {bets.length} bet{bets.length !== 1 ? 's' : ''} placed by AI models
             </p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/50">
-                    <th className="text-left py-2 px-2">Model</th>
-                    <th className="text-left py-2 px-2">Bet</th>
-                    <th className="text-right py-2 px-2">Odds</th>
-                    <th className="text-right py-2 px-2">Stake</th>
-                    <th className="text-center py-2 px-2">Status</th>
-                    <th className="text-right py-2 px-2">Profit</th>
+                    <th className="text-left py-3 px-2 font-medium">Model</th>
+                    <th className="text-left py-3 px-2 font-medium">Bet Type</th>
+                    <th className="text-left py-3 px-2 font-medium">Selection</th>
+                    <th className="text-right py-3 px-2 font-medium">Odds</th>
+                    <th className="text-right py-3 px-2 font-medium">Stake</th>
+                    <th className="text-center py-3 px-2 font-medium">Status</th>
+                    <th className="text-right py-3 px-2 font-medium">Profit</th>
                   </tr>
                 </thead>
                 <tbody>
                   {bets.map((bet) => (
                     <tr key={bet.betId} className="border-b border-border/30">
-                      <td className="py-2 px-2">
-                        <Link href={`/models/${bet.modelId}`} className="hover:text-primary">
+                      <td className="py-3 px-2">
+                        <Link href={`/models/${bet.modelId}`} className="hover:text-primary transition-colors">
                           {bet.modelDisplayName}
                         </Link>
                       </td>
-                      <td className="py-2 px-2">
-                        <span className="text-xs bg-muted px-1.5 py-0.5 rounded mr-1">
+                      <td className="py-3 px-2">
+                        <span className="text-xs bg-muted px-2 py-1 rounded">
                           {bet.betType}
                         </span>
-                        {bet.selection}
                       </td>
-                      <td className="text-right py-2 px-2 font-mono">{bet.odds?.toFixed(2)}</td>
-                      <td className="text-right py-2 px-2 font-mono">€{bet.stake?.toFixed(2)}</td>
-                      <td className="text-center py-2 px-2">
+                      <td className="py-3 px-2 font-medium">{bet.selection}</td>
+                      <td className="text-right py-3 px-2 font-mono">{bet.odds?.toFixed(2)}</td>
+                      <td className="text-right py-3 px-2 font-mono">€{bet.stake?.toFixed(2)}</td>
+                      <td className="text-center py-3 px-2">
                         <span className={cn(
-                          "px-2 py-0.5 rounded-full text-xs font-medium",
+                          "px-2 py-1 rounded-full text-xs font-medium",
                           bet.status === 'won' && "bg-green-500/20 text-green-400",
                           bet.status === 'lost' && "bg-red-500/20 text-red-400",
                           bet.status === 'pending' && "bg-yellow-500/20 text-yellow-400",
@@ -600,17 +538,31 @@ export default async function MatchPage({ params }: MatchPageProps) {
                         </span>
                       </td>
                       <td className={cn(
-                        "text-right py-2 px-2 font-mono",
+                        "text-right py-3 px-2 font-mono font-medium",
                         (bet.profit ?? 0) > 0 && "text-green-400",
                         (bet.profit ?? 0) < 0 && "text-red-400"
                       )}>
-                        {bet.profit !== null ? `€${bet.profit.toFixed(2)}` : '-'}
+                        {bet.profit !== null ? (
+                          <>{bet.profit >= 0 ? '+' : ''}€{bet.profit.toFixed(2)}</>
+                        ) : '-'}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+          </CardContent>
+        </Card>
+      ) : !isFinished && !isLive && (
+        <Card className="bg-card/50 border-border/50">
+          <CardContent className="p-8 text-center">
+            <DollarSign className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+            <p className="text-muted-foreground mb-2 font-medium">
+              AI model bets will be placed approximately 1 hour before kickoff
+            </p>
+            <p className="text-sm text-muted-foreground/70">
+              Bets are generated when team lineups are confirmed
+            </p>
           </CardContent>
         </Card>
       )}
