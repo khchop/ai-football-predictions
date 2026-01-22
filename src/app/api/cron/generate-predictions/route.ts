@@ -446,6 +446,8 @@ async function processModelPredictions(
                   createdAt,
                 });
                 totalStake += stake;
+              } else {
+                console.log(`[Bet Skip] Match ${batchMatch.match.id}: No odds for result bet "${bets.resultBet}"`);
               }
             }
 
@@ -466,6 +468,8 @@ async function processModelPredictions(
                   createdAt,
                 });
                 totalStake += stake;
+              } else {
+                console.log(`[Bet Skip] Match ${batchMatch.match.id}: No odds for over/under bet "${bets.overUnderBet}"`);
               }
             }
 
@@ -486,6 +490,8 @@ async function processModelPredictions(
                   createdAt,
                 });
                 totalStake += stake;
+              } else {
+                console.log(`[Bet Skip] Match ${batchMatch.match.id}: No odds for BTTS bet "${bets.bttsBet}"`);
               }
             }
 

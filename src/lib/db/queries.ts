@@ -2127,13 +2127,13 @@ export async function getModelBettingStats(modelId: string) {
     return null;
   }
 
-  const profit = (balance.currentBalance || 0) - (balance.startingBalance || 1000);
+  const profit = (balance.currentBalance || 0) - (balance.startingBalance || BETTING_CONSTANTS.STARTING_BALANCE);
   const roi = balance.startingBalance ? (profit / balance.startingBalance) * 100 : 0;
   const winRate = balance.totalBets ? ((balance.winningBets || 0) / balance.totalBets) * 100 : 0;
 
   return {
     balance: balance.currentBalance || 0,
-    startingBalance: balance.startingBalance || 1000,
+    startingBalance: balance.startingBalance || BETTING_CONSTANTS.STARTING_BALANCE,
     profit,
     roi,
     totalBets: balance.totalBets || 0,
@@ -2197,7 +2197,7 @@ export async function getBettingLeaderboard() {
 
   // Calculate derived stats
   return leaderboardData.map(row => {
-    const profit = (row.currentBalance || 0) - (row.startingBalance || 1000);
+    const profit = (row.currentBalance || 0) - (row.startingBalance || BETTING_CONSTANTS.STARTING_BALANCE);
     const roi = row.startingBalance ? (profit / row.startingBalance) * 100 : 0;
     const winRate = row.totalBets ? ((row.winningBets || 0) / row.totalBets) * 100 : 0;
     const averageOdds = row.winningBets && row.totalWon && row.winningBets > 0

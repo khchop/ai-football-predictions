@@ -396,7 +396,7 @@ function buildCompactMatchSummary(context: BatchMatchContext, index: number, hom
       
       // Result odds: 1X2 + Double Chance
       const result1X2 = `1:${analysis.oddsHome || '-'} X:${analysis.oddsDraw || '-'} 2:${analysis.oddsAway || '-'}`;
-      const resultDC = `1X:${analysis.odds1X || '-'} X2:${analysis.oddsX2 || '-'}`;
+      const resultDC = `1X:${analysis.odds1X || '-'} X2:${analysis.oddsX2 || '-'} 12:${analysis.odds12 || '-'}`;
       lines.push(`      Result: ${result1X2} | ${resultDC}`);
       
       // Over/Under odds (compact - show available lines)

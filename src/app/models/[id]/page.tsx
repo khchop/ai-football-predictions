@@ -14,9 +14,11 @@ import {
   getModelStatsByCompetition,
   getModelPredictionHistory,
   getModelFunStats,
+  getModelBettingStats,
 } from '@/lib/db/queries';
 import { getProviderById, type ModelTier } from '@/lib/llm';
-import { ArrowLeft, Bot, Sparkles, Target, Hash } from 'lucide-react';
+import { ArrowLeft, Bot, Sparkles, Target, Hash, DollarSign } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -116,12 +118,13 @@ export default async function ModelPage({ params }: ModelPageProps) {
   }
 
   // Fetch all data in parallel
-  const [stats, weeklyPerformance, competitionStats, recentPredictions, funStats] = await Promise.all([
+  const [stats, weeklyPerformance, competitionStats, recentPredictions, funStats, bettingStats] = await Promise.all([
     getModelOverallStats(id),
     getModelWeeklyPerformance(id),
     getModelStatsByCompetition(id),
     getModelPredictionHistory(id, { limit: 21 }), // Fetch 21 to check if there are more
     getModelFunStats(id),
+    getModelBettingStats(id),
   ]);
 
   // Get provider info for tier badge
@@ -161,6 +164,47 @@ export default async function ModelPage({ params }: ModelPageProps) {
 
       {/* Fun Stats */}
       <FunStats stats={funStats} />
+
+      {/* Betting Performance */}
+      {bettingStats && (
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <DollarSign className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold">Betting Performance</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="rounded-xl bg-card/50 border border-border/50 p-4">
+              <p className="text-xs text-muted-foreground mb-1">Balance</p>
+              <p className="text-2xl font-bold font-mono">€{bettingStats.balance.toFixed(2)}</p>
+            </div>
+            <div className="rounded-xl bg-card/50 border border-border/50 p-4">
+              <p className="text-xs text-muted-foreground mb-1">Profit/Loss</p>
+              <p className={cn(
+                "text-2xl font-bold font-mono",
+                bettingStats.profit > 0 && "text-green-400",
+                bettingStats.profit < 0 && "text-red-400"
+              )}>
+                {bettingStats.profit >= 0 ? '+' : ''}€{bettingStats.profit.toFixed(2)}
+              </p>
+            </div>
+            <div className="rounded-xl bg-card/50 border border-border/50 p-4">
+              <p className="text-xs text-muted-foreground mb-1">ROI</p>
+              <p className={cn(
+                "text-2xl font-bold font-mono",
+                bettingStats.roi > 0 && "text-green-400",
+                bettingStats.roi < 0 && "text-red-400"
+              )}>
+                {bettingStats.roi >= 0 ? '+' : ''}{bettingStats.roi.toFixed(1)}%
+              </p>
+            </div>
+            <div className="rounded-xl bg-card/50 border border-border/50 p-4">
+              <p className="text-xs text-muted-foreground mb-1">Win Rate</p>
+              <p className="text-2xl font-bold font-mono">{bettingStats.winRate.toFixed(1)}%</p>
+              <p className="text-xs text-muted-foreground mt-1">{bettingStats.winningBets}/{bettingStats.totalBets}</p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Performance Chart */}
       <section>

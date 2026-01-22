@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { PredictionTable } from '@/components/prediction-table';
 import { MatchEvents } from '@/components/match-events';
-import { getMatchWithAnalysis, getMatchById } from '@/lib/db/queries';
+import { getMatchWithAnalysis, getMatchById, getBetsForMatchWithDetails } from '@/lib/db/queries';
 import { getMatchEvents } from '@/lib/football/api-football';
 import { calculateEnhancedScores } from '@/lib/utils/scoring';
 import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, AlertTriangle, Users } from 'lucide-react';
@@ -136,6 +136,9 @@ export default async function MatchPage({ params }: MatchPageProps) {
   }
 
   const { match, competition, analysis, predictions } = result;
+  
+  // Fetch bets for this match
+  const bets = await getBetsForMatchWithDetails(id);
   const kickoff = parseISO(match.kickoffTime);
   const isFinished = match.status === 'finished';
   const isLive = match.status === 'live';
@@ -630,6 +633,69 @@ export default async function MatchPage({ params }: MatchPageProps) {
           />
         </CardContent>
       </Card>
+
+      {/* Bets Placed on This Match */}
+      {bets && bets.length > 0 && (
+        <Card className="bg-card/50 border-border/50">
+          <CardContent className="p-6">
+            <h2 className="text-xl font-bold mb-2">Bets Placed</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              {bets.length} bets from AI models on this match
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/50">
+                    <th className="text-left py-2 px-2">Model</th>
+                    <th className="text-left py-2 px-2">Bet</th>
+                    <th className="text-right py-2 px-2">Odds</th>
+                    <th className="text-right py-2 px-2">Stake</th>
+                    <th className="text-center py-2 px-2">Status</th>
+                    <th className="text-right py-2 px-2">Profit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bets.map((bet) => (
+                    <tr key={bet.betId} className="border-b border-border/30">
+                      <td className="py-2 px-2">
+                        <Link href={`/models/${bet.modelId}`} className="hover:text-primary">
+                          {bet.modelDisplayName}
+                        </Link>
+                      </td>
+                      <td className="py-2 px-2">
+                        <span className="text-xs bg-muted px-1.5 py-0.5 rounded mr-1">
+                          {bet.betType}
+                        </span>
+                        {bet.selection}
+                      </td>
+                      <td className="text-right py-2 px-2 font-mono">{bet.odds?.toFixed(2)}</td>
+                      <td className="text-right py-2 px-2 font-mono">€{bet.stake?.toFixed(2)}</td>
+                      <td className="text-center py-2 px-2">
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-full text-xs font-medium",
+                          bet.status === 'won' && "bg-green-500/20 text-green-400",
+                          bet.status === 'lost' && "bg-red-500/20 text-red-400",
+                          bet.status === 'pending' && "bg-yellow-500/20 text-yellow-400",
+                          bet.status === 'void' && "bg-muted text-muted-foreground"
+                        )}>
+                          {bet.status}
+                        </span>
+                      </td>
+                      <td className={cn(
+                        "text-right py-2 px-2 font-mono",
+                        (bet.profit ?? 0) > 0 && "text-green-400",
+                        (bet.profit ?? 0) < 0 && "text-red-400"
+                      )}>
+                        {bet.profit !== null ? `€${bet.profit.toFixed(2)}` : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
