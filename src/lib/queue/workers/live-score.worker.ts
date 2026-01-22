@@ -141,26 +141,40 @@ export function createLiveScoreWorker() {
       } catch (error: any) {
         console.error(`[Live Score Worker] Error:`, error);
         
-        // Don't throw - schedule next poll even on error (to recover from transient issues)
-        try {
-          await liveQueue.add(
-            JOB_TYPES.MONITOR_LIVE,
-            {
-              matchId,
-              externalId,
-              kickoffTime: job.data.kickoffTime,
-              pollCount: pollCount + 1,
-            },
-            {
-              delay: POLL_INTERVAL_MS,
-              jobId: `live-poll-${matchId}-${pollCount + 1}`,
-            }
-          );
-        } catch (scheduleError) {
-          // Already exists, that's fine
-        }
+        // Classify error type
+        const isRetryable = 
+          error.code === 'ECONNREFUSED' ||
+          error.code === 'ETIMEDOUT' ||
+          error.message?.includes('timeout') ||
+          error.message?.includes('rate limit') ||
+          error.status === 429 ||
+          error.status === 503;
         
-        return { success: false, error: error.message, nextPollScheduled: true };
+        if (isRetryable) {
+          // For transient errors, schedule next poll to recover automatically
+          try {
+            await liveQueue.add(
+              JOB_TYPES.MONITOR_LIVE,
+              {
+                matchId,
+                externalId,
+                kickoffTime: job.data.kickoffTime,
+                pollCount: pollCount + 1,
+              },
+              {
+                delay: POLL_INTERVAL_MS,
+                jobId: `live-poll-${matchId}-${pollCount + 1}`,
+              }
+            );
+            return { success: false, error: error.message, nextPollScheduled: true, retryable: true };
+          } catch (scheduleError) {
+            // Already exists, that's fine
+            return { success: false, error: error.message, nextPollScheduled: false, retryable: true };
+          }
+        } else {
+          // For non-retryable errors (business logic), throw to fail the job
+          throw error;
+        }
       }
     },
     {

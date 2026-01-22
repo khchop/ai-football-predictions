@@ -120,10 +120,10 @@ export function createScoringWorker() {
         };
       } catch (error: any) {
         console.error(`[Scoring Worker] Error scoring match ${matchId}:`, error);
-        return { 
-          success: false, 
-          error: error.message,
-        };
+        
+        // Throw error to enable BullMQ retry mechanism
+        // BullMQ will retry with exponential backoff based on queue config
+        throw error;
       }
     },
     {
