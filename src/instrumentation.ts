@@ -13,6 +13,16 @@ export async function register() {
     console.log('\n🚀 [Instrumentation] Initializing event-driven betting system...\n');
 
     try {
+      // 0. Sync models from code to database (auto-sync on startup)
+      try {
+        const { syncModelsToDatabase } = await import('./lib/db/sync-models');
+        const result = await syncModelsToDatabase();
+        console.log(`[Instrumentation] Model sync: ${result.total} active models`);
+      } catch (syncError) {
+        console.error('[Instrumentation] Model sync failed (non-fatal):', syncError);
+        // Continue startup even if sync fails
+      }
+
       // 1. Setup repeatable jobs (fetch-fixtures every 6h)
       const { setupRepeatableJobs } = await import('./lib/queue/setup');
       await setupRepeatableJobs();
