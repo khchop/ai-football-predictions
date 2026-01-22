@@ -8,6 +8,7 @@ export const competitions = pgTable('competitions', {
   apiFootballId: integer('api_football_id').notNull(), // API-Football league ID
   season: integer('season').notNull(), // e.g., 2024
   active: boolean('active').default(true),
+  slug: text('slug').unique(), // SEO-friendly slug, e.g., "champions-league"
   createdAt: text('created_at').default(sql`now()`),
 });
 
@@ -35,6 +36,7 @@ export const matches = pgTable('matches', {
   quotaHome: integer('quota_home'), // Points for predicting home win (2-6)
   quotaDraw: integer('quota_draw'), // Points for predicting draw (2-6)
   quotaAway: integer('quota_away'), // Points for predicting away win (2-6)
+  slug: text('slug').unique(), // SEO-friendly slug, e.g., "manchester-city-vs-arsenal-2026-01-22"
   createdAt: text('created_at').default(sql`now()`),
   updatedAt: text('updated_at').default(sql`now()`),
 }, (table) => [
@@ -42,6 +44,7 @@ export const matches = pgTable('matches', {
   index('idx_matches_status').on(table.status),
   index('idx_matches_kickoff_time').on(table.kickoffTime),
   index('idx_matches_status_kickoff').on(table.status, table.kickoffTime),
+  index('idx_matches_slug').on(table.slug),
 ]);
 
 // LLM models we test

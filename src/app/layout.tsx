@@ -11,9 +11,31 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AI Football Predictions - Compare AI Models",
-  description: "See which AI models are best at predicting football match scores. Champions League, Premier League, World Cup and more.",
-  keywords: ["AI", "football", "predictions", "machine learning", "Champions League", "Premier League"],
+  title: "AI Football Predictions - 30 Models Compete | kroam.xyz",
+  description: "Compare 30 AI models predicting Champions League, Premier League & more. See which AI wins at football betting. Updated in real-time.",
+  keywords: ["AI", "football", "predictions", "machine learning", "Champions League", "Premier League", "AI betting", "football AI", "prediction accuracy"],
+  metadataBase: new URL('https://kroam.xyz'),
+  openGraph: {
+    title: "AI Football Predictions - 30 Models Compete",
+    description: "Compare 30 AI models predicting football. See which AI beats the bookies.",
+    url: 'https://kroam.xyz',
+    siteName: 'kroam.xyz',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "AI Football Predictions - 30 Models Compete",
+    description: "See which AI is best at predicting football matches",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
 };
 
 export default function RootLayout({
@@ -21,9 +43,23 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "kroam.xyz",
+    "url": "https://kroam.xyz",
+    "description": "AI football prediction platform comparing 30 AI models on match predictions",
+    "logo": "https://kroam.xyz/logo.png",
+  };
+
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} antialiased min-h-screen bg-background flex flex-col`}>
+        {/* Organization Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
         {/* Swetrix Analytics */}
         <Analytics />
         {/* Background gradient effect */}
