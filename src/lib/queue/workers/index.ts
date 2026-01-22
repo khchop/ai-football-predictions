@@ -16,6 +16,36 @@ import { createBackfillWorker } from './backfill.worker';
 
 let workers: Worker[] = [];
 
+/**
+ * Attach event listeners to a worker for debugging
+ */
+function attachWorkerEvents(worker: Worker, name: string): void {
+  worker.on('ready', () => {
+    console.log(`[Worker:${name}] ✓ Ready and listening for jobs`);
+  });
+
+  worker.on('active', (job) => {
+    console.log(`[Worker:${name}] ▶ Processing job: ${job.name} (id: ${job.id})`);
+  });
+
+  worker.on('completed', (job, result) => {
+    const resultStr = typeof result === 'object' ? JSON.stringify(result) : result;
+    console.log(`[Worker:${name}] ✓ Completed job: ${job.name} (id: ${job.id}) =>`, resultStr);
+  });
+
+  worker.on('failed', (job, err) => {
+    console.error(`[Worker:${name}] ✗ Failed job: ${job?.name} (id: ${job?.id}):`, err.message);
+  });
+
+  worker.on('error', (err) => {
+    console.error(`[Worker:${name}] ⚠ Error:`, err.message);
+  });
+
+  worker.on('stalled', (jobId) => {
+    console.warn(`[Worker:${name}] ⚠ Stalled job: ${jobId}`);
+  });
+}
+
 export function startAllWorkers(): Worker[] {
   if (workers.length > 0) {
     console.log('[Workers] Workers already started');
@@ -24,17 +54,25 @@ export function startAllWorkers(): Worker[] {
 
   console.log('[Workers] Starting all workers...');
 
-  workers = [
-    createFixturesWorker(),
-    createAnalysisWorker(),
-    createLineupsWorker(),
-    createPredictionsWorker(),
-    createLiveScoreWorker(),
-    createSettlementWorker(),
-    createBackfillWorker(),
+  // Create workers with names for event logging
+  const workerConfigs = [
+    { name: 'fixtures', create: createFixturesWorker },
+    { name: 'analysis', create: createAnalysisWorker },
+    { name: 'lineups', create: createLineupsWorker },
+    { name: 'predictions', create: createPredictionsWorker },
+    { name: 'live-score', create: createLiveScoreWorker },
+    { name: 'settlement', create: createSettlementWorker },
+    { name: 'backfill', create: createBackfillWorker },
   ];
 
-  console.log(`[Workers] ✓ Started ${workers.length} workers`);
+  workers = workerConfigs.map(({ name, create }) => {
+    const worker = create();
+    attachWorkerEvents(worker, name);
+    console.log(`[Workers] Created worker: ${name}`);
+    return worker;
+  });
+
+  console.log(`[Workers] ✓ Created ${workers.length} workers, waiting for ready events...`);
 
   // Handle graceful shutdown
   const cleanup = async () => {

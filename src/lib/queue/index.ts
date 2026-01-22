@@ -30,9 +30,16 @@ export type JobType = typeof JOB_TYPES[keyof typeof JOB_TYPES];
 
 // Redis connection for BullMQ (separate from cache to avoid conflicts)
 let connection: IORedis | null = null;
+let connectionId = 0;
 
 export function getQueueConnection(): IORedis {
-  if (connection) return connection;
+  if (connection) {
+    console.log(`[Queue] Reusing existing Redis connection #${connectionId}`);
+    return connection;
+  }
+  
+  connectionId++;
+  console.log(`[Queue] Creating new Redis connection #${connectionId}...`);
   
   const redisUrl = process.env.REDIS_URL;
   if (!redisUrl) {
@@ -45,11 +52,19 @@ export function getQueueConnection(): IORedis {
   });
   
   connection.on('error', (err) => {
-    console.error('[Queue] Redis connection error:', err.message);
+    console.error(`[Queue:Conn#${connectionId}] Redis error:`, err.message);
   });
   
   connection.on('connect', () => {
-    console.log('[Queue] Redis connected');
+    console.log(`[Queue:Conn#${connectionId}] ✓ Redis connected`);
+  });
+  
+  connection.on('ready', () => {
+    console.log(`[Queue:Conn#${connectionId}] ✓ Redis ready`);
+  });
+  
+  connection.on('close', () => {
+    console.log(`[Queue:Conn#${connectionId}] Redis connection closed`);
   });
   
   return connection;
