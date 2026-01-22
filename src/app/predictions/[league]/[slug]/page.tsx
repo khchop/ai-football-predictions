@@ -1,9 +1,9 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { MatchEvents } from '@/components/match-events';
-import { getMatchWithAnalysis, getBetsForMatchWithDetails } from '@/lib/db/queries';
+import { getMatchBySlug, getMatchWithAnalysis, getBetsForMatchWithDetails } from '@/lib/db/queries';
 import { getMatchEvents } from '@/lib/football/api-football';
 import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, Target, DollarSign } from 'lucide-react';
 import Link from 'next/link';
@@ -24,13 +24,16 @@ function getLowestOdds(home: string, draw: string, away: string): 'home' | 'draw
 export const dynamic = 'force-dynamic';
 
 interface MatchPageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ 
+    league: string;
+    slug: string;
+  }>;
 }
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: MatchPageProps): Promise<Metadata> {
-  const { id } = await params;
-  const result = await getMatchWithAnalysis(id);
+  const { league, slug } = await params;
+  const result = await getMatchBySlug(league, slug);
   
   if (!result) {
     return {
@@ -63,23 +66,22 @@ function parseJson<T>(json: string | null): T | null {
   }
 }
 
-export default async function MatchPage({ params }: MatchPageProps) {
-  const { id } = await params;
-  const result = await getMatchWithAnalysis(id);
+export default async function PredictionPage({ params }: MatchPageProps) {
+  const { league, slug } = await params;
+  const result = await getMatchBySlug(league, slug);
 
   if (!result) {
     notFound();
   }
 
-  const { match, competition, analysis } = result;
+  const { match, competition } = result;
   
-  // Redirect to new slug-based URL if slugs exist (permanent redirect for SEO)
-  if (match.slug && competition.slug) {
-    redirect(`/predictions/${competition.slug}/${match.slug}`);
-  }
+  // Get full analysis data using match ID
+  const analysisData = await getMatchWithAnalysis(match.id);
+  const analysis = analysisData?.analysis;
   
   // Fetch bets for this match
-  const bets = await getBetsForMatchWithDetails(id);
+  const bets = await getBetsForMatchWithDetails(match.id);
   const kickoff = parseISO(match.kickoffTime);
   const isFinished = match.status === 'finished';
   const isLive = match.status === 'live';

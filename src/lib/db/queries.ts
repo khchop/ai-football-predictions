@@ -110,6 +110,30 @@ export async function getMatchById(id: string) {
   return result[0];
 }
 
+/**
+ * Get match by competition slug and match slug
+ * Used for SEO-friendly URLs: /predictions/{league-slug}/{match-slug}
+ */
+export async function getMatchBySlug(competitionSlug: string, matchSlug: string) {
+  const db = getDb();
+  const result = await db
+    .select({
+      match: matches,
+      competition: competitions,
+    })
+    .from(matches)
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(
+      and(
+        eq(competitions.slug, competitionSlug),
+        eq(matches.slug, matchSlug)
+      )
+    )
+    .limit(1);
+  
+  return result[0];
+}
+
 // Optimized: Single query for match with predictions
 export async function getRecentMatches(limit: number = 20) {
   const db = getDb();

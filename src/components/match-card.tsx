@@ -11,6 +11,7 @@ import { MatchTime } from '@/components/client-date';
 interface MatchCardProps {
   match: {
     id: string;
+    slug?: string | null;
     homeTeam: string;
     awayTeam: string;
     homeTeamLogo?: string | null;
@@ -30,6 +31,7 @@ interface MatchCardProps {
     competition: {
       id: string;
       name: string;
+      slug?: string | null;
     };
   };
   analysis?: {
@@ -81,8 +83,13 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
     setPrevScore({ home: match.homeScore, away: match.awayScore });
   }, [match.homeScore, match.awayScore, isLive, prevScore.home, prevScore.away]);
 
+  // Determine URL - prefer slug-based URL if available
+  const matchUrl = match.slug && match.competition.slug
+    ? `/predictions/${match.competition.slug}/${match.slug}`
+    : `/matches/${match.id}`;
+
   return (
-    <Link href={`/matches/${match.id}`}>
+    <Link href={matchUrl}>
       <div 
         className={cn(
           "group relative rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden transition-all duration-200",
