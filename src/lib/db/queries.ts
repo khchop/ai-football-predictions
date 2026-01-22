@@ -2243,3 +2243,26 @@ export async function getModelHealthBatch(modelIds: string[]): Promise<Map<strin
   
   return healthMap;
 }
+
+// Get match by external ID (API-Football fixture ID)
+export async function getMatchByExternalId(externalId: string): Promise<Match | null> {
+  const db = getDb();
+  
+  const results = await db
+    .select()
+    .from(matches)
+    .where(eq(matches.externalId, externalId))
+    .limit(1);
+  
+  return results[0] || null;
+}
+
+// Get all bets for a match (simple, no joins)
+export async function getBetsForMatch(matchId: string) {
+  const db = getDb();
+  
+  return db
+    .select()
+    .from(bets)
+    .where(eq(bets.matchId, matchId));
+}
