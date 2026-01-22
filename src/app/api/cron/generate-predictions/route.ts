@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import pLimit from 'p-limit';
 import { 
   getMatchesReadyForPrediction, 
-  createPrediction, 
   upsertModel, 
   deactivateOldModels, 
   updateModelRetryStats, 
@@ -13,17 +12,24 @@ import {
   recordPredictionAttemptFailure,
   clearPredictionAttempt,
   cleanupOldPredictionAttempts,
-  createPredictionsBatch,
   clearPredictionAttemptsBatch,
+  // Betting system
+  getCurrentSeason,
+  getModelBalance,
+  createBets,
+  updateModelBalanceAfterBets,
 } from '@/lib/db/queries';
 import { getActiveProviders, ALL_PROVIDERS, OpenRouterProvider } from '@/lib/llm';
 import { shouldSkipProvider, recordPredictionCost, getBudgetStatus } from '@/lib/llm/budget';
 import { buildBatchPrompt, BatchMatchContextWithStandings } from '@/lib/football/prompt-builder';
-import { BaseLLMProvider, BatchPredictionResult } from '@/lib/llm/providers/base';
+import { parseBatchBettingResponse, BATCH_SYSTEM_PROMPT } from '@/lib/llm/prompt';
+import { BaseLLMProvider } from '@/lib/llm/providers/base';
 import { validateCronRequest } from '@/lib/auth/cron-auth';
-import type { NewPrediction } from '@/lib/db/schema';
+import type { NewBet } from '@/lib/db/schema';
 import { getStandingByTeamName } from '@/lib/football/standings';
 import { refreshOddsForMatch, getAnalysisForMatch } from '@/lib/football/match-analysis';
+import { getBetOdds } from '@/lib/betting/odds-lookup';
+import { v4 as uuidv4 } from 'uuid';
 
 // Concurrency settings
 const MODEL_CONCURRENCY = 5; // Process 5 models in parallel
@@ -110,17 +116,25 @@ interface ModelProcessingResult {
   reason?: string;
 }
 
-// Predict with retry logic
-async function predictBatchWithRetry(
+// Betting result for batch
+interface BatchBettingResult {
+  success: boolean;
+  bets: Map<string, { resultBet: string; overUnderBet: string; bttsBet: string }>;
+  error?: string;
+  processingTimeMs: number;
+}
+
+// Generate bets with retry logic
+async function generateBetsWithRetry(
   provider: BaseLLMProvider,
   batchPrompt: string,
   matchIds: string[],
   maxRetries: number = MAX_RETRIES
 ): Promise<{
-  result: BatchPredictionResult;
+  result: BatchBettingResult;
   retryCount: number;
 }> {
-  let lastResult: BatchPredictionResult;
+  let lastResult: BatchBettingResult;
   let retryCount = 0;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -135,7 +149,50 @@ async function predictBatchWithRetry(
       retryCount++;
     }
 
-    lastResult = await provider.predictBatch(batchPrompt, matchIds);
+    // Call LLM to generate bets
+    const startTime = Date.now();
+    try {
+      // Call the base API method directly (we'll use BATCH_SYSTEM_PROMPT for betting)
+      const rawResponse = await (provider as any).callAPI(BATCH_SYSTEM_PROMPT, batchPrompt);
+      const processingTimeMs = Date.now() - startTime;
+      
+      // Parse betting response
+      const parsed = parseBatchBettingResponse(rawResponse, matchIds);
+      
+      if (parsed.success && parsed.bets.length > 0) {
+        // Convert to map for easy lookup
+        const betsMap = new Map(
+          parsed.bets.map(b => [
+            b.matchId,
+            {
+              resultBet: b.resultBet,
+              overUnderBet: b.overUnderBet,
+              bttsBet: b.bttsBet,
+            },
+          ])
+        );
+        
+        lastResult = {
+          success: true,
+          bets: betsMap,
+          processingTimeMs,
+        };
+      } else {
+        lastResult = {
+          success: false,
+          bets: new Map(),
+          error: parsed.error || 'No bets parsed',
+          processingTimeMs,
+        };
+      }
+    } catch (error) {
+      lastResult = {
+        success: false,
+        bets: new Map(),
+        error: error instanceof Error ? error.message : 'Unknown error',
+        processingTimeMs: Date.now() - startTime,
+      };
+    }
 
     // Success - return immediately
     if (lastResult.success) {
@@ -231,7 +288,7 @@ async function processModelPredictions(
     batches.push(matchesToPredict.slice(i, i + BATCH_SIZE));
   }
 
-  console.log(`\n${modelId}: Processing ${matchesToPredict.length} missing predictions in ${batches.length} batch(es)`);
+  console.log(`\n${modelId}: Generating bets for ${matchesToPredict.length} matches in ${batches.length} batch(es)`);
 
   let successfulPredictions = 0;
   let gaveUpPredictions = 0;
@@ -333,9 +390,9 @@ async function processModelPredictions(
     try {
       const hasAnalysis = batchMatches.some(m => m.analysis);
 
-      // Predict with retry logic
+      // Generate bets with retry logic
       const baseProvider = provider as BaseLLMProvider;
-      const { result: predResult, retryCount } = await predictBatchWithRetry(
+      const { result: betResult, retryCount } = await generateBetsWithRetry(
         baseProvider,
         batchPrompt,
         batchMatchIds,
@@ -346,33 +403,93 @@ async function processModelPredictions(
       const totalAttempts = 1 + retryCount;
       if ('estimateCost' in provider && typeof provider.estimateCost === 'function') {
         const inputTokens = hasAnalysis ? 400 * batchMatches.length : 200 * batchMatches.length;
-        const outputTokens = 50 * batchMatches.length;
+        const outputTokens = 80 * batchMatches.length; // Slightly more tokens for betting response
         const costPerAttempt = (provider as OpenRouterProvider).estimateCost(inputTokens, outputTokens);
         const totalCost = costPerAttempt * totalAttempts;
         await recordPredictionCost(provider.id, totalCost);
       }
 
-      if (predResult.success && predResult.predictions.size > 0) {
-        // Collect predictions for batch insert
-        const predictionsToInsert: Array<Omit<NewPrediction, 'id'>> = [];
+      if (betResult.success && betResult.bets.size > 0) {
+        // Get current season name
+        const seasonName = await getCurrentSeason();
+
+        // Collect bets for batch insert
+        const betsToInsert: NewBet[] = [];
         const attemptsToClean: Array<{ matchId: string; modelId: string }> = [];
+        let totalStake = 0;
 
-        // Collect all successful predictions
+        // Collect all bets from all successful matches
         for (const batchMatch of batchMatches) {
-          const prediction = predResult.predictions.get(batchMatch.match.id);
+          const bets = betResult.bets.get(batchMatch.match.id);
+          const analysis = analysisMap.get(batchMatch.match.id);
 
-          if (prediction) {
-            predictionsToInsert.push({
-              matchId: batchMatch.match.id,
-              modelId: provider.id,
-              predictedHomeScore: prediction.homeScore,
-              predictedAwayScore: prediction.awayScore,
-              rawResponse: `[batch] ${prediction.homeScore}-${prediction.awayScore}`,
-              processingTimeMs: Math.round(predResult.processingTimeMs / batchMatches.length),
-            });
+          if (bets && analysis) {
+            const stake = 1.0; // €1 per bet
+            const createdAt = new Date().toISOString();
+
+            // Result bet
+            if (bets.resultBet && bets.resultBet !== 'skip') {
+              const odds = getBetOdds(analysis, 'result', bets.resultBet);
+              if (odds) {
+                betsToInsert.push({
+                  id: uuidv4(),
+                  matchId: batchMatch.match.id,
+                  modelId: provider.id,
+                  season: seasonName,
+                  betType: 'result',
+                  selection: bets.resultBet,
+                  odds,
+                  stake,
+                  status: 'pending',
+                  createdAt,
+                });
+                totalStake += stake;
+              }
+            }
+
+            // Over/Under bet
+            if (bets.overUnderBet && bets.overUnderBet !== 'skip') {
+              const odds = getBetOdds(analysis, 'over_under', bets.overUnderBet);
+              if (odds) {
+                betsToInsert.push({
+                  id: uuidv4(),
+                  matchId: batchMatch.match.id,
+                  modelId: provider.id,
+                  season: seasonName,
+                  betType: 'over_under',
+                  selection: bets.overUnderBet,
+                  odds,
+                  stake,
+                  status: 'pending',
+                  createdAt,
+                });
+                totalStake += stake;
+              }
+            }
+
+            // BTTS bet
+            if (bets.bttsBet && bets.bttsBet !== 'skip') {
+              const odds = getBetOdds(analysis, 'btts', bets.bttsBet);
+              if (odds) {
+                betsToInsert.push({
+                  id: uuidv4(),
+                  matchId: batchMatch.match.id,
+                  modelId: provider.id,
+                  season: seasonName,
+                  betType: 'btts',
+                  selection: bets.bttsBet,
+                  odds,
+                  stake,
+                  status: 'pending',
+                  createdAt,
+                });
+                totalStake += stake;
+              }
+            }
+
             attemptsToClean.push({ matchId: batchMatch.match.id, modelId: provider.id });
           } else {
-            const errorMsg = `${modelId}: No prediction for ${batchMatch.match.homeTeam} vs ${batchMatch.match.awayTeam}`;
+            const errorMsg = `${modelId}: No bets for ${batchMatch.match.homeTeam} vs ${batchMatch.match.awayTeam}`;
             console.error(`    ${errorMsg}`);
             errors.push(errorMsg);
 
@@ -381,22 +498,20 @@ async function processModelPredictions(
           }
         }
 
-        // Batch save all predictions and clear attempts
-        if (predictionsToInsert.length > 0) {
-          await createPredictionsBatch(predictionsToInsert);
+        // Batch save all bets and update balance
+        if (betsToInsert.length > 0) {
+          await createBets(betsToInsert);
+          // Deduct stake from balance (negative amount, no wins yet)
+          await updateModelBalanceAfterBets(provider.id, seasonName, -totalStake, betsToInsert.length, 0);
           await clearPredictionAttemptsBatch(attemptsToClean);
-          successfulPredictions += predictionsToInsert.length;
+          successfulPredictions += attemptsToClean.length; // Count successful matches
         }
 
         // Record success - resets consecutive failure count
         await recordModelSuccess(provider.id);
 
         const retryInfo = retryCount > 0 ? `, retries: ${retryCount}` : '';
-        console.log(`    Success: Saved ${predResult.predictions.size}/${batchMatches.length} predictions (attempts: ${totalAttempts}${retryInfo})`);
-
-        if (predResult.failedMatchIds && predResult.failedMatchIds.length > 0) {
-          console.log(`    Missing: ${predResult.failedMatchIds.length} matches`);
-        }
+        console.log(`    Success: Placed ${betsToInsert.length} bets for ${betResult.bets.size}/${batchMatches.length} matches (stake: €${totalStake.toFixed(2)}, attempts: ${totalAttempts}${retryInfo})`);
 
         if (retryCount > 0) {
           totalRetries += retryCount;
@@ -404,19 +519,19 @@ async function processModelPredictions(
         }
       } else {
         const retryInfo = retryCount > 0 ? ` (after ${retryCount} retries)` : '';
-        const errorMsg = `${modelId} batch failed${retryInfo}: ${predResult.error}`;
+        const errorMsg = `${modelId} batch failed${retryInfo}: ${betResult.error}`;
         console.error(`    ${errorMsg}`);
         errors.push(errorMsg);
 
         // Record failure for all matches in batch
         for (const batchMatch of batchMatches) {
-          await recordPredictionAttemptFailure(batchMatch.match.id, provider.id, predResult.error || 'Unknown error');
+          await recordPredictionAttemptFailure(batchMatch.match.id, provider.id, betResult.error || 'Unknown error');
         }
 
         gaveUpPredictions += batchMatches.length;
 
         // Record model failure - may auto-disable after 3 consecutive failures
-        const healthResult = await recordModelFailure(provider.id, predResult.error || 'Unknown error');
+        const healthResult = await recordModelFailure(provider.id, betResult.error || 'Unknown error');
         if (healthResult.autoDisabled) {
           console.log(`    ${modelId}: AUTO-DISABLED after 3 consecutive failures`);
         }
@@ -466,7 +581,7 @@ export async function POST(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    console.log('Generating predictions (retry mode - missing models only)...');
+    console.log('Generating bets (retry mode - missing models only)...');
     
     // Get budget status at start
     const budgetStart = await getBudgetStatus();
@@ -499,24 +614,24 @@ export async function POST(request: NextRequest) {
     // Deactivate any models not in the current ALL_PROVIDERS list
     await deactivateOldModels(currentModelIds);
 
-    // Get matches ready for prediction (within 90 min OR within 5 min without predictions)
+    // Get matches ready for betting (within 90 min OR within 5 min without bets)
     // Only returns matches that have lineups available OR are within 5 mins of kickoff
     const matchesReadyForPrediction = await getMatchesReadyForPrediction();
     
     if (matchesReadyForPrediction.length === 0) {
-      console.log('No matches ready for predictions');
+      console.log('No matches ready for betting');
       // Clean up old attempt records
       const cleanedUp = await cleanupOldPredictionAttempts(7);
       return NextResponse.json({
         success: true,
-        message: 'No matches ready for predictions at this time',
+        message: 'No matches ready for betting at this time',
         predictions: 0,
         budget: budgetStart,
         cleanup: `Removed ${cleanedUp} old attempt records`,
       });
     }
 
-    console.log(`Found ${matchesReadyForPrediction.length} matches ready for predictions`);
+    console.log(`Found ${matchesReadyForPrediction.length} matches ready for betting`);
 
     const matchIds = matchesReadyForPrediction.map(m => m.match.id);
     const activeModelIds = activeProviders.map(p => p.id);
@@ -525,19 +640,19 @@ export async function POST(request: NextRequest) {
     const missingPairs = await getMissingModelPredictions(matchIds, activeModelIds);
     
     if (missingPairs.length === 0) {
-      console.log('All matches have predictions or have reached max retry attempts');
+      console.log('All matches have bets or have reached max retry attempts');
       // Clean up old attempt records
       const cleanedUp = await cleanupOldPredictionAttempts(7);
       return NextResponse.json({
         success: true,
-        message: 'All matches have complete predictions',
+        message: 'All matches have complete bets',
         predictions: 0,
         budget: budgetStart,
         cleanup: `Removed ${cleanedUp} old attempt records`,
       });
     }
 
-    console.log(`Found ${missingPairs.length} missing model/match pairs to generate`);
+    console.log(`Found ${missingPairs.length} missing model/match pairs for betting`);
 
     // Group missing pairs by model (for batching)
     const pairsByModel = new Map<string, string[]>();
@@ -614,7 +729,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`\n=== SUMMARY ===`);
     console.log(`Total missing pairs: ${totalPredictions}`);
-    console.log(`Successful new predictions: ${successfulPredictions}`);
+    console.log(`Successful bets placed: ${successfulPredictions} matches`);
     console.log(`Gave up (3+ failures): ${gaveUpPredictions}`);
     if (totalRetries > 0) {
       console.log(`Retry stats: ${totalRetries} attempts, ${successfulRetries} successful`);
@@ -624,7 +739,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Generated ${successfulPredictions} predictions`,
+      message: `Generated bets for ${successfulPredictions} matches`,
       summary: {
         matchesProcessed: matchesReadyForPrediction.length,
         missingPairs: totalPredictions,
@@ -646,7 +761,7 @@ export async function POST(request: NextRequest) {
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
-    console.error('Error generating predictions:', error);
+    console.error('Error generating bets:', error);
     return NextResponse.json(
       { 
         success: false, 
