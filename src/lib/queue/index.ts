@@ -87,10 +87,10 @@ function createQueueOptions() {
   return {
     connection: getQueueConnection(),
     defaultJobOptions: {
-      attempts: 3,
+      attempts: 5, // More attempts to handle API rate limits
       backoff: {
         type: 'exponential',
-        delay: 5000, // 5s, 10s, 20s
+        delay: 30000, // 30s → 60s → 120s → 240s → 480s (total ~15 min of retrying)
       },
       removeOnComplete: {
         age: 24 * 60 * 60, // Keep completed jobs for 24 hours
