@@ -1,8 +1,106 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMatchesPendingResults, getFinishedMatchesWithUnscoredPredictions, updateMatchResult } from '@/lib/db/queries';
+import { 
+  getMatchesPendingResults, 
+  getFinishedMatchesWithUnscoredPredictions, 
+  updateMatchResult,
+  getPendingBetsByMatch,
+  settleBet,
+  updateModelBalanceAfterBets,
+  getCurrentSeason,
+} from '@/lib/db/queries';
 import { getFinishedFixtures, mapFixtureStatus } from '@/lib/football/api-football';
 import { validateCronRequest } from '@/lib/auth/cron-auth';
 import { scorePredictionsForMatch } from '@/lib/scoring/score-match';
+import { 
+  evaluateResultBet, 
+  evaluateOverUnderBet, 
+  evaluateBttsBet,
+  calculatePayout,
+  calculateProfit,
+} from '@/lib/betting/bet-settlement';
+
+/**
+ * Settle all pending bets for a finished match
+ */
+async function settleBetsForMatch(
+  matchId: string,
+  homeScore: number,
+  awayScore: number
+): Promise<{ settled: number; won: number; lost: number }> {
+  const seasonName = await getCurrentSeason();
+  const pendingBets = await getPendingBetsByMatch(matchId);
+
+  if (pendingBets.length === 0) {
+    return { settled: 0, won: 0, lost: 0 };
+  }
+
+  console.log(`  Settling ${pendingBets.length} pending bets...`);
+
+  let settledCount = 0;
+  let wonCount = 0;
+  let lostCount = 0;
+
+  // Group bets by model to batch balance updates
+  const balanceUpdates = new Map<string, { totalPayout: number; betsCount: number; winsCount: number }>();
+
+  for (const bet of pendingBets) {
+    let won = false;
+
+    // Evaluate bet based on type
+    switch (bet.betType) {
+      case 'result':
+        won = evaluateResultBet(bet.selection, homeScore, awayScore);
+        break;
+      case 'over_under':
+        won = evaluateOverUnderBet(bet.selection, homeScore, awayScore);
+        break;
+      case 'btts':
+        won = evaluateBttsBet(bet.selection, homeScore, awayScore);
+        break;
+      default:
+        console.error(`Unknown bet type: ${bet.betType}`);
+        continue;
+    }
+
+    const payout = calculatePayout(bet.stake || 1.0, bet.odds, won);
+    const profit = calculateProfit(bet.stake || 1.0, payout);
+    const status = won ? 'won' : 'lost';
+
+    // Settle the bet
+    await settleBet(bet.id, status, payout, profit);
+    settledCount++;
+
+    if (won) {
+      wonCount++;
+    } else {
+      lostCount++;
+    }
+
+    // Accumulate balance updates per model
+    if (!balanceUpdates.has(bet.modelId)) {
+      balanceUpdates.set(bet.modelId, { totalPayout: 0, betsCount: 0, winsCount: 0 });
+    }
+    const update = balanceUpdates.get(bet.modelId)!;
+    update.totalPayout += payout;
+    update.betsCount++;
+    if (won) update.winsCount++;
+  }
+
+  // Apply balance updates in batch per model
+  for (const [modelId, update] of balanceUpdates) {
+    await updateModelBalanceAfterBets(
+      modelId,
+      seasonName,
+      update.totalPayout, // Add winnings to balance
+      0, // Don't increment bet count (already done when placing bets)
+      update.winsCount
+    );
+  }
+
+  console.log(`  Settled: ${wonCount} won, ${lostCount} lost`);
+
+  return { settled: settledCount, won: wonCount, lost: lostCount };
+}
 
 export async function POST(request: NextRequest) {
   const authError = validateCronRequest(request);
@@ -78,8 +176,16 @@ export async function POST(request: NextRequest) {
             `${fixture.goals.home}-${fixture.goals.away} (${newStatus})`
           );
 
-          // If match is finished, calculate scores for all predictions
+          // If match is finished, settle bets and calculate scores for predictions
           if (newStatus === 'finished') {
+            // Settle all pending bets for this match
+            await settleBetsForMatch(
+              match.id,
+              fixture.goals.home,
+              fixture.goals.away
+            );
+
+            // Legacy: Calculate scores for old prediction system
             await scorePredictionsForMatch(
               match.id,
               fixture.goals.home,
@@ -110,6 +216,11 @@ export async function POST(request: NextRequest) {
         if (match.homeScore !== null && match.awayScore !== null) {
           try {
             console.log(`[Results] Rescoring: ${match.homeTeam} vs ${match.awayTeam} (${match.homeScore}-${match.awayScore})`);
+            
+            // Settle any pending bets for this match
+            await settleBetsForMatch(match.id, match.homeScore, match.awayScore);
+            
+            // Legacy: Rescore predictions
             await scorePredictionsForMatch(match.id, match.homeScore, match.awayScore);
             rescored++;
           } catch (error) {
