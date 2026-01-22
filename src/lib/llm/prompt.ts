@@ -5,21 +5,36 @@
 // SINGLE MATCH PREDICTION
 // ============================================================================
 
-export const SYSTEM_PROMPT = `Football score predictor competing vs 30 AI models.
+export const SYSTEM_PROMPT = `You are a football betting analyst competing against 30 AI models.
 
-QUOTA SCORING:
-- Points = how rare your correct prediction was among 30 models
-- If 25/30 models pick same result: 2 pts (common pick)
-- If only 5/30 pick your result: 6 pts (rare pick)
-- Bonuses if correct: +1 goal diff, +3 exact score
-- Max: 10 pts/match
+BETTING RULES:
+- You have a virtual balance starting at €1,000
+- Each match: Place exactly 3 bets × €1 each = €3 total
+- Payout = Stake × Odds (if won), €0 (if lost)
+- Goal: Maximize profit through smart risk/reward decisions
 
-WINNING STRATEGY:
-- Safe pick (75% prob, 2 pts): EV = 1.5
-- Risky pick (30% prob, 6 pts): EV = 1.8 ← BETTER
-- When data supports ~30%+ upset probability, take the risk
+BET TYPES (all required):
+1. RESULT: Choose ONE of 1, 2, 1X, or X2
+   - 1 = Home win
+   - 2 = Away win
+   - 1X = Home win OR draw (safer, lower odds)
+   - X2 = Away win OR draw (safer, lower odds)
 
-OUTPUT: ONLY JSON {"home_score": X, "away_score": Y}
+2. OVER/UNDER: Choose ONE line (e.g., O2.5, U1.5)
+   - Pick the line and direction with best risk/reward
+   - Available: O0.5, U0.5, O1.5, U1.5, O2.5, U2.5, O3.5, U3.5, O4.5, U4.5
+
+3. BTTS (Both Teams To Score): Choose Yes or No
+   - Yes = Both teams score at least 1 goal
+   - No = At least one team scores 0
+
+STRATEGY:
+- Lower odds = safer bet but lower profit (e.g., O0.5 @1.05)
+- Higher odds = riskier but higher profit (e.g., U0.5 @10.00)
+- Balance risk across your 3 bets
+- Consider match context: form, injuries, H2H, standings
+
+OUTPUT: ONLY JSON {"result_bet": "...", "over_under_bet": "...", "btts_bet": "..."}
 No explanations, no markdown.`;
 
 export function createUserPrompt(
@@ -240,19 +255,23 @@ function findScoresInObject(obj: unknown): { home: number; away: number } | null
 // BATCH PREDICTION (Multiple Matches)
 // ============================================================================
 
-export const BATCH_SYSTEM_PROMPT = `Football score predictor competing vs 30 AI models.
+export const BATCH_SYSTEM_PROMPT = `You are a football betting analyst competing against 30 AI models.
 
-QUOTA SCORING:
-- Points = how rare your correct prediction was among 30 models
-- If 25/30 models pick same result: 2 pts (common)
-- If only 5/30 pick your result: 6 pts (rare)
-- Bonuses if correct: +1 goal diff, +3 exact score
-- Max: 10 pts/match
+BETTING RULES:
+- Virtual balance: €1,000
+- Each match: 3 bets × €1 = €3 wagered
+- Payout = Stake × Odds (if won)
+- Goal: Maximize profit
 
-STRATEGY: Safe picks EV ~1.5, risky picks EV ~1.8. Take calculated risks!
+BET TYPES (all required per match):
+1. RESULT: 1, 2, 1X, or X2
+2. OVER/UNDER: O0.5, U0.5, O1.5, U1.5, O2.5, U2.5, O3.5, U3.5, O4.5, U4.5
+3. BTTS: Yes or No
+
+STRATEGY: Balance risk/reward based on odds and match context.
 
 OUTPUT: JSON ARRAY for ALL matches:
-[{"match_id": "id", "home_score": X, "away_score": Y}, ...]
+[{"match_id": "id", "result_bet": "...", "over_under_bet": "...", "btts_bet": "..."}, ...]
 - match_id must EXACTLY match provided IDs
 - No explanations, no markdown`;
 
@@ -362,4 +381,194 @@ export function parseBatchPredictionResponse(
       failedMatchIds: expectedMatchIds,
     };
   }
+}
+
+// ============================================================================
+// BETTING SYSTEM (NEW)
+// ============================================================================
+
+// Single match betting response
+export interface ParsedBets {
+  resultBet: string; // '1' | '2' | '1X' | 'X2'
+  overUnderBet: string; // 'O2.5' | 'U1.5' etc.
+  bttsBet: string; // 'Yes' | 'No'
+  success: boolean;
+  error?: string;
+}
+
+// Parse single match betting response
+export function parseBettingResponse(response: string): ParsedBets {
+  try {
+    let cleaned = response.trim();
+    
+    // Remove thinking/reasoning tags
+    cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    cleaned = cleaned.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+    cleaned = cleaned.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
+    
+    // Remove markdown
+    cleaned = cleaned.replace(/```json\n?/gi, '');
+    cleaned = cleaned.replace(/```\n?/g, '');
+    
+    // Find JSON object
+    const jsonMatch = cleaned.match(/\{[^{}]*\}/);
+    if (!jsonMatch) {
+      return {
+        resultBet: '',
+        overUnderBet: '',
+        bttsBet: '',
+        success: false,
+        error: 'No JSON object found in response',
+      };
+    }
+    
+    const parsed = JSON.parse(jsonMatch[0]);
+    
+    const resultBet = parsed.result_bet ?? parsed.resultBet ?? parsed.result;
+    const overUnderBet = parsed.over_under_bet ?? parsed.overUnderBet ?? parsed.over_under;
+    const bttsBet = parsed.btts_bet ?? parsed.bttsBet ?? parsed.btts;
+    
+    if (!resultBet || !overUnderBet || !bttsBet) {
+      return {
+        resultBet: String(resultBet || ''),
+        overUnderBet: String(overUnderBet || ''),
+        bttsBet: String(bttsBet || ''),
+        success: false,
+        error: 'Missing required bet fields',
+      };
+    }
+    
+    // Normalize over/under format
+    const normalizedOU = normalizeOverUnder(String(overUnderBet));
+    
+    return {
+      resultBet: String(resultBet),
+      overUnderBet: normalizedOU,
+      bttsBet: String(bttsBet),
+      success: true,
+    };
+  } catch (error) {
+    return {
+      resultBet: '',
+      overUnderBet: '',
+      bttsBet: '',
+      success: false,
+      error: `Failed to parse JSON: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
+  }
+}
+
+// Batch betting item
+export interface BatchBettingItem {
+  matchId: string;
+  resultBet: string;
+  overUnderBet: string;
+  bttsBet: string;
+}
+
+// Batch betting result
+export interface BatchBettingResult {
+  bets: BatchBettingItem[];
+  success: boolean;
+  error?: string;
+  failedMatchIds?: string[];
+}
+
+// Parse batch betting response
+export function parseBatchBettingResponse(
+  response: string,
+  expectedMatchIds: string[]
+): BatchBettingResult {
+  try {
+    let cleaned = response.trim();
+    
+    // Remove thinking/reasoning tags
+    cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    cleaned = cleaned.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+    cleaned = cleaned.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
+    
+    // Remove markdown
+    cleaned = cleaned.replace(/```json\n?/gi, '');
+    cleaned = cleaned.replace(/```\n?/g, '');
+    
+    // Find JSON array
+    const arrayMatch = cleaned.match(/\[[\s\S]*\]/);
+    if (!arrayMatch) {
+      return {
+        bets: [],
+        success: false,
+        error: 'No JSON array found in response',
+        failedMatchIds: expectedMatchIds,
+      };
+    }
+    
+    const parsed = JSON.parse(arrayMatch[0]);
+    
+    if (!Array.isArray(parsed)) {
+      return {
+        bets: [],
+        success: false,
+        error: 'Parsed result is not an array',
+        failedMatchIds: expectedMatchIds,
+      };
+    }
+    
+    const bets: BatchBettingItem[] = [];
+    const foundMatchIds = new Set<string>();
+    
+    for (const item of parsed) {
+      const matchId = item.match_id ?? item.matchId ?? item.id;
+      if (!matchId) continue;
+      
+      const matchIdStr = String(matchId);
+      
+      const resultBet = item.result_bet ?? item.resultBet ?? item.result;
+      const overUnderBet = item.over_under_bet ?? item.overUnderBet ?? item.over_under;
+      const bttsBet = item.btts_bet ?? item.bttsBet ?? item.btts;
+      
+      if (!resultBet || !overUnderBet || !bttsBet) continue;
+      
+      bets.push({
+        matchId: matchIdStr,
+        resultBet: String(resultBet),
+        overUnderBet: normalizeOverUnder(String(overUnderBet)),
+        bttsBet: String(bttsBet),
+      });
+      foundMatchIds.add(matchIdStr);
+    }
+    
+    const failedMatchIds = expectedMatchIds.filter(id => !foundMatchIds.has(id));
+    
+    return {
+      bets,
+      success: bets.length > 0,
+      error: failedMatchIds.length > 0 
+        ? `Missing bets for ${failedMatchIds.length} matches` 
+        : undefined,
+      failedMatchIds: failedMatchIds.length > 0 ? failedMatchIds : undefined,
+    };
+  } catch (error) {
+    return {
+      bets: [],
+      success: false,
+      error: `Failed to parse batch JSON: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      failedMatchIds: expectedMatchIds,
+    };
+  }
+}
+
+// Normalize over/under format to short form (O2.5, U1.5)
+function normalizeOverUnder(input: string): string {
+  const normalized = input.trim().toUpperCase();
+  
+  // "Over 2.5" → "O2.5"
+  if (normalized.startsWith('OVER ')) {
+    return 'O' + normalized.replace('OVER ', '');
+  }
+  // "Under 2.5" → "U2.5"
+  if (normalized.startsWith('UNDER ')) {
+    return 'U' + normalized.replace('UNDER ', '');
+  }
+  // Already in short form
+  return normalized;
 }
