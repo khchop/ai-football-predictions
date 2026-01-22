@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLeaderboardFiltered, getActiveModels, getActiveCompetitions } from '@/lib/db/queries';
+import { getBettingLeaderboard, getActiveModels } from '@/lib/db/queries';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 
 export async function GET(request: NextRequest) {
@@ -19,27 +19,18 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams;
-    
-    // Parse and validate query parameters
-    const daysParam = searchParams.get('days');
-    const minPredictionsParam = searchParams.get('minPredictions');
     const activeOnlyParam = searchParams.get('activeOnly');
-    const competitionParam = searchParams.get('competition');
-    
-    // Validate numeric params with bounds
-    const parsedDays = daysParam ? parseInt(daysParam, 10) : undefined;
-    const parsedMinPredictions = minPredictionsParam ? parseInt(minPredictionsParam, 10) : 5;
-    
-    const filters = {
-      days: parsedDays && !isNaN(parsedDays) ? Math.min(Math.max(parsedDays, 1), 365) : undefined,
-      minPredictions: isNaN(parsedMinPredictions) ? 5 : Math.min(Math.max(parsedMinPredictions, 0), 1000),
-      activeOnly: activeOnlyParam !== 'false', // Default true
-      competitionId: competitionParam || undefined,
-    };
+    const activeOnly = activeOnlyParam !== 'false'; // Default true
 
-    const leaderboard = await getLeaderboardFiltered(filters);
+    // Get betting leaderboard for current season
+    let leaderboard = await getBettingLeaderboard();
+
+    // Filter to active models only if requested
+    if (activeOnly) {
+      leaderboard = leaderboard.filter(m => m.active);
+    }
+
     const activeModels = await getActiveModels();
-    const competitions = await getActiveCompetitions();
 
     return NextResponse.json(
       {
@@ -47,13 +38,6 @@ export async function GET(request: NextRequest) {
         leaderboard,
         activeModels: activeModels.length,
         totalEntries: leaderboard.length,
-        competitions: competitions.map(c => ({ id: c.id, name: c.name })),
-        filters: {
-          days: filters.days || 'all',
-          minPredictions: filters.minPredictions,
-          activeOnly: filters.activeOnly,
-          competition: filters.competitionId || 'all',
-        },
       },
       { headers: createRateLimitHeaders(rateLimitResult) }
     );

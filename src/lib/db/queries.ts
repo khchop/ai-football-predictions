@@ -1949,3 +1949,153 @@ export async function updateModelBalanceAfterBets(
       )
     );
 }
+
+// Get model betting history
+export async function getModelBettingHistory(
+  modelId: string,
+  options: { limit?: number; offset?: number; status?: 'pending' | 'won' | 'lost' } = {}
+) {
+  const db = getDb();
+  const { limit = 50, offset = 0, status } = options;
+
+  const conditions = [eq(bets.modelId, modelId)];
+  if (status) {
+    conditions.push(eq(bets.status, status));
+  }
+
+  return db
+    .select({
+      betId: bets.id,
+      matchId: bets.matchId,
+      homeTeam: matches.homeTeam,
+      awayTeam: matches.awayTeam,
+      homeScore: matches.homeScore,
+      awayScore: matches.awayScore,
+      matchStatus: matches.status,
+      kickoffTime: matches.kickoffTime,
+      competitionName: competitions.name,
+      betType: bets.betType,
+      selection: bets.selection,
+      odds: bets.odds,
+      stake: bets.stake,
+      status: bets.status,
+      payout: bets.payout,
+      profit: bets.profit,
+      createdAt: bets.createdAt,
+      settledAt: bets.settledAt,
+    })
+    .from(bets)
+    .innerJoin(matches, eq(bets.matchId, matches.id))
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(and(...conditions))
+    .orderBy(desc(bets.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+// Get betting stats for a model
+export async function getModelBettingStats(modelId: string) {
+  const db = getDb();
+  const currentSeason = await getCurrentSeason();
+
+  const balance = await getModelBalance(modelId, currentSeason);
+  
+  if (!balance) {
+    return null;
+  }
+
+  const profit = (balance.currentBalance || 0) - (balance.startingBalance || 1000);
+  const roi = balance.startingBalance ? (profit / balance.startingBalance) * 100 : 0;
+  const winRate = balance.totalBets ? ((balance.winningBets || 0) / balance.totalBets) * 100 : 0;
+
+  return {
+    balance: balance.currentBalance || 0,
+    startingBalance: balance.startingBalance || 1000,
+    profit,
+    roi,
+    totalBets: balance.totalBets || 0,
+    winningBets: balance.winningBets || 0,
+    losingBets: (balance.totalBets || 0) - (balance.winningBets || 0),
+    winRate,
+    totalWagered: balance.totalWagered || 0,
+    totalWon: balance.totalWon || 0,
+  };
+}
+
+// Get bets for a match with model details
+export async function getBetsForMatchWithDetails(matchId: string) {
+  const db = getDb();
+  
+  return db
+    .select({
+      betId: bets.id,
+      modelId: bets.modelId,
+      modelDisplayName: models.displayName,
+      provider: models.provider,
+      betType: bets.betType,
+      selection: bets.selection,
+      odds: bets.odds,
+      stake: bets.stake,
+      status: bets.status,
+      payout: bets.payout,
+      profit: bets.profit,
+      createdAt: bets.createdAt,
+      settledAt: bets.settledAt,
+    })
+    .from(bets)
+    .innerJoin(models, eq(bets.modelId, models.id))
+    .where(eq(bets.matchId, matchId))
+    .orderBy(models.displayName, bets.betType);
+}
+
+// Get betting leaderboard for current season
+export async function getBettingLeaderboard() {
+  const db = getDb();
+  const currentSeason = await getCurrentSeason();
+
+  // Get all model balances with model details
+  const leaderboardData = await db
+    .select({
+      modelId: modelBalances.modelId,
+      displayName: models.displayName,
+      provider: models.provider,
+      active: models.active,
+      currentBalance: modelBalances.currentBalance,
+      startingBalance: modelBalances.startingBalance,
+      totalWagered: modelBalances.totalWagered,
+      totalWon: modelBalances.totalWon,
+      totalBets: modelBalances.totalBets,
+      winningBets: modelBalances.winningBets,
+    })
+    .from(modelBalances)
+    .innerJoin(models, eq(modelBalances.modelId, models.id))
+    .where(eq(modelBalances.season, currentSeason))
+    .orderBy(desc(modelBalances.currentBalance));
+
+  // Calculate derived stats
+  return leaderboardData.map(row => {
+    const profit = (row.currentBalance || 0) - (row.startingBalance || 1000);
+    const roi = row.startingBalance ? (profit / row.startingBalance) * 100 : 0;
+    const winRate = row.totalBets ? ((row.winningBets || 0) / row.totalBets) * 100 : 0;
+    const averageOdds = row.winningBets && row.totalWon && row.winningBets > 0
+      ? row.totalWon / row.winningBets
+      : 0;
+
+    return {
+      modelId: row.modelId,
+      displayName: row.displayName,
+      provider: row.provider,
+      active: row.active,
+      balance: row.currentBalance || 0,
+      profit: profit,
+      roi: roi,
+      totalBets: row.totalBets || 0,
+      winningBets: row.winningBets || 0,
+      losingBets: (row.totalBets || 0) - (row.winningBets || 0),
+      winRate: winRate,
+      totalWagered: row.totalWagered || 0,
+      totalWon: row.totalWon || 0,
+      averageOdds: averageOdds,
+    };
+  });
+}

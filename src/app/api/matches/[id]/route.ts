@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMatchWithAnalysis } from '@/lib/db/queries';
+import { getMatchWithAnalysis, getBetsForMatchWithDetails } from '@/lib/db/queries';
 import { calculatePoints } from '@/lib/utils/scoring';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 
@@ -46,7 +46,19 @@ export async function GET(
 
     const { match, competition, predictions, analysis } = result;
 
-    // Calculate points for each prediction if match is finished
+    // Fetch bets for this match
+    const bets = await getBetsForMatchWithDetails(id);
+
+    // Group bets by model for easier display
+    const betsByModel = new Map<string, typeof bets>();
+    for (const bet of bets) {
+      if (!betsByModel.has(bet.modelId)) {
+        betsByModel.set(bet.modelId, []);
+      }
+      betsByModel.get(bet.modelId)!.push(bet);
+    }
+
+    // Calculate points for each prediction if match is finished (legacy)
     const predictionsWithPoints = predictions.map(({ prediction, model }) => {
       let points = null;
       let isExact = false;
@@ -119,9 +131,28 @@ export async function GET(
           homeGoalsConceded: analysis.homeGoalsConceded,
           awayGoalsScored: analysis.awayGoalsScored,
           awayGoalsConceded: analysis.awayGoalsConceded,
+          // Main odds (1X2)
           oddsHome: analysis.oddsHome,
           oddsDraw: analysis.oddsDraw,
           oddsAway: analysis.oddsAway,
+          // Double chance odds
+          odds1X: analysis.odds1X,
+          oddsX2: analysis.oddsX2,
+          odds12: analysis.odds12,
+          // Over/Under odds
+          oddsOver05: analysis.oddsOver05,
+          oddsUnder05: analysis.oddsUnder05,
+          oddsOver15: analysis.oddsOver15,
+          oddsUnder15: analysis.oddsUnder15,
+          oddsOver25: analysis.oddsOver25,
+          oddsUnder25: analysis.oddsUnder25,
+          oddsOver35: analysis.oddsOver35,
+          oddsUnder35: analysis.oddsUnder35,
+          oddsOver45: analysis.oddsOver45,
+          oddsUnder45: analysis.oddsUnder45,
+          // BTTS odds
+          oddsBttsYes: analysis.oddsBttsYes,
+          oddsBttsNo: analysis.oddsBttsNo,
           likelyScores: analysis.likelyScores,
           homeInjuriesCount: analysis.homeInjuriesCount,
           awayInjuriesCount: analysis.awayInjuriesCount,
@@ -133,7 +164,22 @@ export async function GET(
           homeCoach: analysis.homeCoach,
           awayCoach: analysis.awayCoach,
         } : null,
-        predictions: predictionsWithPoints,
+        predictions: predictionsWithPoints, // Legacy
+        bets: bets.map(bet => ({
+          id: bet.betId,
+          modelId: bet.modelId,
+          modelDisplayName: bet.modelDisplayName,
+          provider: bet.provider,
+          betType: bet.betType,
+          selection: bet.selection,
+          odds: bet.odds,
+          stake: bet.stake,
+          status: bet.status,
+          payout: bet.payout,
+          profit: bet.profit,
+          createdAt: bet.createdAt,
+          settledAt: bet.settledAt,
+        })),
       },
       { headers: createRateLimitHeaders(rateLimitResult) }
     );
