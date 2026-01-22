@@ -23,6 +23,7 @@ import { BaseLLMProvider, BatchPredictionResult } from '@/lib/llm/providers/base
 import { validateCronRequest } from '@/lib/auth/cron-auth';
 import type { NewPrediction } from '@/lib/db/schema';
 import { getStandingByTeamName } from '@/lib/football/standings';
+import { refreshOddsForMatch, getAnalysisForMatch } from '@/lib/football/match-analysis';
 
 // Concurrency settings
 const MODEL_CONCURRENCY = 5; // Process 5 models in parallel
@@ -254,8 +255,41 @@ async function processModelPredictions(
 
     console.log(`  Batch ${batchIdx + 1}/${batches.length}: ${batchMatches.map(m => `${m.match.homeTeam} vs ${m.match.awayTeam}`).join(', ')}`);
 
+    // Refresh odds for all matches in batch BEFORE betting (in parallel)
+    console.log(`  Refreshing odds for ${batchMatches.length} matches...`);
+    const oddsRefreshPromises = batchMatches.map(async (m) => {
+      if (!m.match.externalId) return { matchId: m.match.id, success: false };
+      
+      try {
+        const fixtureId = parseInt(m.match.externalId, 10);
+        const success = await refreshOddsForMatch(m.match.id, fixtureId);
+        return { matchId: m.match.id, success };
+      } catch (error) {
+        console.error(`  Error refreshing odds for ${m.match.homeTeam} vs ${m.match.awayTeam}:`, error);
+        return { matchId: m.match.id, success: false };
+      }
+    });
+
+    const oddsResults = await Promise.all(oddsRefreshPromises);
+    const successfulOddsRefresh = oddsResults.filter(r => r.success).length;
+    console.log(`  Refreshed odds: ${successfulOddsRefresh}/${batchMatches.length} successful`);
+
+    // Reload analysis data to get fresh odds
+    const freshAnalysisPromises = batchMatches.map(async (m) => {
+      const freshAnalysis = await getAnalysisForMatch(m.match.id);
+      return { matchId: m.match.id, analysis: freshAnalysis };
+    });
+    const freshAnalysisResults = await Promise.all(freshAnalysisPromises);
+    const analysisMap = new Map(freshAnalysisResults.map(a => [a.matchId, a.analysis]));
+    
+    // Update batchMatches with fresh analysis containing new odds
+    const batchMatchesWithFreshOdds = batchMatches.map(m => ({
+      ...m,
+      analysis: analysisMap.get(m.match.id) || m.analysis,
+    }));
+
     // Fetch standings for all matches in batch (in parallel)
-    const standingsPromises = batchMatches.map(async (m) => {
+    const standingsPromises = batchMatchesWithFreshOdds.map(async (m) => {
       const leagueId = m.competition.apiFootballId;
       if (!leagueId) return { matchId: m.match.id, homeStanding: null, awayStanding: null };
       
@@ -279,9 +313,9 @@ async function processModelPredictions(
     const standingsResults = await Promise.all(standingsPromises);
     const standingsMap = new Map(standingsResults.map(s => [s.matchId, { home: s.homeStanding, away: s.awayStanding }]));
 
-    // Build batch prompt with standings
+    // Build batch prompt with standings and fresh odds
     const batchPrompt = buildBatchPrompt(
-      batchMatches.map(m => {
+      batchMatchesWithFreshOdds.map(m => {
         const standings = standingsMap.get(m.match.id);
         return {
           matchId: m.match.id,

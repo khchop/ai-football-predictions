@@ -591,3 +591,65 @@ export async function fetchAndStoreAnalysis(
 export async function getAnalysisForMatch(matchId: string): Promise<MatchAnalysis | null> {
   return await getMatchAnalysisByMatchId(matchId);
 }
+
+// Refresh ONLY odds for a match (used before betting to get latest odds)
+export async function refreshOddsForMatch(
+  matchId: string,
+  fixtureId: number
+): Promise<boolean> {
+  console.log(`[Match Analysis] Refreshing odds for match ${matchId} (fixture ${fixtureId})`);
+
+  try {
+    // Fetch latest odds only
+    const oddsData = await fetchOdds(fixtureId);
+    
+    if (!oddsData?.response?.[0]?.bookmakers) {
+      console.log(`[Match Analysis] No odds available for fixture ${fixtureId}`);
+      return false;
+    }
+
+    // Extract all odds
+    const odds = extractAllOdds(oddsData);
+
+    // Get existing analysis
+    const existing = await getMatchAnalysisByMatchId(matchId);
+    if (!existing) {
+      console.log(`[Match Analysis] No existing analysis for match ${matchId}`);
+      return false;
+    }
+
+    // Update only odds fields
+    const updatedAnalysis: NewMatchAnalysis = {
+      ...existing,
+      // Update all odds
+      oddsHome: odds.oddsHome,
+      oddsDraw: odds.oddsDraw,
+      oddsAway: odds.oddsAway,
+      odds1X: odds.odds1X,
+      oddsX2: odds.oddsX2,
+      odds12: odds.odds12,
+      oddsOver05: odds.oddsOver05,
+      oddsUnder05: odds.oddsUnder05,
+      oddsOver15: odds.oddsOver15,
+      oddsUnder15: odds.oddsUnder15,
+      oddsOver25: odds.oddsOver25,
+      oddsUnder25: odds.oddsUnder25,
+      oddsOver35: odds.oddsOver35,
+      oddsUnder35: odds.oddsUnder35,
+      oddsOver45: odds.oddsOver45,
+      oddsUnder45: odds.oddsUnder45,
+      oddsBttsYes: odds.oddsBttsYes,
+      oddsBttsNo: odds.oddsBttsNo,
+      likelyScores: odds.likelyScores.length > 0 ? JSON.stringify(odds.likelyScores) : existing.likelyScores,
+      rawOddsData: oddsData ? JSON.stringify(oddsData) : existing.rawOddsData,
+      analysisUpdatedAt: new Date().toISOString(),
+    };
+
+    await upsertMatchAnalysis(updatedAnalysis);
+    console.log(`[Match Analysis] Refreshed odds for match ${matchId}`);
+    return true;
+  } catch (error) {
+    console.error(`[Match Analysis] Error refreshing odds for match ${matchId}:`, error);
+    return false;
+  }
+}
