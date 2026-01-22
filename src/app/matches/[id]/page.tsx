@@ -2,11 +2,9 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
-import { PredictionTable } from '@/components/prediction-table';
 import { MatchEvents } from '@/components/match-events';
 import { getMatchWithAnalysis, getMatchById, getBetsForMatchWithDetails } from '@/lib/db/queries';
 import { getMatchEvents } from '@/lib/football/api-football';
-import { calculateEnhancedScores } from '@/lib/utils/scoring';
 import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, AlertTriangle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -135,7 +133,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
     notFound();
   }
 
-  const { match, competition, analysis, predictions } = result;
+  const { match, competition, analysis } = result;
   
   // Fetch bets for this match
   const bets = await getBetsForMatchWithDetails(id);
@@ -147,62 +145,16 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const keyInjuries = parseJson<KeyInjury[]>(analysis?.keyInjuries ?? null) || [];
   const likelyScores = parseJson<LikelyScore[]>(analysis?.likelyScores ?? null) || [];
 
-
-
-
   // Fetch match events for finished/live matches
   const matchEvents = (isFinished || isLive) && match.externalId 
     ? await getMatchEvents(parseInt(match.externalId, 10))
     : [];
 
-  const predictionsWithPoints = predictions.map(({ prediction, model }) => {
-    // Check if we have enhanced scoring data stored
-    const hasEnhancedScoring = prediction.pointsTotal !== null && prediction.pointsTotal !== undefined;
-    
-    let points = prediction.pointsTotal ?? null;
-    let isExact = (prediction.pointsExactScore || 0) > 0;
-    let isCorrectResult = (prediction.pointsResult || 0) > 0;
-
-    // If no stored scores, calculate on the fly (for backward compatibility)
-    if (!hasEnhancedScoring && isFinished && match.homeScore !== null && match.awayScore !== null) {
-      const scoring = calculateEnhancedScores({
-        predictedHome: prediction.predictedHomeScore,
-        predictedAway: prediction.predictedAwayScore,
-        actualHome: match.homeScore,
-        actualAway: match.awayScore,
-        homeWinPct: analysis?.homeWinPct ?? null,
-        awayWinPct: analysis?.awayWinPct ?? null,
-      });
-      points = scoring.total;
-      isExact = scoring.exactScoreBonus > 0;
-      isCorrectResult = scoring.tendencyPoints > 0;
-    }
-
-    return {
-      id: prediction.id,
-      modelId: model.id,
-      modelDisplayName: model.displayName,
-      provider: model.provider,
-      predictedHomeScore: prediction.predictedHomeScore,
-      predictedAwayScore: prediction.predictedAwayScore,
-      confidence: prediction.confidence,
-      points,
-      isExact,
-      isCorrectResult,
-      // Enhanced scoring breakdown
-      pointsExactScore: prediction.pointsExactScore ?? undefined,
-      pointsResult: prediction.pointsResult ?? undefined,
-      pointsGoalDiff: prediction.pointsGoalDiff ?? undefined,
-      pointsOverUnder: prediction.pointsOverUnder ?? undefined,
-      pointsBtts: prediction.pointsBtts ?? undefined,
-      pointsUpsetBonus: prediction.pointsUpsetBonus ?? undefined,
-      pointsTotal: prediction.pointsTotal ?? undefined,
-    };
-  });
-
-  const exactCount = predictionsWithPoints.filter(p => p.isExact).length;
-  const correctResultCount = predictionsWithPoints.filter(p => p.isCorrectResult && !p.isExact).length;
-  const wrongCount = predictionsWithPoints.filter(p => p.points !== null && p.points === 0).length;
+  // No predictions - using betting system now
+  const predictionsWithPoints: any[] = [];
+  const exactCount = 0;
+  const correctResultCount = 0;
+  const wrongCount = 0;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -598,41 +550,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
         </Card>
       )}
 
-      {/* Prediction Results Summary */}
-      {isFinished && predictions.length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
-          <div className="rounded-xl bg-green-500/10 border border-green-500/20 p-4 text-center">
-            <p className="text-3xl font-bold text-green-400">{exactCount}</p>
-            <p className="text-sm text-muted-foreground">Exact Scores</p>
-          </div>
-          <div className="rounded-xl bg-yellow-500/10 border border-yellow-500/20 p-4 text-center">
-            <p className="text-3xl font-bold text-yellow-400">{correctResultCount}</p>
-            <p className="text-sm text-muted-foreground">Correct Result</p>
-          </div>
-          <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-center">
-            <p className="text-3xl font-bold text-red-400">{wrongCount}</p>
-            <p className="text-sm text-muted-foreground">Wrong Result</p>
-          </div>
-        </div>
-      )}
-
-      {/* Predictions Table */}
-      <Card className="bg-card/50 border-border/50">
-        <CardContent className="p-6">
-          <h2 className="text-xl font-bold mb-2">AI Predictions</h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            {predictions.length > 0 
-              ? `${predictions.length} AI models predicted this match`
-              : 'Predictions are generated when lineups are confirmed (~1 hour before kickoff)'}
-          </p>
-          <PredictionTable
-            predictions={predictionsWithPoints}
-            homeTeam={match.homeTeam}
-            awayTeam={match.awayTeam}
-            isFinished={isFinished}
-          />
-        </CardContent>
-      </Card>
+      {/* Predictions Table - Removed, using betting system now */}
 
       {/* Bets Placed on This Match */}
       {bets && bets.length > 0 && (

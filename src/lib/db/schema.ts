@@ -74,36 +74,6 @@ export const models = pgTable('models', {
   index('idx_models_active').on(table.active),
 ]);
 
-// Predictions made by models
-export const predictions = pgTable('predictions', {
-  id: text('id').primaryKey(), // UUID
-  matchId: text('match_id')
-    .notNull()
-    .references(() => matches.id),
-  modelId: text('model_id')
-    .notNull()
-    .references(() => models.id),
-  predictedHomeScore: integer('predicted_home_score').notNull(),
-  predictedAwayScore: integer('predicted_away_score').notNull(),
-  confidence: text('confidence'), // "low", "medium", "high" (optional)
-  rawResponse: text('raw_response'), // Full LLM response for debugging
-  processingTimeMs: integer('processing_time_ms'), // How long the API call took
-  // Points breakdown (calculated after match finishes)
-  // Note: Using quota-based scoring - pointsResult stores tendencyPoints (2-6)
-  pointsExactScore: integer('points_exact_score').default(0), // Exact score bonus (0-3)
-  pointsResult: integer('points_result').default(0), // Tendency points (2-6)
-  pointsGoalDiff: integer('points_goal_diff').default(0), // Goal diff bonus (0-1)
-  pointsOverUnder: integer('points_over_under').default(0), // Unused (legacy)
-  pointsBtts: integer('points_btts').default(0), // Unused (legacy)
-  pointsUpsetBonus: integer('points_upset_bonus').default(0), // Unused (legacy)
-  pointsTotal: integer('points_total').default(0), // Sum of all points
-  createdAt: text('created_at').default(sql`now()`),
-}, (table) => [
-  index('idx_predictions_match_id').on(table.matchId),
-  index('idx_predictions_model_id').on(table.modelId),
-  unique('predictions_match_model_unique').on(table.matchId, table.modelId),
-]);
-
 // Daily usage tracking for budget control
 export const modelUsage = pgTable('model_usage', {
   id: text('id').primaryKey(), // UUID
@@ -130,35 +100,8 @@ export type NewMatch = typeof matches.$inferInsert;
 export type Model = typeof models.$inferSelect;
 export type NewModel = typeof models.$inferInsert;
 
-export type Prediction = typeof predictions.$inferSelect;
-export type NewPrediction = typeof predictions.$inferInsert;
-
 export type ModelUsage = typeof modelUsage.$inferSelect;
 export type NewModelUsage = typeof modelUsage.$inferInsert;
-
-// Track failed prediction attempts per match/model pair
-// Allows retrying up to 3 times before giving up
-// Records are auto-cleaned after 7 days
-export const predictionAttempts = pgTable('prediction_attempts', {
-  id: text('id').primaryKey(), // UUID
-  matchId: text('match_id')
-    .notNull()
-    .references(() => matches.id),
-  modelId: text('model_id')
-    .notNull()
-    .references(() => models.id),
-  attemptCount: integer('attempt_count').default(0), // Number of failed attempts
-  lastAttemptAt: text('last_attempt_at'), // ISO timestamp of last failed attempt
-  lastError: text('last_error'), // Error message from last attempt
-  createdAt: text('created_at').default(sql`now()`),
-}, (table) => [
-  unique('prediction_attempts_match_model_unique').on(table.matchId, table.modelId),
-  index('idx_prediction_attempts_match_id').on(table.matchId),
-  index('idx_prediction_attempts_created_at').on(table.createdAt),
-]);
-
-export type PredictionAttempt = typeof predictionAttempts.$inferSelect;
-export type NewPredictionAttempt = typeof predictionAttempts.$inferInsert;
 
 // Pre-match analysis data from API-Football
 export const matchAnalysis = pgTable('match_analysis', {

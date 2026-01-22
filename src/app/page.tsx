@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MatchCard } from '@/components/match-card';
-import { getUpcomingMatches, getFinishedMatches, getOverallStats, getPredictionsForMatches, getLiveMatches } from '@/lib/db/queries';
+import { getUpcomingMatches, getFinishedMatches, getOverallStats, getLiveMatches } from '@/lib/db/queries';
 import { Trophy, Calendar, Bot, Target, ArrowRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
@@ -120,22 +120,9 @@ async function UpcomingMatches() {
     );
   }
   
-  // Batch fetch all predictions in one query instead of N+1
-  const matchIds = matches.slice(0, 9).map(m => m.match.id);
-  const allPredictions = await getPredictionsForMatches(matchIds);
-  
-  // Group predictions by match ID for easy lookup
-  const predictionsByMatch = new Map<string, typeof allPredictions>();
-  for (const pred of allPredictions) {
-    const existing = predictionsByMatch.get(pred.matchId) || [];
-    existing.push(pred);
-    predictionsByMatch.set(pred.matchId, existing);
-  }
-  
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {matches.slice(0, 9).map(({ match, competition }) => {
-        const predictions = predictionsByMatch.get(match.id) || [];
         return (
           <MatchCard
             key={match.id}
@@ -147,12 +134,8 @@ async function UpcomingMatches() {
                 name: competition.name,
               },
             }}
-            showPredictions={predictions.length > 0}
-            predictions={predictions.map(p => ({
-              modelDisplayName: p.model.displayName,
-              predictedHomeScore: p.prediction.predictedHomeScore,
-              predictedAwayScore: p.prediction.predictedAwayScore,
-            }))}
+            showPredictions={false}
+            predictions={[]}
           />
         );
       })}

@@ -20,7 +20,6 @@ import {
   calculatePayout,
   calculateProfit,
 } from '@/lib/betting/bet-settlement';
-import { scorePredictionsForMatch } from '@/lib/scoring/score-match';
 
 export function createSettlementWorker() {
   return new Worker<SettleMatchPayload>(
@@ -38,14 +37,6 @@ export function createSettlementWorker() {
 
         if (pendingBets.length === 0) {
           console.log(`[Settlement Worker] No pending bets for match ${matchId}`);
-          
-          // Still score legacy predictions even if no bets
-          try {
-            await scorePredictionsForMatch(matchId, homeScore, awayScore);
-          } catch (error: any) {
-            console.error(`[Settlement Worker] Failed to score predictions:`, error.message);
-          }
-          
           return { settled: 0, won: 0, lost: 0, voids: 0 };
         }
 
@@ -121,14 +112,6 @@ export function createSettlementWorker() {
         await settleBetsTransaction(betsToSettle, balanceUpdates, seasonName);
 
         console.log(`[Settlement Worker] ✓ Settled ${betsToSettle.length} bets (${wonCount} won, ${lostCount} lost, ${voidCount} void)`);
-
-        // Score legacy predictions
-        try {
-          await scorePredictionsForMatch(matchId, homeScore, awayScore);
-          console.log(`[Settlement Worker] ✓ Scored legacy predictions`);
-        } catch (error: any) {
-          console.error(`[Settlement Worker] Failed to score predictions:`, error.message);
-        }
 
         return {
           success: true,

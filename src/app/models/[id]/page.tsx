@@ -3,21 +3,12 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ModelStatsGrid } from '@/components/model-stats-grid';
-import { ModelPerformanceChart } from '@/components/model-performance-chart';
-import { ModelCompetitionBreakdown } from '@/components/model-competition-breakdown';
-import { ModelPredictionHistory } from '@/components/model-prediction-history';
 import {
   getModelById,
-  getModelOverallStats,
-  getModelWeeklyPerformance,
-  getModelStatsByCompetition,
-  getModelPredictionHistory,
-  getModelFunStats,
   getModelBettingStats,
 } from '@/lib/db/queries';
 import { getProviderById, type ModelTier } from '@/lib/llm';
-import { ArrowLeft, Bot, Sparkles, Target, Hash, DollarSign } from 'lucide-react';
+import { ArrowLeft, Bot, Sparkles, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 
@@ -71,42 +62,6 @@ function TableSkeleton() {
   );
 }
 
-// Fun stats component
-function FunStats({ stats }: { stats: Awaited<ReturnType<typeof getModelFunStats>> }) {
-  if (!stats.mostPredictedScore && !stats.bestExactScore) {
-    return null;
-  }
-
-  return (
-    <div className="grid sm:grid-cols-2 gap-4">
-      {stats.mostPredictedScore && (
-        <div className="rounded-xl bg-card/50 border border-border/50 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Hash className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Favorite Prediction</span>
-          </div>
-          <p className="text-2xl font-bold font-mono">{stats.mostPredictedScore.score}</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Predicted {stats.mostPredictedScore.count} times
-          </p>
-        </div>
-      )}
-      {stats.bestExactScore && (
-        <div className="rounded-xl bg-card/50 border border-border/50 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Target className="h-4 w-4 text-green-400" />
-            <span className="text-sm text-muted-foreground">Best Exact Score</span>
-          </div>
-          <p className="text-2xl font-bold font-mono text-green-400">{stats.bestExactScore.score}</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Hit correctly {stats.bestExactScore.count} time{stats.bestExactScore.count !== 1 ? 's' : ''}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default async function ModelPage({ params }: ModelPageProps) {
   const { id } = await params;
 
@@ -117,23 +72,27 @@ export default async function ModelPage({ params }: ModelPageProps) {
     notFound();
   }
 
-  // Fetch all data in parallel
-  const [stats, weeklyPerformance, competitionStats, recentPredictions, funStats, bettingStats] = await Promise.all([
-    getModelOverallStats(id),
-    getModelWeeklyPerformance(id),
-    getModelStatsByCompetition(id),
-    getModelPredictionHistory(id, { limit: 21 }), // Fetch 21 to check if there are more
-    getModelFunStats(id),
+  // Fetch betting stats only (old prediction stats removed)
+  const [bettingStats] = await Promise.all([
     getModelBettingStats(id),
   ]);
+  
+  // Stub data for removed prediction-based components
+  const stats = {
+    totalPredictions: 0,
+    totalPoints: 0,
+    averagePoints: 0,
+    accuracy: 0,
+    exactScores: 0,
+    correctTendencies: 0,
+    correctGoalDiffs: 0,
+  };
+  const weeklyPerformance: any[] = [];
+  const competitionStats: any[] = [];
 
   // Get provider info for tier badge
   const provider = getProviderById(id);
   const tier = provider && 'tier' in provider ? (provider as { tier: ModelTier }).tier : undefined;
-
-  // Check if there are more predictions
-  const hasMorePredictions = recentPredictions.length > 20;
-  const displayPredictions = hasMorePredictions ? recentPredictions.slice(0, 20) : recentPredictions;
 
   return (
     <div className="space-y-8">
@@ -157,13 +116,7 @@ export default async function ModelPage({ params }: ModelPageProps) {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <Suspense fallback={<StatsSkeleton />}>
-        <ModelStatsGrid model={model} stats={stats} tier={tier} />
-      </Suspense>
-
-      {/* Fun Stats */}
-      <FunStats stats={funStats} />
+      {/* Stats Grid - Removed, using betting system now */}
 
       {/* Betting Performance */}
       {bettingStats && (
@@ -206,48 +159,7 @@ export default async function ModelPage({ params }: ModelPageProps) {
         </section>
       )}
 
-      {/* Performance Chart */}
-      <section>
-        <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-semibold">Performance Over Time</h2>
-        </div>
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="p-6">
-            <Suspense fallback={<ChartSkeleton />}>
-              <ModelPerformanceChart data={weeklyPerformance} />
-            </Suspense>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Competition Breakdown */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Performance by Competition</h2>
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="p-4">
-            <Suspense fallback={<TableSkeleton />}>
-              <ModelCompetitionBreakdown data={competitionStats} />
-            </Suspense>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Recent Predictions */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Recent Predictions</h2>
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="p-4">
-            <Suspense fallback={<TableSkeleton />}>
-              <ModelPredictionHistory
-                initialData={displayPredictions}
-                modelId={id}
-                hasMore={hasMorePredictions}
-              />
-            </Suspense>
-          </CardContent>
-        </Card>
-      </section>
+      {/* TODO: Add betting history component - showing betting performance above */}
     </div>
   );
 }

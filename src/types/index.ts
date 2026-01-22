@@ -6,8 +6,6 @@ export type {
   NewMatch,
   Model,
   NewModel,
-  Prediction,
-  NewPrediction,
   MatchAnalysis,
   NewMatchAnalysis,
   // Betting system types

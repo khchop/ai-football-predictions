@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMatchWithAnalysis, getBetsForMatchWithDetails } from '@/lib/db/queries';
-import { calculatePoints } from '@/lib/utils/scoring';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 
 // UUID regex for validation
@@ -44,52 +43,10 @@ export async function GET(
       );
     }
 
-    const { match, competition, predictions, analysis } = result;
+    const { match, competition, analysis } = result;
 
     // Fetch bets for this match
     const bets = await getBetsForMatchWithDetails(id);
-
-    // Group bets by model for easier display
-    const betsByModel = new Map<string, typeof bets>();
-    for (const bet of bets) {
-      if (!betsByModel.has(bet.modelId)) {
-        betsByModel.set(bet.modelId, []);
-      }
-      betsByModel.get(bet.modelId)!.push(bet);
-    }
-
-    // Calculate points for each prediction if match is finished (legacy)
-    const predictionsWithPoints = predictions.map(({ prediction, model }) => {
-      let points = null;
-      let isExact = false;
-      let isCorrectResult = false;
-
-      if (match.status === 'finished' && match.homeScore !== null && match.awayScore !== null) {
-        const scoring = calculatePoints(
-          prediction.predictedHomeScore,
-          prediction.predictedAwayScore,
-          match.homeScore,
-          match.awayScore
-        );
-        points = scoring.points;
-        isExact = scoring.isExact;
-        isCorrectResult = scoring.isCorrectResult;
-      }
-
-      return {
-        id: prediction.id,
-        modelId: model.id,
-        modelDisplayName: model.displayName,
-        provider: model.provider,
-        predictedHomeScore: prediction.predictedHomeScore,
-        predictedAwayScore: prediction.predictedAwayScore,
-        confidence: prediction.confidence,
-        points,
-        isExact,
-        isCorrectResult,
-        createdAt: prediction.createdAt,
-      };
-    });
 
     return NextResponse.json(
       {
@@ -164,7 +121,7 @@ export async function GET(
           homeCoach: analysis.homeCoach,
           awayCoach: analysis.awayCoach,
         } : null,
-        predictions: predictionsWithPoints, // Legacy
+        predictions: [], // Legacy - removed
         bets: bets.map(bet => ({
           id: bet.betId,
           modelId: bet.modelId,
