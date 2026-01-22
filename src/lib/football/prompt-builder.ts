@@ -388,9 +388,32 @@ function buildCompactMatchSummary(context: BatchMatchContext, index: number, hom
   lines.push(`    ${homeTeam} vs ${awayTeam} | ${competition} | ${formattedTime}`);
   
   if (analysis) {
-    // Odds (compact) - consensus signal, not a prediction
-    if (analysis.oddsHome || analysis.oddsDraw || analysis.oddsAway) {
-      lines.push(`    Odds: H=${analysis.oddsHome || '-'} D=${analysis.oddsDraw || '-'} A=${analysis.oddsAway || '-'}`);
+    // BETTING ODDS - All options available for 3 bets
+    const hasOdds = analysis.oddsHome || analysis.odds1X || analysis.oddsOver25 || analysis.oddsBttsYes;
+    
+    if (hasOdds) {
+      lines.push(`    ODDS:`);
+      
+      // Result odds: 1X2 + Double Chance
+      const result1X2 = `1:${analysis.oddsHome || '-'} X:${analysis.oddsDraw || '-'} 2:${analysis.oddsAway || '-'}`;
+      const resultDC = `1X:${analysis.odds1X || '-'} X2:${analysis.oddsX2 || '-'}`;
+      lines.push(`      Result: ${result1X2} | ${resultDC}`);
+      
+      // Over/Under odds (compact - show available lines)
+      const ouLines: string[] = [];
+      if (analysis.oddsOver05) ouLines.push(`0.5: O${analysis.oddsOver05}/U${analysis.oddsUnder05 || '-'}`);
+      if (analysis.oddsOver15) ouLines.push(`1.5: O${analysis.oddsOver15}/U${analysis.oddsUnder15 || '-'}`);
+      if (analysis.oddsOver25) ouLines.push(`2.5: O${analysis.oddsOver25}/U${analysis.oddsUnder25 || '-'}`);
+      if (analysis.oddsOver35) ouLines.push(`3.5: O${analysis.oddsOver35}/U${analysis.oddsUnder35 || '-'}`);
+      if (analysis.oddsOver45) ouLines.push(`4.5: O${analysis.oddsOver45}/U${analysis.oddsUnder45 || '-'}`);
+      if (ouLines.length > 0) {
+        lines.push(`      O/U: ${ouLines.join(' | ')}`);
+      }
+      
+      // BTTS odds
+      if (analysis.oddsBttsYes || analysis.oddsBttsNo) {
+        lines.push(`      BTTS: Yes ${analysis.oddsBttsYes || '-'} | No ${analysis.oddsBttsNo || '-'}`);
+      }
     }
     
     // League position (NEW - very compact)
