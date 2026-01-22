@@ -128,17 +128,52 @@ export async function fetchOdds(fixtureId: number): Promise<APIFootballOddsRespo
   }
 }
 
-// Extract match winner odds from odds response
-function extractMatchWinnerOdds(oddsResponse: APIFootballOddsResponse | null): {
+// Extract all betting odds from odds response
+function extractAllOdds(oddsResponse: APIFootballOddsResponse | null): {
+  // Match Winner (1X2)
   oddsHome: string | null;
   oddsDraw: string | null;
   oddsAway: string | null;
+  // Double Chance
+  odds1X: string | null;
+  oddsX2: string | null;
+  odds12: string | null;
+  // Over/Under
+  oddsOver05: string | null;
+  oddsUnder05: string | null;
+  oddsOver15: string | null;
+  oddsUnder15: string | null;
+  oddsOver25: string | null;
+  oddsUnder25: string | null;
+  oddsOver35: string | null;
+  oddsUnder35: string | null;
+  oddsOver45: string | null;
+  oddsUnder45: string | null;
+  // BTTS
+  oddsBttsYes: string | null;
+  oddsBttsNo: string | null;
+  // Other
   likelyScores: LikelyScore[];
 } {
   const result = {
     oddsHome: null as string | null,
     oddsDraw: null as string | null,
     oddsAway: null as string | null,
+    odds1X: null as string | null,
+    oddsX2: null as string | null,
+    odds12: null as string | null,
+    oddsOver05: null as string | null,
+    oddsUnder05: null as string | null,
+    oddsOver15: null as string | null,
+    oddsUnder15: null as string | null,
+    oddsOver25: null as string | null,
+    oddsUnder25: null as string | null,
+    oddsOver35: null as string | null,
+    oddsUnder35: null as string | null,
+    oddsOver45: null as string | null,
+    oddsUnder45: null as string | null,
+    oddsBttsYes: null as string | null,
+    oddsBttsNo: null as string | null,
     likelyScores: [] as LikelyScore[],
   };
 
@@ -152,7 +187,7 @@ function extractMatchWinnerOdds(oddsResponse: APIFootballOddsResponse | null): {
   const bookmaker = bookmakers.find(b => b.id === 8) || bookmakers[0];
   if (!bookmaker) return result;
 
-  // Find Match Winner bet (usually id: 1 or name: "Match Winner")
+  // 1. Match Winner (Bet ID: 1)
   const matchWinnerBet = bookmaker.bets.find(
     b => b.id === 1 || b.name.toLowerCase().includes('match winner')
   );
@@ -165,13 +200,59 @@ function extractMatchWinnerOdds(oddsResponse: APIFootballOddsResponse | null): {
     }
   }
 
-  // Find Exact Score bet for likely scores
+  // 2. Double Chance (Bet ID: 12)
+  const doubleChanceBet = bookmaker.bets.find(
+    b => b.id === 12 || b.name.toLowerCase().includes('double chance')
+  );
+
+  if (doubleChanceBet) {
+    for (const value of doubleChanceBet.values) {
+      const val = value.value;
+      if (val === 'Home/Draw' || val === '1X') result.odds1X = value.odd;
+      else if (val === 'Draw/Away' || val === 'X2') result.oddsX2 = value.odd;
+      else if (val === 'Home/Away' || val === '12') result.odds12 = value.odd;
+    }
+  }
+
+  // 3. Goals Over/Under (Bet ID: 5)
+  const overUnderBet = bookmaker.bets.find(
+    b => b.id === 5 || b.name.toLowerCase().includes('goals over/under')
+  );
+
+  if (overUnderBet) {
+    for (const value of overUnderBet.values) {
+      const val = value.value;
+      if (val === 'Over 0.5') result.oddsOver05 = value.odd;
+      else if (val === 'Under 0.5') result.oddsUnder05 = value.odd;
+      else if (val === 'Over 1.5') result.oddsOver15 = value.odd;
+      else if (val === 'Under 1.5') result.oddsUnder15 = value.odd;
+      else if (val === 'Over 2.5') result.oddsOver25 = value.odd;
+      else if (val === 'Under 2.5') result.oddsUnder25 = value.odd;
+      else if (val === 'Over 3.5') result.oddsOver35 = value.odd;
+      else if (val === 'Under 3.5') result.oddsUnder35 = value.odd;
+      else if (val === 'Over 4.5') result.oddsOver45 = value.odd;
+      else if (val === 'Under 4.5') result.oddsUnder45 = value.odd;
+    }
+  }
+
+  // 4. Both Teams Score (Bet ID: 8)
+  const bttsBet = bookmaker.bets.find(
+    b => b.id === 8 || b.name.toLowerCase().includes('both teams score')
+  );
+
+  if (bttsBet) {
+    for (const value of bttsBet.values) {
+      if (value.value === 'Yes') result.oddsBttsYes = value.odd;
+      else if (value.value === 'No') result.oddsBttsNo = value.odd;
+    }
+  }
+
+  // 5. Exact Score (for display only, not betting)
   const exactScoreBet = bookmaker.bets.find(
     b => b.name.toLowerCase().includes('exact score')
   );
 
   if (exactScoreBet) {
-    // Sort by odds (lower odds = more likely) and take top 5
     const sortedScores = exactScoreBet.values
       .filter(v => v.value && v.odd)
       .map(v => ({ score: v.value, odds: v.odd }))
@@ -368,8 +449,8 @@ export async function fetchAndStoreAnalysis(
     ? extractH2HStatistics(h2hDetailedData, homeTeamId, awayTeamId) 
     : null;
 
-  // Extract odds
-  const odds = extractMatchWinnerOdds(oddsData);
+  // Extract all odds (1X2, DC, O/U, BTTS)
+  const odds = extractAllOdds(oddsData);
 
   // Extract injuries
   const injuries = extractInjuries(
@@ -416,11 +497,32 @@ export async function fetchAndStoreAnalysis(
     awayGoalsScored: teams?.away?.last_5?.goals?.for?.total || null,
     awayGoalsConceded: teams?.away?.last_5?.goals?.against?.total || null,
     
-    // Odds
+    // Odds - Match Winner (1X2)
     oddsHome: odds.oddsHome,
     oddsDraw: odds.oddsDraw,
     oddsAway: odds.oddsAway,
     likelyScores: odds.likelyScores.length > 0 ? JSON.stringify(odds.likelyScores) : null,
+    
+    // Odds - Double Chance
+    odds1X: odds.odds1X,
+    oddsX2: odds.oddsX2,
+    odds12: odds.odds12,
+    
+    // Odds - Over/Under
+    oddsOver05: odds.oddsOver05,
+    oddsUnder05: odds.oddsUnder05,
+    oddsOver15: odds.oddsOver15,
+    oddsUnder15: odds.oddsUnder15,
+    oddsOver25: odds.oddsOver25,
+    oddsUnder25: odds.oddsUnder25,
+    oddsOver35: odds.oddsOver35,
+    oddsUnder35: odds.oddsUnder35,
+    oddsOver45: odds.oddsOver45,
+    oddsUnder45: odds.oddsUnder45,
+    
+    // Odds - BTTS
+    oddsBttsYes: odds.oddsBttsYes,
+    oddsBttsNo: odds.oddsBttsNo,
     
     // Injuries
     homeInjuriesCount: injuries.homeInjuriesCount,

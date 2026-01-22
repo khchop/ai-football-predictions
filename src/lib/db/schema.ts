@@ -193,10 +193,31 @@ export const matchAnalysis = pgTable('match_analysis', {
   awayGoalsConceded: integer('away_goals_conceded'),
   
   // Betting odds (from /odds endpoint)
-  oddsHome: text('odds_home'), // e.g., "1.38"
-  oddsDraw: text('odds_draw'), // e.g., "5.60"
-  oddsAway: text('odds_away'), // e.g., "6.50"
+  oddsHome: text('odds_home'), // e.g., "1.38" - 1X2: Home win
+  oddsDraw: text('odds_draw'), // e.g., "5.60" - 1X2: Draw
+  oddsAway: text('odds_away'), // e.g., "6.50" - 1X2: Away win
   likelyScores: text('likely_scores'), // JSON array of {score, odds}
+  
+  // Double Chance odds
+  odds1X: text('odds_1x'), // Home win OR Draw
+  oddsX2: text('odds_x2'), // Draw OR Away win
+  odds12: text('odds_12'), // Home win OR Away win (no draw)
+  
+  // Over/Under goals odds
+  oddsOver05: text('odds_over_05'),
+  oddsUnder05: text('odds_under_05'),
+  oddsOver15: text('odds_over_15'),
+  oddsUnder15: text('odds_under_15'),
+  oddsOver25: text('odds_over_25'),
+  oddsUnder25: text('odds_under_25'),
+  oddsOver35: text('odds_over_35'),
+  oddsUnder35: text('odds_under_35'),
+  oddsOver45: text('odds_over_45'),
+  oddsUnder45: text('odds_under_45'),
+  
+  // Both Teams To Score odds
+  oddsBttsYes: text('odds_btts_yes'),
+  oddsBttsNo: text('odds_btts_no'),
   
   // Injuries (from /injuries endpoint)
   homeInjuriesCount: integer('home_injuries_count').default(0),
@@ -279,3 +300,75 @@ export const leagueStandings = pgTable('league_standings', {
 
 export type LeagueStanding = typeof leagueStandings.$inferSelect;
 export type NewLeagueStanding = typeof leagueStandings.$inferInsert;
+
+// Betting seasons (for tracking when to reset balances)
+export const seasons = pgTable('seasons', {
+  id: text('id').primaryKey(), // UUID
+  name: text('name').notNull(), // e.g., "2024-2025"
+  startDate: text('start_date').notNull(), // ISO date
+  endDate: text('end_date'), // ISO date (null if current season)
+  isCurrent: boolean('is_current').default(false),
+  createdAt: text('created_at').default(sql`now()`),
+});
+
+export type Season = typeof seasons.$inferSelect;
+export type NewSeason = typeof seasons.$inferInsert;
+
+// Model betting balances per season
+export const modelBalances = pgTable('model_balances', {
+  id: text('id').primaryKey(), // UUID
+  modelId: text('model_id')
+    .notNull()
+    .references(() => models.id),
+  season: text('season').notNull(), // e.g., "2024-2025"
+  startingBalance: doublePrecision('starting_balance').default(1000.00),
+  currentBalance: doublePrecision('current_balance').default(1000.00),
+  totalWagered: doublePrecision('total_wagered').default(0.00),
+  totalWon: doublePrecision('total_won').default(0.00),
+  totalBets: integer('total_bets').default(0),
+  winningBets: integer('winning_bets').default(0),
+  createdAt: text('created_at').default(sql`now()`),
+  updatedAt: text('updated_at').default(sql`now()`),
+}, (table) => [
+  unique('model_balances_model_season_unique').on(table.modelId, table.season),
+  index('idx_model_balances_season').on(table.season),
+  index('idx_model_balances_model_id').on(table.modelId),
+]);
+
+export type ModelBalance = typeof modelBalances.$inferSelect;
+export type NewModelBalance = typeof modelBalances.$inferInsert;
+
+// Individual bets (replaces predictions for betting system)
+export const bets = pgTable('bets', {
+  id: text('id').primaryKey(), // UUID
+  matchId: text('match_id')
+    .notNull()
+    .references(() => matches.id),
+  modelId: text('model_id')
+    .notNull()
+    .references(() => models.id),
+  season: text('season').notNull(),
+  
+  // Bet details
+  betType: text('bet_type').notNull(), // 'result' | 'over_under' | 'btts'
+  selection: text('selection').notNull(), // '1' | '2' | '1X' | 'X2' | 'O2.5' | 'U1.5' | 'Yes' | 'No'
+  odds: doublePrecision('odds').notNull(),
+  stake: doublePrecision('stake').default(1.00),
+  
+  // Outcome
+  status: text('status').default('pending'), // 'pending' | 'won' | 'lost' | 'void'
+  payout: doublePrecision('payout'), // NULL until settled
+  profit: doublePrecision('profit'), // NULL until settled
+  
+  createdAt: text('created_at').default(sql`now()`),
+  settledAt: text('settled_at'),
+}, (table) => [
+  unique('bets_match_model_type_unique').on(table.matchId, table.modelId, table.betType),
+  index('idx_bets_match_id').on(table.matchId),
+  index('idx_bets_model_id').on(table.modelId),
+  index('idx_bets_season').on(table.season),
+  index('idx_bets_status').on(table.status),
+]);
+
+export type Bet = typeof bets.$inferSelect;
+export type NewBet = typeof bets.$inferInsert;
