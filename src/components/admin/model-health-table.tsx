@@ -1,13 +1,13 @@
 'use client';
 
 import { Model } from '@/lib/db/schema';
-import { OpenRouterProvider } from '@/lib/llm/providers/openrouter';
+import { TogetherProvider } from '@/lib/llm/providers/together';
 import { CheckCircle, AlertTriangle, XCircle, Ban, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
 interface ModelHealthTableProps {
   models: Model[];
-  providerConfig: Map<string, OpenRouterProvider>;
+  providerConfig: Map<string, TogetherProvider>;
 }
 
 type HealthStatus = 'healthy' | 'degraded' | 'failing' | 'disabled';

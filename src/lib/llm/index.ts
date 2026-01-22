@@ -1,13 +1,13 @@
 import { LLMProvider } from '@/types';
-import { OPENROUTER_PROVIDERS } from './providers/openrouter';
+import { TOGETHER_PROVIDERS } from './providers/together';
 
-// All available providers - 30 open-source models via OpenRouter
-export const ALL_PROVIDERS: LLMProvider[] = [...OPENROUTER_PROVIDERS];
+// All available providers - 35 open-source models via Together AI
+export const ALL_PROVIDERS: LLMProvider[] = [...TOGETHER_PROVIDERS];
 
 // Get active providers (checks if API keys are configured)
 export function getActiveProviders(): LLMProvider[] {
-  // All providers use OpenRouter
-  if (!process.env.OPENROUTER_API_KEY) {
+  // All providers use Together AI
+  if (!process.env.TOGETHER_API_KEY) {
     return [];
   }
   return ALL_PROVIDERS;
@@ -36,7 +36,7 @@ export function getProviderStats(): {
   budget: number;
   premium: number;
 } {
-  const providers = OPENROUTER_PROVIDERS;
+  const providers = TOGETHER_PROVIDERS;
   return {
     total: providers.length,
     free: providers.filter(p => p.tier === 'free').length,
@@ -47,10 +47,10 @@ export function getProviderStats(): {
 }
 
 // Export providers
-export { OPENROUTER_PROVIDERS };
+export { TOGETHER_PROVIDERS };
 
-// Re-export OpenRouter provider class for type checking
-export { OpenRouterProvider, type ModelTier, type ModelPricing } from './providers/openrouter';
+// Re-export Together AI provider class for type checking
+export { TogetherProvider, type ModelTier, type ModelPricing } from './providers/together';
 
 // Re-export batch prediction types
 export { type BatchPredictionResult } from './providers/base';

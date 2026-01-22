@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllModelsWithHealth } from '@/lib/db/queries';
 import { getBudgetStatus } from '@/lib/llm/budget';
-import { OPENROUTER_PROVIDERS } from '@/lib/llm/providers/openrouter';
+import { TOGETHER_PROVIDERS } from '@/lib/llm/providers/together';
 
 function validateAdminRequest(request: NextRequest): NextResponse | null {
   const password = request.headers.get('X-Admin-Password');
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get provider config for tier info (simplified for JSON)
-    const providerConfig = OPENROUTER_PROVIDERS.map(p => ({
+    const providerConfig = TOGETHER_PROVIDERS.map(p => ({
       id: p.id,
       tier: p.tier,
     }));
