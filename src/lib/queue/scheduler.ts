@@ -158,16 +158,12 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
 
 // Cancel all jobs for a match (if postponed/cancelled)
 export async function cancelMatchJobs(matchId: string): Promise<number> {
+  // Job IDs must match those created in scheduleMatchJobs
   const jobsToCancel = [
     { queue: analysisQueue, jobId: `analyze-${matchId}` },
-    { queue: oddsQueue, jobId: `refresh-odds-2h-${matchId}` },
-    { queue: oddsQueue, jobId: `refresh-odds-95m-${matchId}` },
-    { queue: predictionsQueue, jobId: `predict-1-${matchId}` },
+    { queue: oddsQueue, jobId: `odds-${matchId}` },
     { queue: lineupsQueue, jobId: `lineups-${matchId}` },
-    { queue: oddsQueue, jobId: `refresh-odds-35m-${matchId}` },
-    { queue: predictionsQueue, jobId: `predict-2-${matchId}` },
-    { queue: oddsQueue, jobId: `refresh-odds-10m-${matchId}` },
-    { queue: predictionsQueue, jobId: `predict-3-${matchId}` },
+    { queue: predictionsQueue, jobId: `predict-${matchId}` },
     { queue: liveQueue, jobId: `live-${matchId}` },
   ];
   

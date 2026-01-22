@@ -99,6 +99,17 @@ export interface ParsedPrediction {
   error?: string;
 }
 
+// Validate score is in reasonable range (0-20)
+function validateScore(score: number, label: string): { valid: boolean; error?: string } {
+  if (isNaN(score)) {
+    return { valid: false, error: `${label} is NaN` };
+  }
+  if (score < 0 || score > 20) {
+    return { valid: false, error: `${label} out of range (0-20): ${score}` };
+  }
+  return { valid: true };
+}
+
 export function parsePredictionResponse(response: string): ParsedPrediction {
   try {
     // Clean up the response
@@ -134,18 +145,36 @@ export function parsePredictionResponse(response: string): ParsedPrediction {
       try {
         const parsed = JSON.parse(cleaned);
         if (parsed.home_score !== undefined && parsed.away_score !== undefined) {
-          return {
-            homeScore: parseInt(String(parsed.home_score), 10),
-            awayScore: parseInt(String(parsed.away_score), 10),
-            success: true,
-          };
+          const homeScore = parseInt(String(parsed.home_score), 10);
+          const awayScore = parseInt(String(parsed.away_score), 10);
+          
+          // Validate scores
+          const homeValidation = validateScore(homeScore, 'home_score');
+          if (!homeValidation.valid) {
+            return { homeScore: 0, awayScore: 0, success: false, error: homeValidation.error };
+          }
+          const awayValidation = validateScore(awayScore, 'away_score');
+          if (!awayValidation.valid) {
+            return { homeScore: 0, awayScore: 0, success: false, error: awayValidation.error };
+          }
+          
+          return { homeScore, awayScore, success: true };
         }
         if (parsed.homeScore !== undefined && parsed.awayScore !== undefined) {
-          return {
-            homeScore: parseInt(String(parsed.homeScore), 10),
-            awayScore: parseInt(String(parsed.awayScore), 10),
-            success: true,
-          };
+          const homeScore = parseInt(String(parsed.homeScore), 10);
+          const awayScore = parseInt(String(parsed.awayScore), 10);
+          
+          // Validate scores
+          const homeValidation = validateScore(homeScore, 'homeScore');
+          if (!homeValidation.valid) {
+            return { homeScore: 0, awayScore: 0, success: false, error: homeValidation.error };
+          }
+          const awayValidation = validateScore(awayScore, 'awayScore');
+          if (!awayValidation.valid) {
+            return { homeScore: 0, awayScore: 0, success: false, error: awayValidation.error };
+          }
+          
+          return { homeScore, awayScore, success: true };
         }
       } catch {
         // Continue to error handling
@@ -155,15 +184,21 @@ export function parsePredictionResponse(response: string): ParsedPrediction {
     // If we found a pattern match, parse it
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
-      const homeScore = parsed.home_score ?? parsed.homeScore;
-      const awayScore = parsed.away_score ?? parsed.awayScore;
+      const homeScore = parseInt(String(parsed.home_score ?? parsed.homeScore), 10);
+      const awayScore = parseInt(String(parsed.away_score ?? parsed.awayScore), 10);
 
       if (homeScore !== undefined && awayScore !== undefined) {
-        return {
-          homeScore: parseInt(String(homeScore), 10),
-          awayScore: parseInt(String(awayScore), 10),
-          success: true,
-        };
+        // Validate scores
+        const homeValidation = validateScore(homeScore, 'home_score');
+        if (!homeValidation.valid) {
+          return { homeScore: 0, awayScore: 0, success: false, error: homeValidation.error };
+        }
+        const awayValidation = validateScore(awayScore, 'away_score');
+        if (!awayValidation.valid) {
+          return { homeScore: 0, awayScore: 0, success: false, error: awayValidation.error };
+        }
+        
+        return { homeScore, awayScore, success: true };
       }
     }
 
@@ -248,13 +283,29 @@ export function parseBatchPredictionResponse(
       const awayScore = item.away_score ?? item.awayScore;
       
       if (!matchId || homeScore === undefined || awayScore === undefined) {
+        if (matchId) {
+          failedMatchIds.push(String(matchId));
+        }
+        continue;
+      }
+      
+      const homeParsed = parseInt(String(homeScore), 10);
+      const awayParsed = parseInt(String(awayScore), 10);
+      
+      // Validate scores
+      const homeValidation = validateScore(homeParsed, `home_score for match ${matchId}`);
+      const awayValidation = validateScore(awayParsed, `away_score for match ${matchId}`);
+      
+      if (!homeValidation.valid || !awayValidation.valid) {
+        console.warn(`[Batch Parse] Invalid score for match ${matchId}: ${homeValidation.error || awayValidation.error}`);
+        failedMatchIds.push(String(matchId));
         continue;
       }
       
       predictions.push({
         matchId: String(matchId),
-        homeScore: parseInt(String(homeScore), 10),
-        awayScore: parseInt(String(awayScore), 10),
+        homeScore: homeParsed,
+        awayScore: awayParsed,
       });
     }
     

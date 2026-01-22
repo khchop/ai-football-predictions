@@ -7,6 +7,7 @@ import {
   parseBatchPredictionResponse,
   BatchParsedResult,
 } from '../prompt';
+import { fetchWithRetry, APIError, RateLimitError } from '@/lib/utils/api-client';
 
 // Result for batch predictions
 export interface BatchPredictionResult {
@@ -153,32 +154,39 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
     // OPTIMIZED: Reduced max_tokens since JSON responses are small
     // Single prediction: ~30 tokens, Batch of 10: ~300 tokens
     const maxTokens = isBatch ? 800 : 100;
-
-    // Create abort controller for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
     
     try {
-      const response = await fetch(this.endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...this.getHeaders(),
+      // Use fetchWithRetry for automatic retry on transient failures
+      // Retries: 429 (rate limit), 5xx (server errors), timeouts
+      const response = await fetchWithRetry(
+        this.endpoint,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...this.getHeaders(),
+          },
+          body: JSON.stringify({
+            model: this.model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+            // OPTIMIZED: Lower temperature for more reliable JSON output
+            temperature: 0.3,
+            max_tokens: maxTokens,
+            // Force JSON output mode for all models
+            response_format: { type: 'json_object' },
+          }),
         },
-        body: JSON.stringify({
-          model: this.model,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          // OPTIMIZED: Lower temperature for more reliable JSON output
-          temperature: 0.3,
-          max_tokens: maxTokens,
-          // Force JSON output mode for all models
-          response_format: { type: 'json_object' },
-        }),
-        signal: controller.signal,
-      });
+        {
+          maxRetries: 3,
+          baseDelayMs: 1000,
+          maxDelayMs: 10000,
+          retryableStatusCodes: [408, 429, 500, 502, 503, 504],
+        },
+        timeout
+      );
 
       if (!response.ok) {
         // Safely read error text
@@ -188,14 +196,27 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
         } catch {
           // Ignore if body can't be read
         }
-        throw new Error(`API error ${response.status}: ${errorText}`);
+        
+        // Throw specific error for rate limiting
+        if (response.status === 429) {
+          throw new RateLimitError(
+            `Rate limit exceeded: ${errorText}`,
+            this.endpoint
+          );
+        }
+        
+        throw new APIError(
+          `API error: ${errorText}`,
+          response.status,
+          this.endpoint
+        );
       }
 
       let data;
       try {
         data = await response.json();
       } catch {
-        throw new Error('API returned invalid JSON response');
+        throw new APIError('API returned invalid JSON response', response.status, this.endpoint);
       }
       
       const message = data.choices?.[0]?.message;
@@ -220,15 +241,23 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
       }
       
       // No usable content found - throw descriptive error instead of returning empty string
-      throw new Error('API response contained no usable content (no content, reasoning, or reasoning_details)');
+      throw new APIError(
+        'API response contained no usable content (no content, reasoning, or reasoning_details)',
+        response.status,
+        this.endpoint
+      );
     } catch (error) {
-      // Handle abort (timeout) specifically
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error(`Request timed out after ${timeout}ms`);
+      // Re-throw APIError and RateLimitError as-is
+      if (error instanceof APIError || error instanceof RateLimitError) {
+        throw error;
       }
-      throw error;
-    } finally {
-      clearTimeout(timeoutId);
+      
+      // Wrap other errors
+      if (error instanceof Error) {
+        throw new APIError(error.message, undefined, this.endpoint, error);
+      }
+      
+      throw new APIError('Unknown error', undefined, this.endpoint, error);
     }
   }
 }
