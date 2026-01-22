@@ -127,41 +127,47 @@ export function extractTeamStatistics(
 
   const stats = statsResponse.response;
   
+  // Defensive null checks - API may return incomplete data on errors
+  if (!stats?.fixtures || !stats?.goals || !stats?.clean_sheet || !stats?.failed_to_score || !stats?.biggest) {
+    console.error('[Team Statistics] Incomplete stats response, missing required fields');
+    return null;
+  }
+  
   return {
     // Home/Away record
-    homeWins: stats.fixtures.wins.home,
-    homeDraws: stats.fixtures.draws.home,
-    homeLosses: stats.fixtures.loses.home,
-    awayWins: stats.fixtures.wins.away,
-    awayDraws: stats.fixtures.draws.away,
-    awayLosses: stats.fixtures.loses.away,
+    homeWins: stats.fixtures.wins?.home ?? 0,
+    homeDraws: stats.fixtures.draws?.home ?? 0,
+    homeLosses: stats.fixtures.loses?.home ?? 0,
+    awayWins: stats.fixtures.wins?.away ?? 0,
+    awayDraws: stats.fixtures.draws?.away ?? 0,
+    awayLosses: stats.fixtures.loses?.away ?? 0,
     
     // Goals
-    homeGoalsFor: stats.goals.for.total.home,
-    homeGoalsAgainst: stats.goals.against.total.home,
-    awayGoalsFor: stats.goals.for.total.away,
-    awayGoalsAgainst: stats.goals.against.total.away,
-    totalGoalsFor: stats.goals.for.total.total,
-    totalGoalsAgainst: stats.goals.against.total.total,
+    homeGoalsFor: stats.goals.for?.total?.home ?? 0,
+    homeGoalsAgainst: stats.goals.against?.total?.home ?? 0,
+    awayGoalsFor: stats.goals.for?.total?.away ?? 0,
+    awayGoalsAgainst: stats.goals.against?.total?.away ?? 0,
+    totalGoalsFor: stats.goals.for?.total?.total ?? 0,
+    totalGoalsAgainst: stats.goals.against?.total?.total ?? 0,
     
     // Clean sheets
-    cleanSheetsHome: stats.clean_sheet.home,
-    cleanSheetsAway: stats.clean_sheet.away,
-    cleanSheetsTotal: stats.clean_sheet.total,
+    cleanSheetsHome: stats.clean_sheet?.home ?? 0,
+    cleanSheetsAway: stats.clean_sheet?.away ?? 0,
+    cleanSheetsTotal: stats.clean_sheet?.total ?? 0,
     
     // Failed to score
-    failedToScoreHome: stats.failed_to_score.home,
-    failedToScoreAway: stats.failed_to_score.away,
+    failedToScoreHome: stats.failed_to_score?.home ?? 0,
+    failedToScoreAway: stats.failed_to_score?.away ?? 0,
     
     // Streaks
-    winStreak: stats.biggest.streak.wins,
-    drawStreak: stats.biggest.streak.draws,
-    loseStreak: stats.biggest.streak.loses,
+    winStreak: stats.biggest.streak?.wins ?? 0,
+    drawStreak: stats.biggest.streak?.draws ?? 0,
+    loseStreak: stats.biggest.streak?.loses ?? 0,
     
     // Goal timing (early and late goals are tactically important)
-    goalsFor0to15: stats.goals.for.minute['0-15']?.total || null,
-    goalsFor76to90: stats.goals.for.minute['76-90']?.total || null,
-    goalsAgainst0to15: stats.goals.against.minute['0-15']?.total || null,
-    goalsAgainst76to90: stats.goals.against.minute['76-90']?.total || null,
+    goalsFor0to15: stats.goals.for?.minute?.['0-15']?.total ?? null,
+    goalsFor76to90: stats.goals.for?.minute?.['76-90']?.total ?? null,
+    goalsAgainst0to15: stats.goals.against?.minute?.['0-15']?.total ?? null,
+    goalsAgainst76to90: stats.goals.against?.minute?.['76-90']?.total ?? null,
   };
 }

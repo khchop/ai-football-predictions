@@ -59,7 +59,7 @@ export function createAnalysisWorker() {
     },
     {
       connection: getQueueConnection(),
-      concurrency: 3, // Process 3 analyses in parallel
+      concurrency: 1, // Process one at a time to avoid API rate limits (each analysis = ~6 API calls)
     }
   );
 }
