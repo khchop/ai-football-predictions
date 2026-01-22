@@ -174,6 +174,8 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
           // OPTIMIZED: Lower temperature for more reliable JSON output
           temperature: 0.3,
           max_tokens: maxTokens,
+          // Force JSON output mode for all models
+          response_format: { type: 'json_object' },
         }),
         signal: controller.signal,
       });

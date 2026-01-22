@@ -319,6 +319,44 @@ export const bets = pgTable('bets', {
 export type Bet = typeof bets.$inferSelect;
 export type NewBet = typeof bets.$inferInsert;
 
+// AI score predictions (Kicktipp Quota Scoring system)
+export const predictions = pgTable('predictions', {
+  id: text('id').primaryKey(), // UUID
+  matchId: text('match_id')
+    .notNull()
+    .references(() => matches.id),
+  modelId: text('model_id')
+    .notNull()
+    .references(() => models.id),
+  
+  // Prediction
+  predictedHome: integer('predicted_home').notNull(),
+  predictedAway: integer('predicted_away').notNull(),
+  predictedResult: text('predicted_result').notNull(), // 'H' | 'D' | 'A'
+  
+  // Scoring (calculated after match finishes using Kicktipp Quota System)
+  tendencyPoints: integer('tendency_points'), // 2-6 based on quota
+  goalDiffBonus: integer('goal_diff_bonus'), // 0 or 1
+  exactScoreBonus: integer('exact_score_bonus'), // 0 or 3
+  totalPoints: integer('total_points'), // Sum of above (max 10)
+  
+  // Status
+  status: text('status').default('pending'), // 'pending' | 'scored' | 'void'
+  
+  // Timestamps
+  createdAt: text('created_at').default(sql`now()`),
+  scoredAt: text('scored_at'),
+}, (table) => [
+  unique('predictions_match_model_unique').on(table.matchId, table.modelId),
+  index('idx_predictions_match_id').on(table.matchId),
+  index('idx_predictions_model_id').on(table.modelId),
+  index('idx_predictions_status').on(table.status),
+  index('idx_predictions_created_at').on(table.createdAt),
+]);
+
+export type Prediction = typeof predictions.$inferSelect;
+export type NewPrediction = typeof predictions.$inferInsert;
+
 // AI-generated blog posts for SEO/GEO
 export const blogPosts = pgTable('blog_posts', {
   id: text('id').primaryKey(), // UUID

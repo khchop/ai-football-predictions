@@ -1,7 +1,7 @@
 /**
  * Workers Index
  * 
- * Starts all workers for the event-driven betting system.
+ * Starts all workers for the predictions system with Kicktipp Quota Scoring.
  * Call startAllWorkers() from instrumentation.ts.
  */
 
@@ -12,7 +12,7 @@ import { createLineupsWorker } from './lineups.worker';
 import { createOddsWorker } from './odds.worker';
 import { createPredictionsWorker } from './predictions.worker';
 import { createLiveScoreWorker } from './live-score.worker';
-import { createSettlementWorker } from './settlement.worker';
+import { createScoringWorker } from './scoring.worker';
 import { createBackfillWorker } from './backfill.worker';
 import { createContentWorker } from './content.worker';
 
@@ -64,7 +64,7 @@ export function startAllWorkers(): Worker[] {
     { name: 'odds', create: createOddsWorker },
     { name: 'predictions', create: createPredictionsWorker },
     { name: 'live-score', create: createLiveScoreWorker },
-    { name: 'settlement', create: createSettlementWorker },
+    { name: 'scoring', create: createScoringWorker },
     { name: 'backfill', create: createBackfillWorker },
     { name: 'content', create: createContentWorker },
   ];

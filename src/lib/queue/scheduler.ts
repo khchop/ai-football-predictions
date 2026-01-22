@@ -2,7 +2,12 @@
  * Match Job Scheduler
  * 
  * Schedules all jobs for a match at precise times relative to kickoff.
- * Routes jobs to appropriate queues for guaranteed processing.
+ * Simplified schedule: 5 jobs per match (was 10)
+ * - T-6h: Analysis (stats, form, H2H)
+ * - T-2h: Odds (for content only, not sent to models)
+ * - T-60m: Lineups
+ * - T-30m: Predictions (score prediction with Kicktipp Quota Scoring)
+ * - T-0: Live monitoring
  */
 
 import { 
@@ -37,7 +42,7 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
   }
   
   const jobsToSchedule = [
-    // T-6h: Analyze match (fetch H2H, odds, injuries, team stats)
+    // T-6h: Analyze match (fetch H2H, stats, injuries, team stats - NO ODDS sent to models)
     {
       queue: analysisQueue,
       name: JOB_TYPES.ANALYZE_MATCH,
@@ -50,7 +55,7 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
       delay: kickoff - 6 * 60 * 60 * 1000 - now,
       jobId: `analyze-${match.id}`,
     },
-    // T-2h: Refresh odds
+    // T-2h: Refresh odds (for content generation only, not sent to models)
     {
       queue: oddsQueue,
       name: JOB_TYPES.REFRESH_ODDS,
@@ -59,31 +64,7 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
         externalId: match.externalId,
       },
       delay: kickoff - 2 * 60 * 60 * 1000 - now,
-      jobId: `refresh-odds-2h-${match.id}`,
-    },
-    // T-95m: Refresh odds (before first prediction)
-    {
-      queue: oddsQueue,
-      name: JOB_TYPES.REFRESH_ODDS,
-      data: {
-        matchId: match.id,
-        externalId: match.externalId,
-      },
-      delay: kickoff - 95 * 60 * 1000 - now,
-      jobId: `refresh-odds-95m-${match.id}`,
-    },
-    // T-90m: First prediction attempt
-    {
-      queue: predictionsQueue,
-      name: JOB_TYPES.PREDICT_MATCH,
-      data: {
-        matchId: match.id,
-        attempt: 1,
-        skipIfDone: false,
-        force: false,
-      },
-      delay: kickoff - 90 * 60 * 1000 - now,
-      jobId: `predict-1-${match.id}`,
+      jobId: `odds-${match.id}`,
     },
     // T-60m: Fetch lineups
     {
@@ -98,53 +79,16 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
       delay: kickoff - 60 * 60 * 1000 - now,
       jobId: `lineups-${match.id}`,
     },
-    // T-35m: Refresh odds (before second prediction)
-    {
-      queue: oddsQueue,
-      name: JOB_TYPES.REFRESH_ODDS,
-      data: {
-        matchId: match.id,
-        externalId: match.externalId,
-      },
-      delay: kickoff - 35 * 60 * 1000 - now,
-      jobId: `refresh-odds-35m-${match.id}`,
-    },
-    // T-30m: Second prediction attempt
+    // T-30m: Generate predictions (single attempt after lineups available)
     {
       queue: predictionsQueue,
       name: JOB_TYPES.PREDICT_MATCH,
       data: {
         matchId: match.id,
-        attempt: 2,
         skipIfDone: true,
-        force: false,
       },
       delay: kickoff - 30 * 60 * 1000 - now,
-      jobId: `predict-2-${match.id}`,
-    },
-    // T-10m: Refresh odds (before final prediction)
-    {
-      queue: oddsQueue,
-      name: JOB_TYPES.REFRESH_ODDS,
-      data: {
-        matchId: match.id,
-        externalId: match.externalId,
-      },
-      delay: kickoff - 10 * 60 * 1000 - now,
-      jobId: `refresh-odds-10m-${match.id}`,
-    },
-    // T-5m: Final prediction attempt (force)
-    {
-      queue: predictionsQueue,
-      name: JOB_TYPES.PREDICT_MATCH,
-      data: {
-        matchId: match.id,
-        attempt: 3,
-        skipIfDone: true,
-        force: true, // Generate with or without lineups
-      },
-      delay: kickoff - 5 * 60 * 1000 - now,
-      jobId: `predict-3-${match.id}`,
+      jobId: `predict-${match.id}`,
     },
     // Kickoff: Start live monitoring
     {

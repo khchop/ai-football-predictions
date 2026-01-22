@@ -28,9 +28,9 @@ export interface BatchMatchContext extends PromptContext {
 // Scoring explanation is in system prompt - don't duplicate here
 const ANALYSIS_HEADER = `Analyze match data and predict final score.
 
-DATA FORMAT: Odds (lower=more likely), H2H, Form (WDLWW), Stats (%), Lineups, Absences
+DATA FORMAT: H2H, Form (WDLWW), Stats (%), Lineups, Absences, Table Position
 
-KEY FACTORS: Home advantage (~0.4 goals), form, H2H, key injuries, odds consensus
+KEY FACTORS: Home advantage (~0.4 goals), current form, H2H record, key injuries, league position
 
 `;
 
@@ -193,13 +193,6 @@ export function buildEnhancedPrompt(context: PromptContext | EnhancedPromptConte
   
   // If we have analysis data, include it
   if (analysis) {
-    // Betting Odds (keep - this is consensus signal, not a prediction)
-    if (analysis.oddsHome || analysis.oddsDraw || analysis.oddsAway) {
-      lines.push('BETTING ODDS:');
-      lines.push(`Home Win: ${analysis.oddsHome || 'N/A'} | Draw: ${analysis.oddsDraw || 'N/A'} | Away Win: ${analysis.oddsAway || 'N/A'}`);
-      lines.push('');
-    }
-    
     // League Standings (factual data)
     if (homeStanding || awayStanding) {
       lines.push('LEAGUE STANDINGS:');
@@ -388,34 +381,6 @@ function buildCompactMatchSummary(context: BatchMatchContext, index: number, hom
   lines.push(`    ${homeTeam} vs ${awayTeam} | ${competition} | ${formattedTime}`);
   
   if (analysis) {
-    // BETTING ODDS - All options available for 3 bets
-    const hasOdds = analysis.oddsHome || analysis.odds1X || analysis.oddsOver25 || analysis.oddsBttsYes;
-    
-    if (hasOdds) {
-      lines.push(`    ODDS:`);
-      
-      // Result odds: 1X2 + Double Chance
-      const result1X2 = `1:${analysis.oddsHome || '-'} X:${analysis.oddsDraw || '-'} 2:${analysis.oddsAway || '-'}`;
-      const resultDC = `1X:${analysis.odds1X || '-'} X2:${analysis.oddsX2 || '-'} 12:${analysis.odds12 || '-'}`;
-      lines.push(`      Result: ${result1X2} | ${resultDC}`);
-      
-      // Over/Under odds (compact - show available lines)
-      const ouLines: string[] = [];
-      if (analysis.oddsOver05) ouLines.push(`0.5: O${analysis.oddsOver05}/U${analysis.oddsUnder05 || '-'}`);
-      if (analysis.oddsOver15) ouLines.push(`1.5: O${analysis.oddsOver15}/U${analysis.oddsUnder15 || '-'}`);
-      if (analysis.oddsOver25) ouLines.push(`2.5: O${analysis.oddsOver25}/U${analysis.oddsUnder25 || '-'}`);
-      if (analysis.oddsOver35) ouLines.push(`3.5: O${analysis.oddsOver35}/U${analysis.oddsUnder35 || '-'}`);
-      if (analysis.oddsOver45) ouLines.push(`4.5: O${analysis.oddsOver45}/U${analysis.oddsUnder45 || '-'}`);
-      if (ouLines.length > 0) {
-        lines.push(`      O/U: ${ouLines.join(' | ')}`);
-      }
-      
-      // BTTS odds
-      if (analysis.oddsBttsYes || analysis.oddsBttsNo) {
-        lines.push(`      BTTS: Yes ${analysis.oddsBttsYes || '-'} | No ${analysis.oddsBttsNo || '-'}`);
-      }
-    }
-    
     // League position (NEW - very compact)
     if (homeStanding && awayStanding) {
       lines.push(`    Table: ${homeTeam} ${homeStanding.position}${getOrdinalSuffix(homeStanding.position)} (${homeStanding.points}pts, ${homeStanding.goalDiff >= 0 ? '+' : ''}${homeStanding.goalDiff}GD) | ${awayTeam} ${awayStanding.position}${getOrdinalSuffix(awayStanding.position)} (${awayStanding.points}pts, ${awayStanding.goalDiff >= 0 ? '+' : ''}${awayStanding.goalDiff}GD)`);

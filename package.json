@@ -11,7 +11,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
-    "migrate:betting": "tsx scripts/migrate-betting-system.ts"
+    "migrate:betting": "tsx scripts/migrate-betting-system.ts",
+    "migrate:predictions": "tsx scripts/migrate-predictions.ts"
   },
   "dependencies": {
     "@bull-board/api": "^6.16.2",

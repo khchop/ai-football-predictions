@@ -1,7 +1,7 @@
-import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalances, seasons } from './index';
+import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalances, seasons, predictions } from './index';
 import { eq, and, or, gte, lte, desc, sql, isNotNull, isNull, notInArray, inArray } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
-import type { NewCompetition, NewMatch, NewModel, Match, MatchAnalysis, NewMatchAnalysis, Model, Competition, NewBet, Bet, ModelBalance, NewModelBalance } from './schema';
+import type { NewCompetition, NewMatch, NewModel, Match, MatchAnalysis, NewMatchAnalysis, Model, Competition, NewBet, Bet, ModelBalance, NewModelBalance, Prediction, NewPrediction } from './schema';
 import type { ScoringBreakdown, EnhancedLeaderboardEntry } from '@/types';
 import { withCache, cacheKeys, CACHE_TTL, cacheDelete } from '@/lib/cache/redis';
 import { BETTING_CONSTANTS } from '@/lib/betting/constants';
@@ -1188,4 +1188,177 @@ export async function getBetsForMatch(matchId: string) {
     .select()
     .from(bets)
     .where(eq(bets.matchId, matchId));
+}
+
+// ============= PREDICTIONS SYSTEM (Kicktipp Quota Scoring) =============
+
+// Create a single prediction
+export async function createPrediction(data: NewPrediction) {
+  const db = getDb();
+  return db.insert(predictions).values(data).returning();
+}
+
+// Get all predictions for a match
+export async function getPredictionsForMatch(matchId: string): Promise<Prediction[]> {
+  const db = getDb();
+  return db
+    .select()
+    .from(predictions)
+    .where(eq(predictions.matchId, matchId))
+    .orderBy(predictions.createdAt);
+}
+
+// Get predictions by model
+export async function getModelPredictions(modelId: string, limit = 50) {
+  const db = getDb();
+  return db
+    .select({
+      prediction: predictions,
+      match: matches,
+      competition: competitions,
+    })
+    .from(predictions)
+    .innerJoin(matches, eq(predictions.matchId, matches.id))
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(eq(predictions.modelId, modelId))
+    .orderBy(desc(matches.kickoffTime))
+    .limit(limit);
+}
+
+// Update prediction scores after match finishes
+export async function updatePredictionScores(
+  predictionId: string,
+  scores: {
+    tendencyPoints: number;
+    goalDiffBonus: number;
+    exactScoreBonus: number;
+    totalPoints: number;
+  }
+) {
+  const db = getDb();
+  return db
+    .update(predictions)
+    .set({
+      ...scores,
+      status: 'scored',
+      scoredAt: new Date().toISOString(),
+    })
+    .where(eq(predictions.id, predictionId))
+    .returning();
+}
+
+// Update match quotas after all predictions are in
+export async function updateMatchQuotas(
+  matchId: string,
+  quotaHome: number,
+  quotaDraw: number,
+  quotaAway: number
+) {
+  const db = getDb();
+  return db
+    .update(matches)
+    .set({
+      quotaHome,
+      quotaDraw,
+      quotaAway,
+    })
+    .where(eq(matches.id, matchId))
+    .returning();
+}
+
+// Get leaderboard (by total points)
+export async function getLeaderboard(limit = 30) {
+  const db = getDb();
+  return db
+    .select({
+      model: models,
+      totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
+      totalPredictions: sql<number>`COUNT(${predictions.id})`,
+      exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
+      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
+      avgPoints: sql<number>`ROUND(AVG(${predictions.totalPoints})::numeric, 2)`,
+    })
+    .from(models)
+    .leftJoin(predictions, and(
+      eq(predictions.modelId, models.id),
+      eq(predictions.status, 'scored')
+    ))
+    .where(eq(models.active, true))
+    .groupBy(models.id)
+    .orderBy(desc(sql`COALESCE(SUM(${predictions.totalPoints}), 0)`))
+    .limit(limit);
+}
+
+// Get model stats for detail page
+export async function getModelPredictionStats(modelId: string) {
+  const db = getDb();
+  
+  const stats = await db
+    .select({
+      totalPredictions: sql<number>`COUNT(${predictions.id})`,
+      scoredPredictions: sql<number>`SUM(CASE WHEN ${predictions.status} = 'scored' THEN 1 ELSE 0 END)`,
+      totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
+      avgPoints: sql<number>`ROUND(AVG(${predictions.totalPoints})::numeric, 2)`,
+      exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
+      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
+      wrongTendencies: sql<number>`SUM(CASE WHEN ${predictions.status} = 'scored' AND ${predictions.tendencyPoints} IS NULL THEN 1 ELSE 0 END)`,
+      maxPoints: sql<number>`MAX(${predictions.totalPoints})`,
+      minPoints: sql<number>`MIN(${predictions.totalPoints})`,
+    })
+    .from(predictions)
+    .where(eq(predictions.modelId, modelId))
+    .groupBy();
+  
+  return stats[0] || null;
+}
+
+// Get matches that need predictions (scheduled matches without predictions)
+export async function getMatchesMissingPredictions(hoursAhead: number = 2): Promise<Match[]> {
+  const db = getDb();
+  
+  const now = new Date();
+  const targetTime = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
+  
+  // Get scheduled matches in the time window that don't have predictions
+  const matchesWithPredictions = db
+    .select({ matchId: predictions.matchId })
+    .from(predictions)
+    .groupBy(predictions.matchId);
+  
+  return db
+    .select()
+    .from(matches)
+    .where(
+      and(
+        eq(matches.status, 'scheduled'),
+        sql`${matches.kickoffTime} <= ${targetTime.toISOString()}`,
+        sql`${matches.kickoffTime} > ${now.toISOString()}`,
+        notInArray(matches.id, matchesWithPredictions)
+      )
+    )
+    .orderBy(matches.kickoffTime);
+}
+
+// Get finished matches with pending predictions (need scoring)
+export async function getMatchesNeedingScoring(): Promise<Match[]> {
+  const db = getDb();
+  
+  const results = await db
+    .select({ match: matches })
+    .from(matches)
+    .innerJoin(predictions, eq(matches.id, predictions.matchId))
+    .where(
+      and(
+        eq(matches.status, 'finished'),
+        eq(predictions.status, 'pending') // Predictions not yet scored
+      )
+    )
+    .groupBy(matches.id, matches.externalId, matches.competitionId, matches.homeTeam, 
+             matches.awayTeam, matches.homeTeamLogo, matches.awayTeamLogo, matches.kickoffTime,
+             matches.homeScore, matches.awayScore, matches.status, matches.matchMinute, 
+             matches.round, matches.venue, matches.isUpset, matches.quotaHome, matches.quotaDraw,
+             matches.quotaAway, matches.slug, matches.createdAt, matches.updatedAt)
+    .orderBy(desc(matches.kickoffTime));
+  
+  return results.map(r => r.match);
 }
