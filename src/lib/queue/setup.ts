@@ -35,6 +35,44 @@ export async function setupRepeatableJobs(): Promise<void> {
     }
   }
   
+  try {
+    // Backfill missing data every hour
+    await matchQueue.add(
+      JOB_TYPES.BACKFILL_MISSING,
+      { manual: false, hoursAhead: 12 },
+      {
+        repeat: {
+          pattern: '5 * * * *', // Every hour at :05 (offset from fixtures at :00)
+          tz: 'Europe/Berlin',
+        },
+        jobId: 'backfill-missing-repeatable',
+      }
+    );
+    console.log('[Queue Setup] ✓ Registered: backfill-missing (every hour, Berlin TZ)');
+  } catch (error: any) {
+    if (error.message?.includes('already exists')) {
+      console.log('[Queue Setup] backfill-missing already registered');
+    } else {
+      console.error('[Queue Setup] Failed to register backfill-missing:', error);
+      throw error;
+    }
+  }
+  
+  // One-time immediate backfill on startup
+  try {
+    await matchQueue.add(
+      JOB_TYPES.BACKFILL_MISSING,
+      { manual: false, hoursAhead: 24 }, // Look further ahead on startup
+      {
+        delay: 5000, // 5 second delay to let workers start
+        jobId: `backfill-startup-${Date.now()}`, // Unique ID each startup
+      }
+    );
+    console.log('[Queue Setup] ✓ Scheduled: one-time startup backfill (runs in 5s)');
+  } catch (error: any) {
+    console.error('[Queue Setup] Failed to schedule startup backfill:', error);
+  }
+  
   console.log('[Queue Setup] All repeatable jobs registered');
 }
 

@@ -58,9 +58,16 @@ export interface CatchUpPayload {
   since?: string; // ISO date string
 }
 
+// Backfill missing data (repeatable)
+export interface BackfillMissingPayload {
+  manual?: boolean;     // True if triggered manually via API
+  hoursAhead?: number;  // How far ahead to look (default 12)
+}
+
 // Union type for all payloads
 export type JobPayload =
   | FetchFixturesPayload
+  | BackfillMissingPayload
   | AnalyzeMatchPayload
   | RefreshOddsPayload
   | FetchLineupsPayload

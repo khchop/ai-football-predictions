@@ -115,9 +115,17 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
   
   let scheduled = 0;
   
+  // Jobs that should run immediately if their scheduled time has passed
+  const lateRunnableJobs = new Set([
+    JOB_TYPES.ANALYZE_MATCH,
+    JOB_TYPES.REFRESH_ODDS,
+    JOB_TYPES.FETCH_LINEUPS,
+    JOB_TYPES.PREDICT_MATCH,
+  ]);
+  
   for (const job of jobsToSchedule) {
-    // Only schedule future jobs (delay > 0)
     if (job.delay > 0) {
+      // Schedule for future
       try {
         await matchQueue.add(job.name, job.data, {
           delay: job.delay,
@@ -130,6 +138,21 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
           continue;
         }
         console.error(`[Scheduler] Failed to schedule ${job.name} for ${match.id}:`, error);
+      }
+    } else if (kickoff > now && lateRunnableJobs.has(job.name as any)) {
+      // Job time passed but match hasn't started - run immediately
+      try {
+        await matchQueue.add(job.name, job.data, {
+          delay: 1000, // 1 second delay to avoid duplicate processing
+          jobId: job.jobId,
+        });
+        scheduled++;
+        console.log(`[Scheduler] Running past-due ${job.name} immediately for ${match.homeTeam} vs ${match.awayTeam}`);
+      } catch (error: any) {
+        if (error.message?.includes('already exists')) {
+          continue;
+        }
+        console.error(`[Scheduler] Failed to schedule late ${job.name} for ${match.id}:`, error);
       }
     }
   }

@@ -12,6 +12,7 @@ import { createLineupsWorker } from './lineups.worker';
 import { createPredictionsWorker } from './predictions.worker';
 import { createLiveScoreWorker } from './live-score.worker';
 import { createSettlementWorker } from './settlement.worker';
+import { createBackfillWorker } from './backfill.worker';
 
 let workers: Worker[] = [];
 
@@ -30,6 +31,7 @@ export function startAllWorkers(): Worker[] {
     createPredictionsWorker(),
     createLiveScoreWorker(),
     createSettlementWorker(),
+    createBackfillWorker(),
   ];
 
   console.log(`[Workers] ✓ Started ${workers.length} workers`);

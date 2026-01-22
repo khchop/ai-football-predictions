@@ -12,6 +12,7 @@ import IORedis from 'ioredis';
 export const JOB_TYPES = {
   // Repeatable
   FETCH_FIXTURES: 'fetch-fixtures',
+  BACKFILL_MISSING: 'backfill-missing',
   
   // Per-match scheduled
   ANALYZE_MATCH: 'analyze-match',

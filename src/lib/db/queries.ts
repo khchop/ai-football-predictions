@@ -1013,6 +1013,110 @@ export async function getModelFunStats(modelId: string) {
   };
 }
 
+// ============= BACKFILL QUERIES =============
+
+// Get scheduled matches missing analysis data
+export async function getMatchesMissingAnalysis(hoursAhead: number = 12): Promise<Match[]> {
+  const db = getDb();
+  const now = new Date();
+  const future = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
+  
+  const results = await db
+    .select({ match: matches })
+    .from(matches)
+    .leftJoin(matchAnalysis, eq(matches.id, matchAnalysis.matchId))
+    .where(
+      and(
+        eq(matches.status, 'scheduled'),
+        gte(matches.kickoffTime, now.toISOString()),
+        lte(matches.kickoffTime, future.toISOString()),
+        isNotNull(matches.externalId),
+        isNull(matchAnalysis.id) // No analysis record exists
+      )
+    )
+    .orderBy(matches.kickoffTime);
+  
+  return results.map(r => r.match);
+}
+
+// Get matches with analysis but missing odds
+export async function getMatchesMissingOdds(hoursAhead: number = 6): Promise<Match[]> {
+  const db = getDb();
+  const now = new Date();
+  const future = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
+  
+  const results = await db
+    .select({ match: matches })
+    .from(matches)
+    .innerJoin(matchAnalysis, eq(matches.id, matchAnalysis.matchId))
+    .where(
+      and(
+        eq(matches.status, 'scheduled'),
+        gte(matches.kickoffTime, now.toISOString()),
+        lte(matches.kickoffTime, future.toISOString()),
+        isNotNull(matches.externalId),
+        isNull(matchAnalysis.oddsHome) // Has analysis but no odds
+      )
+    )
+    .orderBy(matches.kickoffTime);
+  
+  return results.map(r => r.match);
+}
+
+// Get matches missing lineups (has analysis, < X hours to kickoff)
+export async function getMatchesMissingLineups(hoursAhead: number = 2): Promise<Match[]> {
+  const db = getDb();
+  const now = new Date();
+  const future = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
+  
+  const results = await db
+    .select({ match: matches })
+    .from(matches)
+    .innerJoin(matchAnalysis, eq(matches.id, matchAnalysis.matchId))
+    .where(
+      and(
+        eq(matches.status, 'scheduled'),
+        gte(matches.kickoffTime, now.toISOString()),
+        lte(matches.kickoffTime, future.toISOString()),
+        isNotNull(matches.externalId),
+        eq(matchAnalysis.lineupsAvailable, false) // Lineups not yet fetched
+      )
+    )
+    .orderBy(matches.kickoffTime);
+  
+  return results.map(r => r.match);
+}
+
+// Get matches missing bets (has lineups, < X hours to kickoff, no bets)
+export async function getMatchesMissingBets(hoursAhead: number = 2): Promise<Match[]> {
+  const db = getDb();
+  const now = new Date();
+  const future = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
+  
+  const results = await db
+    .select({ match: matches })
+    .from(matches)
+    .innerJoin(matchAnalysis, eq(matches.id, matchAnalysis.matchId))
+    .leftJoin(bets, eq(matches.id, bets.matchId))
+    .where(
+      and(
+        eq(matches.status, 'scheduled'),
+        gte(matches.kickoffTime, now.toISOString()),
+        lte(matches.kickoffTime, future.toISOString()),
+        eq(matchAnalysis.lineupsAvailable, true), // Has lineups
+        isNull(bets.id) // No bets yet
+      )
+    )
+    .groupBy(matches.id, matches.externalId, matches.competitionId, matches.homeTeam, 
+             matches.awayTeam, matches.homeTeamLogo, matches.awayTeamLogo, matches.kickoffTime,
+             matches.homeScore, matches.awayScore, matches.status, matches.matchMinute, 
+             matches.round, matches.venue, matches.isUpset, matches.quotaHome, matches.quotaDraw,
+             matches.quotaAway, matches.createdAt, matches.updatedAt)
+    .orderBy(matches.kickoffTime);
+  
+  return results.map(r => r.match);
+}
+
 // ============= ADDITIONAL QUERIES =============
 
 // Get match by external ID (API-Football fixture ID)
