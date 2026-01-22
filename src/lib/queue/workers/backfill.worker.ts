@@ -8,13 +8,14 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, analysisQueue, oddsQueue, lineupsQueue, predictionsQueue } from '../index';
+import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, analysisQueue, oddsQueue, lineupsQueue, predictionsQueue, settlementQueue } from '../index';
 import type { BackfillMissingPayload } from '../types';
 import { 
   getMatchesMissingAnalysis,
   getMatchesMissingOdds,
   getMatchesMissingLineups,
   getMatchesMissingBets,
+  getMatchesNeedingSettlement,
 } from '@/lib/db/queries';
 
 export function createBackfillWorker() {
@@ -30,6 +31,7 @@ export function createBackfillWorker() {
         oddsTriggered: 0,
         lineupsTriggered: 0,
         betsTriggered: 0,
+        settlementsTriggered: 0,
         errors: [] as string[],
       };
       
@@ -137,6 +139,25 @@ export function createBackfillWorker() {
           if (!match.externalId) continue;
           
           try {
+            // Check for failed lineups jobs and remove them
+            const oldLineupsJobIds = [
+              `lineups-${match.id}`,
+              `backfill-lineups-${match.id}`,
+            ];
+            
+            for (const oldJobId of oldLineupsJobIds) {
+              try {
+                const oldJob = await lineupsQueue.getJob(oldJobId);
+                if (oldJob && await oldJob.isFailed()) {
+                  await oldJob.remove();
+                  console.log(`[Backfill Worker] Removed failed lineups job ${oldJobId} for retry`);
+                }
+              } catch (err) {
+                // Job doesn't exist, that's fine
+              }
+            }
+            
+            // Create new lineups job with timestamp
             await lineupsQueue.add(
               JOB_TYPES.FETCH_LINEUPS,
               {
@@ -147,7 +168,7 @@ export function createBackfillWorker() {
               },
               {
                 delay: 1000,
-                jobId: `backfill-lineups-${match.id}`,
+                jobId: `backfill-lineups-${match.id}-${Date.now()}`,
               }
             );
             results.lineupsTriggered++;
@@ -163,6 +184,28 @@ export function createBackfillWorker() {
         
         for (const match of missingBets) {
           try {
+            // Check for failed prediction jobs and remove them
+            const oldPredictJobIds = [
+              `predict-1-${match.id}`,
+              `predict-2-${match.id}`,
+              `predict-3-${match.id}`,
+              `predict-immediate-${match.id}`,
+              `backfill-predict-${match.id}`,
+            ];
+            
+            for (const oldJobId of oldPredictJobIds) {
+              try {
+                const oldJob = await predictionsQueue.getJob(oldJobId);
+                if (oldJob && await oldJob.isFailed()) {
+                  await oldJob.remove();
+                  console.log(`[Backfill Worker] Removed failed prediction job ${oldJobId} for retry`);
+                }
+              } catch (err) {
+                // Job doesn't exist, that's fine
+              }
+            }
+            
+            // Create new prediction job with timestamp
             await predictionsQueue.add(
               JOB_TYPES.PREDICT_MATCH,
               {
@@ -173,7 +216,7 @@ export function createBackfillWorker() {
               },
               {
                 delay: 1000,
-                jobId: `backfill-predict-${match.id}`,
+                jobId: `backfill-predict-${match.id}-${Date.now()}`,
               }
             );
             results.betsTriggered++;
@@ -184,9 +227,55 @@ export function createBackfillWorker() {
           }
         }
         
+        // 5. Find finished matches with pending bets (need settlement)
+        const needingSettlement = await getMatchesNeedingSettlement();
+        
+        for (const match of needingSettlement) {
+          try {
+            // Check for failed settlement jobs and remove them
+            const oldSettlementJobIds = [
+              `settle-${match.id}`,
+              `backfill-settle-${match.id}`,
+            ];
+            
+            for (const oldJobId of oldSettlementJobIds) {
+              try {
+                const oldJob = await settlementQueue.getJob(oldJobId);
+                if (oldJob && await oldJob.isFailed()) {
+                  await oldJob.remove();
+                  console.log(`[Backfill Worker] Removed failed settlement job ${oldJobId} for retry`);
+                }
+              } catch (err) {
+                // Job doesn't exist, that's fine
+              }
+            }
+            
+            // Create new settlement job with timestamp
+            await settlementQueue.add(
+              JOB_TYPES.SETTLE_MATCH,
+              {
+                matchId: match.id,
+                homeScore: match.homeScore ?? 0,
+                awayScore: match.awayScore ?? 0,
+                status: match.status,
+              },
+              {
+                delay: 1000,
+                priority: 1, // High priority - settle bets ASAP
+                jobId: `backfill-settle-${match.id}-${Date.now()}`,
+              }
+            );
+            results.settlementsTriggered++;
+          } catch (error: any) {
+            if (!error.message?.includes('already exists')) {
+              results.errors.push(`Settlement ${match.id}: ${error.message}`);
+            }
+          }
+        }
+        
         // Log summary
         const total = results.analysisTriggered + results.oddsTriggered + 
-                      results.lineupsTriggered + results.betsTriggered;
+                      results.lineupsTriggered + results.betsTriggered + results.settlementsTriggered;
         
         if (total > 0 || results.errors.length > 0) {
           console.log(`[Backfill Worker] Triggered ${total} jobs:`, {
@@ -194,6 +283,7 @@ export function createBackfillWorker() {
             odds: results.oddsTriggered,
             lineups: results.lineupsTriggered,
             bets: results.betsTriggered,
+            settlements: results.settlementsTriggered,
           });
           
           if (results.errors.length > 0) {

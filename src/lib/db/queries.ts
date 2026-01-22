@@ -1117,6 +1117,30 @@ export async function getMatchesMissingBets(hoursAhead: number = 2): Promise<Mat
   return results.map(r => r.match);
 }
 
+// Get finished matches with pending bets (need settlement)
+export async function getMatchesNeedingSettlement(): Promise<Match[]> {
+  const db = getDb();
+  
+  const results = await db
+    .select({ match: matches })
+    .from(matches)
+    .innerJoin(bets, eq(matches.id, bets.matchId))
+    .where(
+      and(
+        eq(matches.status, 'finished'),
+        eq(bets.status, 'pending') // Bets not yet settled
+      )
+    )
+    .groupBy(matches.id, matches.externalId, matches.competitionId, matches.homeTeam, 
+             matches.awayTeam, matches.homeTeamLogo, matches.awayTeamLogo, matches.kickoffTime,
+             matches.homeScore, matches.awayScore, matches.status, matches.matchMinute, 
+             matches.round, matches.venue, matches.isUpset, matches.quotaHome, matches.quotaDraw,
+             matches.quotaAway, matches.createdAt, matches.updatedAt)
+    .orderBy(desc(matches.kickoffTime));
+  
+  return results.map(r => r.match);
+}
+
 // ============= ADDITIONAL QUERIES =============
 
 // Get match by external ID (API-Football fixture ID)
