@@ -129,7 +129,8 @@ async function runMigrations() {
   
   const pool = new Pool({
     connectionString,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    // Try without SSL first, fallback to SSL if needed
+    ssl: false,
   });
 
   try {
