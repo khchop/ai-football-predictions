@@ -1,8 +1,8 @@
 # Remaining Fixes - Football Predictions System
 
 **Last Updated:** 2026-01-23  
-**Completed:** 29/200 issues (15%)  
-**Status:** Batch 2 complete: Robust retry infrastructure + Content migration to Together AI
+**Completed:** 39/200 issues (19.5%)  
+**Status:** Batch 3 complete: Comprehensive input validation with Zod
 
 ## 🧹 Fresh Start Complete
 
@@ -48,6 +48,12 @@
 - [x] **Batch 2: Circuit breaker pattern implementation**
 - [x] **Batch 2: Service-specific retry configurations**
 - [x] **Batch 2: Content generation migration (OpenRouter → Together AI Llama 4 Maverick)**
+- [x] **Batch 3: Zod dependency installation**
+- [x] **Batch 3: Validation schemas creation (all API routes)**
+- [x] **Batch 3: Validation middleware (validateQuery, validateParams, validateBody)**
+- [x] **Batch 3: API route validation updates (8 routes)**
+- [x] **Batch 3: Standardized validation error response format**
+- [x] **Batch 3: Removed ad-hoc validation (UUID regex, parseInt fallbacks)**
 
 ---
 
