@@ -10,6 +10,7 @@
 import { getAllQueues, QUEUE_NAMES } from '@/lib/queue';
 import { NextRequest, NextResponse } from 'next/server';
 import type { Queue } from 'bullmq';
+import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 
 function validateAdminRequest(request: NextRequest): NextResponse | null {
   const password = request.headers.get('X-Admin-Password');
@@ -52,6 +53,24 @@ async function getQueueStats(queue: Queue) {
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limit check (first, before auth)
+  const rateLimitKey = getRateLimitKey(request);
+  const rateLimitResult = await checkRateLimit(`admin:queue-status:${rateLimitKey}`, RATE_LIMIT_PRESETS.admin);
+  
+  if (!rateLimitResult.allowed) {
+    const retryAfter = Math.ceil((rateLimitResult.resetAt * 1000 - Date.now()) / 1000);
+    return NextResponse.json(
+      { error: 'Too many requests', retryAfter },
+      {
+        status: 429,
+        headers: {
+          ...createRateLimitHeaders(rateLimitResult),
+          'Retry-After': String(retryAfter),
+        },
+      }
+    );
+  }
+
   // Validate password
   const authError = validateAdminRequest(request);
   if (authError) return authError;
@@ -98,34 +117,37 @@ export async function GET(request: NextRequest) {
       }))
     );
 
-    return NextResponse.json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      totals,
-      queues: queueStats.reduce((acc, { name, stats }) => {
-        acc[name] = stats;
-        return acc;
-      }, {} as Record<string, any>),
-      recentJobs: allJobs
-        .flatMap(({ queueName, waiting, active, delayed, failed }) => [
-          ...waiting.map(j => ({ ...formatJob(j), queue: queueName, state: 'waiting' })),
-          ...active.map(j => ({ ...formatJob(j), queue: queueName, state: 'active' })),
-          ...delayed.map(j => ({ ...formatJob(j), queue: queueName, state: 'delayed' })),
-          ...failed.map(j => ({ ...formatJob(j), queue: queueName, state: 'failed' })),
-        ])
-        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-        .slice(0, 30),
-      repeatable: allRepeatableJobs
-        .flatMap(({ queueName, jobs }) =>
-          jobs.map(job => ({
-            queue: queueName,
-            key: job.key,
-            name: job.name,
-            pattern: job.pattern,
-            next: job.next,
-          }))
-        ),
-    });
+    return NextResponse.json(
+      {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        totals,
+        queues: queueStats.reduce((acc, { name, stats }) => {
+          acc[name] = stats;
+          return acc;
+        }, {} as Record<string, any>),
+        recentJobs: allJobs
+          .flatMap(({ queueName, waiting, active, delayed, failed }) => [
+            ...waiting.map(j => ({ ...formatJob(j), queue: queueName, state: 'waiting' })),
+            ...active.map(j => ({ ...formatJob(j), queue: queueName, state: 'active' })),
+            ...delayed.map(j => ({ ...formatJob(j), queue: queueName, state: 'delayed' })),
+            ...failed.map(j => ({ ...formatJob(j), queue: queueName, state: 'failed' })),
+          ])
+          .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+          .slice(0, 30),
+        repeatable: allRepeatableJobs
+          .flatMap(({ queueName, jobs }) =>
+            jobs.map(job => ({
+              queue: queueName,
+              key: job.key,
+              name: job.name,
+              pattern: job.pattern,
+              next: job.next,
+            }))
+          ),
+      },
+      { headers: createRateLimitHeaders(rateLimitResult) }
+    );
   } catch (error: any) {
     console.error('[Queue Status API] Error:', error);
     return NextResponse.json(
@@ -133,7 +155,7 @@ export async function GET(request: NextRequest) {
         status: 'error',
         error: error.message,
       },
-      { status: 500 }
+      { status: 500, headers: createRateLimitHeaders(rateLimitResult) }
     );
   }
 }

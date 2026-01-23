@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllModelsWithHealth } from '@/lib/db/queries';
 import { getBudgetStatus } from '@/lib/llm/budget';
 import { TOGETHER_PROVIDERS } from '@/lib/llm/providers/together';
+import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 
 function validateAdminRequest(request: NextRequest): NextResponse | null {
   const password = request.headers.get('X-Admin-Password');
@@ -31,6 +32,24 @@ function validateAdminRequest(request: NextRequest): NextResponse | null {
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limit check (first, before auth)
+  const rateLimitKey = getRateLimitKey(request);
+  const rateLimitResult = await checkRateLimit(`admin:data:${rateLimitKey}`, RATE_LIMIT_PRESETS.admin);
+  
+  if (!rateLimitResult.allowed) {
+    const retryAfter = Math.ceil((rateLimitResult.resetAt * 1000 - Date.now()) / 1000);
+    return NextResponse.json(
+      { error: 'Too many requests', retryAfter },
+      {
+        status: 429,
+        headers: {
+          ...createRateLimitHeaders(rateLimitResult),
+          'Retry-After': String(retryAfter),
+        },
+      }
+    );
+  }
+
   // Validate password
   const authError = validateAdminRequest(request);
   if (authError) return authError;
@@ -67,17 +86,20 @@ export async function GET(request: NextRequest) {
       tier: p.tier,
     }));
 
-    return NextResponse.json({
-      models: modelsWithHealth,
-      budgetStatus,
-      providerConfig,
-      healthCounts,
-    });
+    return NextResponse.json(
+      {
+        models: modelsWithHealth,
+        budgetStatus,
+        providerConfig,
+        healthCounts,
+      },
+      { headers: createRateLimitHeaders(rateLimitResult) }
+    );
   } catch (error) {
     console.error('Error fetching admin data:', error);
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+      { status: 500, headers: createRateLimitHeaders(rateLimitResult) }
     );
   }
 }

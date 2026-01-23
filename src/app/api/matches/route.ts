@@ -3,16 +3,20 @@ import { getUpcomingMatches, getRecentMatches, getFinishedMatches, getOverallSta
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 
 export async function GET(request: NextRequest) {
-  // Apply rate limiting
+  // Apply rate limiting (60 req/min)
   const rateLimitKey = getRateLimitKey(request);
-  const rateLimitResult = checkRateLimit(`matches:${rateLimitKey}`, RATE_LIMIT_PRESETS.standard);
+  const rateLimitResult = await checkRateLimit(`matches:${rateLimitKey}`, RATE_LIMIT_PRESETS.api);
   
   if (!rateLimitResult.allowed) {
+    const retryAfter = Math.ceil((rateLimitResult.resetAt * 1000 - Date.now()) / 1000);
     return NextResponse.json(
       { success: false, error: 'Rate limit exceeded. Please try again later.' },
       { 
         status: 429,
-        headers: createRateLimitHeaders(rateLimitResult),
+        headers: {
+          ...createRateLimitHeaders(rateLimitResult),
+          'Retry-After': String(retryAfter),
+        },
       }
     );
   }
@@ -83,7 +87,7 @@ export async function GET(request: NextRequest) {
           ? (error instanceof Error ? error.message : 'Unknown error')
           : 'An internal error occurred'
       },
-      { status: 500 }
+      { status: 500, headers: createRateLimitHeaders(rateLimitResult) }
     );
   }
 }

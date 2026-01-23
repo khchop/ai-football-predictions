@@ -1,33 +1,9 @@
 /**
- * Simple in-memory rate limiter using sliding window algorithm
- * Note: This works per-instance only. For distributed rate limiting,
- * use Redis-based solutions like @upstash/ratelimit
+ * Redis-based distributed rate limiter using fixed-window algorithm
+ * Uses INCR + EXPIRE for atomic counter operations across instances
  */
 
-interface RateLimitEntry {
-  count: number;
-  resetAt: number;
-}
-
-// Store rate limit entries by key
-const rateLimitStore = new Map<string, RateLimitEntry>();
-
-// Cleanup interval (every 60 seconds)
-let cleanupInterval: NodeJS.Timeout | null = null;
-
-function startCleanup() {
-  if (cleanupInterval) return;
-  cleanupInterval = setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of rateLimitStore.entries()) {
-      if (entry.resetAt < now) {
-        rateLimitStore.delete(key);
-      }
-    }
-  }, 60000);
-  // Don't prevent process from exiting
-  cleanupInterval.unref();
-}
+import { getRedis } from '@/lib/cache/redis';
 
 export interface RateLimitConfig {
   /** Maximum number of requests in the window */
@@ -41,7 +17,7 @@ export interface RateLimitResult {
   allowed: boolean;
   /** Number of remaining requests in the window */
   remaining: number;
-  /** Timestamp when the rate limit resets */
+  /** Timestamp when the rate limit resets (Unix seconds) */
   resetAt: number;
   /** Number of requests made in the current window */
   current: number;
@@ -49,80 +25,107 @@ export interface RateLimitResult {
 
 /**
  * Check if a request is allowed under rate limiting
- * @param key Unique identifier for the rate limit bucket (e.g., IP address)
+ * Uses Redis INCR for atomic counter operations
+ * Fail-open: if Redis is unavailable, allows the request
+ * 
+ * @param key Unique identifier for the rate limit bucket (e.g., IP address or user ID)
  * @param config Rate limit configuration
  */
-export function checkRateLimit(key: string, config: RateLimitConfig): RateLimitResult {
-  startCleanup();
+export async function checkRateLimit(key: string, config: RateLimitConfig): Promise<RateLimitResult> {
+  const redis = getRedis();
+  const windowSeconds = Math.ceil(config.windowMs / 1000);
   
-  const now = Date.now();
-  const entry = rateLimitStore.get(key);
-  
-  // If no entry or window has passed, create new entry
-  if (!entry || entry.resetAt < now) {
-    const newEntry: RateLimitEntry = {
-      count: 1,
-      resetAt: now + config.windowMs,
-    };
-    rateLimitStore.set(key, newEntry);
+  // Fail-open: if Redis unavailable, allow request
+  if (!redis) {
+    console.warn('[Rate Limit] Redis unavailable, allowing request');
     return {
       allowed: true,
-      remaining: config.limit - 1,
-      resetAt: newEntry.resetAt,
+      remaining: config.limit,
+      resetAt: Math.floor(Date.now() / 1000) + windowSeconds,
       current: 1,
     };
   }
-  
-  // Check if limit exceeded
-  if (entry.count >= config.limit) {
+
+  try {
+    const redisKey = `rate:${key}`;
+    
+    // Atomic increment operation
+    const count = await redis.incr(redisKey);
+    
+    // Set expiry only on first request (count === 1)
+    if (count === 1) {
+      await redis.expire(redisKey, windowSeconds);
+    }
+    
+    // Get remaining TTL for reset time
+    const ttl = await redis.ttl(redisKey);
+    const resetAtSeconds = Math.floor(Date.now() / 1000) + (ttl > 0 ? ttl : windowSeconds);
+    
+    const allowed = count <= config.limit;
+    const remaining = Math.max(0, config.limit - count);
+    
     return {
-      allowed: false,
-      remaining: 0,
-      resetAt: entry.resetAt,
-      current: entry.count,
+      allowed,
+      remaining,
+      resetAt: resetAtSeconds,
+      current: count,
+    };
+  } catch (error) {
+    // Fail-open: if Redis operation fails, allow request
+    console.warn('[Rate Limit] Redis error, allowing request:', error);
+    return {
+      allowed: true,
+      remaining: config.limit,
+      resetAt: Math.floor(Date.now() / 1000) + Math.ceil(config.windowMs / 1000),
+      current: 1,
     };
   }
-  
-  // Increment counter
-  entry.count++;
-  return {
-    allowed: true,
-    remaining: config.limit - entry.count,
-    resetAt: entry.resetAt,
-    current: entry.count,
-  };
 }
 
 /**
  * Get rate limit key from request (uses IP address or forwarded IP)
+ * Handles reverse proxy headers for distributed deployments (Coolify/Traefik)
  */
 export function getRateLimitKey(request: Request): string {
-  // Try to get real IP from common headers
+  // X-Forwarded-For can contain comma-separated list of IPs
+  // Format: client, proxy1, proxy2
+  // Take the leftmost IP (original client)
   const forwardedFor = request.headers.get('x-forwarded-for');
   if (forwardedFor) {
-    // Take the first IP (client IP)
-    return forwardedFor.split(',')[0].trim();
+    const ips = forwardedFor.split(',').map(ip => ip.trim());
+    if (ips.length > 0 && ips[0]) {
+      return ips[0];
+    }
   }
   
+  // Alternative header used by some proxies
   const realIp = request.headers.get('x-real-ip');
   if (realIp) {
     return realIp;
   }
+
+  // Cloudflare uses CF-Connecting-IP
+  const cfIp = request.headers.get('cf-connecting-ip');
+  if (cfIp) {
+    return cfIp;
+  }
   
-  // Fallback to a generic key (not ideal but works for single-user scenarios)
+  // Fallback to generic key (single-instance or local testing)
   return 'anonymous';
 }
 
 // Preset configurations
 export const RATE_LIMIT_PRESETS = {
-  /** Standard API endpoint: 100 requests per minute */
-  standard: { limit: 100, windowMs: 60 * 1000 },
+  /** Admin endpoints: 10 requests per minute */
+  admin: { limit: 10, windowMs: 60 * 1000 },
+  /** Public API endpoint: 60 requests per minute */
+  api: { limit: 60, windowMs: 60 * 1000 },
+  /** Public browsing: 120 requests per minute */
+  public: { limit: 120, windowMs: 60 * 1000 },
   /** Strict endpoint: 30 requests per minute */
   strict: { limit: 30, windowMs: 60 * 1000 },
   /** Relaxed endpoint: 300 requests per minute */
   relaxed: { limit: 300, windowMs: 60 * 1000 },
-  /** Very strict: 10 requests per minute */
-  veryStrict: { limit: 10, windowMs: 60 * 1000 },
 } as const;
 
 /**
@@ -132,6 +135,6 @@ export function createRateLimitHeaders(result: RateLimitResult): Record<string, 
   return {
     'X-RateLimit-Limit': String(result.current + result.remaining),
     'X-RateLimit-Remaining': String(result.remaining),
-    'X-RateLimit-Reset': String(Math.ceil(result.resetAt / 1000)),
+    'X-RateLimit-Reset': String(result.resetAt),
   };
 }

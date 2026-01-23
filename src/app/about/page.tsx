@@ -8,7 +8,7 @@ export const metadata = {
 };
 
 // Static count - update when adding/removing models
-const MODEL_COUNT = 30;
+const MODEL_COUNT = 35;
 
 export default function AboutPage() {
   const modelCount = MODEL_COUNT;
@@ -163,33 +163,27 @@ export default function AboutPage() {
       <section>
         <h2 className="text-2xl font-bold mb-2">{modelCount} Open-Source Models</h2>
         <p className="text-muted-foreground mb-6">
-          All models are open-source, running across 4 cost tiers via OpenRouter.
+          All models are open-source, running across 3 performance tiers via Together AI.
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
           {[
             { 
-              tier: 'Free', 
-              color: 'green',
-              count: 10, 
-              examples: 'Llama 3.3 70B, DeepSeek V3, Mistral Small 3.1, Qwen 2.5 72B, Gemma 3 27B' 
-            },
-            { 
               tier: 'Ultra-Budget', 
               color: 'blue',
-              count: 8, 
-              examples: 'Llama 3.2 3B, Gemma 3 4B/12B, Mistral 7B, Qwen 2.5 7B, Command R 7B' 
+              count: 6, 
+              examples: 'Llama 3.2 3B, GPT-OSS 20B, Gemma 3n E4B, Gemma 2B' 
             },
             { 
               tier: 'Budget', 
-              color: 'yellow',
-              count: 7, 
-              examples: 'Llama 4 Scout, DeepSeek V3.1/V3.2, Command R, Mistral Saba' 
+              color: 'green',
+              count: 22, 
+              examples: 'DeepSeek V3.1, Llama 3.3 70B, Qwen 2.5 72B, Mistral Small 3 24B, GLM 4.7' 
             },
             { 
               tier: 'Premium', 
               color: 'purple',
-              count: 5, 
-              examples: 'Llama 3.1 405B, Mistral Large 2, Nemotron Ultra 253B, Command R+' 
+              count: 7, 
+              examples: 'DeepSeek R1, Llama 3.1 405B, Qwen3 235B Thinking, Cogito v2.1 671B' 
             },
           ].map((t) => (
             <div 
@@ -200,7 +194,6 @@ export default function AboutPage() {
                 <span className={`font-semibold ${
                   t.color === 'green' ? 'text-green-400' :
                   t.color === 'blue' ? 'text-blue-400' :
-                  t.color === 'yellow' ? 'text-yellow-400' :
                   'text-purple-400'
                 }`}>{t.tier}</span>
                 <span className="text-sm text-muted-foreground">{t.count} models</span>

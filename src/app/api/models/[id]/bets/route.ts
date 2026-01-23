@@ -10,16 +10,20 @@ interface RouteParams {
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  // Apply rate limiting
+  // Apply rate limiting (60 req/min)
   const rateLimitKey = getRateLimitKey(request);
-  const rateLimitResult = checkRateLimit(`model-bets:${rateLimitKey}`, RATE_LIMIT_PRESETS.standard);
+  const rateLimitResult = await checkRateLimit(`model-bets:${rateLimitKey}`, RATE_LIMIT_PRESETS.api);
   
   if (!rateLimitResult.allowed) {
+    const retryAfter = Math.ceil((rateLimitResult.resetAt * 1000 - Date.now()) / 1000);
     return NextResponse.json(
       { success: false, error: 'Rate limit exceeded. Please try again later.' },
       { 
         status: 429,
-        headers: createRateLimitHeaders(rateLimitResult),
+        headers: {
+          ...createRateLimitHeaders(rateLimitResult),
+          'Retry-After': String(retryAfter),
+        },
       }
     );
   }
