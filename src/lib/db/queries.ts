@@ -36,8 +36,14 @@ function logQueryError(operation: string, error: any, context?: Record<string, a
 
 export async function upsertCompetition(data: NewCompetition) {
   const db = getDb();
-  // Invalidate cache on upsert
-  await cacheDelete(cacheKeys.activeCompetitions());
+  
+  // Fire-and-forget cache invalidation - don't fail DB operation if Redis is down
+  try {
+    await cacheDelete(cacheKeys.activeCompetitions());
+  } catch (error) {
+    logQueryError('cacheDelete', error, { operation: 'upsertCompetition', cacheKey: 'activeCompetitions' });
+  }
+  
   return db
     .insert(competitions)
     .values(data)
@@ -140,7 +146,7 @@ export async function getMatchesPendingResults() {
     );
 }
 
-export async function getMatchById(id: string) {
+export async function getMatchById(id: string): Promise<{ match: Match; competition: Competition } | undefined> {
   const db = getDb();
   const result = await db
     .select({
@@ -159,7 +165,7 @@ export async function getMatchById(id: string) {
  * Get match by competition slug and match slug
  * Used for SEO-friendly URLs: /predictions/{league-slug}/{match-slug}
  */
-export async function getMatchBySlug(competitionSlug: string, matchSlug: string) {
+export async function getMatchBySlug(competitionSlug: string, matchSlug: string): Promise<{ match: Match; competition: Competition } | undefined> {
   const db = getDb();
   const result = await db
     .select({
@@ -284,15 +290,21 @@ export async function getActiveModels(): Promise<Model[]> {
 // Deactivate models not in the provided list of IDs
 export async function deactivateOldModels(activeModelIds: string[]) {
   const db = getDb();
-  // Invalidate cache on model changes
-  await cacheDelete(cacheKeys.activeModels());
+  
+  // Fire-and-forget cache invalidation - don't fail DB operation if Redis is down
+  try {
+    await cacheDelete(cacheKeys.activeModels());
+  } catch (error) {
+    logQueryError('cacheDelete', error, { operation: 'deactivateOldModels', cacheKey: 'activeModels' });
+  }
+  
   return db
     .update(models)
     .set({ active: false })
     .where(not(inArray(models.id, activeModelIds)));
 }
 
-export async function getModelById(id: string) {
+export async function getModelById(id: string): Promise<Model | undefined> {
   const db = getDb();
   const result = await db.select().from(models).where(eq(models.id, id)).limit(1);
   return result[0];
@@ -591,8 +603,8 @@ export async function createBet(data: NewBet) {
   return db.insert(bets).values(data);
 }
 
-// Create multiple bets
-export async function createBets(betsData: NewBet[]) {
+// Create multiple bets (INTERNAL: Use createBetsWithBalanceUpdate for external calls)
+async function createBets(betsData: NewBet[]) {
   const db = getDb();
   return db.insert(bets).values(betsData);
 }
@@ -710,22 +722,34 @@ export async function settleBetsTransaction(
   return db.transaction(async (tx) => {
     const settledAt = new Date().toISOString();
     
-    // Batch update all bets (instead of N individual queries)
+    // Batch update all bets using SQL CASE expressions (single query instead of N+1)
+    // This prevents connection pool exhaustion with large bet batches
     if (betsToSettle.length > 0) {
-      // Note: Drizzle doesn't support batch updates with different values easily,
-      // so we'll update them one by one within the transaction for now.
-      // This is still better than separate transactions and avoids the main race condition.
-      for (const bet of betsToSettle) {
-        await tx
-          .update(bets)
-          .set({
-            status: bet.status,
-            payout: bet.payout,
-            profit: bet.profit,
-            settledAt,
-          })
-          .where(eq(bets.id, bet.betId));
-      }
+      // Build CASE expressions for status, payout, and profit fields
+      const statusCaseWhen = betsToSettle
+        .map(b => `WHEN '${b.betId}' THEN '${b.status}'`)
+        .join(' ');
+      
+      const payoutCaseWhen = betsToSettle
+        .map(b => `WHEN '${b.betId}' THEN ${b.payout}`)
+        .join(' ');
+      
+      const profitCaseWhen = betsToSettle
+        .map(b => `WHEN '${b.betId}' THEN ${b.profit}`)
+        .join(' ');
+      
+      const betIds = betsToSettle.map(b => `'${b.betId}'`).join(',');
+      
+      // Execute batch update with CASE expressions
+      await tx.execute(sql`
+        UPDATE bets 
+        SET 
+          status = CASE id ${sql.raw(statusCaseWhen)} END,
+          payout = CASE id ${sql.raw(payoutCaseWhen)} END,
+          profit = CASE id ${sql.raw(profitCaseWhen)} END,
+          settled_at = ${settledAt}
+        WHERE id IN (${sql.raw(betIds)})
+      `);
     }
     
     // Update all model balances (atomic SQL prevents race conditions)

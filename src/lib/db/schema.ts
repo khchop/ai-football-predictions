@@ -352,6 +352,7 @@ export const predictions = pgTable('predictions', {
   index('idx_predictions_model_id').on(table.modelId),
   index('idx_predictions_status').on(table.status),
   index('idx_predictions_created_at').on(table.createdAt),
+  index('idx_predictions_match_status').on(table.matchId, table.status), // Composite index for queries filtering by match + status
 ]);
 
 export type Prediction = typeof predictions.$inferSelect;
