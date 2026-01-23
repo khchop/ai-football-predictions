@@ -1,8 +1,17 @@
 # Remaining Fixes - Football Predictions System
 
-**Last Updated:** 2026-01-22  
-**Completed:** 18/200 issues (9%)  
-**Status:** Phase 2 complete, starting Phase 3
+**Last Updated:** 2026-01-23  
+**Completed:** 23/200 issues (12%)  
+**Status:** Phase 2 complete + cleanup done, ready for Phase 3
+
+## 🧹 Fresh Start Complete
+
+- ✅ Removed .env.local (using Coolify environment variables)
+- ✅ Deleted unused betting system worker
+- ✅ SQL cleanup script created (CLEANUP_DATABASE.sql)
+- ✅ Scoring worker handles partial success
+- ✅ Database error logging enhanced
+- ✅ Schema migration ready (auto-applies on deploy)
 
 ---
 
@@ -13,7 +22,7 @@
 - [x] Race conditions in database queries
 - [x] Build failure (duplicate code)
 
-### HIGH (15/60)
+### HIGH (19/60)
 - [x] Worker error handling (throw for retry)
 - [x] LLM API retry logic with backoff
 - [x] Scheduler job ID mismatch
@@ -26,36 +35,34 @@
 - [x] Environment variable validation on startup
 - [x] API-Football timeout configuration (already present)
 - [x] Atomic SQL for `recordModelFailure()`
-- [x] Atomic SQL for `updateModelBalanceAfterBets()`
-- [x] Atomic SQL for `settleBetsTransaction()`
 - [x] Admin password sanitization in responses
+- [x] Scoring worker partial success handling
+- [x] Database error logging with full context
+- [x] Remove .env.local (use Coolify env vars)
+- [x] Delete unused settlement.worker.ts
+- [x] Create SQL cleanup script
+- [x] Schema migration for missing tables (will auto-apply on push)
 
 ---
 
-## 🔴 HIGH Priority Remaining (45/60)
+## 🔴 HIGH Priority Remaining (41/60)
 
 ### Database & Performance
-1. **Fix settlement transaction edge cases** - `src/lib/db/queries.ts:645-690`
-   - Currently has limitation: "Note: Individual updates to avoid SQLite's lack of UPDATE FROM support"
-   - Should batch update all model balances in single query
-   - Add validation: don't settle same match twice
+1. **Add database indexes** - `src/lib/db/schema.ts`
+   - Missing indexes on frequently queried columns (already present in schema, need migration):
+     - `matches.status` ✅ (line 44)
+     - `matches.kickoffTime` ✅ (line 45)
+     - `predictions.matchId` ✅ (line 351)
+     - `predictions.status` ✅ (line 353)
+   - Most indexes already defined, just need schema push
 
-2. **Add database indexes** - `src/lib/db/schema.ts`
-   - Missing indexes on frequently queried columns:
-     - `matches.status`
-     - `matches.kickoffTime`
-     - `predictions.matchId`
-     - `predictions.status`
-     - `bets.matchId + bets.status`
-   - Add composite indexes for common queries
+2. ~~Fix settlement transaction edge cases~~ - **DELETED** (betting system unused)
 
-3. **Fix potential N+1 in settlement worker** - `src/lib/queue/workers/settlement.worker.ts`
-   - Loops through bets and updates individually
-   - Should batch updates like predictions worker
+3. ~~Fix potential N+1 in settlement worker~~ - **DELETED** (worker removed)
 
-4. **Add connection pooling limits** - `src/lib/db/index.ts`
-   - No max connection limit configured
-   - Could exhaust database connections under load
+4. **Connection pooling already configured** - `src/lib/db/index.ts:17-18`
+   - Max: 10, Min: 2 (already set)
+   - ✅ This is complete
 
 ### Error Handling & Resilience
 5. **Inconsistent error handling in analysis worker** - `src/lib/queue/workers/analysis.worker.ts`
@@ -446,6 +453,30 @@ git push
 
 ---
 
-**Total Remaining:** 182/200 issues (91%)  
-**Estimated Time:** 15-20 hours  
-**Priority Focus:** HIGH (45) → MEDIUM (79) → LOW (43)
+**Total Remaining:** 177/200 issues (88%)  
+**Estimated Time:** 14-18 hours  
+**Priority Focus:** HIGH (41) → MEDIUM (79) → LOW (43)
+
+---
+
+## 📝 Next Steps
+
+After the current deploy completes:
+
+1. **Run CLEANUP_DATABASE.sql** - Execute the cleanup script to:
+   - Delete all data before 2026-01-23
+   - Reset model health tracking
+   - Create missing tables (blog_posts, match_previews)
+   - Clear old usage data
+
+2. **Clear Redis queues and DLQ**:
+   ```bash
+   # Via admin API or directly in Redis
+   curl -X DELETE -H "X-Admin-Password: $ADMIN_PASSWORD" https://your-domain.com/api/admin/dlq
+   ```
+
+3. **Restart the server** - Fresh workers will initialize and fetch today's fixtures
+
+4. **Monitor logs** - Check for any errors in the deployment
+
+5. **Continue with Batch 1** - Fix remaining 6 workers' error handling
