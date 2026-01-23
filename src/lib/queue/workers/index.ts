@@ -17,6 +17,7 @@ import { createBackfillWorker } from './backfill.worker';
 import { createContentWorker } from './content.worker';
 import { createModelRecoveryWorker } from './model-recovery.worker';
 import { addToDeadLetterQueue } from '../dead-letter';
+import { loggers } from '@/lib/logger/modules';
 
 let workers: Worker[] = [];
 
@@ -24,49 +25,53 @@ let workers: Worker[] = [];
  * Attach event listeners to a worker for debugging
  */
 function attachWorkerEvents(worker: Worker, name: string): void {
+  const log = loggers.workers.child({ worker: name });
+  
   worker.on('ready', () => {
-    console.log(`[Worker:${name}] ✓ Ready and listening for jobs`);
+    log.info(`✓ Ready and listening for jobs`);
   });
 
   worker.on('active', (job) => {
-    console.log(`[Worker:${name}] ▶ Processing job: ${job.name} (id: ${job.id})`);
+    log.info({ jobId: job.id, jobName: job.name }, `▶ Processing job`);
   });
 
   worker.on('completed', (job, result) => {
     const resultStr = typeof result === 'object' ? JSON.stringify(result) : result;
-    console.log(`[Worker:${name}] ✓ Completed job: ${job.name} (id: ${job.id}) =>`, resultStr);
+    log.info({ jobId: job.id, jobName: job.name, result: resultStr }, `✓ Completed job`);
   });
 
   worker.on('failed', async (job, err) => {
-    console.error(`[Worker:${name}] ✗ Failed job: ${job?.name} (id: ${job?.id}):`, err.message);
+    log.error({ jobId: job?.id, jobName: job?.name, err }, `✗ Failed job`);
     
     // If job has exhausted all retry attempts, add to DLQ
     if (job && job.attemptsMade >= (job.opts.attempts || 5)) {
-      console.error(`[Worker:${name}] Job ${job.id} exhausted all retries, adding to DLQ`);
+      log.error({ jobId: job.id }, `Job exhausted all retries, adding to DLQ`);
       try {
         await addToDeadLetterQueue(job, err);
       } catch (dlqError) {
-        console.error(`[Worker:${name}] Failed to add job to DLQ:`, dlqError);
+        log.error({ jobId: job.id, err: dlqError }, `Failed to add job to DLQ`);
       }
     }
   });
 
   worker.on('error', (err) => {
-    console.error(`[Worker:${name}] ⚠ Error:`, err.message);
+    log.error({ err }, `⚠ Error`);
   });
 
   worker.on('stalled', (jobId) => {
-    console.warn(`[Worker:${name}] ⚠ Stalled job: ${jobId}`);
+    log.warn({ jobId }, `⚠ Stalled job`);
   });
 }
 
 export function startAllWorkers(): Worker[] {
+  const log = loggers.workers;
+  
   if (workers.length > 0) {
-    console.log('[Workers] Workers already started');
+    log.info('Workers already started');
     return workers;
   }
 
-  console.log('[Workers] Starting all workers...');
+  log.info('Starting all workers...');
 
   // Create workers with names for event logging
   const workerConfigs = [
@@ -85,17 +90,17 @@ export function startAllWorkers(): Worker[] {
   workers = workerConfigs.map(({ name, create }) => {
     const worker = create();
     attachWorkerEvents(worker, name);
-    console.log(`[Workers] Created worker: ${name}`);
+    log.info({ worker: name }, `Created worker`);
     return worker;
   });
 
-  console.log(`[Workers] ✓ Created ${workers.length} workers, waiting for ready events...`);
+  log.info({ count: workers.length }, `✓ Created workers, waiting for ready events...`);
 
   // Handle graceful shutdown
   const cleanup = async () => {
-    console.log('[Workers] Shutting down workers...');
+    log.info('Shutting down workers...');
     await Promise.all(workers.map(w => w.close()));
-    console.log('[Workers] All workers shut down');
+    log.info('All workers shut down');
     workers = [];
   };
 
@@ -110,8 +115,9 @@ export function getWorkers(): Worker[] {
 }
 
 export async function stopAllWorkers(): Promise<void> {
-  console.log('[Workers] Stopping all workers...');
+  const log = loggers.workers;
+  log.info('Stopping all workers...');
   await Promise.all(workers.map(w => w.close()));
   workers = [];
-  console.log('[Workers] All workers stopped');
+  log.info('All workers stopped');
 }

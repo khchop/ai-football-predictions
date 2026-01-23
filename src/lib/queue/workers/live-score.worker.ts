@@ -11,6 +11,7 @@ import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, liveQueue, settlementQueue 
 import type { MonitorLivePayload } from '../types';
 import { getMatchById, updateMatchResult } from '@/lib/db/queries';
 import { getFixtureById, mapFixtureStatus, formatMatchMinute } from '@/lib/football/api-football';
+import { loggers } from '@/lib/logger/modules';
 
 const POLL_INTERVAL_MS = 60 * 1000; // 60 seconds
 const MAX_POLLS = 150; // Stop after 150 polls (2.5 hours) to prevent infinite loops
@@ -20,37 +21,38 @@ export function createLiveScoreWorker() {
     QUEUE_NAMES.LIVE,
     async (job: Job<MonitorLivePayload>) => {
       const { matchId, externalId, pollCount = 0 } = job.data;
+      const log = loggers.liveScoreWorker.child({ jobId: job.id, jobName: job.name });
       
-      console.log(`[Live Score Worker] Poll ${pollCount + 1} for match ${matchId}`);
+      log.info(`Poll ${pollCount + 1} for match ${matchId}`);
       
       try {
-        // Safety: Stop if too many polls
-        if (pollCount >= MAX_POLLS) {
-          console.log(`[Live Score Worker] Max polls reached (${MAX_POLLS}) for match ${matchId}, stopping`);
-          return { stopped: true, reason: 'max_polls_reached', pollCount };
-        }
+         // Safety: Stop if too many polls
+         if (pollCount >= MAX_POLLS) {
+           log.info(`Max polls reached (${MAX_POLLS}) for match ${matchId}, stopping`);
+           return { stopped: true, reason: 'max_polls_reached', pollCount };
+         }
         
-        // Get match data
-        const matchData = await getMatchById(matchId);
-        if (!matchData) {
-          console.log(`[Live Score Worker] Match ${matchId} not found`);
-          return { stopped: true, reason: 'match_not_found' };
-        }
+         // Get match data
+         const matchData = await getMatchById(matchId);
+         if (!matchData) {
+           log.info(`Match ${matchId} not found`);
+           return { stopped: true, reason: 'match_not_found' };
+         }
         
         const { match } = matchData;
         
-        // If match already finished, stop polling
-        if (match.status === 'finished' || match.status === 'cancelled' || match.status === 'postponed') {
-          console.log(`[Live Score Worker] Match ${matchId} is ${match.status}, stopping polls`);
-          return { stopped: true, reason: 'match_already_finished', status: match.status };
-        }
+         // If match already finished, stop polling
+         if (match.status === 'finished' || match.status === 'cancelled' || match.status === 'postponed') {
+           log.info(`Match ${matchId} is ${match.status}, stopping polls`);
+           return { stopped: true, reason: 'match_already_finished', status: match.status };
+         }
         
         // Fetch fixture from API
         const fixtureId = parseInt(externalId, 10);
         const fixture = await getFixtureById(fixtureId);
         
-        if (!fixture) {
-          console.log(`[Live Score Worker] No fixture data from API for ${externalId}`);
+         if (!fixture) {
+           log.info(`No fixture data from API for ${externalId}`);
           
           // Schedule next poll anyway (might be temporary API issue)
           await liveQueue.add(
@@ -81,14 +83,14 @@ export function createLiveScoreWorker() {
         const scoreChanged = homeScore !== match.homeScore || awayScore !== match.awayScore;
         const minuteChanged = matchMinute !== match.matchMinute;
         
-        if (statusChanged || scoreChanged || minuteChanged) {
-          await updateMatchResult(matchId, homeScore, awayScore, newStatus, matchMinute);
-          console.log(`[Live Score Worker] ${match.homeTeam} vs ${match.awayTeam}: ${homeScore}-${awayScore} (${matchMinute}, ${newStatus})`);
-        }
+         if (statusChanged || scoreChanged || minuteChanged) {
+           await updateMatchResult(matchId, homeScore, awayScore, newStatus, matchMinute);
+           log.info(`${match.homeTeam} vs ${match.awayTeam}: ${homeScore}-${awayScore} (${matchMinute}, ${newStatus})`);
+         }
         
-        // Check if match finished
-        if (newStatus === 'finished') {
-          console.log(`[Live Score Worker] ✓ Match ${matchId} finished! Triggering settlement...`);
+         // Check if match finished
+         if (newStatus === 'finished') {
+           log.info(`✓ Match ${matchId} finished! Triggering settlement...`);
           
           // Trigger settlement job
           await settlementQueue.add(
@@ -138,8 +140,8 @@ export function createLiveScoreWorker() {
           pollCount: pollCount + 1,
           nextPollScheduled: true,
         };
-      } catch (error: any) {
-        console.error(`[Live Score Worker] Error:`, error);
+       } catch (error: any) {
+         log.error({ err: error }, `Error`);
         
         // Classify error type
         const isRetryable = 

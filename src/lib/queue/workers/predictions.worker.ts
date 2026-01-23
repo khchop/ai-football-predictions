@@ -24,45 +24,47 @@ import { parseBatchPredictionResponse, BATCH_SYSTEM_PROMPT } from '@/lib/llm/pro
 import { getStandingsForLeagues, getStandingFromMap } from '@/lib/football/standings';
 import { getResult } from '@/lib/utils/scoring';
 import { v4 as uuidv4 } from 'uuid';
+import { loggers } from '@/lib/logger/modules';
 
 export function createPredictionsWorker() {
   return new Worker<PredictMatchPayload>(
     QUEUE_NAMES.PREDICTIONS,
     async (job: Job<PredictMatchPayload>) => {
       const { matchId, skipIfDone = false } = job.data;
+      const log = loggers.predictionsWorker.child({ jobId: job.id, jobName: job.name });
       
-      console.log(`[Predictions Worker] Generating predictions for match ${matchId}`);
+      log.info(`Generating predictions for match ${matchId}`);
       
       try {
-        // Check if predictions already exist
-        if (skipIfDone) {
-          const existingPredictions = await getPredictionsForMatch(matchId);
-          if (existingPredictions.length > 0) {
-            console.log(`[Predictions Worker] Predictions already exist for match ${matchId}, skipping`);
-            return { skipped: true, reason: 'predictions_already_exist', predictionCount: existingPredictions.length };
-          }
-        }
+         // Check if predictions already exist
+         if (skipIfDone) {
+           const existingPredictions = await getPredictionsForMatch(matchId);
+           if (existingPredictions.length > 0) {
+             log.info(`Predictions already exist for match ${matchId}, skipping`);
+             return { skipped: true, reason: 'predictions_already_exist', predictionCount: existingPredictions.length };
+           }
+         }
         
-        // Get match data
-        const matchData = await getMatchById(matchId);
-        if (!matchData) {
-          console.log(`[Predictions Worker] Match ${matchId} not found`);
-          return { skipped: true, reason: 'match_not_found' };
-        }
+         // Get match data
+         const matchData = await getMatchById(matchId);
+         if (!matchData) {
+           log.info(`Match ${matchId} not found`);
+           return { skipped: true, reason: 'match_not_found' };
+         }
         
         const { match, competition } = matchData;
         
-        if (match.status !== 'scheduled') {
-          console.log(`[Predictions Worker] Match ${matchId} is ${match.status}, skipping`);
-          return { skipped: true, reason: 'match_not_scheduled', status: match.status };
-        }
+         if (match.status !== 'scheduled') {
+           log.info(`Match ${matchId} is ${match.status}, skipping`);
+           return { skipped: true, reason: 'match_not_scheduled', status: match.status };
+         }
         
-        // Get analysis (odds excluded from prompt, but analysis contains other stats)
-        const analysis = await getMatchAnalysisByMatchId(matchId);
-        if (!analysis) {
-          console.log(`[Predictions Worker] No analysis for match ${matchId}`);
-          return { skipped: true, reason: 'no_analysis' };
-        }
+         // Get analysis (odds excluded from prompt, but analysis contains other stats)
+         const analysis = await getMatchAnalysisByMatchId(matchId);
+         if (!analysis) {
+           log.info(`No analysis for match ${matchId}`);
+           return { skipped: true, reason: 'no_analysis' };
+         }
         
         // Get standings
         let homeStanding = null;
@@ -73,14 +75,14 @@ export function createPredictionsWorker() {
             const standingsMap = await getStandingsForLeagues([competition.apiFootballId]);
             homeStanding = getStandingFromMap(match.homeTeam, competition.apiFootballId, standingsMap);
             awayStanding = getStandingFromMap(match.awayTeam, competition.apiFootballId, standingsMap);
-          } catch (error: any) {
-            console.error(`[Predictions Worker] Failed to get standings:`, error.message);
-          }
+           } catch (error: any) {
+             log.error({ err: error }, `Failed to get standings`);
+           }
         }
         
-         // Get active providers (filtered to exclude auto-disabled models)
-         const providers = await getActiveProviders();
-         console.log(`[Predictions Worker] Generating predictions from ${providers.length} models`);
+          // Get active providers (filtered to exclude auto-disabled models)
+          const providers = await getActiveProviders();
+          log.info(`Generating predictions from ${providers.length} models`);
         
         let successCount = 0;
         let failCount = 0;
@@ -109,11 +111,11 @@ export function createPredictionsWorker() {
             // Parse simple JSON: [{match_id: "xxx", home_score: X, away_score: Y}]
             const parsed = parseBatchPredictionResponse(rawResponse, [matchId]);
             
-            if (!parsed.success || parsed.predictions.length === 0) {
-              console.error(`  ${provider.id}: Failed to parse prediction - ${parsed.error}`);
-              failCount++;
-              continue;
-            }
+             if (!parsed.success || parsed.predictions.length === 0) {
+               log.error(`${provider.id}: Failed to parse prediction - ${parsed.error}`);
+               failCount++;
+               continue;
+             }
             
             const prediction = parsed.predictions[0];
             
@@ -131,26 +133,26 @@ export function createPredictionsWorker() {
               status: 'pending',
             });
             
-             console.log(`  ✓ ${provider.id}: ${prediction.homeScore}-${prediction.awayScore}`);
-             await recordModelSuccess(provider.id);
-             successCount++;
-           } catch (error: any) {
-             console.error(`  ${provider.id}: Error - ${error.message}`);
-             const { autoDisabled } = await recordModelFailure(provider.id, error.message);
-             if (autoDisabled) {
-               console.warn(`  ⚠️ ${provider.id}: Auto-disabled after 3 consecutive failures`);
-             }
-             failCount++;
-          }
+              log.info(`✓ ${provider.id}: ${prediction.homeScore}-${prediction.awayScore}`);
+              await recordModelSuccess(provider.id);
+              successCount++;
+            } catch (error: any) {
+              log.error({ err: error }, `${provider.id}: Error`);
+              const { autoDisabled } = await recordModelFailure(provider.id, error.message);
+              if (autoDisabled) {
+                log.warn(`⚠️ ${provider.id}: Auto-disabled after 3 consecutive failures`);
+              }
+              failCount++;
+           }
         }
         
-        // Batch insert all predictions at once (1 query instead of N)
-        if (predictionsToInsert.length > 0) {
-          await createPredictionsBatch(predictionsToInsert);
-          console.log(`[Predictions Worker] Inserted ${predictionsToInsert.length} predictions in batch`);
-        }
-        
-        console.log(`[Predictions Worker] Complete: ${successCount} success, ${failCount} failed`);
+         // Batch insert all predictions at once (1 query instead of N)
+         if (predictionsToInsert.length > 0) {
+           await createPredictionsBatch(predictionsToInsert);
+           log.info(`Inserted ${predictionsToInsert.length} predictions in batch`);
+         }
+         
+         log.info(`Complete: ${successCount} success, ${failCount} failed`);
         
         return { 
           success: true, 
@@ -158,19 +160,19 @@ export function createPredictionsWorker() {
           failCount,
           totalModels: providers.length,
         };
-      } catch (error: any) {
-        console.error(`[Predictions Worker] Error processing match ${matchId}:`, error);
-        // Throw error to enable BullMQ retry logic
-        // Only transient errors should retry (network, timeout, rate limit)
-        if (error.message?.includes('timeout') || 
-            error.message?.includes('ECONNREFUSED') ||
-            error.message?.includes('rate limit') ||
-            error.message?.includes('429')) {
-          throw new Error(`Retryable error for match ${matchId}: ${error.message}`);
-        }
-        // Non-retryable errors (business logic) should not retry
-        throw error;
-      }
+       } catch (error: any) {
+         log.error({ err: error }, `Error processing match ${matchId}`);
+         // Throw error to enable BullMQ retry logic
+         // Only transient errors should retry (network, timeout, rate limit)
+         if (error.message?.includes('timeout') || 
+             error.message?.includes('ECONNREFUSED') ||
+             error.message?.includes('rate limit') ||
+             error.message?.includes('429')) {
+           throw new Error(`Retryable error for match ${matchId}: ${error.message}`);
+         }
+         // Non-retryable errors (business logic) should not retry
+         throw error;
+       }
     },
     {
       connection: getQueueConnection(),

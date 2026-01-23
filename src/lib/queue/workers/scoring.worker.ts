@@ -19,46 +19,48 @@ import {
   updateMatchQuotas 
 } from '@/lib/db/queries';
 import { calculateQuotas, calculateQuotaScores } from '@/lib/utils/scoring';
+import { loggers } from '@/lib/logger/modules';
 
 export function createScoringWorker() {
   return new Worker<SettleMatchPayload>(
     QUEUE_NAMES.SETTLEMENT, // Keep same queue name for backward compatibility
     async (job: Job<SettleMatchPayload>) => {
       const { matchId } = job.data;
+      const log = loggers.scoringWorker.child({ jobId: job.id, jobName: job.name });
       
-      console.log(`[Scoring Worker] Scoring predictions for match ${matchId}`);
+      log.info(`Scoring predictions for match ${matchId}`);
       
       try {
-        // Get match with final score
-        const matchData = await getMatchById(matchId);
-        if (!matchData) {
-          console.log(`[Scoring Worker] Match ${matchId} not found`);
-          return { skipped: true, reason: 'match_not_found' };
-        }
+         // Get match with final score
+         const matchData = await getMatchById(matchId);
+         if (!matchData) {
+           log.info(`Match ${matchId} not found`);
+           return { skipped: true, reason: 'match_not_found' };
+         }
         
         const { match } = matchData;
         
-        if (match.status !== 'finished') {
-          console.log(`[Scoring Worker] Match ${matchId} is ${match.status}, not finished yet`);
-          return { skipped: true, reason: 'match_not_finished', status: match.status };
-        }
+         if (match.status !== 'finished') {
+           log.info(`Match ${matchId} is ${match.status}, not finished yet`);
+           return { skipped: true, reason: 'match_not_finished', status: match.status };
+         }
         
         const { homeScore: actualHome, awayScore: actualAway } = match;
         
-        if (actualHome === null || actualAway === null) {
-          console.log(`[Scoring Worker] Match ${matchId} has no final score`);
-          return { skipped: true, reason: 'no_final_score' };
-        }
+         if (actualHome === null || actualAway === null) {
+           log.info(`Match ${matchId} has no final score`);
+           return { skipped: true, reason: 'no_final_score' };
+         }
         
         // Get all predictions for this match
         const predictions = await getPredictionsForMatch(matchId);
         
-        if (predictions.length === 0) {
-          console.log(`[Scoring Worker] No predictions found for match ${matchId}`);
-          return { skipped: true, reason: 'no_predictions' };
-        }
-        
-        console.log(`  Found ${predictions.length} predictions`);
+         if (predictions.length === 0) {
+           log.info(`No predictions found for match ${matchId}`);
+           return { skipped: true, reason: 'no_predictions' };
+         }
+         
+         log.info(`Found ${predictions.length} predictions`);
         
         // Step 1: Calculate quotas from prediction distribution
         // Quota = 30 / (# models with same tendency), clamped to [2-6]
@@ -67,7 +69,7 @@ export function createScoringWorker() {
           predictedAway: p.predictedAway,
         })));
         
-        console.log(`  Quotas: Home=${quotas.home}, Draw=${quotas.draw}, Away=${quotas.away}`);
+         log.info(`Quotas: Home=${quotas.home}, Draw=${quotas.draw}, Away=${quotas.away}`);
         
         // Step 2: Save quotas to match for display
         await updateMatchQuotas(matchId, quotas.home, quotas.draw, quotas.away);
@@ -107,33 +109,27 @@ export function createScoringWorker() {
             scoredCount++;
             totalPointsAwarded += breakdown.total;
             
-            if (breakdown.total > 0) {
-              console.log(`  ✓ ${prediction.modelId}: ${prediction.predictedHome}-${prediction.predictedAway} = ${breakdown.total}pts (${breakdown.tendencyPoints}+${breakdown.goalDiffBonus}+${breakdown.exactScoreBonus})`);
-            }
-          } catch (error: any) {
-            failedCount++;
-            console.error(`  ✗ Failed to score prediction ${prediction.id} (${prediction.modelId}):`, {
-              error: error.message,
-              code: error.code,
-              detail: error.detail,
-              predictionId: prediction.id,
-              modelId: prediction.modelId,
-            });
-            failedPredictions.push({
-              id: prediction.id,
-              modelId: prediction.modelId,
-              error: error.message,
-            });
-            // Continue with other predictions - don't fail the whole job
-          }
+             if (breakdown.total > 0) {
+               log.info(`✓ ${prediction.modelId}: ${prediction.predictedHome}-${prediction.predictedAway} = ${breakdown.total}pts (${breakdown.tendencyPoints}+${breakdown.goalDiffBonus}+${breakdown.exactScoreBonus})`);
+             }
+           } catch (error: any) {
+             failedCount++;
+             log.error({ err: error, predictionId: prediction.id, modelId: prediction.modelId }, `Failed to score prediction`);
+             failedPredictions.push({
+               id: prediction.id,
+               modelId: prediction.modelId,
+               error: error.message,
+             });
+             // Continue with other predictions - don't fail the whole job
+           }
         }
         
-        // Log results
-        if (failedCount > 0) {
-          console.log(`[Scoring Worker] ⚠️  Scored ${scoredCount} predictions, ${failedCount} failed (${totalPointsAwarded} total points awarded)`);
-        } else {
-          console.log(`[Scoring Worker] ✅ Scored ${scoredCount} predictions (${totalPointsAwarded} total points awarded)`);
-        }
+         // Log results
+         if (failedCount > 0) {
+           log.warn(`Scored ${scoredCount} predictions, ${failedCount} failed (${totalPointsAwarded} total points awarded)`);
+         } else {
+           log.info(`✓ Scored ${scoredCount} predictions (${totalPointsAwarded} total points awarded)`);
+         }
         
         // Return partial success if some predictions scored
         if (scoredCount > 0) {
@@ -162,8 +158,8 @@ export function createScoringWorker() {
           quotas,
           finalScore: `${actualHome}-${actualAway}`,
         };
-      } catch (error: any) {
-        console.error(`[Scoring Worker] Error scoring match ${matchId}:`, error);
+       } catch (error: any) {
+         log.error({ err: error }, `Error scoring match ${matchId}`);
         
         // Throw error to enable BullMQ retry mechanism
         // BullMQ will retry with exponential backoff based on queue config

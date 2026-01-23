@@ -10,14 +10,16 @@ import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { GenerateContentPayload } from '../types';
 import { generateMatchPreview } from '@/lib/content/generator';
 import { getMatchesNeedingPreviews, getMatchBetsForPreview, hasMatchPreview } from '@/lib/content/queries';
+import { loggers } from '@/lib/logger/modules';
 
 export function createContentWorker() {
   return new Worker<GenerateContentPayload>(
     QUEUE_NAMES.CONTENT,
     async (job: Job<GenerateContentPayload>) => {
       const { type, data } = job.data;
+      const log = loggers.contentWorker.child({ jobId: job.id, jobName: job.name });
       
-      console.log(`[Content Worker] Generating ${type} content`);
+      log.info(`Generating ${type} content`);
       
       try {
         if (type === 'match_preview') {
@@ -29,22 +31,22 @@ export function createContentWorker() {
             kickoffTime: string;
             venue?: string;
           });
-        } else if (type === 'league_roundup') {
-          console.log('[Content Worker] League roundup generation not yet implemented');
-          return { skipped: true, reason: 'not_implemented' };
-        } else if (type === 'model_report') {
-          console.log('[Content Worker] Model report generation not yet implemented');
-          return { skipped: true, reason: 'not_implemented' };
+         } else if (type === 'league_roundup') {
+           log.info('League roundup generation not yet implemented');
+           return { skipped: true, reason: 'not_implemented' };
+         } else if (type === 'model_report') {
+           log.info('Model report generation not yet implemented');
+           return { skipped: true, reason: 'not_implemented' };
         } else if (type === 'scan_matches') {
           // Scan for matches that need previews and queue them
           return await scanMatchesNeedingPreviews();
         } else {
           throw new Error(`Unknown content type: ${type}`);
         }
-      } catch (error) {
-        console.error(`[Content Worker] Error generating ${type}:`, error);
-        throw error;
-      }
+       } catch (error) {
+         log.error({ err: error }, `Error generating ${type}`);
+         throw error;
+       }
     },
     {
       connection: getQueueConnection(),
@@ -69,15 +71,16 @@ async function generateMatchPreviewContent(data: {
   venue?: string;
 }) {
   const { matchId, homeTeam, awayTeam } = data;
+  const log = loggers.contentWorker.child({ matchId });
   
   // Check if preview already exists
   const exists = await hasMatchPreview(matchId);
   if (exists) {
-    console.log(`[Content Worker] Preview already exists for ${homeTeam} vs ${awayTeam}`);
+    log.info(`Preview already exists for ${homeTeam} vs ${awayTeam}`);
     return { skipped: true, reason: 'preview_exists' };
   }
   
-  console.log(`[Content Worker] Generating preview for ${homeTeam} vs ${awayTeam}`);
+  log.info(`Generating preview for ${homeTeam} vs ${awayTeam}`);
   
   // Get AI model bets for this match (if available)
   const aiPredictions = await getMatchBetsForPreview(matchId);
@@ -88,7 +91,7 @@ async function generateMatchPreviewContent(data: {
     aiPredictions,
   });
   
-  console.log(`[Content Worker] ✓ Preview generated: ${previewId}`);
+  log.info(`✓ Preview generated: ${previewId}`);
   
   return {
     success: true,
@@ -102,16 +105,18 @@ async function generateMatchPreviewContent(data: {
  * This runs hourly to check if any matches are 6h away from kickoff
  */
 async function scanMatchesNeedingPreviews() {
-  console.log('[Content Worker] Scanning for matches needing previews...');
+  const log = loggers.contentWorker;
+  
+  log.info('Scanning for matches needing previews...');
   
   const matchesNeedingPreviews = await getMatchesNeedingPreviews();
   
   if (matchesNeedingPreviews.length === 0) {
-    console.log('[Content Worker] No matches need previews at this time');
+    log.info('No matches need previews at this time');
     return { scanned: 0, queued: 0 };
   }
   
-  console.log(`[Content Worker] Found ${matchesNeedingPreviews.length} matches needing previews`);
+  log.info(`Found ${matchesNeedingPreviews.length} matches needing previews`);
   
   // Queue each match for preview generation
   const { getQueue } = await import('../index');
@@ -148,14 +153,14 @@ async function scanMatchesNeedingPreviews() {
         }
       );
       
-      queuedCount++;
-      console.log(`[Content Worker] Queued preview for ${match.homeTeam} vs ${match.awayTeam}`);
-    } catch (error) {
-      console.error(`[Content Worker] Failed to queue match ${match.id}:`, error);
-    }
-  }
-  
-  console.log(`[Content Worker] ✓ Scanned ${matchesNeedingPreviews.length} matches, queued ${queuedCount}`);
+       queuedCount++;
+       log.info(`Queued preview for ${match.homeTeam} vs ${match.awayTeam}`);
+     } catch (error) {
+       log.error({ err: error, matchId: match.id }, `Failed to queue match`);
+     }
+   }
+   
+   log.info(`✓ Scanned ${matchesNeedingPreviews.length} matches, queued ${queuedCount}`);
   
   return {
     scanned: matchesNeedingPreviews.length,
@@ -165,15 +170,17 @@ async function scanMatchesNeedingPreviews() {
 
 // Worker event handlers
 export function setupContentWorkerEvents(worker: Worker) {
+  const log = loggers.contentWorker;
+  
   worker.on('completed', (job) => {
-    console.log(`[Content Worker] Job ${job.id} completed`);
+    log.info({ jobId: job.id }, `Job completed`);
   });
 
   worker.on('failed', (job, err) => {
-    console.error(`[Content Worker] Job ${job?.id} failed:`, err.message);
+    log.error({ jobId: job?.id, err }, `Job failed`);
   });
 
   worker.on('error', (err) => {
-    console.error('[Content Worker] Worker error:', err);
+    log.error({ err }, `Worker error`);
   });
 }

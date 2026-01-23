@@ -17,14 +17,16 @@ import {
   getMatchesMissingPredictions,
   getMatchesNeedingScoring,
 } from '@/lib/db/queries';
+import { loggers } from '@/lib/logger/modules';
 
 export function createBackfillWorker() {
   return new Worker<BackfillMissingPayload>(
     QUEUE_NAMES.BACKFILL,
     async (job: Job<BackfillMissingPayload>) => {
       const { hoursAhead = 12 } = job.data;
+      const log = loggers.backfillWorker.child({ jobId: job.id, jobName: job.name });
       
-      console.log(`[Backfill Worker] Checking for matches with missing data (next ${hoursAhead}h)...`);
+      log.info(`Checking for matches with missing data (next ${hoursAhead}h)...`);
       
       const results = {
         analysisTriggered: 0,
@@ -53,10 +55,10 @@ export function createBackfillWorker() {
             for (const oldJobId of oldJobIds) {
               try {
                 const oldJob = await analysisQueue.getJob(oldJobId);
-                if (oldJob && await oldJob.isFailed()) {
-                  await oldJob.remove();
-                  console.log(`[Backfill Worker] Removed failed job ${oldJobId} for retry`);
-                }
+                 if (oldJob && await oldJob.isFailed()) {
+                   await oldJob.remove();
+                   log.info(`Removed failed job ${oldJobId} for retry`);
+                 }
               } catch (err) {
                 // Job doesn't exist, that's fine
               }
@@ -100,13 +102,13 @@ export function createBackfillWorker() {
               `backfill-odds-${match.id}`,
             ];
             
-            for (const oldJobId of oldOddsJobIds) {
-              try {
-                const oldJob = await oddsQueue.getJob(oldJobId);
-                if (oldJob && await oldJob.isFailed()) {
-                  await oldJob.remove();
-                  console.log(`[Backfill Worker] Removed failed odds job ${oldJobId} for retry`);
-                }
+             for (const oldJobId of oldOddsJobIds) {
+               try {
+                 const oldJob = await oddsQueue.getJob(oldJobId);
+                 if (oldJob && await oldJob.isFailed()) {
+                   await oldJob.remove();
+                   log.info(`Removed failed odds job ${oldJobId} for retry`);
+                 }
               } catch (err) {
                 // Job doesn't exist, that's fine
               }
@@ -145,13 +147,13 @@ export function createBackfillWorker() {
               `backfill-lineups-${match.id}`,
             ];
             
-            for (const oldJobId of oldLineupsJobIds) {
-              try {
-                const oldJob = await lineupsQueue.getJob(oldJobId);
-                if (oldJob && await oldJob.isFailed()) {
-                  await oldJob.remove();
-                  console.log(`[Backfill Worker] Removed failed lineups job ${oldJobId} for retry`);
-                }
+             for (const oldJobId of oldLineupsJobIds) {
+               try {
+                 const oldJob = await lineupsQueue.getJob(oldJobId);
+                 if (oldJob && await oldJob.isFailed()) {
+                   await oldJob.remove();
+                   log.info(`Removed failed lineups job ${oldJobId} for retry`);
+                 }
               } catch (err) {
                 // Job doesn't exist, that's fine
               }
@@ -193,13 +195,13 @@ export function createBackfillWorker() {
               `backfill-predict-${match.id}`,
             ];
             
-            for (const oldJobId of oldPredictJobIds) {
-              try {
-                const oldJob = await predictionsQueue.getJob(oldJobId);
-                if (oldJob && await oldJob.isFailed()) {
-                  await oldJob.remove();
-                  console.log(`[Backfill Worker] Removed failed prediction job ${oldJobId} for retry`);
-                }
+             for (const oldJobId of oldPredictJobIds) {
+               try {
+                 const oldJob = await predictionsQueue.getJob(oldJobId);
+                 if (oldJob && await oldJob.isFailed()) {
+                   await oldJob.remove();
+                   log.info(`Removed failed prediction job ${oldJobId} for retry`);
+                 }
               } catch (err) {
                 // Job doesn't exist, that's fine
               }
@@ -238,13 +240,13 @@ export function createBackfillWorker() {
               `backfill-settle-${match.id}`,
             ];
             
-            for (const oldJobId of oldSettlementJobIds) {
-              try {
-                const oldJob = await settlementQueue.getJob(oldJobId);
-                if (oldJob && await oldJob.isFailed()) {
-                  await oldJob.remove();
-                  console.log(`[Backfill Worker] Removed failed settlement job ${oldJobId} for retry`);
-                }
+             for (const oldJobId of oldSettlementJobIds) {
+               try {
+                 const oldJob = await settlementQueue.getJob(oldJobId);
+                 if (oldJob && await oldJob.isFailed()) {
+                   await oldJob.remove();
+                   log.info(`Removed failed settlement job ${oldJobId} for retry`);
+                 }
               } catch (err) {
                 // Job doesn't exist, that's fine
               }
@@ -277,28 +279,22 @@ export function createBackfillWorker() {
         const total = results.analysisTriggered + results.oddsTriggered + 
                       results.lineupsTriggered + results.predictionsTriggered + results.scoringsTriggered;
         
-        if (total > 0 || results.errors.length > 0) {
-          console.log(`[Backfill Worker] Triggered ${total} jobs:`, {
-            analysis: results.analysisTriggered,
-            odds: results.oddsTriggered,
-            lineups: results.lineupsTriggered,
-            predictions: results.predictionsTriggered,
-            scorings: results.scoringsTriggered,
-          });
-          
-          if (results.errors.length > 0) {
-            console.error(`[Backfill Worker] ${results.errors.length} errors:`, results.errors);
-          }
-        } else {
-          console.log('[Backfill Worker] No missing data found');
-        }
+         if (total > 0 || results.errors.length > 0) {
+           log.info({ analysis: results.analysisTriggered, odds: results.oddsTriggered, lineups: results.lineupsTriggered, predictions: results.predictionsTriggered, scorings: results.scoringsTriggered }, `Triggered ${total} jobs`);
+           
+           if (results.errors.length > 0) {
+             log.error({ errors: results.errors }, `${results.errors.length} errors`);
+           }
+         } else {
+           log.info('No missing data found');
+         }
         
         return results;
         
-      } catch (error: any) {
-        console.error('[Backfill Worker] Fatal error:', error);
-        throw error;
-      }
+       } catch (error: any) {
+         log.error({ err: error }, 'Fatal error');
+         throw error;
+       }
     },
     {
       connection: getQueueConnection(),

@@ -10,40 +10,42 @@ import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, predictionsQueue } from '..
 import type { FetchLineupsPayload } from '../types';
 import { updateMatchLineups } from '@/lib/football/lineups';
 import { getMatchById } from '@/lib/db/queries';
+import { loggers } from '@/lib/logger/modules';
 
 export function createLineupsWorker() {
   return new Worker<FetchLineupsPayload>(
     QUEUE_NAMES.LINEUPS,
     async (job: Job<FetchLineupsPayload>) => {
       const { matchId, externalId, homeTeam, awayTeam } = job.data;
+      const log = loggers.lineupsWorker.child({ jobId: job.id, jobName: job.name });
       
-      console.log(`[Lineups Worker] Fetching lineups for ${homeTeam} vs ${awayTeam} (match: ${matchId})`);
+      log.info(`Fetching lineups for ${homeTeam} vs ${awayTeam} (match: ${matchId})`);
       
       try {
-        // Verify match still exists and is scheduled
-        const matchData = await getMatchById(matchId);
-        if (!matchData) {
-          console.log(`[Lineups Worker] Match ${matchId} not found, skipping`);
-          return { skipped: true, reason: 'match_not_found' };
-        }
+         // Verify match still exists and is scheduled
+         const matchData = await getMatchById(matchId);
+         if (!matchData) {
+           log.info(`Match ${matchId} not found, skipping`);
+           return { skipped: true, reason: 'match_not_found' };
+         }
         
         const { match } = matchData;
         
-        if (match.status !== 'scheduled') {
-          console.log(`[Lineups Worker] Match ${matchId} is ${match.status}, skipping`);
-          return { skipped: true, reason: 'match_not_scheduled', status: match.status };
-        }
+         if (match.status !== 'scheduled') {
+           log.info(`Match ${matchId} is ${match.status}, skipping`);
+           return { skipped: true, reason: 'match_not_scheduled', status: match.status };
+         }
         
         // Fetch and store lineups
         const fixtureId = parseInt(externalId, 10);
         const lineupsFound = await updateMatchLineups(matchId, fixtureId);
         
-        if (!lineupsFound) {
-          console.log(`[Lineups Worker] Lineups not available yet for ${homeTeam} vs ${awayTeam}`);
-          return { success: false, lineupsFound: false };
-        }
+         if (!lineupsFound) {
+           log.info(`Lineups not available yet for ${homeTeam} vs ${awayTeam}`);
+           return { success: false, lineupsFound: false };
+         }
         
-        console.log(`[Lineups Worker] ✓ Lineups found for ${homeTeam} vs ${awayTeam}`);
+         log.info(`✓ Lineups found for ${homeTeam} vs ${awayTeam}`);
         
         // Lineups are available! Trigger immediate high-priority prediction
         // This ensures we generate predictions as soon as lineups are confirmed
@@ -61,13 +63,13 @@ export function createLineupsWorker() {
               jobId: `predict-immediate-${matchId}`,
             }
           );
-          console.log(`[Lineups Worker] Queued immediate prediction for ${homeTeam} vs ${awayTeam}`);
-        } catch (error: any) {
-          // Job might already exist, that's fine
-          if (!error.message?.includes('already exists')) {
-            console.error(`[Lineups Worker] Failed to queue immediate prediction:`, error);
-          }
-        }
+           log.info(`Queued immediate prediction for ${homeTeam} vs ${awayTeam}`);
+         } catch (error: any) {
+           // Job might already exist, that's fine
+           if (!error.message?.includes('already exists')) {
+             log.error({ err: error }, `Failed to queue immediate prediction`);
+           }
+         }
         
         return { 
           success: true, 
@@ -75,10 +77,10 @@ export function createLineupsWorker() {
           matchId,
           immediatePredictionQueued: true,
         };
-      } catch (error: any) {
-        console.error(`[Lineups Worker] Error fetching lineups for ${homeTeam} vs ${awayTeam}:`, error);
-        throw error; // Let BullMQ handle retry
-      }
+       } catch (error: any) {
+         log.error({ err: error }, `Error fetching lineups for ${homeTeam} vs ${awayTeam}`);
+         throw error; // Let BullMQ handle retry
+       }
     },
     {
       connection: getQueueConnection(),

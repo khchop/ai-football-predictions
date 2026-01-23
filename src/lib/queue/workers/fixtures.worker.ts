@@ -13,14 +13,16 @@ import { upsertMatch, upsertCompetition } from '@/lib/db/queries';
 import { scheduleMatchJobs } from '../scheduler';
 import { v4 as uuidv4 } from 'uuid';
 import { generateMatchSlug, generateCompetitionSlug } from '@/lib/utils/slugify';
+import { loggers } from '@/lib/logger/modules';
 
 export function createFixturesWorker() {
   return new Worker<FetchFixturesPayload>(
     QUEUE_NAMES.FIXTURES,
     async (job: Job<FetchFixturesPayload>) => {
       const { manual = false } = job.data;
+      const log = loggers.fixturesWorker.child({ jobId: job.id, jobName: job.name });
       
-      console.log(`[Fixtures Worker] Starting fetch (manual: ${manual})...`);
+      log.info(`Starting fetch (manual: ${manual})...`);
       
       try {
         // Fetch fixtures for the next 36 hours
@@ -115,14 +117,14 @@ export function createFixturesWorker() {
                 jobsScheduled += scheduled;
               }
             } catch (error: any) {
-              const errorMsg = `Failed to process fixture ${fixture.fixture.id}: ${error.message}`;
-              console.error(`[Fixtures Worker] ${errorMsg}`);
-              errors.push(errorMsg);
-            }
+               const errorMsg = `Failed to process fixture ${fixture.fixture.id}: ${error.message}`;
+               log.error({ err: error }, errorMsg);
+               errors.push(errorMsg);
+             }
           }
         }
 
-        console.log(`[Fixtures Worker] ✓ Fetched ${totalFixtures} fixtures, saved ${savedFixtures}, scheduled ${jobsScheduled} jobs`);
+        log.info(`✓ Fetched ${totalFixtures} fixtures, saved ${savedFixtures}, scheduled ${jobsScheduled} jobs`);
 
         return {
           success: true,
@@ -132,10 +134,10 @@ export function createFixturesWorker() {
           jobsScheduled,
           errors: errors.length > 0 ? errors : undefined,
         };
-      } catch (error: any) {
-        console.error('[Fixtures Worker] Error:', error);
-        throw error; // Let BullMQ handle retry
-      }
+       } catch (error: any) {
+         log.error({ err: error }, 'Error');
+         throw error; // Let BullMQ handle retry
+       }
     },
     {
       connection: getQueueConnection(),
