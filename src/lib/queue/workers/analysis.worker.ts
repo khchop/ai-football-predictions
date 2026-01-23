@@ -6,6 +6,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
+import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { AnalyzeMatchPayload } from '../types';
 import { fetchAndStoreAnalysis } from '@/lib/football/match-analysis';
@@ -55,15 +56,31 @@ export function createAnalysisWorker() {
           hasInjuries: (analysis.homeInjuriesCount || 0) > 0 || (analysis.awayInjuriesCount || 0) > 0,
         };
        } catch (error: any) {
-          log.error({ 
-            matchId, 
-            externalId, 
-            homeTeam, 
-            awayTeam,
-            attemptsMade: job.attemptsMade,
-            err: error 
-          }, `Error analyzing match`);
-          throw error; // Let BullMQ handle retry
+           log.error({ 
+             matchId, 
+             externalId, 
+             homeTeam, 
+             awayTeam,
+             attemptsMade: job.attemptsMade,
+             err: error 
+           }, `Error analyzing match`);
+           
+           Sentry.captureException(error, {
+             level: 'error',
+             tags: {
+               worker: 'analysis',
+               matchId,
+             },
+             extra: {
+               jobId: job.id,
+               externalId,
+               homeTeam,
+               awayTeam,
+               attempt: job.attemptsMade,
+             },
+           });
+           
+           throw error; // Let BullMQ handle retry
        }
     },
     {

@@ -8,6 +8,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
+import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, analysisQueue, oddsQueue, lineupsQueue, predictionsQueue, settlementQueue } from '../index';
 import type { BackfillMissingPayload } from '../types';
 import { 
@@ -343,8 +344,21 @@ export function createBackfillWorker() {
         return results;
         
        } catch (error: any) {
-         log.error({ err: error }, 'Fatal error');
-         throw error;
+          log.error({ err: error }, 'Fatal error');
+          
+          Sentry.captureException(error, {
+            level: 'error',
+            tags: {
+              worker: 'backfill',
+            },
+            extra: {
+              jobId: job.id,
+              hoursAhead: job.data.hoursAhead,
+              manual: job.data.manual,
+            },
+          });
+          
+          throw error;
        }
     },
     {

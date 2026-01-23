@@ -8,6 +8,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
+import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES } from '../index';
 import { getAutoDisabledModels, reEnableModel } from '@/lib/db/queries';
 import { loggers } from '@/lib/logger/modules';
@@ -62,10 +63,22 @@ export function createModelRecoveryWorker() {
         log.info({ recovered, checked: disabledModels.length, failed }, 'Model recovery complete');
         return { recovered, checked: disabledModels.length, failed, errors };
       } catch (error) {
-        // Outer catch for critical errors
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        log.error({ error: errorMsg }, 'Model recovery worker failed');
-        throw error; // Re-throw for BullMQ retry
+         // Outer catch for critical errors
+         const errorMsg = error instanceof Error ? error.message : String(error);
+         log.error({ error: errorMsg }, 'Model recovery worker failed');
+         
+         Sentry.captureException(error, {
+           level: 'error',
+           tags: {
+             worker: 'model-recovery',
+           },
+           extra: {
+             jobId: job.id,
+             errorMessage: errorMsg,
+           },
+         });
+         
+         throw error; // Re-throw for BullMQ retry
       }
     },
     {

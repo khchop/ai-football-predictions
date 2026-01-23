@@ -7,7 +7,8 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, liveQueue, settlementQueue } from '../index';
+import * as Sentry from '@sentry/nextjs';
+import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, liveQueue, settlementQueue, getQueue } from '../index';
 import type { MonitorLivePayload } from '../types';
 import { getMatchById, updateMatchResult } from '@/lib/db/queries';
 import { getFixtureById, mapFixtureStatus, formatMatchMinute } from '@/lib/football/api-football';
@@ -163,13 +164,27 @@ export function createLiveScoreWorker() {
            nextPollScheduled,
          };
        } catch (error: any) {
-          log.error({ matchId, externalId, pollCount, err: error }, `Error polling live score`);
-         
-         // Throw error to enable BullMQ retry mechanism
-         // BullMQ will retry with exponential backoff based on queue config
-         // For transient errors, BullMQ retry handles the recovery
-         // For non-retryable errors, they'll be moved to DLQ after max retries
-         throw error;
+           log.error({ matchId, externalId, pollCount, err: error }, `Error polling live score`);
+           
+           Sentry.captureException(error, {
+             level: 'error',
+             tags: {
+               worker: 'live-score',
+               matchId,
+             },
+             extra: {
+               jobId: job.id,
+               externalId,
+               pollCount,
+               kickoffTime: job.data.kickoffTime,
+             },
+           });
+          
+          // Throw error to enable BullMQ retry mechanism
+          // BullMQ will retry with exponential backoff based on queue config
+          // For transient errors, BullMQ retry handles the recovery
+          // For non-retryable errors, they'll be moved to DLQ after max retries
+          throw error;
        }
     },
     {

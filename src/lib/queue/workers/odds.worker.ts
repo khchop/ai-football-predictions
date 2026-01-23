@@ -6,6 +6,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
+import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { RefreshOddsPayload } from '../types';
 import { refreshOddsForMatch } from '@/lib/football/match-analysis';
@@ -61,13 +62,27 @@ export function createOddsWorker() {
            matchId,
          };
        } catch (error: any) {
-          log.error({ 
-            matchId, 
-            externalId,
-            attemptsMade: job.attemptsMade,
-            err: error 
-          }, `Error refreshing odds`);
-          throw error; // Let BullMQ handle retry
+           log.error({ 
+             matchId, 
+             externalId,
+             attemptsMade: job.attemptsMade,
+             err: error 
+           }, `Error refreshing odds`);
+           
+           Sentry.captureException(error, {
+             level: 'error',
+             tags: {
+               worker: 'odds',
+               matchId,
+             },
+             extra: {
+               jobId: job.id,
+               externalId,
+               attempt: job.attemptsMade,
+             },
+           });
+           
+           throw error; // Let BullMQ handle retry
        }
     },
     {

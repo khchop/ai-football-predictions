@@ -6,6 +6,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
+import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, predictionsQueue } from '../index';
 import type { FetchLineupsPayload } from '../types';
 import { updateMatchLineups } from '@/lib/football/lineups';
@@ -82,15 +83,31 @@ export function createLineupsWorker() {
           immediatePredictionQueued: true,
         };
        } catch (error: any) {
-          log.error({ 
-            matchId, 
-            externalId, 
-            homeTeam, 
-            awayTeam,
-            attemptsMade: job.attemptsMade,
-            err: error 
-          }, `Error fetching lineups`);
-          throw error; // Let BullMQ handle retry
+           log.error({ 
+             matchId, 
+             externalId, 
+             homeTeam, 
+             awayTeam,
+             attemptsMade: job.attemptsMade,
+             err: error 
+           }, `Error fetching lineups`);
+           
+           Sentry.captureException(error, {
+             level: 'error',
+             tags: {
+               worker: 'lineups',
+               matchId,
+             },
+             extra: {
+               jobId: job.id,
+               externalId,
+               homeTeam,
+               awayTeam,
+               attempt: job.attemptsMade,
+             },
+           });
+           
+           throw error; // Let BullMQ handle retry
        }
     },
     {
