@@ -1305,7 +1305,7 @@ export async function getLeaderboard(limit = 30) {
       totalPredictions: sql<number>`COUNT(${predictions.id})`,
       exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
       correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
-      avgPoints: sql<number>`ROUND(AVG(${predictions.totalPoints})::numeric, 2)`,
+      avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
     })
     .from(models)
     .leftJoin(predictions, and(

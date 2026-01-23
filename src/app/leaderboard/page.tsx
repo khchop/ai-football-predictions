@@ -33,9 +33,9 @@ async function LeaderboardContent({ searchParams }: { searchParams: { [key: stri
     provider: entry.model.provider,
     totalPredictions: entry.totalPredictions,
     totalPoints: entry.totalPoints,
-    averagePoints: entry.avgPoints,
-    exactScores: entry.exactScores,
-    correctTendencies: entry.correctTendencies,
+    averagePoints: entry.avgPoints ?? 0, // Null safety for models with no predictions
+    exactScores: entry.exactScores ?? 0,
+    correctTendencies: entry.correctTendencies ?? 0,
   }));
   
   return (
