@@ -74,7 +74,9 @@ export function createScoringWorker() {
         
         // Step 3: Score each prediction using quota system
         let scoredCount = 0;
+        let failedCount = 0;
         let totalPointsAwarded = 0;
+        const failedPredictions: Array<{ id: string; modelId: string; error: string }> = [];
         
         for (const prediction of predictions) {
           // Skip already scored predictions
@@ -82,39 +84,81 @@ export function createScoringWorker() {
             continue;
           }
           
-          // Calculate points using Kicktipp Quota System
-          const breakdown = calculateQuotaScores({
-            predictedHome: prediction.predictedHome,
-            predictedAway: prediction.predictedAway,
-            actualHome,
-            actualAway,
-            quotaHome: quotas.home,
-            quotaDraw: quotas.draw,
-            quotaAway: quotas.away,
-          });
-          
-          // Update prediction with scores
-          await updatePredictionScores(prediction.id, {
-            tendencyPoints: breakdown.tendencyPoints,
-            goalDiffBonus: breakdown.goalDiffBonus,
-            exactScoreBonus: breakdown.exactScoreBonus,
-            totalPoints: breakdown.total,
-          });
-          
-          scoredCount++;
-          totalPointsAwarded += breakdown.total;
-          
-          if (breakdown.total > 0) {
-            console.log(`  ✓ ${prediction.modelId}: ${prediction.predictedHome}-${prediction.predictedAway} = ${breakdown.total}pts (${breakdown.tendencyPoints}+${breakdown.goalDiffBonus}+${breakdown.exactScoreBonus})`);
+          try {
+            // Calculate points using Kicktipp Quota System
+            const breakdown = calculateQuotaScores({
+              predictedHome: prediction.predictedHome,
+              predictedAway: prediction.predictedAway,
+              actualHome,
+              actualAway,
+              quotaHome: quotas.home,
+              quotaDraw: quotas.draw,
+              quotaAway: quotas.away,
+            });
+            
+            // Update prediction with scores
+            await updatePredictionScores(prediction.id, {
+              tendencyPoints: breakdown.tendencyPoints,
+              goalDiffBonus: breakdown.goalDiffBonus,
+              exactScoreBonus: breakdown.exactScoreBonus,
+              totalPoints: breakdown.total,
+            });
+            
+            scoredCount++;
+            totalPointsAwarded += breakdown.total;
+            
+            if (breakdown.total > 0) {
+              console.log(`  ✓ ${prediction.modelId}: ${prediction.predictedHome}-${prediction.predictedAway} = ${breakdown.total}pts (${breakdown.tendencyPoints}+${breakdown.goalDiffBonus}+${breakdown.exactScoreBonus})`);
+            }
+          } catch (error: any) {
+            failedCount++;
+            console.error(`  ✗ Failed to score prediction ${prediction.id} (${prediction.modelId}):`, {
+              error: error.message,
+              code: error.code,
+              detail: error.detail,
+              predictionId: prediction.id,
+              modelId: prediction.modelId,
+            });
+            failedPredictions.push({
+              id: prediction.id,
+              modelId: prediction.modelId,
+              error: error.message,
+            });
+            // Continue with other predictions - don't fail the whole job
           }
         }
         
-        console.log(`[Scoring Worker] ✅ Scored ${scoredCount} predictions (${totalPointsAwarded} total points awarded)`);
+        // Log results
+        if (failedCount > 0) {
+          console.log(`[Scoring Worker] ⚠️  Scored ${scoredCount} predictions, ${failedCount} failed (${totalPointsAwarded} total points awarded)`);
+        } else {
+          console.log(`[Scoring Worker] ✅ Scored ${scoredCount} predictions (${totalPointsAwarded} total points awarded)`);
+        }
         
+        // Return partial success if some predictions scored
+        if (scoredCount > 0) {
+          return { 
+            success: true, 
+            scoredCount,
+            failedCount,
+            failedPredictions: failedCount > 0 ? failedPredictions : undefined,
+            totalPointsAwarded,
+            quotas,
+            finalScore: `${actualHome}-${actualAway}`,
+          };
+        }
+        
+        // Only throw if ALL predictions failed
+        if (failedCount > 0 && scoredCount === 0) {
+          throw new Error(`All ${failedCount} predictions failed to score for match ${matchId}`);
+        }
+        
+        // This shouldn't happen but return success anyway
         return { 
           success: true, 
-          scoredCount, 
-          totalPointsAwarded,
+          scoredCount: 0,
+          failedCount: 0,
+          totalPointsAwarded: 0,
           quotas,
           finalScore: `${actualHome}-${actualAway}`,
         };

@@ -1,10 +1,34 @@
 import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalances, seasons, predictions } from './index';
-import { eq, and, or, gte, lte, desc, sql, isNotNull, isNull, notInArray, inArray } from 'drizzle-orm';
+import { eq, and, desc, gte, lte, sql, inArray, ne, or, lt } from 'drizzle-orm';
+import type { NewMatch, NewMatchAnalysis, NewBet, NewModelBalance, NewPrediction } from './schema';
 import { v4 as uuidv4 } from 'uuid';
-import type { NewCompetition, NewMatch, NewModel, Match, MatchAnalysis, NewMatchAnalysis, Model, Competition, NewBet, Bet, ModelBalance, NewModelBalance, Prediction, NewPrediction } from './schema';
+
+import type { NewCompetition, NewModel, Match, MatchAnalysis, Model, Competition, Bet, ModelBalance, Prediction } from './schema';
 import type { ScoringBreakdown, EnhancedLeaderboardEntry } from '@/types';
 import { withCache, cacheKeys, CACHE_TTL, cacheDelete } from '@/lib/cache/redis';
 import { BETTING_CONSTANTS } from '@/lib/betting/constants';
+
+/**
+ * Log database query errors with full context
+ */
+function logQueryError(operation: string, error: any, context?: Record<string, any>) {
+  console.error(`[DB Query Error] ${operation}:`, {
+    message: error.message,
+    code: error.code,
+    severity: error.severity,
+    detail: error.detail,
+    hint: error.hint,
+    position: error.position,
+    table: error.table,
+    column: error.column,
+    constraint: error.constraint,
+    dataType: error.dataType,
+    file: error.file,
+    line: error.line,
+    routine: error.routine,
+    ...context,
+  });
+}
 
 // ============= COMPETITIONS =============
 
@@ -1246,15 +1270,20 @@ export async function updatePredictionScores(
   }
 ) {
   const db = getDb();
-  return db
-    .update(predictions)
-    .set({
-      ...scores,
-      status: 'scored',
-      scoredAt: new Date().toISOString(),
-    })
-    .where(eq(predictions.id, predictionId))
-    .returning();
+  try {
+    return await db
+      .update(predictions)
+      .set({
+        ...scores,
+        status: 'scored',
+        scoredAt: new Date().toISOString(),
+      })
+      .where(eq(predictions.id, predictionId))
+      .returning();
+  } catch (error: any) {
+    logQueryError('updatePredictionScores', error, { predictionId, scores });
+    throw error;
+  }
 }
 
 // Update match quotas after all predictions are in
