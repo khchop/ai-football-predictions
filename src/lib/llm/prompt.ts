@@ -257,24 +257,80 @@ export function parseBatchPredictionResponse(
     cleaned = cleaned.replace(/```json\n?/gi, '');
     cleaned = cleaned.replace(/```\n?/g, '');
     
-    // Try to find JSON array
+    let parsed: any;
+    
+    // Try to find JSON array first (preferred format)
     const arrayMatch = cleaned.match(/\[[\s\S]*\]/);
-    if (!arrayMatch) {
+    if (arrayMatch) {
+      try {
+        parsed = JSON.parse(arrayMatch[0]);
+        if (!Array.isArray(parsed)) {
+          // Found brackets but not actually an array
+          parsed = null;
+        }
+      } catch {
+        // Array parsing failed, try fallbacks
+        parsed = null;
+      }
+    }
+    
+    // Fallback 1: Try to find a JSON object (single prediction without array)
+    if (!parsed) {
+      // Look for object with score fields
+      const objectPatterns = [
+        /\{[^{}]*"home_?[sS]core"[^{}]*"away_?[sS]core"[^{}]*\}/i,
+        /\{[^{}]*"away_?[sS]core"[^{}]*"home_?[sS]core"[^{}]*\}/i,
+      ];
+      
+      for (const pattern of objectPatterns) {
+        const objectMatch = cleaned.match(pattern);
+        if (objectMatch) {
+          try {
+            const obj = JSON.parse(objectMatch[0]);
+            // Wrap single object in array
+            parsed = [obj];
+            console.log('[Parser] Wrapped single object in array');
+            break;
+          } catch {
+            // Continue to next pattern
+          }
+        }
+      }
+    }
+    
+    // Fallback 2: Try parsing entire cleaned response as JSON
+    if (!parsed) {
+      try {
+        const maybeJson = JSON.parse(cleaned);
+        if (Array.isArray(maybeJson)) {
+          parsed = maybeJson;
+        } else if (typeof maybeJson === 'object' && maybeJson !== null) {
+          // Single object, wrap in array
+          parsed = [maybeJson];
+          console.log('[Parser] Wrapped parsed object in array');
+        }
+      } catch {
+        // All parsing attempts failed
+      }
+    }
+    
+    // If all parsing failed, log preview and return error
+    if (!parsed) {
+      const preview = response.slice(0, 500);
+      console.warn('[Parser] No valid JSON found. Response preview:', preview);
       return {
         predictions: [],
         success: false,
-        error: 'No JSON array found in response',
+        error: `No valid JSON found in response (preview: ${preview.slice(0, 100)}...)`,
         failedMatchIds: expectedMatchIds,
       };
     }
-    
-    const parsed = JSON.parse(arrayMatch[0]);
     
     if (!Array.isArray(parsed)) {
       return {
         predictions: [],
         success: false,
-        error: 'Response is not an array',
+        error: 'Response is not an array after all parsing attempts',
         failedMatchIds: expectedMatchIds,
       };
     }
@@ -282,14 +338,29 @@ export function parseBatchPredictionResponse(
     const predictions: BatchPredictionItem[] = [];
     const failedMatchIds: string[] = [];
     
-    for (const item of parsed) {
-      const matchId = item.match_id ?? item.matchId ?? item.id;
-      const homeScore = item.home_score ?? item.homeScore;
-      const awayScore = item.away_score ?? item.awayScore;
+    for (let i = 0; i < parsed.length; i++) {
+      const item = parsed[i];
+      
+      // Try to extract match_id from various possible fields
+      let matchId = item.match_id ?? item.matchId ?? item.id;
+      
+      // If no match_id provided and we have exactly 1 expected match, use that
+      if (!matchId && expectedMatchIds.length === 1) {
+        matchId = expectedMatchIds[0];
+        console.log('[Parser] Using expected matchId for single-match prediction');
+      }
+      
+      // Try various score field name variants
+      const homeScore = item.home_score ?? item.homeScore ?? item.Home_Score ?? item.home;
+      const awayScore = item.away_score ?? item.awayScore ?? item.Away_Score ?? item.away;
       
       if (!matchId || homeScore === undefined || awayScore === undefined) {
+        console.warn('[Parser] Missing required fields:', { matchId, homeScore, awayScore, item });
         if (matchId) {
           failedMatchIds.push(String(matchId));
+        } else if (expectedMatchIds.length === 1) {
+          // Single match expected but couldn't parse - mark as failed
+          failedMatchIds.push(expectedMatchIds[0]);
         }
         continue;
       }

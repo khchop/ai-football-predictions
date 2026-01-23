@@ -160,8 +160,10 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
     const timeout = isBatch ? this.batchRequestTimeout : this.requestTimeout;
     
     // OPTIMIZED: Reduced max_tokens since JSON responses are small
-    // Single prediction: ~30 tokens, Batch of 10: ~300 tokens
-    const maxTokens = isBatch ? 800 : 100;
+    // Single prediction: ~60-80 tokens (with array format and match_id)
+    // Batch of 10: ~600-800 tokens
+    // Increased from 100 to 150 to prevent truncation for single predictions
+    const maxTokens = isBatch ? 800 : 150;
     
     try {
       // Use fetchWithRetry for automatic retry on transient failures

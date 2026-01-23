@@ -114,17 +114,24 @@ export function createPredictionsWorker() {
                awayStanding,
              }]);
              
-             // Call LLM with score prediction system prompt
-             const rawResponse = await (provider as any).callAPI(BATCH_SYSTEM_PROMPT, prompt);
-             
-             // Parse simple JSON: [{match_id: "xxx", home_score: X, away_score: Y}]
-             const parsed = parseBatchPredictionResponse(rawResponse, [matchId]);
-             
-              if (!parsed.success || parsed.predictions.length === 0) {
-                log.error({ matchId, modelId: provider.id, error: parsed.error }, `Failed to parse prediction`);
-                failCount++;
-                continue;
-              }
+              // Call LLM with score prediction system prompt
+              const rawResponse = await (provider as any).callAPI(BATCH_SYSTEM_PROMPT, prompt);
+              
+              // Parse simple JSON: [{match_id: "xxx", home_score: X, away_score: Y}]
+              const parsed = parseBatchPredictionResponse(rawResponse, [matchId]);
+              
+               if (!parsed.success || parsed.predictions.length === 0) {
+                 // Log error with raw response preview for debugging
+                 const responsePreview = rawResponse.slice(0, 300).replace(/\s+/g, ' ');
+                 log.error({ 
+                   matchId, 
+                   modelId: provider.id, 
+                   error: parsed.error,
+                   rawResponsePreview: responsePreview 
+                 }, `Failed to parse prediction`);
+                 failCount++;
+                 continue;
+               }
              
              const prediction = parsed.predictions[0];
              
