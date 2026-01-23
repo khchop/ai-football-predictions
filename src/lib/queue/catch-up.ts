@@ -64,6 +64,7 @@ export async function checkAndFixStuckMatches(): Promise<number> {
     log.warn({ count: stuckMatches.length }, 'Found matches stuck in scheduled status after kickoff');
     
     let fixed = 0;
+    let skipped = 0;
     
     for (const { match } of stuckMatches) {
       if (!match.externalId) {
@@ -71,7 +72,39 @@ export async function checkAndFixStuckMatches(): Promise<number> {
         continue;
       }
       
+      const jobId = `live-${match.id}`;
+      
       try {
+        // Check if a job already exists with this ID
+        const existingJob = await liveQueue.getJob(jobId);
+        
+        if (existingJob) {
+          const state = await existingJob.getState();
+          
+          if (state === 'completed' || state === 'failed') {
+            // Job completed/failed but match still stuck - remove old job and create new one
+            log.info({ 
+              matchId: match.id, 
+              homeTeam: match.homeTeam,
+              awayTeam: match.awayTeam,
+              oldJobState: state 
+            }, 'Removing old job and creating recovery job for stuck match');
+            
+            await existingJob.remove();
+          } else if (state === 'active' || state === 'waiting' || state === 'delayed') {
+            // Job is already active/queued - let it continue
+            log.info({ 
+              matchId: match.id, 
+              homeTeam: match.homeTeam,
+              awayTeam: match.awayTeam,
+              jobState: state 
+            }, 'Live monitoring job already exists and is active, skipping');
+            
+            skipped++;
+            continue;
+          }
+        }
+        
         // Trigger live monitoring immediately
         await liveQueue.add(
           JOB_TYPES.MONITOR_LIVE,
@@ -83,7 +116,7 @@ export async function checkAndFixStuckMatches(): Promise<number> {
           },
           {
             priority: 1, // High priority
-            jobId: `live-${match.id}`,
+            jobId,
           }
         );
         
@@ -97,12 +130,15 @@ export async function checkAndFixStuckMatches(): Promise<number> {
       } catch (error: any) {
         if (!error.message?.includes('already exists')) {
           log.error({ matchId: match.id, error: error.message }, 'Failed to fix stuck match');
+        } else {
+          log.warn({ matchId: match.id }, 'Job already exists (race condition), skipping');
+          skipped++;
         }
       }
     }
     
-    if (fixed > 0) {
-      log.info({ fixed }, 'Fixed stuck scheduled matches');
+    if (fixed > 0 || skipped > 0) {
+      log.info({ fixed, skipped, total: stuckMatches.length }, 'Stuck match recovery completed');
     }
     
     return fixed;
