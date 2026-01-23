@@ -50,8 +50,8 @@ export async function register() {
 
        // 4. Catch-up scheduling for existing matches
        const { catchUpScheduling } = await import('./lib/queue/catch-up');
-       const { scheduled, matches } = await catchUpScheduling();
-       loggers.instrumentation.info({ jobsScheduled: scheduled, matchesTotal: matches }, 'Catch-up scheduling completed');
+       const { scheduled, matches, stuckFixed } = await catchUpScheduling();
+       loggers.instrumentation.info({ jobsScheduled: scheduled, matchesTotal: matches, stuckMatchesFixed: stuckFixed }, 'Catch-up scheduling completed');
 
        loggers.instrumentation.info('Event-driven system initialized successfully');
      } catch (error) {

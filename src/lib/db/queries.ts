@@ -148,6 +148,29 @@ export async function getMatchesPendingResults() {
     );
 }
 
+// Get matches stuck in 'scheduled' status where kickoff has passed (likely in progress)
+export async function getStuckScheduledMatches() {
+  const db = getDb();
+  const now = new Date();
+  const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000); // Look back 3 hours max
+  
+  return db
+    .select({
+      match: matches,
+      competition: competitions,
+    })
+    .from(matches)
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(
+      and(
+        eq(matches.status, 'scheduled'),
+        lte(matches.kickoffTime, now.toISOString()),
+        gte(matches.kickoffTime, threeHoursAgo.toISOString())
+      )
+    )
+    .orderBy(matches.kickoffTime);
+}
+
 export async function getMatchById(id: string): Promise<{ match: Match; competition: Competition } | undefined> {
   const db = getDb();
   const result = await db

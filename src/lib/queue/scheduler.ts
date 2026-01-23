@@ -199,6 +199,7 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
     JOB_TYPES.REFRESH_ODDS,
     JOB_TYPES.FETCH_LINEUPS,
     JOB_TYPES.PREDICT_MATCH,
+    JOB_TYPES.MONITOR_LIVE, // Start live monitoring for matches already in progress
   ]);
   
    for (const job of jobsToSchedule) {
@@ -222,24 +223,30 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
          }
           log.error({ matchId: match.id, jobName: job.name, error: error.message }, 'Failed to schedule job');
        }
-     } else if (kickoff > now && lateRunnableJobs.has(job.name as any)) {
-       // Job time passed but match hasn't started - run immediately
-        try {
-          await job.queue.add(job.name, job.data, {
-            delay: 1000, // 1 second delay to avoid duplicate processing
-            jobId: job.jobId,
-            priority: job.priority,
-            // Uses timeout from getJobTimeout(job.name) when processed by workers
-          });
-          scheduled++;
-         log.info({ jobName: job.name, homeTeam: match.homeTeam, awayTeam: match.awayTeam }, 'Running past-due job immediately');
-       } catch (error: any) {
-         if (error.message?.includes('already exists')) {
-           continue;
-         }
-         log.error({ matchId: match.id, jobName: job.name, error: error.message }, 'Failed to schedule late job');
-       }
-     }
+      } else if (lateRunnableJobs.has(job.name as any)) {
+        // Job time passed - run immediately if appropriate
+        // For MONITOR_LIVE: run if match hasn't finished yet (may be in progress)
+        // For others: run if match hasn't started yet (kickoff > now)
+        const shouldRun = job.name === JOB_TYPES.MONITOR_LIVE || kickoff > now;
+        
+        if (shouldRun) {
+          try {
+            await job.queue.add(job.name, job.data, {
+              delay: 1000, // 1 second delay to avoid duplicate processing
+              jobId: job.jobId,
+              priority: job.priority,
+              // Uses timeout from getJobTimeout(job.name) when processed by workers
+            });
+            scheduled++;
+            log.info({ jobName: job.name, homeTeam: match.homeTeam, awayTeam: match.awayTeam }, 'Running past-due job immediately');
+          } catch (error: any) {
+            if (error.message?.includes('already exists')) {
+              continue;
+            }
+            log.error({ matchId: match.id, jobName: job.name, error: error.message }, 'Failed to schedule late job');
+          }
+        }
+      }
   }
   
   if (scheduled > 0) {
