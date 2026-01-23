@@ -10,6 +10,7 @@ import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { RefreshOddsPayload } from '../types';
 import { refreshOddsForMatch } from '@/lib/football/match-analysis';
 import { getMatchById } from '@/lib/db/queries';
+import { generatePreMatchContent } from '@/lib/content/match-content';
 import { loggers } from '@/lib/logger/modules';
 
 export function createOddsWorker() {
@@ -46,11 +47,19 @@ export function createOddsWorker() {
          }
         
          log.info(`✓ Odds refreshed for ${match.homeTeam} vs ${match.awayTeam}`);
-        
-        return { 
-          success: true, 
-          matchId,
-        };
+         
+         // Generate pre-match content (non-blocking)
+         try {
+           await generatePreMatchContent(matchId);
+           log.info({ matchId }, 'Pre-match content generation triggered');
+         } catch (err) {
+           log.warn({ matchId, err }, 'Pre-match content generation failed (non-blocking)');
+         }
+         
+         return { 
+           success: true, 
+           matchId,
+         };
        } catch (error: any) {
           log.error({ 
             matchId, 

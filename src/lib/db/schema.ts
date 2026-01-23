@@ -440,3 +440,41 @@ export const matchPreviews = pgTable('match_previews', {
 
 export type MatchPreview = typeof matchPreviews.$inferSelect;
 export type NewMatchPreview = typeof matchPreviews.$inferInsert;
+
+// Match content: 3-section narrative for SEO/GEO
+// Replaces raw odds panel with progressive content:
+// 1. Pre-match (~150-200 words) - odds/market summary
+// 2. Betting (~150-200 words) - AI predictions summary
+// 3. Post-match (~150-200 words) - results/performance
+export const matchContent = pgTable('match_content', {
+  id: text('id').primaryKey(), // UUID
+  matchId: text('match_id')
+    .notNull()
+    .unique()
+    .references(() => matches.id, { onDelete: 'cascade' }),
+
+  // Pre-match section (generated after odds refresh, ~6h before kickoff)
+  preMatchContent: text('pre_match_content'),
+  preMatchGeneratedAt: text('pre_match_generated_at'),
+
+  // Betting section (generated after AI predictions, ~30m before kickoff)
+  bettingContent: text('betting_content'),
+  bettingGeneratedAt: text('betting_generated_at'),
+
+  // Post-match section (generated after scoring complete)
+  postMatchContent: text('post_match_content'),
+  postMatchGeneratedAt: text('post_match_generated_at'),
+
+  // AI generation metadata
+  generatedBy: text('generated_by').default('meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8'),
+  totalTokens: integer('total_tokens').default(0),
+  totalCost: text('total_cost').default('0'),
+
+  createdAt: text('created_at').default(sql`now()`),
+  updatedAt: text('updated_at').default(sql`now()`),
+}, (table) => [
+  index('idx_match_content_match_id').on(table.matchId),
+]);
+
+export type MatchContent = typeof matchContent.$inferSelect;
+export type NewMatchContent = typeof matchContent.$inferInsert;

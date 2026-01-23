@@ -1,10 +1,10 @@
-import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalances, seasons, predictions } from './index';
+import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalances, seasons, predictions, blogPosts } from './index';
 import { eq, and, desc, gte, lte, sql, inArray, ne, or, lt, not, isNull, isNotNull } from 'drizzle-orm';
 import type { NewMatch, NewMatchAnalysis, NewBet, NewModelBalance, NewPrediction } from './schema';
 import { v4 as uuidv4 } from 'uuid';
 import { loggers } from '@/lib/logger/modules';
 
-import type { NewCompetition, NewModel, Match, MatchAnalysis, Model, Competition, Bet, ModelBalance, Prediction } from './schema';
+import type { NewCompetition, NewModel, Match, MatchAnalysis, Model, Competition, Bet, ModelBalance, Prediction, BlogPost } from './schema';
 import type { ScoringBreakdown, EnhancedLeaderboardEntry } from '@/types';
 import { withCache, cacheKeys, CACHE_TTL, cacheDelete } from '@/lib/cache/redis';
 import { BETTING_CONSTANTS } from '@/lib/betting/constants';
@@ -1456,4 +1456,39 @@ export async function getMatchesNeedingScoring(): Promise<Match[]> {
     .orderBy(desc(matches.kickoffTime));
   
   return results.map(r => r.match);
+}
+
+/**
+ * Get published blog posts (paginated)
+ */
+export async function getPublishedBlogPosts(limit: number = 20, offset: number = 0) {
+  const db = getDb();
+  
+  const result = await db
+    .select()
+    .from(blogPosts)
+    .where(eq(blogPosts.status, 'published'))
+    .orderBy(desc(blogPosts.publishedAt))
+    .limit(limit)
+    .offset(offset);
+
+  return result;
+}
+
+/**
+ * Get blog post by slug
+ */
+export async function getBlogPostBySlug(slug: string) {
+  const db = getDb();
+  
+  const result = await db
+    .select()
+    .from(blogPosts)
+    .where(and(
+      eq(blogPosts.slug, slug),
+      eq(blogPosts.status, 'published')
+    ))
+    .limit(1);
+
+  return result[0] || null;
 }

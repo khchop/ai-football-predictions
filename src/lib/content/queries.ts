@@ -140,3 +140,19 @@ export async function getMatchPreview(matchId: string) {
 
   return result[0] || null;
 }
+
+/**
+ * Get match content (3-section narrative for match pages)
+ */
+export async function getMatchContent(matchId: string) {
+  const db = getDb();
+  const { matchContent: mc } = await import('@/lib/db/schema');
+  
+  const result = await db
+    .select()
+    .from(mc)
+    .where(eq(mc.matchId, matchId))
+    .limit(1);
+
+  return result[0] || null;
+}

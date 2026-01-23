@@ -23,6 +23,7 @@ import { buildBatchPrompt } from '@/lib/football/prompt-builder';
 import { parseBatchPredictionResponse, BATCH_SYSTEM_PROMPT } from '@/lib/llm/prompt';
 import { getStandingsForLeagues, getStandingFromMap } from '@/lib/football/standings';
 import { getResult } from '@/lib/utils/scoring';
+import { generateBettingContent } from '@/lib/content/match-content';
 import { v4 as uuidv4 } from 'uuid';
 import { loggers } from '@/lib/logger/modules';
 
@@ -154,18 +155,26 @@ export function createPredictionsWorker() {
             }
          }
          
-          // Batch insert all predictions at once (1 query instead of N)
-          if (predictionsToInsert.length > 0) {
-            await createPredictionsBatch(predictionsToInsert);
-            log.info({ matchId, predictionCount: predictionsToInsert.length }, `Inserted predictions in batch`);
-            
-            // NOW record model health for all successful models (only after batch insert succeeds)
-            for (const modelId of successfulModelIds) {
-              await recordModelSuccess(modelId);
-            }
-          }
-         
-         log.info(`Complete: ${successCount} success, ${failCount} failed`);
+           // Batch insert all predictions at once (1 query instead of N)
+           if (predictionsToInsert.length > 0) {
+             await createPredictionsBatch(predictionsToInsert);
+             log.info({ matchId, predictionCount: predictionsToInsert.length }, `Inserted predictions in batch`);
+             
+             // NOW record model health for all successful models (only after batch insert succeeds)
+             for (const modelId of successfulModelIds) {
+               await recordModelSuccess(modelId);
+             }
+             
+             // Generate betting content (non-blocking)
+             try {
+               await generateBettingContent(matchId);
+               log.info({ matchId }, 'Betting content generation triggered');
+             } catch (err) {
+               log.warn({ matchId, err }, 'Betting content generation failed (non-blocking)');
+             }
+           }
+          
+          log.info(`Complete: ${successCount} success, ${failCount} failed`);
         
         return { 
           success: true, 

@@ -1,461 +1,171 @@
-# TODO: Remaining System Improvements
+# TODO: Content System Implementation
 
 **Generated:** 2026-01-23  
-**Source:** Deep system analysis (84 total issues identified)  
-**Status:** Batches 1-8 complete (63 issues fixed, 75% complete)
+**Goal:** Replace raw odds panel with 3-section narrative content + blog pages  
+**Total Word Count:** ~500 words per match  
+**Status:** In Progress
 
 ---
 
 ## Overview
 
-| Priority | Count | Fixed | Status |
-|----------|-------|-------|--------|
-| **CRITICAL** | 4 | 4 | ✅ Batch 1 complete |
-| **HIGH** | 18 | 18 | ✅ Batches B (6) + 2 (6) + 3-4 (6) all complete |
-| **MEDIUM** | 49 | 40 | ✅ Batches 3-8 complete (5+7+6+7+9=34, +6 more in Batch 8) |
-| **LOW** | 13 | 0 | 📋 Documented for future work |
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 1 | Database & Schema | In Progress |
+| 2 | Content Generation Functions | Pending |
+| 3 | Hook into Job Flow | Pending |
+| 4 | Update Match Page | Pending |
+| 5 | Blog Pages | Pending |
+| 6 | Test & Verify | Pending |
 
 ---
 
-## MEDIUM Priority Issues (49 total)
+## Phase 1: Database & Schema
 
-### ✅ Batch 3 Completed Items (5 database issues fixed)
+### Tasks
 
-- [x] **N+1 loop in settleBetsTransaction** - Fixed with SQL CASE expressions for batch update (single query)
-- [x] **`createBets` without balance update exposed** - Made function private to prevent misuse
-- [x] **Undefined return without null check** - Added explicit return types to getMatchById, getMatchBySlug, getModelById
-- [x] **Silent cache failure in upserts** - Wrapped cacheDelete calls in try-catch to prevent Redis failure from blocking DB ops
-- [x] **Missing composite index** - Added index on predictions(matchId, status)
+- [x] Delete old TODO.md
+- [ ] Create migration `drizzle/0008_add_match_content.sql`
+- [ ] Add `matchContent` table to `src/lib/db/schema.ts`
+- [ ] Run `npx drizzle-kit push` to apply migration
 
-### Database & Query Optimization (8 issues)
+### Files to Create/Modify
 
-- [x] **N+1 loop in settleBetsTransaction** - `src/lib/db/queries.ts:718-745`
-  - Fixed: Replaced loop with single SQL UPDATE using CASE expressions
-  - Implementation: Batch update with statusCaseWhen, payoutCaseWhen, profitCaseWhen
-  - Date: 2026-01-23
-
-- [x] **`createBets` without balance update exposed** - `src/lib/db/queries.ts:595-598`
-  - Fixed: Made function private (removed export)
-  - Implementation: Added internal comment directing to createBetsWithBalanceUpdate
-  - Date: 2026-01-23
-
-- [x] **Undefined return without null check** - `src/lib/db/queries.ts:155, 179, 298`
-  - Fixed: Added explicit return type annotations
-  - Implementation: getMatchById, getMatchBySlug return `| undefined`, getModelById returns `Model | undefined`
-  - Date: 2026-01-23
-
-- [ ] **Connection pool exhaustion risk** - `src/lib/db/queries.ts:710-747`
-  - Status: RESOLVED by N+1 fix - CASE expression batch update prevents exhaustion
-  - Impact: Single query prevents pool drain on large settlements
-  - Date: 2026-01-23
-
-- [ ] **Inconsistent lock ordering (deadlock risk)** - `src/lib/db/queries.ts:311+`
-  - Issue: Different transactions lock tables in different orders
-  - Fix: Document and enforce consistent order: `models -> bets -> modelBalances`
-  - Impact: Future deadlock potential if code changes
-  - Effort: 20 min
-
-- [x] **Silent cache failure in upserts** - `src/lib/db/queries.ts:40, 288`
-  - Fixed: Wrapped cacheDelete calls in try-catch with error logging
-  - Implementation: Fire-and-forget pattern - logs error but doesn't fail DB operation
-  - Date: 2026-01-23
-
-- [ ] **Health recording race condition** - `src/lib/db/queries.ts:412-453`
-  - Issue: Model health stats can be racy under concurrent predictions
-  - Fix: Atomic conditional updates or move into transaction
-  - Impact: Slightly inaccurate health statistics
-  - Effort: 25 min
-
-- [ ] **Raw SQL type casting** - `src/lib/db/queries.ts:1038-1058`
-  - Issue: Manual type assertions on COUNT(*) results
-  - Fix: Use proper SQL casting (already done with `::int`)
-  - Impact: Potential precision loss for very large counts
-  - Effort: 10 min
+| File | Action |
+|------|--------|
+| `drizzle/0008_add_match_content.sql` | Create |
+| `src/lib/db/schema.ts` | Edit (add matchContent table) |
 
 ---
 
-### API Security & Rate Limiting (9 issues)
+## Phase 2: Content Generation Functions
 
-- [x] **Rate limiter fails open** - `src/lib/utils/rate-limiter.ts:40-48`
-  - Fixed: Added failClosed option (true for admin, false for public)
-  - Implementation: Admin routes reject if Redis unavailable, public allow
-  - Date: 2026-01-23
+### Tasks
 
-- [x] **IP spoofing via X-Forwarded-For** - `src/lib/utils/rate-limiter.ts:90-116`
-  - Fixed: Only trust CF-Connecting-IP, validate IP format, use fingerprint fallback
-  - Implementation: Added isValidIP() validation, prevents arbitrary values
-  - Date: 2026-01-23
+- [ ] Create `src/lib/content/match-content.ts` with 3 functions
+- [ ] Add prompts for pre-match (~150-200 words), betting (~150-200 words), post-match (~150-200 words)
+- [ ] Update `src/lib/content/queries.ts` with content CRUD queries
+- [ ] Test content generation locally
 
-- [x] **Anonymous rate limit fallback** - `src/lib/utils/rate-limiter.ts:115`
-  - Fixed: Use request fingerprinting (User-Agent hash) instead of 'anonymous'
-  - Implementation: Fingerprinting is not spoofable, protects against bypasses
-  - Date: 2026-01-23
+### Files to Create/Modify
 
-- [x] **Missing request body size limits** - All POST endpoints
-  - Fixed: Added middleware.ts with 10KB admin / 100KB public limits
-  - Implementation: Checks Content-Length, returns 413 if exceeded
-  - Date: 2026-01-23
+| File | Action |
+|------|--------|
+| `src/lib/content/match-content.ts` | Create |
+| `src/lib/content/queries.ts` | Edit |
 
-- [x] **No CORS configuration** - `next.config.ts`
-  - Fixed: Created src/middleware.ts with strict CORS policy
-  - Implementation: Same-origin only + NEXT_PUBLIC_BASE_URL, localhost in dev
-  - Date: 2026-01-23
+### Content Distribution
 
-- [ ] **Potential IDOR in model bets** - `src/app/api/models/[id]/bets/route.ts:15-50`
-  - Issue: Any user can access any model's betting data
-  - Note: May be intentionally public - verify before fixing
-  - Impact: If sensitive, private betting data exposed
-  - Effort: 15 min (after verification)
-
-- [x] **Missing CSRF protection** - State-changing endpoints
-  - Status: Not needed - header-based auth provides implicit protection
-  - Rationale: Custom headers cannot be set cross-origin, eliminates CSRF
-  - Note: Would require explicit tokens if cookie-based auth added
-  - Date: 2026-01-23
-
-- [ ] **API errors logged but not thrown** - `src/lib/football/h2h.ts:55-57`
-  - Issue: API returns errors in response, they're logged but function continues
-  - Fix: Throw errors instead of silent failures
-  - Impact: Bad data written to database when API indicates error
-  - Effort: 20 min
-
-- [x] **Admin errors expose details** - `src/app/api/admin/*/route.ts` (multiple)
-   - Fixed: All admin routes now use sanitizeError()
-   - Implementation: Updated data, queue-status, dlq routes; re-enable-model already done
-   - Date: 2026-01-23
-
-- [ ] **Potential IDOR in model bets** - `src/app/api/models/[id]/bets/route.ts:15-50`
-   - Issue: Any user can access any model's betting data
-   - Note: May be intentionally public - verify before fixing
-   - Impact: If sensitive, private betting data exposed
-   - Effort: 15 min (after verification)
+- **Pre-match:** ~150-200 words (odds/market summary)
+- **Betting:** ~150-200 words (AI predictions summary)
+- **Post-match:** ~150-200 words (results/performance)
+- **Total:** ~500 words per match
 
 ---
 
-### ✅ Batch 4 Completed Items (7 external API issues fixed)
+## Phase 3: Hook into Job Flow
 
-- [x] **Hardcoded timeouts not configurable** - Made configurable via LLM_REQUEST_TIMEOUT_MS and LLM_BATCH_TIMEOUT_MS environment variables
-- [x] **Duplicated fetchFromAPI implementations** - Consolidated h2h.ts, team-statistics.ts, standings.ts to use central fetchFromAPIFootball
-- [x] **Rate limit detection via string matching** - Added HTTP 429 status check first, then fallback to string matching
-- [x] **Hardcoded 60s retry-after** - Now parses Retry-After header from response, fallback to 60s
-- [x] **Score range too permissive (0-20)** - Tightened to 0-10 with integer validation
-- [x] **No odds value validation** - Added validateOdds function (1.01-100.00 range) for all betting odds
-- [x] **Single success closes circuit breaker** - Require 3 consecutive successes to prevent oscillation
-- [x] **Lineups assumes exactly 2 elements** - Fixed array destructuring, safe access with validation
-- [x] **Incomplete array element validation** - Added element-level null checks in formatStartingXI
+### Tasks
 
-### External API Integration (15 issues - 9 completed in Batch 4, 6 remaining)
+- [ ] `odds.worker.ts` - Trigger pre-match content after odds refresh
+- [ ] `predictions.worker.ts` - Trigger betting content after predictions
+- [ ] `scoring.worker.ts` - Trigger post-match content after scoring
 
-- [ ] **No retry on JSON parse failure** - `src/lib/llm/providers/base.ts:212-217`
-  - Issue: JSON parse errors thrown immediately without retry
-  - Fix: Treat as transient, retry with exponential backoff
-  - Impact: Transient network glitches cause permanent failure
-  - Effort: 20 min
+### Files to Modify
 
-- [ ] **URL logging pattern risk** - `src/lib/football/api-football.ts:32`
-  - Issue: Logging full URLs could leak API keys if structure changes
-  - Fix: Only log endpoints, not full URLs with params
-  - Impact: Future API key exposure if URL structure changes
-  - Effort: 10 min
-
-- [ ] **Rate limit headers not used proactively** - `src/lib/football/api-client.ts:54-58`
-  - Issue: Remaining requests logged but not used for throttling
-  - Fix: Slow requests proactively before hitting limit
-  - Impact: System hits rate limit unnecessarily
-  - Effort: 30 min
-
-- [ ] **Standings error vs empty indistinguishable** - `src/lib/football/standings.ts:181-184`
-  - Issue: Error returns 0 updated, same as "no standings available"
-  - Fix: Return custom error or wrap in Try type
-  - Impact: Can't monitor data freshness
-  - Effort: 15 min
-
-- [ ] **6 raw API responses stored per match** - `src/lib/football/match-analysis.ts:549-567`
-  - Issue: ~50-100KB JSON per match stored in database
-  - Fix: Only store processed results, archive raw responses
-  - Impact: Database bloat, ~30-60MB per 100 matches/day
-  - Effort: 45 min
-
-- [ ] **All fixtures loaded into memory at once** - `src/lib/football/api-football.ts:117-129`
-  - Issue: All fixtures accumulated in single array
-  - Fix: Process and cache fixtures in batches
-  - Impact: Memory spike on busy days with 100+ fixtures
-  - Effort: 25 min
+| File | Line | Change |
+|------|------|--------|
+| `src/lib/queue/workers/odds.worker.ts` | ~48 | Add generatePreMatchContent() call (non-blocking) |
+| `src/lib/queue/workers/predictions.worker.ts` | ~166 | Add generateBettingContent() call (non-blocking) |
+| `src/lib/queue/workers/scoring.worker.ts` | ~165 | Add generatePostMatchContent() call (non-blocking) |
 
 ---
 
-### Queue Infrastructure (9 issues)
+## Phase 4: Update Match Page
 
-- [x] **Scheduled jobs may overlap with backfill** - Verified no overlap risk (different job ID patterns)
-- [x] **No timezone validation** - Deferred (timezone is hardcoded, use validated tz in BullMQ setup)
-- [x] **No cleanup for cancelled matches** - `src/lib/queue/scheduler.ts:163-215` - Implemented in Batch 5
-  - Fixed: Enhanced cancelMatchJobs to handle active jobs (move to DLQ) and queued jobs (remove)
-  - Date: 2026-01-23
-- [x] **Connection not closed on shutdown** - `src/lib/queue/index.ts` - Implemented in Batch 5
-  - Fixed: Added graceful shutdown handlers (SIGTERM/SIGINT) with closeQueueConnection()
-  - Date: 2026-01-23
-- [x] **No health check before queue operations** - `src/lib/queue/index.ts:112-121` - Implemented in Batch 5
-  - Fixed: Added ensureQueueHealthy() helper function that throws on unhealthy Redis
-  - Date: 2026-01-23
-- [x] **No automatic DLQ alerting** - `src/lib/queue/dead-letter.ts:17` - Implemented in Batch 5
-  - Fixed: Added DLQ_ALERT_THRESHOLD = 50, logs warn when exceeded
-  - Date: 2026-01-23
-- [ ] **No global rate limiting across workers** - Analysis: NOT NEEDED for current scale
-  - Recommendation: Defer to future if 100+ concurrent matches
-  - Current protection sufficient: per-worker limits + caching + 30 req/min limit
-  - Effort: 60 min (defer)
-- [ ] **Live score polling unbounded concurrency** - `src/lib/queue/workers/live-score.worker.ts:58-70`
-   - Issue: Each live match self-schedules, errors schedule again
-   - Fix: Dedup re-scheduling, cap concurrent polls
-   - Impact: Exponential job growth during errors
-   - Effort: 30 min
+### Tasks
 
-- [x] **Repeatable job update doesn't remove old pattern** - `src/lib/queue/setup.ts` - Implemented in Batch 5
-  - Fixed: Created registerRepeatableJob() helper that auto-removes old patterns before adding new
-  - Date: 2026-01-23
+- [ ] Create `src/components/match/MatchContent.tsx` component
+- [ ] Remove odds panel from match page (lines 268-494)
+- [ ] Add MatchContentSection component to page
+- [ ] Keep AI Model Bets table (lines 496-575)
+
+### Files to Create/Modify
+
+| File | Action |
+|------|--------|
+| `src/components/match/MatchContent.tsx` | Create |
+| `src/app/predictions/[league]/[slug]/page.tsx` | Edit |
 
 ---
 
-### ✅ Batch 6 Completed Items (7 cache issues fixed)
+## Phase 5: Blog Pages
 
-- [x] **Fire-and-forget cache set** - Added logging for background cache failures
-- [x] **`null` value caching issue** - Implemented sentinel pattern for cache miss vs cached null distinction
-- [x] **No connection pool configuration** - Added production-ready settings (timeouts, keepalive, healthchecks)
-- [x] **Event listener accumulation** - Added cleanup function to remove listeners on timeout
-- [x] **JSON serialization errors not specific** - Added specific error detection for circular references and BigInt
-- [x] **Cache key collision risk** - Implemented SHA256 hash for user-supplied filter strings
-- [x] **TTL misconfiguration for live events** - Reduced ODDS 30min→10min, LINEUPS 15min→5min
+### Tasks
 
----
+- [ ] Install `react-markdown` dependency
+- [ ] Create `src/app/blog/page.tsx` (blog index)
+- [ ] Create `src/app/blog/[slug]/page.tsx` (blog post with markdown)
+- [ ] Add blog queries to `src/lib/db/queries.ts`
 
-### ✅ Batch 8 Completed Items (9 external API & database issues fixed)
+### Files to Create/Modify
 
-#### External API Integration (6 issues)
-
-- [x] **No retry on JSON parse failure** - `src/lib/llm/providers/base.ts:220-223`
-  - Fixed: Added retry loop with exponential backoff (2 retries, 100ms-200ms delays)
-  - Implementation: Clone response and retry parsing on JSON errors
-  - Impact: Transient network glitches no longer cause permanent failures
-  - Date: 2026-01-23
-
-- [x] **URL logging pattern risk** - `src/lib/football/api-football.ts:32`
-  - Fixed: Log only endpoint and safe params, not full URL
-  - Implementation: Filter out sensitive keys (apiKey, token, secret, auth)
-  - Impact: Prevents accidental API key exposure in logs
-  - Date: 2026-01-23
-
-- [x] **Rate limit headers not used proactively** - `src/lib/utils/api-client.ts:54-58`
-  - Fixed: Track X-RateLimit headers and proactively throttle
-  - Implementation: New rateLimitTracker Map, getProactiveThrottleDelay()
-  - Impact: Distributes remaining requests evenly until reset
-  - Date: 2026-01-23
-
-- [x] **Standings error vs empty indistinguishable** - `src/lib/football/standings.ts:181-184`
-  - Fixed: New StandingsUpdateResult type with success flag and error field
-  - Implementation: Returns { updated: 0, success: true, error: 'no_standings_available' } vs { success: false }
-  - Impact: Can now monitor data freshness properly
-  - Date: 2026-01-23
-
-- [x] **6 raw API responses stored per match** - `src/lib/football/match-analysis.ts:549-567`
-  - Fixed: Archive raw responses - set all rawXxxData fields to null
-  - Implementation: Only processed results stored, not raw JSON
-  - Impact: ~50-100KB saved per match, ~30-60MB per 100 matches/day
-  - Date: 2026-01-23
-
-- [x] **All fixtures loaded into memory at once** - `src/lib/football/api-football.ts:117-129`
-  - Fixed: Process fixtures in batches, group by competition while fetching
-  - Implementation: Process per date, categorize immediately instead of accumulating
-  - Impact: Reduced peak memory usage by ~10-20% on busy days
-  - Date: 2026-01-23
-
-#### Database & Transactions (3 issues)
-
-- [x] **Inconsistent lock ordering (deadlock risk)** - `src/lib/db/queries.ts:311+`
-  - Fixed: Documented and enforced lock order: models -> bets -> modelBalances
-  - Implementation: Added comments, reordered createBetsWithBalanceUpdate to lock bets first
-  - Impact: Prevents circular wait conditions between transactions
-  - Date: 2026-01-23
-
-- [x] **Health recording race condition** - `src/lib/db/queries.ts:412-453`
-  - Fixed: Documented atomic UPDATE semantics for recordModelSuccess()
-  - Impact: PostgreSQL guarantees atomic field updates, no lost updates
-  - Date: 2026-01-23
-
-- [x] **Potential IDOR in model bets** - `src/app/api/models/[id]/bets/route.ts:15-50`
-  - Fixed: Verified intentional - all model data public for leaderboard transparency
-  - Impact: No action needed - design is correct
-  - Date: 2026-01-23
+| File | Action |
+|------|--------|
+| `src/app/blog/page.tsx` | Create |
+| `src/app/blog/[slug]/page.tsx` | Create |
+| `src/lib/db/queries.ts` | Edit |
 
 ---
 
-### Worker Issues (4 issues)
+## Phase 6: Test & Verify
 
-- [ ] **Errors in content worker not re-thrown** - `src/lib/queue/workers/content.worker.ts:158-160`
-   - Issue: Errors in queue add loop caught and logged
-   - Fix: Re-throw or track in results
-   - Impact: Job appears successful even with failures
-   - Effort: 15 min
+### Tasks
 
-- [ ] **Missing job context in error logging** - Multiple workers
-   - Issue: Error logs missing job-specific context
-   - Fix: Include matchId, jobId, retry count, etc.
-   - Impact: Harder to debug specific failures
-   - Effort: 30 min
-
-- [x] **Errors array unbounded size** - `src/lib/queue/workers/backfill.worker.ts` - Implemented in Batch 5
-   - Fixed: Added MAX_ERRORS = 100 constant and addError() helper function
-   - Implementation: Caps error array at 100 entries, appends truncation message
-   - Date: 2026-01-23
-
-- [ ] **Model success recorded before batch insert** - `src/lib/queue/workers/predictions.worker.ts:137-138`
-   - Issue: Health recorded before batch insert succeeds
-   - Fix: Record success only after batch insert
-   - Impact: Health stats inconsistent with actual predictions
-   - Effort: 15 min
+- [ ] Verify build passes (`npm run build`)
+- [ ] Test content generation manually
+- [ ] Verify match page displays content
+- [ ] Verify blog pages render markdown
+- [ ] Verify no TypeScript errors
 
 ---
 
-## LOW Priority Issues (13 total)
+## Technical Details
 
-### Database (1 issue)
+### Content Generation Triggers
 
-- [x] **Missing composite index** - `src/lib/db/schema.ts:349-355`
-  - Fixed: Added composite index on predictions(matchId, status)
-  - Implementation: `index('idx_predictions_match_status').on(table.matchId, table.status)`
-  - Date: 2026-01-23
+| Content | Trigger | Worker | Timing |
+|---------|---------|--------|--------|
+| Pre-match | After odds refresh | odds.worker.ts | ~6h before |
+| Betting | After predictions | predictions.worker.ts | ~30m before |
+| Post-match | After scoring | scoring.worker.ts | After match |
 
-### Queue (6 issues)
+### Database Schema
 
-- [ ] **Circuit breaker state not persisted** - `src/lib/utils/circuit-breaker.ts:71`
-  - Issue: In-memory state lost on restart
-  - Fix: Persist to Redis with 1-hour TTL
-  - Impact: Failures immediately after restart not blocked
-  - Effort: 30 min
+**Table:** `match_content`
 
-- [ ] **Priority not consistently applied** - `src/lib/queue/scheduler.ts:47-109`
-  - Issue: Some jobs have priority, others don't
-  - Fix: Set priority: 10 for time-sensitive jobs
-  - Impact: Non-critical jobs delay important ones
-  - Effort: 20 min
+- `id` TEXT PRIMARY KEY
+- `match_id` TEXT UNIQUE (cascade delete)
+- `pre_match_content` TEXT (nullable)
+- `pre_match_generated_at` TEXT (nullable)
+- `betting_content` TEXT (nullable)
+- `betting_generated_at` TEXT (nullable)
+- `post_match_content` TEXT (nullable)
+- `post_match_generated_at` TEXT (nullable)
+- `generated_by` TEXT (default: Llama 4 Maverick)
+- `total_tokens` INTEGER
+- `total_cost` TEXT
+- `created_at` TEXT
+- `updated_at` TEXT
 
-- [ ] **No priority escalation for deadlines** - `src/lib/queue/scheduler.ts`
-  - Issue: No boost to priority as kickoff approaches
-  - Fix: Implement dynamic priority based on time-to-kickoff
-  - Impact: Late jobs may miss their window
-  - Effort: 45 min
+### Implementation Notes
 
-- [ ] **Startup backfill jobs never cleaned** - `src/lib/queue/setup.ts:66-78`
-  - Issue: Each restart creates new unique backfill job
-  - Fix: Deduplicate or auto-clean old ones
-  - Impact: Slow Redis memory growth over time
-  - Effort: 20 min
-
-- [ ] **DLQ index not cleaned when entries expire** - `src/lib/queue/dead-letter.ts:54-63`
-  - Issue: ZSET index has stale keys for expired entries
-  - Fix: Trim index when retrieving DLQ jobs
-  - Impact: Fewer DLQ entries returned than exist
-  - Effort: 15 min
-
-- [ ] **No validation of cron patterns** - `src/lib/queue/setup.ts`
-  - Issue: Cron patterns are raw strings with no validation
-  - Fix: Use cron validation library at startup
-  - Impact: Invalid cron patterns silently fail
-  - Effort: 15 min
-
-### Cache (2 issues)
-
-- [ ] **Cache warming doesn't verify writes** - `src/lib/cache/warming.ts:52-94`
-  - Issue: Reports warming success without verifying data cached
-  - Fix: Verify with follow-up cache hits
-  - Impact: False positive - cache may not be warm
-  - Effort: 20 min
-
-- [ ] **Health check can serve stale status** - `src/lib/cache/redis.ts:65-86`
-  - Issue: 30-second cooldown caches health status
-  - Fix: Reduce cooldown during degradation
-  - Impact: App retries failed operations for 30 seconds
-  - Effort: 15 min
-
-### Workers (2 issues)
-
-- [ ] **Dynamic import in content worker** - `src/lib/queue/workers/content.worker.ts:122`
-  - Issue: `await import('../index')` is unusual and fragile
-  - Fix: Use static import at file top
-  - Impact: Runtime resolution error if path changes
-  - Effort: 5 min
-
-- [ ] **Zero-point predictions not logged** - `src/lib/queue/workers/scoring.worker.ts:112-114`
-  - Issue: Only logs when `breakdown.total > 0`
-  - Fix: Log all predictions for completeness
-  - Impact: Missing visibility into zero-point cases
-  - Effort: 5 min
-
-### Other (2 issues)
-
-- [ ] **Per-job timeout not configurable** - `src/lib/queue/scheduler.ts:121-143`
-  - Issue: All jobs use 2-minute timeout
-  - Fix: Allow per-job override (e.g., 10min for predictions)
-  - Impact: Some jobs timeout prematurely, others hold resources too long
-  - Effort: 20 min
-
-- [ ] **Queue add errors silently swallowed** - `src/lib/queue/workers/lineups.worker.ts:52-72`
-  - Issue: Prediction queue add errors caught but not returned
-  - Fix: Include in job result for visibility
-  - Impact: Silent prediction job failures
-  - Effort: 10 min
+- All content generation is **non-blocking** - failures logged but don't affect job success
+- Show **nothing** if content missing (user preference)
+- Use **markdown** for blog posts (better SEO via semantic HTML)
+- Content progresses: pre-match → betting → post-match
+- Each section is independent and can be regenerated
 
 ---
 
-## Suggested Implementation Order
-
-### Batch A: Database Optimization (1.5 hours)
-1. Fix N+1 in settleBetsTransaction (30 min)
-2. Make createBets private (10 min)
-3. Fix undefined returns (15 min)
-4. Fix cache failure handling (15 min)
-5. Add composite index (5 min)
-
-### Batch B: API Hardening (2 hours)
-1. Rate limiter improvements (30 min)
-2. CORS configuration (20 min)
-3. Request body limits (20 min)
-4. CSRF protection (45 min)
-5. Admin error sanitization (15 min)
-
-### Batch C: External API Robustness (2.5 hours)
-1. Consolidate fetchFromAPI (45 min)
-2. Improve error handling (30 min)
-3. Response validation (30 min)
-4. Timeout configurability (20 min)
-5. Rate limit improvements (15 min)
-
-### Batch D: Queue Improvements (2 hours)
-1. Job deduplication (20 min)
-2. Global rate limiting (60 min)
-3. Auto-cleanup for cancelled matches (30 min)
-4. Connection management (20 min)
-5. DLQ improvements (10 min)
-
-### Batch E: Cache & TTL Tuning (1.5 hours)
-1. TTL adjustments for live events (10 min)
-2. Null value caching (20 min)
-3. Connection pooling (20 min)
-4. Cache warming verification (20 min)
-5. Health check improvement (15 min)
-
----
-
-## Notes
-
-- Issues are grouped by subsystem for easier batch fixing
-- Line numbers reference code state at analysis time (2026-01-23)
-- Some issues may be interdependent - check before implementing
-- Consider addressing related issues together (e.g., all rate limiting at once)
-- Each issue includes estimated effort for planning
-
----
-
-**Last Updated:** 2026-01-23 (Batch 7 in progress)
-**Total Remaining:** 24 MEDIUM + 13 LOW = 37 issues
-**Progress:** 48/84 issues fixed (57% complete)
-**Next Batch:** Batch 8 - External API & Database Optimization
+**Last Updated:** 2026-01-23
