@@ -49,6 +49,16 @@ interface GenerationResult<T = unknown> {
   cost: number; // In USD
 }
 
+interface TextGenerationResult {
+  content: string;
+  usage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+  cost: number; // In USD
+}
+
 // Configuration
 const MODEL = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
 const API_URL = 'https://api.together.xyz/v1/chat/completions';
@@ -174,7 +184,95 @@ export async function generateWithTogetherAI<T = unknown>(
        loggers.togetherClient.error({ error: error.message }, 'Content generation failed');
        throw error;
      }
-     loggers.togetherClient.error({}, 'Unknown error during content generation');
-     throw new Error('Unknown error during content generation');
-   }
+      loggers.togetherClient.error({}, 'Unknown error during content generation');
+      throw new Error('Unknown error during content generation');
+    }
+}
+
+/**
+ * Generate plain text content using Together AI
+ * Use this for prose content (match summaries, descriptions) that doesn't need JSON structure.
+ * Avoids JSON parsing errors by returning raw text directly.
+ */
+export async function generateTextWithTogetherAI(
+  systemPrompt: string,
+  userPrompt: string,
+  temperature: number = 0.7,
+  maxTokens: number = 1000
+): Promise<TextGenerationResult> {
+  const apiKey = process.env.TOGETHER_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error('TOGETHER_API_KEY environment variable is not set');
+  }
+
+  const request: TogetherRequest = {
+    model: MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    temperature,
+    max_tokens: maxTokens,
+    top_p: 0.9,
+  };
+
+  const startTime = Date.now();
+
+  try {
+    const response = await fetchWithRetry(
+      API_URL,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(request),
+      },
+      TOGETHER_CONTENT_RETRY,
+      TOGETHER_CONTENT_TIMEOUT_MS,
+      SERVICE_NAMES.TOGETHER_CONTENT
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Together AI API error (${response.status}): ${errorText}`);
+    }
+
+    const data = await response.json() as TogetherResponse;
+
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error('No response from Together AI API');
+    }
+
+    const content = data.choices[0].message.content;
+    const usage = data.usage;
+    const cost = calculateCost(usage.prompt_tokens, usage.completion_tokens);
+    const duration = Date.now() - startTime;
+
+    loggers.togetherClient.info({
+      duration,
+      inputTokens: usage.prompt_tokens,
+      outputTokens: usage.completion_tokens,
+      cost,
+    }, 'Text content generated (no JSON parsing)');
+
+    return {
+      content, // Raw text, no JSON parsing
+      usage: {
+        promptTokens: usage.prompt_tokens,
+        completionTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens,
+      },
+      cost,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      loggers.togetherClient.error({ error: error.message }, 'Text content generation failed');
+      throw error;
+    }
+    loggers.togetherClient.error({}, 'Unknown error during text content generation');
+    throw new Error('Unknown error during text content generation');
+  }
 }

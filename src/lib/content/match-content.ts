@@ -13,7 +13,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getDb, matchContent, matches, matchAnalysis, bets, models } from '@/lib/db';
 import { loggers } from '@/lib/logger/modules';
-import { generateWithTogetherAI } from './together-client';
+import { generateTextWithTogetherAI } from './together-client';
 import { CONTENT_CONFIG, estimateContentCost } from './config';
 import { eq } from 'drizzle-orm';
 
@@ -24,8 +24,10 @@ const log = loggers.content;
  * 
  * Triggered: After odds refresh (~6h before kickoff)
  * Content: Market expectations, bookmaker favors, key odds insights
+ * 
+ * Returns: true if content generated and saved, false if failed (non-blocking)
  */
-export async function generatePreMatchContent(matchId: string): Promise<void> {
+export async function generatePreMatchContent(matchId: string): Promise<boolean> {
   try {
     const db = getDb();
 
@@ -40,10 +42,10 @@ export async function generatePreMatchContent(matchId: string): Promise<void> {
       .where(eq(matches.id, matchId))
       .limit(1);
 
-    if (matchData.length === 0) {
-      log.warn({ matchId }, 'Match not found for pre-match content generation');
-      return;
-    }
+     if (matchData.length === 0) {
+       log.warn({ matchId }, 'Match not found for pre-match content generation');
+       return false;
+     }
 
     const { match, analysis } = matchData[0];
 
@@ -75,21 +77,18 @@ Include:
 
 Write flowing prose without headers.`;
 
-    const systemPrompt = 'You are a professional football analyst writing a pre-match market summary for betting enthusiasts.';
+     const systemPrompt = 'You are a professional football analyst writing a pre-match market summary for betting enthusiasts.';
 
-    // Generate content
-    const result = await generateWithTogetherAI<{ content: string }>(
-      systemPrompt,
-      prompt,
-      0.7,
-      1000
-    );
+     // Generate content (returns raw text, no JSON parsing)
+     const result = await generateTextWithTogetherAI(
+       systemPrompt,
+       prompt,
+       0.7,
+       1000
+     );
 
-    // Extract content (handle both direct string and JSON wrapper)
-    const content =
-      typeof result.content === 'string'
-        ? result.content
-        : (result.content as any).content || JSON.stringify(result.content);
+     // Content is already a string
+     const content = result.content;
 
     // Save to database
     const db2 = getDb();
@@ -126,24 +125,26 @@ Write flowing prose without headers.`;
         },
       });
 
-    log.info(
-      {
-        matchId,
-        tokens: result.usage.totalTokens,
-        cost: result.usage.totalTokens,
-      },
-      '✓ Pre-match content generated'
-    );
-  } catch (error) {
-    log.error(
-      {
-        matchId,
-        err: error instanceof Error ? error.message : String(error),
-      },
-      'Pre-match content generation failed'
-    );
-    // Non-blocking: don't throw
-  }
+     log.info(
+       {
+         matchId,
+         tokens: result.usage.totalTokens,
+         cost: result.cost.toFixed(4),
+       },
+       '✓ Pre-match content generated'
+     );
+     return true;
+   } catch (error) {
+     log.error(
+       {
+         matchId,
+         err: error instanceof Error ? error.message : String(error),
+       },
+       'Pre-match content generation failed'
+     );
+     // Non-blocking: don't throw, return false
+     return false;
+   }
 }
 
 /**
@@ -151,8 +152,10 @@ Write flowing prose without headers.`;
  * 
  * Triggered: After AI predictions (~30m before kickoff)
  * Content: AI model consensus, prediction distribution, confidence
+ * 
+ * Returns: true if content generated and saved, false if failed (non-blocking)
  */
-export async function generateBettingContent(matchId: string): Promise<void> {
+export async function generateBettingContent(matchId: string): Promise<boolean> {
   try {
     const db = getDb();
 
@@ -165,12 +168,12 @@ export async function generateBettingContent(matchId: string): Promise<void> {
       .where(eq(matches.id, matchId))
       .limit(1);
 
-    if (matchData.length === 0) {
-      log.warn({ matchId }, 'Match not found for betting content generation');
-      return;
-    }
+     if (matchData.length === 0) {
+       log.warn({ matchId }, 'Match not found for betting content generation');
+       return false;
+     }
 
-    const match = matchData[0].match;
+     const match = matchData[0].match;
 
     // Get AI model bets for this match
     const modelBets = await db
@@ -221,22 +224,19 @@ Include:
 
 Write flowing prose without headers.`;
 
-    const systemPrompt =
-      'You are a data analyst summarizing AI football model predictions for betting insights.';
+     const systemPrompt =
+       'You are a data analyst summarizing AI football model predictions for betting insights.';
 
-    // Generate content
-    const result = await generateWithTogetherAI<{ content: string }>(
-      systemPrompt,
-      prompt,
-      0.7,
-      1000
-    );
+     // Generate content (returns raw text, no JSON parsing)
+     const result = await generateTextWithTogetherAI(
+       systemPrompt,
+       prompt,
+       0.7,
+       1000
+     );
 
-    // Extract content
-    const content =
-      typeof result.content === 'string'
-        ? result.content
-        : (result.content as any).content || JSON.stringify(result.content);
+     // Content is already a string
+     const content = result.content;
 
     // Save to database
     const db2 = getDb();
@@ -256,24 +256,26 @@ Write flowing prose without headers.`;
       })
       .where(eq(matchContent.matchId, matchId));
 
-    log.info(
-      {
-        matchId,
-        tokens: result.usage.totalTokens,
-        cost: result.usage.totalTokens,
-      },
-      '✓ Betting content generated'
-    );
-  } catch (error) {
-    log.error(
-      {
-        matchId,
-        err: error instanceof Error ? error.message : String(error),
-      },
-      'Betting content generation failed'
-    );
-    // Non-blocking: don't throw
-  }
+     log.info(
+       {
+         matchId,
+         tokens: result.usage.totalTokens,
+         cost: result.cost.toFixed(4),
+       },
+       '✓ Betting content generated'
+     );
+     return true;
+   } catch (error) {
+     log.error(
+       {
+         matchId,
+         err: error instanceof Error ? error.message : String(error),
+       },
+       'Betting content generation failed'
+     );
+     // Non-blocking: don't throw, return false
+     return false;
+   }
 }
 
 /**
@@ -281,8 +283,10 @@ Write flowing prose without headers.`;
  * 
  * Triggered: After match scoring complete
  * Content: Result summary, how AI models performed, top scorers
+ * 
+ * Returns: true if content generated and saved, false if failed (non-blocking)
  */
-export async function generatePostMatchContent(matchId: string): Promise<void> {
+export async function generatePostMatchContent(matchId: string): Promise<boolean> {
   try {
     const db = getDb();
 
@@ -295,20 +299,20 @@ export async function generatePostMatchContent(matchId: string): Promise<void> {
       .where(eq(matches.id, matchId))
       .limit(1);
 
-    if (matchData.length === 0) {
-      log.warn({ matchId }, 'Match not found for post-match content generation');
-      return;
-    }
+     if (matchData.length === 0) {
+       log.warn({ matchId }, 'Match not found for post-match content generation');
+       return false;
+     }
 
-    const match = matchData[0].match;
+     const match = matchData[0].match;
 
-    if (match.status !== 'finished' || match.homeScore === null || match.awayScore === null) {
-      log.warn(
-        { matchId, status: match.status },
-        'Match not finished, skipping post-match content'
-      );
-      return;
-    }
+     if (match.status !== 'finished' || match.homeScore === null || match.awayScore === null) {
+       log.warn(
+         { matchId, status: match.status },
+         'Match not finished, skipping post-match content'
+       );
+       return false;
+     }
 
     // Get predictions performance summary
     const predictions = await db.query.predictions.findMany({
@@ -341,22 +345,19 @@ Include:
 
 Write flowing prose without headers.`;
 
-    const systemPrompt =
-      'You are a sports analyst writing match reports and AI model performance summaries.';
+     const systemPrompt =
+       'You are a sports analyst writing match reports and AI model performance summaries.';
 
-    // Generate content
-    const result = await generateWithTogetherAI<{ content: string }>(
-      systemPrompt,
-      prompt,
-      0.7,
-      1000
-    );
+     // Generate content (returns raw text, no JSON parsing)
+     const result = await generateTextWithTogetherAI(
+       systemPrompt,
+       prompt,
+       0.7,
+       1000
+     );
 
-    // Extract content
-    const content =
-      typeof result.content === 'string'
-        ? result.content
-        : (result.content as any).content || JSON.stringify(result.content);
+     // Content is already a string
+     const content = result.content;
 
     // Save to database
     const db2 = getDb();
@@ -376,22 +377,24 @@ Write flowing prose without headers.`;
       })
       .where(eq(matchContent.matchId, matchId));
 
-    log.info(
-      {
-        matchId,
-        tokens: result.usage.totalTokens,
-        cost: result.usage.totalTokens,
-      },
-      '✓ Post-match content generated'
-    );
-  } catch (error) {
-    log.error(
-      {
-        matchId,
-        err: error instanceof Error ? error.message : String(error),
-      },
-      'Post-match content generation failed'
-    );
-    // Non-blocking: don't throw
-  }
+     log.info(
+       {
+         matchId,
+         tokens: result.usage.totalTokens,
+         cost: result.cost.toFixed(4),
+       },
+       '✓ Post-match content generated'
+     );
+     return true;
+   } catch (error) {
+     log.error(
+       {
+         matchId,
+         err: error instanceof Error ? error.message : String(error),
+       },
+       'Post-match content generation failed'
+     );
+     // Non-blocking: don't throw, return false
+     return false;
+   }
 }
