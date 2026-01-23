@@ -1,68 +1,9 @@
 import { APIFootballLineupsResponse } from '@/types';
 import { updateMatchAnalysisLineups, getMatchAnalysisByMatchId, getMatchById } from '@/lib/db/queries';
-import { fetchWithRetry, APIError } from '@/lib/utils/api-client';
-import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
+import { fetchLineups as fetchLineupsFromAPI } from '@/lib/football/api-client';
 import { loggers } from '@/lib/logger/modules';
 
 const log = loggers.lineups;
-
-const API_BASE_URL = 'https://v3.football.api-sports.io';
-
-// Fetch lineups from API-Football
-export async function fetchLineups(fixtureId: number): Promise<APIFootballLineupsResponse | null> {
-  const apiKey = process.env.API_FOOTBALL_KEY;
-  
-  if (!apiKey) {
-    throw new Error('API_FOOTBALL_KEY is not configured');
-  }
-
-  const url = new URL(`${API_BASE_URL}/fixtures/lineups`);
-  url.searchParams.append('fixture', String(fixtureId));
-
-   log.info({ url: url.toString() }, 'Fetching');
-
-  try {
-     const response = await fetchWithRetry(
-       url.toString(),
-       {
-         method: 'GET',
-         headers: {
-           'x-apisports-key': apiKey,
-         },
-       },
-       API_FOOTBALL_RETRY,
-       API_FOOTBALL_TIMEOUT_MS,
-       SERVICE_NAMES.API_FOOTBALL
-     );
-
-    if (!response.ok) {
-      throw new APIError(
-        `API-Football lineups error: ${response.status} ${response.statusText}`,
-        response.status,
-        '/fixtures/lineups'
-      );
-    }
-
-    const data = await response.json();
-    
-     if (data.errors && Object.keys(data.errors).length > 0) {
-       log.error({ errors: data.errors }, 'API Errors');
-     }
-     
-     log.info({ results: data.results || 0 }, 'Results');
-
-     // If no lineups available yet, return null
-     if (!data.response || data.response.length === 0) {
-       log.info({ fixtureId }, 'No lineups available yet');
-       return null;
-     }
-
-    return data;
-   } catch (error) {
-     log.error({ fixtureId, error }, 'Error fetching lineups');
-     return null;
-   }
-}
 
 // Extract starting XI player names as a simple string
 // Filters out null elements and safely accesses player names
@@ -76,28 +17,35 @@ function formatStartingXI(startXI: Array<{ player: { name: string; pos: string }
 
 // Update match analysis with lineup data
 export async function updateMatchLineups(
-  matchId: string,
-  fixtureId: number
+   matchId: string,
+   fixtureId: number
 ): Promise<boolean> {
-   log.info({ matchId, fixtureId }, 'Fetching lineups');
+    log.info({ matchId, fixtureId }, 'Fetching lineups');
 
-  const lineupsData = await fetchLineups(fixtureId);
-  
-   if (!lineupsData?.response || lineupsData.response.length < 2) {
-      log.info({ matchId, length: lineupsData?.response?.length }, 'Lineups not available yet');
+    let lineupsData: APIFootballLineupsResponse | null;
+    
+    try {
+      lineupsData = await fetchLineupsFromAPI(fixtureId);
+      
+      if (!lineupsData || !lineupsData.response || lineupsData.response.length < 2) {
+         log.info({ matchId, length: lineupsData?.response?.length }, 'Lineups not available yet');
+         return false;
+       }
+    } catch (error) {
+      log.error({ matchId, fixtureId, error: error instanceof Error ? error.message : String(error) }, 'Error fetching lineups');
       return false;
     }
 
-    // Get match data to verify team order
-    const matchData = await getMatchById(matchId);
-    if (!matchData) {
-      log.error({ matchId }, 'Match not found in database');
-      return false;
-    }
+     // Get match data to verify team order
+     const matchData = await getMatchById(matchId);
+     if (!matchData) {
+       log.error({ matchId }, 'Match not found in database');
+       return false;
+     }
 
-   // Safely access first two lineups (already checked length >= 2)
-   const lineup1 = lineupsData.response[0];
-   const lineup2 = lineupsData.response[1];
+    // Safely access first two lineups (already checked length >= 2)
+    const lineup1 = lineupsData.response[0];
+    const lineup2 = lineupsData.response[1];
    
    // Validate lineup data has required fields
    if (!lineup1?.team?.name || !lineup2?.team?.name) {

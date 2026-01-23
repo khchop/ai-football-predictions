@@ -55,8 +55,15 @@ export function createAnalysisWorker() {
           hasInjuries: (analysis.homeInjuriesCount || 0) > 0 || (analysis.awayInjuriesCount || 0) > 0,
         };
        } catch (error: any) {
-         log.error({ err: error }, `Error analyzing ${homeTeam} vs ${awayTeam}`);
-         throw error; // Let BullMQ handle retry
+          log.error({ 
+            matchId, 
+            externalId, 
+            homeTeam, 
+            awayTeam,
+            attemptsMade: job.attemptsMade,
+            err: error 
+          }, `Error analyzing match`);
+          throw error; // Let BullMQ handle retry
        }
     },
     {

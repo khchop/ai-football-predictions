@@ -2,7 +2,7 @@
 
 **Generated:** 2026-01-23  
 **Source:** Deep system analysis (84 total issues identified)  
-**Status:** Batches 1-5 complete (41 issues fixed), Batch 6 in progress
+**Status:** Batches 1-6 complete (48 issues fixed), Batch 7 in progress
 
 ---
 
@@ -12,7 +12,7 @@
 |----------|-------|-------|--------|
 | **CRITICAL** | 4 | 4 | ✅ Batch 1 complete |
 | **HIGH** | 18 | 18 | ✅ Batches B (6) + 2 (6) + 3-4 (6) all complete |
-| **MEDIUM** | 49 | 18 | 🔄 Batches 3 (5) + 4 (7) + 5 (6) complete, 31 remaining |
+| **MEDIUM** | 49 | 25 | 🔄 Batches 3-6 complete (5+7+6+7), 24 remaining |
 | **LOW** | 13 | 0 | 📋 Documented for future work |
 
 ---
@@ -120,45 +120,15 @@
   - Effort: 20 min
 
 - [x] **Admin errors expose details** - `src/app/api/admin/*/route.ts` (multiple)
-  - Fixed: All admin routes now use sanitizeError()
-  - Implementation: Updated data, queue-status, dlq routes; re-enable-model already done
-  - Date: 2026-01-23
-
-- [ ] **Missing request body size limits** - All POST endpoints
-  - Issue: No explicit body size limits before parsing
-  - Fix: Configure Next.js body size limits or add middleware
-  - Impact: Memory exhaustion DoS via large payloads
-  - Effort: 20 min
-
-- [ ] **No CORS configuration** - `next.config.ts`
-  - Issue: No explicit CORS headers configured
-  - Fix: Add middleware with appropriate CORS policy
-  - Impact: Cross-origin requests may be blocked or exposed
-  - Effort: 20 min
+   - Fixed: All admin routes now use sanitizeError()
+   - Implementation: Updated data, queue-status, dlq routes; re-enable-model already done
+   - Date: 2026-01-23
 
 - [ ] **Potential IDOR in model bets** - `src/app/api/models/[id]/bets/route.ts:15-50`
-  - Issue: Any user can access any model's betting data
-  - Note: May be intentionally public - verify before fixing
-  - Impact: If sensitive, private betting data exposed
-  - Effort: 15 min (after verification)
-
-- [ ] **Missing CSRF protection** - State-changing endpoints
-  - Issue: Admin operations rely only on header auth (no tokens)
-  - Fix: Add CSRF token validation for POST/PUT/DELETE
-  - Impact: Combined with XSS, could allow state changes
-  - Effort: 45 min
-
-- [ ] **API errors logged but not thrown** - `src/lib/football/h2h.ts:55-57`
-  - Issue: API returns errors in response, they're logged but function continues
-  - Fix: Throw errors instead of silent failures
-  - Impact: Bad data written to database when API indicates error
-  - Effort: 20 min
-
-- [ ] **Admin errors expose details** - `src/app/api/admin/*/route.ts` (multiple)
-  - Issue: Admin endpoints expose raw error messages
-  - Fix: Use error-sanitizer even for admin (they should read logs)
-  - Impact: Exposes internal system details
-  - Effort: 15 min
+   - Issue: Any user can access any model's betting data
+   - Note: May be intentionally public - verify before fixing
+   - Impact: If sensitive, private betting data exposed
+   - Effort: 15 min (after verification)
 
 ---
 
@@ -246,49 +216,15 @@
 
 ---
 
-### Cache Issues (7 issues)
+### ✅ Batch 6 Completed Items (7 cache issues fixed)
 
-- [ ] **Fire-and-forget cache set** - `src/lib/cache/redis.ts:301-304`
-  - Issue: Cache writes are fire-and-forget with swallowed errors
-  - Fix: Log failures, monitor cache hit rate
-  - Impact: Failed cache writes go undetected
-  - Effort: 15 min
-
-- [ ] **`null` value caching issue** - `src/lib/cache/redis.ts:163-177, 294`
-  - Issue: Legitimate cached `null` values cause re-fetch
-  - Fix: Use sentinel value or distinguish cache miss from null
-  - Impact: API queries repeated unnecessarily
-  - Effort: 20 min
-
-- [ ] **No connection pool configuration** - `src/lib/cache/redis.ts:32-43`
-  - Issue: Using ioredis defaults without tuning
-  - Fix: Configure max connections, pre-warming
-  - Impact: Connection establishment latency under load
-  - Effort: 20 min
-
-- [ ] **Event listener accumulation** - `src/lib/cache/redis.ts:99-108`
-  - Issue: In `ensureRedisConnection`, listeners may accumulate
-  - Fix: Use `once()` (already done) but add cleanup timeout
-  - Impact: Rare: event listeners remain if connection hangs
-  - Effort: 15 min
-
-- [ ] **JSON serialization errors not specific** - `src/lib/cache/redis.ts:191`
-  - Issue: `JSON.stringify` errors caught as generic cache error
-  - Fix: Catch and log serialization errors distinctly
-  - Impact: Hard to debug circular references
-  - Effort: 15 min
-
-- [ ] **Cache key collision risk** - `src/lib/cache/redis.ts:249`
-  - Issue: User-supplied filter string used directly in key
-  - Fix: Escape special characters or hash filters
-  - Impact: Potential key collisions or incorrect invalidation
-  - Effort: 20 min
-
-- [ ] **TTL misconfiguration for live events** - `src/lib/cache/redis.ts:138-158`
-  - Issue: `LINEUPS: 900s` and `ODDS: 1800s` too long for live betting
-  - Fix: Reduce to 300s (5 min) for pre-match period
-  - Impact: Users see outdated odds/lineups
-  - Effort: 10 min
+- [x] **Fire-and-forget cache set** - Added logging for background cache failures
+- [x] **`null` value caching issue** - Implemented sentinel pattern for cache miss vs cached null distinction
+- [x] **No connection pool configuration** - Added production-ready settings (timeouts, keepalive, healthchecks)
+- [x] **Event listener accumulation** - Added cleanup function to remove listeners on timeout
+- [x] **JSON serialization errors not specific** - Added specific error detection for circular references and BigInt
+- [x] **Cache key collision risk** - Implemented SHA256 hash for user-supplied filter strings
+- [x] **TTL misconfiguration for live events** - Reduced ODDS 30min→10min, LINEUPS 15min→5min
 
 ---
 
@@ -459,6 +395,7 @@
 
 ---
 
-**Last Updated:** 2026-01-23  
-**Total Remaining:** 62 MEDIUM + LOW issues  
-**Next Batch:** After Batch 1 security fixes complete
+**Last Updated:** 2026-01-23 (Batch 7 in progress)
+**Total Remaining:** 24 MEDIUM + 13 LOW = 37 issues
+**Progress:** 48/84 issues fixed (57% complete)
+**Next Batch:** Batch 8 - External API & Database Optimization

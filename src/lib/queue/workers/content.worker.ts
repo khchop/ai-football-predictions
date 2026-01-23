@@ -105,67 +105,83 @@ async function generateMatchPreviewContent(data: {
  * This runs hourly to check if any matches are 6h away from kickoff
  */
 async function scanMatchesNeedingPreviews() {
-  const log = loggers.contentWorker;
-  
-  log.info('Scanning for matches needing previews...');
-  
-  const matchesNeedingPreviews = await getMatchesNeedingPreviews();
-  
-  if (matchesNeedingPreviews.length === 0) {
-    log.info('No matches need previews at this time');
-    return { scanned: 0, queued: 0 };
-  }
-  
-  log.info(`Found ${matchesNeedingPreviews.length} matches needing previews`);
-  
-  // Queue each match for preview generation
-  const { getQueue } = await import('../index');
-  const contentQueue = getQueue(QUEUE_NAMES.CONTENT);
-  
-  let queuedCount = 0;
-  for (const item of matchesNeedingPreviews) {
-    const { match, competition, analysis } = item;
-    
-    try {
-      await contentQueue.add(
-        'generate-match-preview',
-        {
-          type: 'match_preview',
-          data: {
-            matchId: match.id,
-            homeTeam: match.homeTeam,
-            awayTeam: match.awayTeam,
-            competition: competition.name,
-            kickoffTime: match.kickoffTime,
-            venue: match.venue || undefined,
-            analysis: analysis || undefined,
-          },
-        },
-        {
-          jobId: `preview-${match.id}`, // Prevent duplicates
-          removeOnComplete: {
-            age: 86400, // Keep for 24 hours
-            count: 100,
-          },
-          removeOnFail: {
-            age: 604800, // Keep failed jobs for 7 days
-          },
-        }
-      );
-      
-       queuedCount++;
-       log.info(`Queued preview for ${match.homeTeam} vs ${match.awayTeam}`);
-     } catch (error) {
-       log.error({ err: error, matchId: match.id }, `Failed to queue match`);
-     }
+   const log = loggers.contentWorker;
+   
+   log.info('Scanning for matches needing previews...');
+   
+   const matchesNeedingPreviews = await getMatchesNeedingPreviews();
+   
+   if (matchesNeedingPreviews.length === 0) {
+     log.info('No matches need previews at this time');
+     return { scanned: 0, queued: 0, failed: 0 };
    }
    
-   log.info(`✓ Scanned ${matchesNeedingPreviews.length} matches, queued ${queuedCount}`);
-  
-  return {
-    scanned: matchesNeedingPreviews.length,
-    queued: queuedCount,
-  };
+   log.info({ matchCount: matchesNeedingPreviews.length }, `Found matches needing previews`);
+   
+   // Queue each match for preview generation
+   const { getQueue } = await import('../index');
+   const contentQueue = getQueue(QUEUE_NAMES.CONTENT);
+   
+   let queuedCount = 0;
+   let failedCount = 0;
+   const failedMatches: Array<{ matchId: string; error: string }> = [];
+   
+   for (const item of matchesNeedingPreviews) {
+     const { match, competition, analysis } = item;
+     
+     try {
+       await contentQueue.add(
+         'generate-match-preview',
+         {
+           type: 'match_preview',
+           data: {
+             matchId: match.id,
+             homeTeam: match.homeTeam,
+             awayTeam: match.awayTeam,
+             competition: competition.name,
+             kickoffTime: match.kickoffTime,
+             venue: match.venue || undefined,
+             analysis: analysis || undefined,
+           },
+         },
+         {
+           jobId: `preview-${match.id}`, // Prevent duplicates
+           removeOnComplete: {
+             age: 86400, // Keep for 24 hours
+             count: 100,
+           },
+           removeOnFail: {
+             age: 604800, // Keep failed jobs for 7 days
+           },
+         }
+       );
+       
+        queuedCount++;
+        log.info({ matchId: match.id, teams: `${match.homeTeam} vs ${match.awayTeam}` }, `Queued preview`);
+      } catch (error: any) {
+        failedCount++;
+        failedMatches.push({
+          matchId: match.id,
+          error: error.message || String(error),
+        });
+        log.error({ matchId: match.id, err: error }, `Failed to queue match`);
+      }
+    }
+    
+    log.info({ scanned: matchesNeedingPreviews.length, queued: queuedCount, failed: failedCount }, `Scan complete`);
+   
+   // If ALL matches failed, throw to trigger retry (don't silently fail)
+   if (failedCount > 0 && queuedCount === 0) {
+     throw new Error(`All ${failedCount} matches failed to queue for preview generation`);
+   }
+   
+   return {
+     scanned: matchesNeedingPreviews.length,
+     queued: queuedCount,
+     failed: failedCount,
+     partialSuccess: failedCount > 0 && queuedCount > 0,
+     failedMatches: failedMatches.slice(0, 10), // Cap to prevent huge payloads
+   };
 }
 
 // Worker event handlers

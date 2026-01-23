@@ -64,12 +64,16 @@ export function createLineupsWorker() {
             }
           );
            log.info(`Queued immediate prediction for ${homeTeam} vs ${awayTeam}`);
-         } catch (error: any) {
-           // Job might already exist, that's fine
-           if (!error.message?.includes('already exists')) {
-             log.error({ err: error }, `Failed to queue immediate prediction`);
-           }
-         }
+          } catch (error: any) {
+            // Job might already exist, that's fine
+            if (!error.message?.includes('already exists')) {
+              log.error({ 
+                matchId, 
+                externalId,
+                err: error 
+              }, `Failed to queue immediate prediction`);
+            }
+          }
         
         return { 
           success: true, 
@@ -78,8 +82,15 @@ export function createLineupsWorker() {
           immediatePredictionQueued: true,
         };
        } catch (error: any) {
-         log.error({ err: error }, `Error fetching lineups for ${homeTeam} vs ${awayTeam}`);
-         throw error; // Let BullMQ handle retry
+          log.error({ 
+            matchId, 
+            externalId, 
+            homeTeam, 
+            awayTeam,
+            attemptsMade: job.attemptsMade,
+            err: error 
+          }, `Error fetching lineups`);
+          throw error; // Let BullMQ handle retry
        }
     },
     {

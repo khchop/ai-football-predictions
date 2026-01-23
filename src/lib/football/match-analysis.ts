@@ -6,80 +6,28 @@ import {
    KeyInjury,
    H2HMatch,
  } from '@/types';
- import { upsertMatchAnalysis, getMatchAnalysisByMatchId } from '@/lib/db/queries';
- import { v4 as uuidv4 } from 'uuid';
- import type { MatchAnalysis, NewMatchAnalysis } from '@/lib/db/schema';
- import { fetchWithRetry, APIError } from '@/lib/utils/api-client';
- import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
- import { 
-   fetchTeamStatistics, 
-   extractTeamStatistics 
- } from '@/lib/football/team-statistics';
- import { 
-   fetchH2HDetailed, 
-   extractH2HStatistics 
- } from '@/lib/football/h2h';
- import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
- import pLimit from 'p-limit';
- import { loggers } from '@/lib/logger/modules';
+  import { upsertMatchAnalysis, getMatchAnalysisByMatchId } from '@/lib/db/queries';
+  import { v4 as uuidv4 } from 'uuid';
+  import type { MatchAnalysis, NewMatchAnalysis } from '@/lib/db/schema';
+  import { APIError } from '@/lib/utils/api-client';
+  import { 
+    fetchTeamStatistics, 
+    extractTeamStatistics 
+  } from '@/lib/football/team-statistics';
+  import { 
+    fetchH2HDetailed, 
+    extractH2HStatistics 
+  } from '@/lib/football/h2h';
+  import {
+    fetchPrediction as fetchPredictionFromAPI,
+    fetchInjuries as fetchInjuriesFromAPI,
+    fetchOdds as fetchOddsFromAPI,
+  } from '@/lib/football/api-client';
+  import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
+  import pLimit from 'p-limit';
+  import { loggers } from '@/lib/logger/modules';
 
 const log = loggers.matchAnalysis;
-
-const API_BASE_URL = 'https://v3.football.api-sports.io';
-
-interface FetchOptions {
-  endpoint: string;
-  params?: Record<string, string | number>;
-}
-
-async function fetchFromAPI<T>({ endpoint, params }: FetchOptions): Promise<T> {
-  const apiKey = process.env.API_FOOTBALL_KEY;
-  
-  if (!apiKey) {
-    throw new Error('API_FOOTBALL_KEY is not configured');
-  }
-
-  const url = new URL(`${API_BASE_URL}${endpoint}`);
-  
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      url.searchParams.append(key, String(value));
-    });
-  }
-
-   log.info({ url: url.toString() }, 'Fetching');
-
-   const response = await fetchWithRetry(
-     url.toString(),
-     {
-       method: 'GET',
-       headers: {
-         'x-apisports-key': apiKey,
-       },
-     },
-     API_FOOTBALL_RETRY,
-     API_FOOTBALL_TIMEOUT_MS,
-     SERVICE_NAMES.API_FOOTBALL
-   );
-
-  if (!response.ok) {
-    throw new APIError(
-      `API-Football error: ${response.status} ${response.statusText}`,
-      response.status,
-      endpoint
-    );
-  }
-
-  const data = await response.json();
-  
-   if (data.errors && Object.keys(data.errors).length > 0) {
-     log.error({ errors: data.errors }, 'API Errors');
-   }
-   
-   log.info({ results: data.results || 0 }, 'Results');
-
-  return data;
-}
 
 // Parse percentage string to integer (e.g., "68%" -> 68)
 function parsePercent(percentStr: string | null | undefined): number | null {
@@ -88,46 +36,18 @@ function parsePercent(percentStr: string | null | undefined): number | null {
   return match ? parseInt(match[1], 10) : null;
 }
 
-// Fetch predictions from API-Football
+// Re-export central API client functions with consistent error handling
+// These now throw errors instead of silently returning null
 export async function fetchPrediction(fixtureId: number): Promise<APIFootballPredictionResponse | null> {
-  try {
-    const data = await fetchFromAPI<APIFootballPredictionResponse>({
-      endpoint: '/predictions',
-      params: { fixture: fixtureId },
-    });
-    return data;
-   } catch (error) {
-     log.error({ fixtureId, error }, 'Error fetching prediction');
-     return null;
-   }
+  return fetchPredictionFromAPI(fixtureId);
 }
 
-// Fetch injuries from API-Football
 export async function fetchInjuries(fixtureId: number): Promise<APIFootballInjuryResponse | null> {
-  try {
-    const data = await fetchFromAPI<APIFootballInjuryResponse>({
-      endpoint: '/injuries',
-      params: { fixture: fixtureId },
-    });
-    return data;
-   } catch (error) {
-     log.error({ fixtureId, error }, 'Error fetching injuries');
-     return null;
-   }
+  return fetchInjuriesFromAPI(fixtureId);
 }
 
-// Fetch odds from API-Football (prefer Bet365, bookmaker id: 8)
 export async function fetchOdds(fixtureId: number): Promise<APIFootballOddsResponse | null> {
-  try {
-    const data = await fetchFromAPI<APIFootballOddsResponse>({
-      endpoint: '/odds',
-      params: { fixture: fixtureId },
-    });
-    return data;
-   } catch (error) {
-     log.error({ fixtureId, error }, 'Error fetching odds');
-     return null;
-   }
+  return fetchOddsFromAPI(fixtureId);
 }
 
 // Validate and format odds value

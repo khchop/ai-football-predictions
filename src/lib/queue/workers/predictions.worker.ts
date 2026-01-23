@@ -75,82 +75,95 @@ export function createPredictionsWorker() {
             const standingsMap = await getStandingsForLeagues([competition.apiFootballId]);
             homeStanding = getStandingFromMap(match.homeTeam, competition.apiFootballId, standingsMap);
             awayStanding = getStandingFromMap(match.awayTeam, competition.apiFootballId, standingsMap);
-           } catch (error: any) {
-             log.error({ err: error }, `Failed to get standings`);
-           }
+            } catch (error: any) {
+              log.error({ 
+                matchId,
+                competitionId: competition.apiFootballId,
+                attemptsMade: job.attemptsMade,
+                err: error 
+              }, `Failed to get standings`);
+            }
         }
         
           // Get active providers (filtered to exclude auto-disabled models)
           const providers = await getActiveProviders();
           log.info(`Generating predictions from ${providers.length} models`);
         
-        let successCount = 0;
-        let failCount = 0;
-        
-        // Collect all predictions to insert in batch
-        const predictionsToInsert: NewPrediction[] = [];
-        
-        // Generate predictions for each model
-        for (const provider of providers) {
-          try {
-            // Build prompt (WITHOUT ODDS - only stats, form, H2H, standings)
-            const prompt = buildBatchPrompt([{
-              matchId: match.id,
-              homeTeam: match.homeTeam,
-              awayTeam: match.awayTeam,
-              competition: competition.name,
-              kickoffTime: match.kickoffTime,
-              analysis,
-              homeStanding,
-              awayStanding,
-            }]);
-            
-            // Call LLM with score prediction system prompt
-            const rawResponse = await (provider as any).callAPI(BATCH_SYSTEM_PROMPT, prompt);
-            
-            // Parse simple JSON: [{match_id: "xxx", home_score: X, away_score: Y}]
-            const parsed = parseBatchPredictionResponse(rawResponse, [matchId]);
-            
-             if (!parsed.success || parsed.predictions.length === 0) {
-               log.error(`${provider.id}: Failed to parse prediction - ${parsed.error}`);
-               failCount++;
-               continue;
-             }
-            
-            const prediction = parsed.predictions[0];
-            
-            // Determine result tendency (H/D/A)
-            const result = getResult(prediction.homeScore, prediction.awayScore);
-            
-            // Collect prediction for batch insert
-            predictionsToInsert.push({
-              id: uuidv4(),
-              matchId,
-              modelId: provider.id,
-              predictedHome: prediction.homeScore,
-              predictedAway: prediction.awayScore,
-              predictedResult: result,
-              status: 'pending',
-            });
-            
-              log.info(`✓ ${provider.id}: ${prediction.homeScore}-${prediction.awayScore}`);
-              await recordModelSuccess(provider.id);
-              successCount++;
-            } catch (error: any) {
-              log.error({ err: error }, `${provider.id}: Error`);
-              const { autoDisabled } = await recordModelFailure(provider.id, error.message);
-              if (autoDisabled) {
-                log.warn(`⚠️ ${provider.id}: Auto-disabled after 3 consecutive failures`);
+         let successCount = 0;
+         let failCount = 0;
+         
+         // Collect all predictions to insert in batch
+         const predictionsToInsert: NewPrediction[] = [];
+         // Track which models succeeded so we can record health AFTER batch insert
+         const successfulModelIds: string[] = [];
+         
+         // Generate predictions for each model
+         for (const provider of providers) {
+           try {
+             // Build prompt (WITHOUT ODDS - only stats, form, H2H, standings)
+             const prompt = buildBatchPrompt([{
+               matchId: match.id,
+               homeTeam: match.homeTeam,
+               awayTeam: match.awayTeam,
+               competition: competition.name,
+               kickoffTime: match.kickoffTime,
+               analysis,
+               homeStanding,
+               awayStanding,
+             }]);
+             
+             // Call LLM with score prediction system prompt
+             const rawResponse = await (provider as any).callAPI(BATCH_SYSTEM_PROMPT, prompt);
+             
+             // Parse simple JSON: [{match_id: "xxx", home_score: X, away_score: Y}]
+             const parsed = parseBatchPredictionResponse(rawResponse, [matchId]);
+             
+              if (!parsed.success || parsed.predictions.length === 0) {
+                log.error({ matchId, modelId: provider.id, error: parsed.error }, `Failed to parse prediction`);
+                failCount++;
+                continue;
               }
-              failCount++;
-           }
-        }
-        
-         // Batch insert all predictions at once (1 query instead of N)
-         if (predictionsToInsert.length > 0) {
-           await createPredictionsBatch(predictionsToInsert);
-           log.info(`Inserted ${predictionsToInsert.length} predictions in batch`);
+             
+             const prediction = parsed.predictions[0];
+             
+             // Determine result tendency (H/D/A)
+             const result = getResult(prediction.homeScore, prediction.awayScore);
+             
+             // Collect prediction for batch insert
+             predictionsToInsert.push({
+               id: uuidv4(),
+               matchId,
+               modelId: provider.id,
+               predictedHome: prediction.homeScore,
+               predictedAway: prediction.awayScore,
+               predictedResult: result,
+               status: 'pending',
+             });
+             
+             // Track successful model but DON'T record health yet
+             successfulModelIds.push(provider.id);
+             log.info({ matchId, modelId: provider.id, prediction: `${prediction.homeScore}-${prediction.awayScore}` }, `✓ Prediction generated`);
+             successCount++;
+             } catch (error: any) {
+               log.error({ matchId, modelId: provider.id, err: error }, `Error generating prediction`);
+               const { autoDisabled } = await recordModelFailure(provider.id, error.message);
+               if (autoDisabled) {
+                 log.warn({ matchId, modelId: provider.id }, `⚠️ Auto-disabled after 3 consecutive failures`);
+               }
+               failCount++;
+            }
          }
+         
+          // Batch insert all predictions at once (1 query instead of N)
+          if (predictionsToInsert.length > 0) {
+            await createPredictionsBatch(predictionsToInsert);
+            log.info({ matchId, predictionCount: predictionsToInsert.length }, `Inserted predictions in batch`);
+            
+            // NOW record model health for all successful models (only after batch insert succeeds)
+            for (const modelId of successfulModelIds) {
+              await recordModelSuccess(modelId);
+            }
+          }
          
          log.info(`Complete: ${successCount} success, ${failCount} failed`);
         
@@ -161,10 +174,14 @@ export function createPredictionsWorker() {
           totalModels: providers.length,
         };
        } catch (error: any) {
-         log.error({ err: error }, `Error processing match ${matchId}`);
-         // Throw error to enable BullMQ retry logic
-         // Only transient errors should retry (network, timeout, rate limit)
-         if (error.message?.includes('timeout') || 
+          log.error({ 
+            matchId,
+            attemptsMade: job.attemptsMade,
+            err: error 
+          }, `Error processing predictions`);
+          // Throw error to enable BullMQ retry logic
+          // Only transient errors should retry (network, timeout, rate limit)
+          if (error.message?.includes('timeout') ||
              error.message?.includes('ECONNREFUSED') ||
              error.message?.includes('rate limit') ||
              error.message?.includes('429')) {

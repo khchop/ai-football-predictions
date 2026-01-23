@@ -116,11 +116,15 @@ export function createFixturesWorker() {
                 
                 jobsScheduled += scheduled;
               }
-            } catch (error: any) {
-               const errorMsg = `Failed to process fixture ${fixture.fixture.id}: ${error.message}`;
-               log.error({ err: error }, errorMsg);
-               errors.push(errorMsg);
-             }
+             } catch (error: any) {
+                const errorMsg = `Failed to process fixture ${fixture.fixture.id}: ${error.message}`;
+                log.error({ 
+                  fixtureId: fixture.fixture.id,
+                  competitionId: competition.apiFootballId,
+                  err: error 
+                }, `Error processing fixture`);
+                errors.push(errorMsg);
+              }
           }
         }
 
@@ -135,8 +139,12 @@ export function createFixturesWorker() {
           errors: errors.length > 0 ? errors : undefined,
         };
        } catch (error: any) {
-         log.error({ err: error }, 'Error');
-         throw error; // Let BullMQ handle retry
+          log.error({ 
+            manual,
+            attemptsMade: job.attemptsMade,
+            err: error 
+          }, `Error fetching fixtures`);
+          throw error; // Let BullMQ handle retry
        }
     },
     {

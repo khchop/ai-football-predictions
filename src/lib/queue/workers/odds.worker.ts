@@ -52,8 +52,13 @@ export function createOddsWorker() {
           matchId,
         };
        } catch (error: any) {
-         log.error({ err: error }, `Error refreshing odds for match ${matchId}`);
-         throw error; // Let BullMQ handle retry
+          log.error({ 
+            matchId, 
+            externalId,
+            attemptsMade: job.attemptsMade,
+            err: error 
+          }, `Error refreshing odds`);
+          throw error; // Let BullMQ handle retry
        }
     },
     {
