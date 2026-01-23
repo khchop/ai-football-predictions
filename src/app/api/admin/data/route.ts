@@ -4,6 +4,7 @@ import { getBudgetStatus } from '@/lib/llm/budget';
 import { TOGETHER_PROVIDERS } from '@/lib/llm/providers/together';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 import { requireAdminAuth } from '@/lib/utils/admin-auth';
+import { sanitizeError } from '@/lib/utils/error-sanitizer';
 
 export async function GET(request: NextRequest) {
   // Rate limit check (first, before auth)
@@ -70,9 +71,8 @@ export async function GET(request: NextRequest) {
       { headers: createRateLimitHeaders(rateLimitResult) }
     );
   } catch (error) {
-    console.error('Error fetching admin data:', error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : 'Unknown error' },
+      { success: false, error: sanitizeError(error, 'admin-data') },
       { status: 500, headers: createRateLimitHeaders(rateLimitResult) }
     );
   }

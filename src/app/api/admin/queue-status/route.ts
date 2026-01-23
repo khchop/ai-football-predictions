@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { Queue } from 'bullmq';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 import { requireAdminAuth } from '@/lib/utils/admin-auth';
+import { sanitizeError } from '@/lib/utils/error-sanitizer';
 
 async function getQueueStats(queue: Queue) {
   const [waiting, active, completed, failed, delayed, paused] = await Promise.all([
@@ -123,11 +124,10 @@ export async function GET(request: NextRequest) {
       { headers: createRateLimitHeaders(rateLimitResult) }
     );
   } catch (error: any) {
-    console.error('[Queue Status API] Error:', error);
     return NextResponse.json(
       {
         status: 'error',
-        error: error.message,
+        error: sanitizeError(error, 'admin-queue-status'),
       },
       { status: 500, headers: createRateLimitHeaders(rateLimitResult) }
     );

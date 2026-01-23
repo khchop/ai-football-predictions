@@ -17,7 +17,7 @@ import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRE
 import { validateQuery } from '@/lib/validation/middleware';
 import { getDlqQuerySchema } from '@/lib/validation/schemas';
 import { requireAdminAuth } from '@/lib/utils/admin-auth';
-import { createValidationErrorResponse } from '@/lib/utils/error-sanitizer';
+import { createValidationErrorResponse, sanitizeError } from '@/lib/utils/error-sanitizer';
 
 // Zod schema for DELETE query parameters
 const dlqDeleteSchema = z.object({
@@ -81,13 +81,12 @@ export async function GET(req: NextRequest) {
         headers: createRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('[Admin DLQ API] Error fetching DLQ:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch DLQ' },
-      { status: 500, headers: createRateLimitHeaders(rateLimitResult) }
-    );
-  }
+   } catch (error) {
+     return NextResponse.json(
+       { error: sanitizeError(error, 'admin-dlq-get') },
+       { status: 500, headers: createRateLimitHeaders(rateLimitResult) }
+     );
+   }
 }
 
 /**
@@ -155,11 +154,10 @@ export async function DELETE(req: NextRequest) {
         { headers: createRateLimitHeaders(rateLimitResult) }
       );
     }
-  } catch (error) {
-    console.error('[Admin DLQ API] Error deleting from DLQ:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete from DLQ' },
-      { status: 500, headers: createRateLimitHeaders(rateLimitResult) }
-    );
-  }
+   } catch (error) {
+     return NextResponse.json(
+       { error: sanitizeError(error, 'admin-dlq-delete') },
+       { status: 500, headers: createRateLimitHeaders(rateLimitResult) }
+     );
+   }
 }

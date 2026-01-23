@@ -3,6 +3,19 @@
  * 
  * Provides timing-safe password comparison to prevent timing attacks.
  * All admin endpoints should use validateAdminPassword() or requireAdminAuth().
+ * 
+ * CSRF Protection
+ * ---------------
+ * Admin routes use header-based authentication (X-Admin-Password) rather than
+ * cookie-based auth. This provides implicit CSRF protection because:
+ * 
+ * 1. Custom headers cannot be set by cross-origin HTML forms or links
+ * 2. JavaScript can only set custom headers with explicit CORS permission
+ * 3. The browser enforces same-origin policy for custom header access
+ * 
+ * This design eliminates the need for explicit CSRF tokens. However, if cookie-based
+ * authentication is ever added in the future, explicit CSRF token protection would
+ * be required. See OWASP CSRF Prevention Cheat Sheet for more details.
  */
 
 import crypto from 'crypto';
