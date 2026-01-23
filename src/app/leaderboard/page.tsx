@@ -89,9 +89,9 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
         <h2 className="text-sm font-medium text-muted-foreground mb-4">Kicktipp Scoring System</h2>
         <div className="grid sm:grid-cols-4 gap-3">
           <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/20 p-3 text-center">
-            <p className="text-2xl font-bold text-yellow-400">2</p>
+            <p className="text-2xl font-bold text-yellow-400">2-6</p>
             <p className="text-xs font-medium mt-1">Correct Tendency</p>
-            <p className="text-xs text-muted-foreground">Right winner (H/D/A)</p>
+            <p className="text-xs text-muted-foreground">Based on rarity</p>
           </div>
           <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-3 text-center">
             <p className="text-2xl font-bold text-blue-400">+1</p>
@@ -104,13 +104,13 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
             <p className="text-xs text-muted-foreground">Perfect prediction</p>
           </div>
           <div className="rounded-lg bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 p-3 text-center">
-            <p className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">6</p>
+            <p className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">10</p>
             <p className="text-xs font-medium mt-1">Maximum Points</p>
             <p className="text-xs text-muted-foreground">Per match</p>
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-3 text-center">
-          Models predict exact scorelines for each match. Points are awarded based on the Kicktipp scoring system: tendency (2), goal difference bonus (+1), and exact score bonus (+3).
+          Models predict exact scorelines for each match. Points are awarded based on the Kicktipp Quota scoring system: tendency points (2-6, variable based on prediction rarity), goal difference bonus (+1), and exact score bonus (+3). Maximum: 10 points.
         </p>
       </div>
 

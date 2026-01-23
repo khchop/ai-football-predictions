@@ -282,10 +282,10 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
             </div>
           )}
 
-          {/* Quota display (for finished matches with quotas) */}
-          {isFinished && match.quotaHome && match.quotaDraw && match.quotaAway && (
+          {/* Quota display (for matches with quotas) */}
+          {match.quotaHome && match.quotaDraw && match.quotaAway && (
             <div className="mt-3 flex items-center justify-center gap-2 text-xs">
-              <span className="text-muted-foreground">Quota:</span>
+              <span className="text-muted-foreground">Points:</span>
               <span className={cn(
                 "font-mono px-1.5 py-0.5 rounded",
                 match.homeScore !== null && match.awayScore !== null && 

@@ -11,11 +11,11 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { getDb, matchContent, matches, matchAnalysis, bets, models } from '@/lib/db';
+import { getDb, matchContent, matches, matchAnalysis, bets, models, predictions } from '@/lib/db';
 import { loggers } from '@/lib/logger/modules';
 import { generateTextWithTogetherAI } from './together-client';
 import { CONTENT_CONFIG, estimateContentCost } from './config';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 
 const log = loggers.content;
 
@@ -314,16 +314,39 @@ export async function generatePostMatchContent(matchId: string): Promise<boolean
        return false;
      }
 
-    // Get predictions performance summary
-    const predictions = await db.query.predictions.findMany({
-      where: (p, { eq: eqOp }) => eqOp(p.matchId, matchId),
-    });
+    // Get predictions with model names
+    const predictionsWithModels = await db
+      .select({
+        modelName: models.displayName,
+        predictedHome: predictions.predictedHome,
+        predictedAway: predictions.predictedAway,
+        tendencyPoints: predictions.tendencyPoints,
+        goalDiffBonus: predictions.goalDiffBonus,
+        exactScoreBonus: predictions.exactScoreBonus,
+        totalPoints: predictions.totalPoints,
+      })
+      .from(predictions)
+      .innerJoin(models, eq(predictions.modelId, models.id))
+      .where(eq(predictions.matchId, matchId))
+      .orderBy(desc(predictions.totalPoints));
 
-    const correctTendency = predictions.filter((p) => p.totalPoints !== null && p.totalPoints > 0)
+    const correctTendency = predictionsWithModels.filter((p) => p.totalPoints !== null && p.totalPoints > 0)
       .length;
-    const exactScores = predictions.filter(
+    const exactScores = predictionsWithModels.filter(
       (p) => p.exactScoreBonus !== null && p.exactScoreBonus > 0
     ).length;
+
+    // Build top performers list with actual model names
+    const topPerformers = predictionsWithModels
+      .filter(p => p.totalPoints !== null && p.totalPoints > 0)
+      .slice(0, 5)
+      .map(p => `- ${p.modelName}: ${p.predictedHome}-${p.predictedAway} (${p.totalPoints} pts)`)
+      .join('\n');
+
+    // Build exact hits list
+    const exactHits = predictionsWithModels
+      .filter(p => p.exactScoreBonus !== null && p.exactScoreBonus > 0)
+      .map(p => p.modelName);
 
     const prompt = `Write 4-5 sentences (~150-200 words) about ${match.homeTeam} ${match.homeScore}-${match.awayScore} ${match.awayTeam}.
 
@@ -332,16 +355,24 @@ Status: ${match.status}
 Quotas: Home=${match.quotaHome}, Draw=${match.quotaDraw}, Away=${match.quotaAway}
 
 AI Model Performance:
-- Total Predictions: ${predictions.length}
-- Correct Tendency: ${correctTendency} models (${predictions.length > 0 ? ((correctTendency / predictions.length) * 100).toFixed(1) : 0}%)
-- Exact Score Hits: ${exactScores} models
-- Total Points Awarded: ${predictions.reduce((sum, p) => sum + (p.totalPoints || 0), 0)}
+- Total Predictions: ${predictionsWithModels.length}
+- Correct Tendency: ${correctTendency} models (${predictionsWithModels.length > 0 ? ((correctTendency / predictionsWithModels.length) * 100).toFixed(1) : 0}%)
+- Exact Score Hits: ${exactHits.length > 0 ? exactHits.join(', ') : 'None'}
+- Total Points Awarded: ${predictionsWithModels.reduce((sum, p) => sum + (p.totalPoints || 0), 0)}
+
+Top Performers (by points):
+${topPerformers || 'No correct predictions'}
+
+All Predictions (top 10 by points):
+${predictionsWithModels.slice(0, 10).map(p => `- ${p.modelName}: ${p.predictedHome}-${p.predictedAway} (${p.totalPoints ?? 0} pts)`).join('\n')}
 
 Include:
-- Match result summary and key details
-- How AI models performed (% correct tendency, exact scores)
-- Which models scored highest
-- Notable predictions that hit or missed
+- Match result summary
+- How AI models performed (use actual model names like "Llama 3.3 70B", "DeepSeek R1", "Qwen 2.5 72B", etc.)
+- Name the top scoring models specifically with their predictions
+- Notable predictions that hit or missed (with model names)
+
+IMPORTANT: Use the actual model names provided above. DO NOT use generic names like "Model 1", "Model 2", etc.
 
 Write flowing prose without headers.`;
 

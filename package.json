@@ -15,7 +15,8 @@
     "migrate:predictions": "tsx scripts/migrate-predictions.ts",
     "migrate:hotfix": "tsx scripts/migrate-hotfix.ts",
     "sync-models": "tsx scripts/sync-models.ts",
-    "clean-predictions": "tsx scripts/clean-predictions.ts"
+    "clean-predictions": "tsx scripts/clean-predictions.ts",
+    "regenerate-content": "tsx scripts/regenerate-post-match-content.ts"
   },
   "dependencies": {
     "@bull-board/api": "^6.16.2",

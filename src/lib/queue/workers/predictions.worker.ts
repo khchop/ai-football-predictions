@@ -17,13 +17,14 @@ import {
   createPredictionsBatch,
   recordModelSuccess,
   recordModelFailure,
+  updateMatchQuotas,
 } from '@/lib/db/queries';
 import type { NewPrediction } from '@/lib/db/schema';
 import { getActiveProviders } from '@/lib/llm';
 import { buildBatchPrompt } from '@/lib/football/prompt-builder';
 import { parseBatchPredictionResponse, BATCH_SYSTEM_PROMPT } from '@/lib/llm/prompt';
 import { getStandingsForLeagues, getStandingFromMap } from '@/lib/football/standings';
-import { getResult } from '@/lib/utils/scoring';
+import { getResult, calculateQuotas } from '@/lib/utils/scoring';
 import { generateBettingContent } from '@/lib/content/match-content';
 import { v4 as uuidv4 } from 'uuid';
 import { loggers } from '@/lib/logger/modules';
@@ -196,6 +197,14 @@ export function createPredictionsWorker() {
            if (predictionsToInsert.length > 0) {
              await createPredictionsBatch(predictionsToInsert);
              log.info({ matchId, predictionCount: predictionsToInsert.length }, `Inserted predictions in batch`);
+             
+             // Calculate and store quotas immediately after predictions are saved
+             const quotas = calculateQuotas(predictionsToInsert.map(p => ({
+               predictedHome: p.predictedHome,
+               predictedAway: p.predictedAway,
+             })));
+             await updateMatchQuotas(matchId, quotas.home, quotas.draw, quotas.away);
+             log.info({ matchId, quotas }, 'Quotas calculated and stored');
              
              // NOW record model health for all successful models (only after batch insert succeeds)
              for (const modelId of successfulModelIds) {
