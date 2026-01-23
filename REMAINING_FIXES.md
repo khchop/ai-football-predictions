@@ -76,7 +76,7 @@
 
 ---
 
-## 🔴 HIGH Priority Remaining (24/60)
+## 🔴 HIGH Priority Remaining (23/59)
 
 ### Database & Performance
 1. **Add database indexes** - `src/lib/db/schema.ts`
@@ -140,100 +140,99 @@
     - ✅ OpenRouter client no longer used
 
 12. **Handle Together AI model deprecation** - `src/lib/llm/providers/together.ts`
-    - 35 models hardcoded
-    - If Together AI deprecates a model, predictions will fail
-    - Add model availability check or fallback
+     - 35 models hardcoded
+     - If Together AI deprecates a model, predictions will fail
+     - Add model availability check or fallback
 
-13. **Add retry to external API calls** - `src/lib/football/odds.ts`
-    - Doesn't use `fetchWithRetry`
-    - Transient failures = permanent failure
+13. **Add retry to standings fetch** - `src/lib/football/standings.ts`
+     - Doesn't use `fetchWithRetry`
+     - Transient failures = permanent failure
 
-14. **Add retry to standings fetch** - `src/lib/football/standings.ts`
-    - Same issue as odds
+14. **Add retry to H2H fetch** - `src/lib/football/h2h.ts`
+     - Doesn't use `fetchWithRetry`
+     - Transient failures = permanent failure
 
-15. **Add retry to H2H fetch** - `src/lib/football/h2h.ts`
-    - Same issue as odds
-
-16. **Add retry to team stats fetch** - `src/lib/football/team-statistics.ts`
-    - Same issue as odds
+15. **Add retry to team stats fetch** - `src/lib/football/team-statistics.ts`
+     - Doesn't use `fetchWithRetry`
+     - Transient failures = permanent failure
 
 ### Job Scheduling & Queue
-17. **Handle job already exists error** - Multiple workers
-    - Currently catches "already exists" and continues silently
-    - Should log or track duplicate attempts
+16. **Handle job already exists error** - Multiple workers
+     - Currently catches "already exists" and continues silently
+     - Should log or track duplicate attempts
 
-18. **Add job deduplication** - `src/lib/queue/index.ts`
-    - No deduplication key configured
-    - Could have duplicate jobs for same match
+17. **Add job deduplication** - `src/lib/queue/index.ts`
+     - No deduplication key configured
+     - Could have duplicate jobs for same match
 
-19. **Handle scheduler timezone issues** - `src/lib/queue/scheduler.ts`
-    - Uses `new Date()` without explicit timezone
-    - Could schedule jobs at wrong time if server timezone changes
+18. **Handle scheduler timezone issues** - `src/lib/queue/scheduler.ts`
+     - Uses `new Date()` without explicit timezone
+     - Could schedule jobs at wrong time if server timezone changes
 
-20. **Add scheduler catch-up limit** - `src/lib/queue/catch-up.ts`
-    - Catch-up could schedule 100s of jobs at once
-    - Should limit batch size (e.g., 50 matches max)
+19. **Add scheduler catch-up limit** - `src/lib/queue/catch-up.ts`
+     - Catch-up could schedule 100s of jobs at once
+     - Should limit batch size (e.g., 50 matches max)
 
-21. **Handle cancelled matches better** - `src/lib/queue/scheduler.ts`
-    - `cancelMatchJobs()` only removes waiting/delayed jobs
-    - Active jobs continue running
-    - Should also cancel/fail active jobs
+20. **Handle cancelled matches better** - `src/lib/queue/scheduler.ts`
+     - `cancelMatchJobs()` only removes waiting/delayed jobs
+     - Active jobs continue running
+     - Should also cancel/fail active jobs
 
 ### Logging & Monitoring
-22. **Add structured logging** - All files
-    - Currently using `console.log`
-    - User confirmed: Yes, use pino
-    - Should use structured logger (JSON format)
-    - Add request IDs for tracing
+21. **Add structured logging** - All files
+     - Currently using `console.log`
+     - User confirmed: Yes, use pino
+     - Should use structured logger (JSON format)
+     - Add request IDs for tracing
 
-23. **Add performance logging** - Workers
-    - No timing information logged
-    - Can't identify slow operations
-    - Add duration logging for each worker
+22. **Add performance logging** - Workers
+     - No timing information logged
+     - Can't identify slow operations
+     - Add duration logging for each worker
 
-24. **Add error tracking** - All files
-    - Errors logged but not tracked
-    - Should integrate Sentry or similar
-    - Track error rates, patterns
+23. **Add error tracking** - All files
+     - Errors logged but not tracked
+     - Should integrate Sentry or similar
+     - Track error rates, patterns
 
-25. **Add queue metrics** - `src/lib/queue/index.ts`
-    - No metrics on queue depth, processing time, failure rate
-    - Add metrics export for monitoring
+24. **Add queue metrics** - `src/lib/queue/index.ts`
+     - No metrics on queue depth, processing time, failure rate
+     - Add metrics export for monitoring
 
 ### Redis & Caching
-26. **Handle Redis connection failures** - `src/lib/cache/redis.ts`, `src/lib/queue/index.ts`
-    - App crashes if Redis is unavailable
-    - Should gracefully degrade (skip cache, log error)
+25. **Handle Redis connection failures** - `src/lib/cache/redis.ts`, `src/lib/queue/index.ts`
+     - App crashes if Redis is unavailable
+     - Should gracefully degrade (skip cache, log error)
 
-27. **Add Redis connection pooling** - `src/lib/cache/redis.ts`
-    - Creates new connection on every request
-    - Should use connection pool
+26. **Add Redis connection pooling** - `src/lib/cache/redis.ts`
+     - Creates new connection on every request
+     - Should use connection pool
 
-28. **Add cache warming** - `src/lib/cache/redis.ts`
-    - Cold start = slow first requests
-    - Warm frequently accessed data on startup
+27. **Add cache warming** - `src/lib/cache/redis.ts`
+     - Cold start = slow first requests
+     - Warm frequently accessed data on startup
 
 ### Content & SEO
-29. **Add sitemap generation** - `src/app/sitemap.xml/route.ts`
-    - Static sitemap
-    - Should dynamically include all matches
+28. **Add sitemap generation** - `src/app/sitemap.xml/route.ts`
+     - Static sitemap
+     - Should dynamically include all matches
 
-30. **Add robots.txt** - `src/app/robots.txt/route.ts`
-    - Might be missing or incomplete
-    - Check and update
+29. **Add robots.txt** - `src/app/robots.txt/route.ts`
+     - Might be missing or incomplete
+     - Check and update
 
 ### Security
-31. **Add CORS configuration** - `src/middleware.ts` or Next.js config
-    - No CORS headers configured
-    - Could block legitimate frontend requests
+30. **Add CORS configuration** - `src/middleware.ts` or Next.js config
+     - No CORS headers configured
+     - Could block legitimate frontend requests
 
-32. **Add CSP headers** - `src/middleware.ts` or Next.js config
-    - No Content Security Policy
-    - Vulnerable to XSS
+31. **Add CSP headers** - `src/middleware.ts` or Next.js config
+     - No Content Security Policy
+     - Vulnerable to XSS
 
-33. **Sanitize user input in logs** - All files
-    - Sensitive data might be logged (API keys, passwords)
-    - Sanitize before logging
+32. **Sanitize user input in logs** - All files
+     - Sensitive data might be logged (API keys, passwords)
+     - Sanitize before logging
 
 ---
 
@@ -356,7 +355,7 @@
 7. ✅ Standardized validation error responses
 
 ### Batch 4: External API Retry Logic (1-2 hours)
-1. Add retry wrapper to odds.ts, standings.ts, h2h.ts, team-statistics.ts
+1. Add retry wrapper to standings.ts, h2h.ts, team-statistics.ts
 2. Use exponential backoff pattern
 3. Add max retry attempts
 4. Log retry attempts
@@ -465,9 +464,9 @@ git push
 - Circuit breaker + retry infrastructure
 - Zod validation middleware + 8 routes
 
-**Total Remaining:** 161/200 issues (80.5%)  
+**Total Remaining:** 160/199 issues (80.4%)  
 **Estimated Time:** 9-12 hours  
-**Priority Focus:** HIGH (24) → MEDIUM (79) → LOW (43)
+**Priority Focus:** HIGH (23) → MEDIUM (79) → LOW (43)
 
 ---
 
