@@ -16,6 +16,7 @@
 
 import { loggers } from '@/lib/logger/modules';
 import type { ServiceName } from './retry-config';
+import { cacheGet, cacheSet } from '@/lib/cache/redis';
 
 // Re-export for convenience
 export type { ServiceName };
@@ -70,6 +71,44 @@ interface CircuitStatus {
 
 const circuits = new Map<ServiceName, CircuitStatus>();
 
+// Redis persistence configuration
+const CIRCUIT_BREAKER_KEY_PREFIX = 'circuit:breaker:';
+const CIRCUIT_BREAKER_TTL = 3600; // 1 hour in seconds
+
+/**
+ * Get Redis key for circuit breaker state
+ */
+function getCircuitKey(service: ServiceName): string {
+  return `${CIRCUIT_BREAKER_KEY_PREFIX}${service}`;
+}
+
+/**
+ * Load circuit state from Redis (on startup or first access)
+ */
+async function loadCircuitFromRedis(service: ServiceName): Promise<CircuitStatus | null> {
+  try {
+    const cached = await cacheGet<CircuitStatus>(getCircuitKey(service));
+    if (cached) {
+      loggers.circuitBreaker.debug({ service }, 'Loaded circuit state from Redis');
+      return cached;
+    }
+  } catch (error) {
+    loggers.circuitBreaker.warn({ service, error }, 'Failed to load circuit state from Redis (falling back to in-memory)');
+  }
+  return null;
+}
+
+/**
+ * Persist circuit state to Redis
+ */
+async function persistCircuitToRedis(service: ServiceName, circuit: CircuitStatus): Promise<void> {
+  try {
+    await cacheSet(getCircuitKey(service), circuit, CIRCUIT_BREAKER_TTL);
+  } catch (error) {
+    loggers.circuitBreaker.warn({ service, error }, 'Failed to persist circuit state to Redis (continuing with in-memory)');
+  }
+}
+
 // ============================================================================
 // CIRCUIT BREAKER LOGIC
 // ============================================================================
@@ -77,6 +116,9 @@ const circuits = new Map<ServiceName, CircuitStatus>();
 function getConfig(service: ServiceName): CircuitBreakerConfig {
   return { ...DEFAULT_CONFIG, ...SERVICE_CONFIGS[service] };
 }
+
+// Track which services have been loaded from Redis to avoid repeated attempts
+const redisLoadAttempts = new Set<ServiceName>();
 
 function getOrCreateCircuit(service: ServiceName): CircuitStatus {
   let circuit = circuits.get(service);
@@ -92,6 +134,30 @@ function getOrCreateCircuit(service: ServiceName): CircuitStatus {
     };
     circuits.set(service, circuit);
   }
+  return circuit;
+}
+
+/**
+ * Async version to load from Redis on first access
+ */
+async function getOrCreateCircuitAsync(service: ServiceName): Promise<CircuitStatus> {
+  let circuit = circuits.get(service);
+  
+  // If not in memory and haven't tried loading from Redis yet, try to load
+  if (!circuit && !redisLoadAttempts.has(service)) {
+    redisLoadAttempts.add(service);
+    const redisCircuit = await loadCircuitFromRedis(service);
+    if (redisCircuit) {
+      circuit = redisCircuit;
+      circuits.set(service, circuit);
+    }
+  }
+  
+  // Fall back to creating new if not found
+  if (!circuit) {
+    circuit = getOrCreateCircuit(service);
+  }
+  
   return circuit;
 }
 
@@ -159,6 +225,11 @@ export function recordSuccess(service: ServiceName): void {
     // Reset failure counter on success
     circuit.failures = 0;
   }
+  
+  // Persist to Redis asynchronously (don't block on success)
+  persistCircuitToRedis(service, circuit).catch(() => {
+    // Error already logged in persistCircuitToRedis
+  });
 }
 
 /**
@@ -174,28 +245,33 @@ export function recordFailure(service: ServiceName, error?: Error): void {
   
   const errorMsg = error?.message || 'Unknown error';
   
-   if (circuit.state === 'half-open') {
-     // Failure in half-open immediately opens circuit
-     circuit.state = 'open';
-     circuit.lastStateChange = Date.now();
-     loggers.circuitBreaker.warn(
-       { service, error: errorMsg },
-       'HALF_OPEN -> OPEN (recovery failed)'
-     );
-   } else if (circuit.state === 'closed' && circuit.failures >= config.failureThreshold) {
-     // Too many failures, open the circuit
-     circuit.state = 'open';
-     circuit.lastStateChange = Date.now();
-     loggers.circuitBreaker.warn(
-       { service, failures: circuit.failures, error: errorMsg },
-       'CLOSED -> OPEN after too many failures'
-     );
-   } else if (circuit.state === 'closed') {
-     loggers.circuitBreaker.warn(
-       { service, currentFailures: circuit.failures, threshold: config.failureThreshold, error: errorMsg },
-       'Failure recorded'
-     );
-   }
+    if (circuit.state === 'half-open') {
+      // Failure in half-open immediately opens circuit
+      circuit.state = 'open';
+      circuit.lastStateChange = Date.now();
+      loggers.circuitBreaker.warn(
+        { service, error: errorMsg },
+        'HALF_OPEN -> OPEN (recovery failed)'
+      );
+    } else if (circuit.state === 'closed' && circuit.failures >= config.failureThreshold) {
+      // Too many failures, open the circuit
+      circuit.state = 'open';
+      circuit.lastStateChange = Date.now();
+      loggers.circuitBreaker.warn(
+        { service, failures: circuit.failures, error: errorMsg },
+        'CLOSED -> OPEN after too many failures'
+      );
+    } else if (circuit.state === 'closed') {
+      loggers.circuitBreaker.warn(
+        { service, currentFailures: circuit.failures, threshold: config.failureThreshold, error: errorMsg },
+        'Failure recorded'
+      );
+    }
+  
+  // Persist to Redis asynchronously (don't block on failure)
+  persistCircuitToRedis(service, circuit).catch(() => {
+    // Error already logged in persistCircuitToRedis
+  });
 }
 
 /**
@@ -222,14 +298,40 @@ export function getAllCircuitStatuses(): Map<ServiceName, CircuitStatus & { conf
  * Manually reset a circuit (for admin use)
  */
 export function resetCircuit(service: ServiceName): void {
-   const circuit = getOrCreateCircuit(service);
-   const previousState = circuit.state;
-   circuit.state = 'closed';
-   circuit.failures = 0;
-   circuit.successes = 0;
-   circuit.lastStateChange = Date.now();
-   loggers.circuitBreaker.info({ service, previousState }, 'Manual reset');
- }
+    const circuit = getOrCreateCircuit(service);
+    const previousState = circuit.state;
+    circuit.state = 'closed';
+    circuit.failures = 0;
+    circuit.successes = 0;
+    circuit.lastStateChange = Date.now();
+    loggers.circuitBreaker.info({ service, previousState }, 'Manual reset');
+    
+    // Persist the reset to Redis
+    persistCircuitToRedis(service, circuit).catch(() => {
+      // Error already logged
+    });
+  }
+
+/**
+ * Initialize circuits from Redis on startup (for known services)
+ * This ensures circuit state survives app restarts
+ */
+export async function initializeCircuitsFromRedis(): Promise<void> {
+  const services: ServiceName[] = ['api-football', 'together-predictions', 'together-content'];
+  
+  for (const service of services) {
+    try {
+      const loadedCircuit = await loadCircuitFromRedis(service);
+      if (loadedCircuit) {
+        circuits.set(service, loadedCircuit);
+        redisLoadAttempts.add(service);
+        loggers.circuitBreaker.info({ service }, 'Circuit state restored from Redis');
+      }
+    } catch (error) {
+      loggers.circuitBreaker.warn({ service, error }, 'Failed to restore circuit from Redis');
+    }
+  }
+}
 
 // ============================================================================
 // ERROR CLASS

@@ -12,9 +12,99 @@ import { Queue } from 'bullmq';
 
 const log = loggers.queue;
 
+// ============================================================================
+// CRON PATTERN VALIDATION
+// ============================================================================
+
+/**
+ * Validate cron pattern format at startup
+ * Prevents silent failures from invalid cron patterns
+ */
+function validateCronPattern(pattern: string, jobName: string): void {
+  const parts = pattern.trim().split(/\s+/);
+  
+  // Standard cron format: minute hour day month dayOfWeek
+  if (parts.length !== 5) {
+    throw new Error(
+      `Invalid cron pattern "${pattern}" for job "${jobName}": ` +
+      `Expected 5 fields (minute hour day month dayOfWeek), got ${parts.length}`
+    );
+  }
+  
+  // Validate each field
+  const FIELD_RANGES = [
+    { name: 'minute', min: 0, max: 59 },
+    { name: 'hour', min: 0, max: 23 },
+    { name: 'day', min: 1, max: 31 },
+    { name: 'month', min: 1, max: 12 },
+    { name: 'dayOfWeek', min: 0, max: 6 },
+  ];
+  
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    const field = FIELD_RANGES[i];
+    
+    // Allow wildcards and question marks
+    if (part === '*' || part === '?') {
+      continue;
+    }
+    
+    // Check for ranges (e.g., "5-10")
+    if (part.includes('-') && !part.startsWith('-')) {
+      const [start, end] = part.split('-');
+      if (!isValidCronNumber(start, field.min, field.max) || !isValidCronNumber(end, field.min, field.max)) {
+        throw new Error(
+          `Invalid ${field.name} range "${part}" in cron pattern "${pattern}": ` +
+          `Expected values between ${field.min}-${field.max}`
+        );
+      }
+      continue;
+    }
+    
+    // Check for lists (e.g., "1,2,3")
+    if (part.includes(',')) {
+      for (const num of part.split(',')) {
+        if (!isValidCronNumber(num, field.min, field.max)) {
+          throw new Error(
+            `Invalid ${field.name} value "${num}" in cron pattern "${pattern}": ` +
+            `Expected values between ${field.min}-${field.max}`
+          );
+        }
+      }
+      continue;
+    }
+    
+    // Check for step values (e.g., "*/5")
+    if (part.includes('/')) {
+      const [expr, step] = part.split('/');
+      if (!isValidCronNumber(step, 1, field.max)) {
+        throw new Error(
+          `Invalid step value "${step}" in cron pattern "${pattern}": ` +
+          `Expected positive number, got "${step}"`
+        );
+      }
+      continue;
+    }
+    
+    // Simple number
+    if (!isValidCronNumber(part, field.min, field.max)) {
+      throw new Error(
+        `Invalid ${field.name} value "${part}" in cron pattern "${pattern}": ` +
+        `Expected values between ${field.min}-${field.max}`
+      );
+    }
+  }
+}
+
+function isValidCronNumber(str: string, min: number, max: number): boolean {
+  const num = parseInt(str, 10);
+  return !isNaN(num) && num >= min && num <= max;
+}
+
 /**
  * Register a repeatable job, automatically removing old jobs with the same jobId
  * Prevents old cron patterns from persisting when pattern changes
+ * Validates cron pattern before registering
  */
 async function registerRepeatableJob(
   queue: Queue,
@@ -26,6 +116,9 @@ async function registerRepeatableJob(
   }
 ): Promise<void> {
   try {
+    // Validate cron pattern before registering (fail fast on invalid patterns)
+    validateCronPattern(options.repeat.pattern, `${queue.name}:${options.jobId}`);
+    
     // Get existing repeatable jobs for this queue
     const existingJobs = await queue.getRepeatableJobs();
     
@@ -87,20 +180,32 @@ export async function setupRepeatableJobs(): Promise<void> {
     }
   );
   
-  // One-time immediate backfill on startup
-  try {
-    await backfillQueue.add(
-      JOB_TYPES.BACKFILL_MISSING,
-      { manual: false, hoursAhead: 24 }, // Look further ahead on startup
-      {
-        delay: 5000, // 5 second delay to let workers start
-        jobId: `backfill-startup-${Date.now()}`, // Unique ID each startup
-      }
-    );
-    log.info({ delay: '5s' }, 'Scheduled: one-time startup backfill');
-  } catch (error: any) {
-    log.error({ error: error.message }, 'Failed to schedule startup backfill');
-  }
+   // One-time immediate backfill on startup (use fixed ID to prevent accumulation)
+   const STARTUP_BACKFILL_JOB_ID = 'backfill-startup-once';
+   try {
+     // Clean up any existing startup backfill job before adding new one
+     try {
+       const existingJob = await backfillQueue.getJob(STARTUP_BACKFILL_JOB_ID);
+       if (existingJob) {
+         await existingJob.remove();
+         log.debug({}, 'Removed old startup backfill job');
+       }
+     } catch (error) {
+       // Job doesn't exist, that's fine
+     }
+     
+     await backfillQueue.add(
+       JOB_TYPES.BACKFILL_MISSING,
+       { manual: false, hoursAhead: 24 }, // Look further ahead on startup
+       {
+         delay: 5000, // 5 second delay to let workers start
+         jobId: STARTUP_BACKFILL_JOB_ID, // Fixed ID prevents accumulation on restart
+       }
+     );
+     log.info({ delay: '5s' }, 'Scheduled: one-time startup backfill');
+   } catch (error: any) {
+     log.error({ error: error.message }, 'Failed to schedule startup backfill');
+   }
   
   // Scan for matches needing previews every hour
   await registerRepeatableJob(

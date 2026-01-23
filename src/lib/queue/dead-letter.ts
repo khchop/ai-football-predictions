@@ -86,13 +86,35 @@ export async function addToDeadLetterQueue(
 }
 
 /**
- * Get failed jobs from DLQ
+ * Get failed jobs from DLQ (with automatic cleanup of stale index entries)
  */
 export async function getDeadLetterJobs(
   limit: number = 50,
   offset: number = 0
 ): Promise<DLQEntry[]> {
   const redis = getQueueConnection();
+  
+  // Clean up stale index entries (keys that no longer exist)
+  // This prevents the index from growing indefinitely with expired keys
+  try {
+    const allIndexKeys = await redis.zrange(DLQ_INDEX_KEY, 0, -1);
+    const staleKeys: string[] = [];
+    
+    for (const key of allIndexKeys) {
+      const exists = await redis.exists(key);
+      if (exists === 0) {
+        staleKeys.push(key);
+      }
+    }
+    
+    // Remove stale entries from index
+    if (staleKeys.length > 0) {
+      await redis.zrem(DLQ_INDEX_KEY, ...staleKeys);
+      log.debug({ count: staleKeys.length }, 'Cleaned stale DLQ index entries');
+    }
+  } catch (error) {
+    log.warn({ error }, 'Failed to clean stale DLQ index entries (continuing)');
+  }
   
   // Get keys from index (newest first)
   const keys = await redis.zrevrange(DLQ_INDEX_KEY, offset, offset + limit - 1);

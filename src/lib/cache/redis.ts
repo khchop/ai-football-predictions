@@ -11,7 +11,9 @@ import { loggers } from '@/lib/logger/modules';
 let redisClient: Redis | null = null;
 let isRedisHealthy = false;
 let lastHealthCheck = 0;
-const HEALTH_CHECK_INTERVAL_MS = 30000; // 30 seconds
+// Adaptive cooldown: shorter when unhealthy (5s) to detect recovery, longer when healthy (30s)
+const HEALTH_CHECK_INTERVAL_HEALTHY_MS = 30000; // 30 seconds when healthy
+const HEALTH_CHECK_INTERVAL_DEGRADED_MS = 5000; // 5 seconds when degraded
 
 // Sentinel value for cached null - distinguishes cache hit (null value) from cache miss
 const CACHE_NULL_SENTINEL = '___CACHE_NULL___';
@@ -82,8 +84,16 @@ export async function isRedisAvailable(): Promise<boolean> {
   if (!redis) return false;
   
   const now = Date.now();
+  
+  // Use adaptive cooldown based on current health status
+  // Shorter cooldown (5s) when degraded to detect recovery quickly
+  // Longer cooldown (30s) when healthy to reduce check frequency
+  const cooldown = isRedisHealthy 
+    ? HEALTH_CHECK_INTERVAL_HEALTHY_MS 
+    : HEALTH_CHECK_INTERVAL_DEGRADED_MS;
+  
   // Use cached health status if check was recent
-  if (now - lastHealthCheck < HEALTH_CHECK_INTERVAL_MS) {
+  if (now - lastHealthCheck < cooldown) {
     return isRedisHealthy;
   }
   

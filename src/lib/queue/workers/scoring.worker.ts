@@ -115,12 +115,26 @@ export function createScoringWorker() {
                    totalPoints: breakdown.total,
                  });
                  
-                 scoredCount++;
-                 totalPointsAwarded += breakdown.total;
-                 
-                 if (breakdown.total > 0) {
-                   log.info({ modelId: prediction.modelId, predicted: `${prediction.predictedHome}-${prediction.predictedAway}`, points: breakdown.total, breakdown }, '✓ Scored prediction');
-                 }
+                  scoredCount++;
+                  totalPointsAwarded += breakdown.total;
+                  
+                  // Log all predictions for complete visibility (including zero points)
+                  if (breakdown.total > 0) {
+                    log.info({ 
+                      modelId: prediction.modelId, 
+                      predicted: `${prediction.predictedHome}-${prediction.predictedAway}`, 
+                      points: breakdown.total, 
+                      breakdown 
+                    }, '✓ Scored prediction (points awarded)');
+                  } else {
+                    log.debug({ 
+                      modelId: prediction.modelId, 
+                      predicted: `${prediction.predictedHome}-${prediction.predictedAway}`, 
+                      actual: `${actualHome}-${actualAway}`,
+                      points: 0, 
+                      breakdown 
+                    }, 'Scored prediction (zero points - no match)');
+                  }
                } catch (error: any) {
                  failedCount++;
                  log.error({ predictionId: prediction.id, modelId: prediction.modelId, error: error.message }, 'Failed to score prediction');

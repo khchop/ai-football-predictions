@@ -9,13 +9,14 @@
  */
 
 import { loggers } from '@/lib/logger/modules';
-import { isRedisAvailable } from './redis';
+import { isRedisAvailable, cacheGet } from './redis';
 
 /**
  * Interface for cache warming results
  */
 export interface WarmingResult {
   warmed: string[];      // Successfully warmed cache keys
+  verified: string[];    // Verified in cache (read back confirmed)
   skipped: string[];     // Skipped due to Redis unavailability
   failed: string[];      // Failed to warm (with error details)
   duration: number;      // Time taken in milliseconds
@@ -32,6 +33,7 @@ export async function warmCache(): Promise<WarmingResult> {
   const startTime = Date.now();
   const result: WarmingResult = {
     warmed: [],
+    verified: [],
     skipped: [],
     failed: [],
     duration: 0,
@@ -48,71 +50,96 @@ export async function warmCache(): Promise<WarmingResult> {
 
   loggers.cache.info('Starting cache warming');
 
-  // Warm active competitions
-  try {
-    await warmActiveCompetitions();
-    result.warmed.push('activeCompetitions');
-    loggers.cache.debug('Warmed activeCompetitions cache');
-  } catch (error) {
-    result.failed.push(
-      `activeCompetitions: ${error instanceof Error ? error.message : String(error)}`
-    );
-    loggers.cache.warn(
-      { error: error instanceof Error ? error.message : String(error) },
-      'Failed to warm activeCompetitions cache'
-    );
-  }
+   // Warm active competitions
+   try {
+     await warmActiveCompetitions('cache:active:competitions');
+     result.warmed.push('activeCompetitions');
+     
+     // Verify the write by reading back from cache
+     const verified = await cacheGet('cache:active:competitions');
+     if (verified !== null) {
+       result.verified.push('activeCompetitions');
+       loggers.cache.debug('Warmed and verified activeCompetitions cache');
+     } else {
+       loggers.cache.warn({}, 'activeCompetitions cache warming not verified');
+     }
+   } catch (error) {
+     result.failed.push(
+       `activeCompetitions: ${error instanceof Error ? error.message : String(error)}`
+     );
+     loggers.cache.warn(
+       { error: error instanceof Error ? error.message : String(error) },
+       'Failed to warm activeCompetitions cache'
+     );
+   }
 
-  // Warm active models
-  try {
-    await warmActiveModels();
-    result.warmed.push('activeModels');
-    loggers.cache.debug('Warmed activeModels cache');
-  } catch (error) {
-    result.failed.push(
-      `activeModels: ${error instanceof Error ? error.message : String(error)}`
-    );
-    loggers.cache.warn(
-      { error: error instanceof Error ? error.message : String(error) },
-      'Failed to warm activeModels cache'
-    );
-  }
+   // Warm active models
+   try {
+     await warmActiveModels('cache:active:models');
+     result.warmed.push('activeModels');
+     
+     // Verify the write by reading back from cache
+     const verified = await cacheGet('cache:active:models');
+     if (verified !== null) {
+       result.verified.push('activeModels');
+       loggers.cache.debug('Warmed and verified activeModels cache');
+     } else {
+       loggers.cache.warn({}, 'activeModels cache warming not verified');
+     }
+   } catch (error) {
+     result.failed.push(
+       `activeModels: ${error instanceof Error ? error.message : String(error)}`
+     );
+     loggers.cache.warn(
+       { error: error instanceof Error ? error.message : String(error) },
+       'Failed to warm activeModels cache'
+     );
+   }
 
-  // Warm overall stats
-  try {
-    await warmOverallStats();
-    result.warmed.push('overallStats');
-    loggers.cache.debug('Warmed overallStats cache');
-  } catch (error) {
-    result.failed.push(
-      `overallStats: ${error instanceof Error ? error.message : String(error)}`
-    );
-    loggers.cache.warn(
-      { error: error instanceof Error ? error.message : String(error) },
-      'Failed to warm overallStats cache'
-    );
-  }
+   // Warm overall stats
+   try {
+     await warmOverallStats('cache:overall:stats');
+     result.warmed.push('overallStats');
+     
+     // Verify the write by reading back from cache
+     const verified = await cacheGet('cache:overall:stats');
+     if (verified !== null) {
+       result.verified.push('overallStats');
+       loggers.cache.debug('Warmed and verified overallStats cache');
+     } else {
+       loggers.cache.warn({}, 'overallStats cache warming not verified');
+     }
+   } catch (error) {
+     result.failed.push(
+       `overallStats: ${error instanceof Error ? error.message : String(error)}`
+     );
+     loggers.cache.warn(
+       { error: error instanceof Error ? error.message : String(error) },
+       'Failed to warm overallStats cache'
+     );
+   }
 
   result.duration = Date.now() - startTime;
 
-  loggers.cache.info(
-    {
-      warmed: result.warmed.length,
-      skipped: result.skipped.length,
-      failed: result.failed.length,
-      duration: result.duration,
-    },
-    'Cache warming completed'
-  );
+   loggers.cache.info(
+     {
+       warmed: result.warmed.length,
+       verified: result.verified.length,
+       skipped: result.skipped.length,
+       failed: result.failed.length,
+       duration: result.duration,
+     },
+     'Cache warming completed'
+   );
 
-  return result;
+   return result;
 }
 
 /**
  * Warm active competitions cache
  * Pre-fetches list of active competitions to avoid cold database hits
  */
-async function warmActiveCompetitions(): Promise<void> {
+async function warmActiveCompetitions(_cacheKey?: string): Promise<void> {
   // Import here to avoid circular dependencies
   const { getActiveCompetitions } = await import('@/lib/db/queries');
   
@@ -124,7 +151,7 @@ async function warmActiveCompetitions(): Promise<void> {
  * Warm active models cache
  * Pre-fetches list of active LLM models to avoid cold database hits
  */
-async function warmActiveModels(): Promise<void> {
+async function warmActiveModels(_cacheKey?: string): Promise<void> {
   // Import here to avoid circular dependencies
   const { getActiveModels } = await import('@/lib/db/queries');
   
@@ -136,7 +163,7 @@ async function warmActiveModels(): Promise<void> {
  * Warm overall stats cache
  * Pre-fetches system statistics to avoid cold database hits
  */
-async function warmOverallStats(): Promise<void> {
+async function warmOverallStats(_cacheKey?: string): Promise<void> {
   // Import here to avoid circular dependencies
   const { getOverallStats } = await import('@/lib/db/queries');
   

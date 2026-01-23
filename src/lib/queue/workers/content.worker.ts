@@ -6,7 +6,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { getQueueConnection, QUEUE_NAMES } from '../index';
+import { getQueueConnection, QUEUE_NAMES, getQueue } from '../index';
 import type { GenerateContentPayload } from '../types';
 import { generateMatchPreview } from '@/lib/content/generator';
 import { getMatchesNeedingPreviews, getMatchBetsForPreview, hasMatchPreview } from '@/lib/content/queries';
@@ -116,11 +116,10 @@ async function scanMatchesNeedingPreviews() {
      return { scanned: 0, queued: 0, failed: 0 };
    }
    
-   log.info({ matchCount: matchesNeedingPreviews.length }, `Found matches needing previews`);
-   
-   // Queue each match for preview generation
-   const { getQueue } = await import('../index');
-   const contentQueue = getQueue(QUEUE_NAMES.CONTENT);
+    log.info({ matchCount: matchesNeedingPreviews.length }, `Found matches needing previews`);
+    
+    // Queue each match for preview generation
+    const contentQueue = getQueue(QUEUE_NAMES.CONTENT);
    
    let queuedCount = 0;
    let failedCount = 0;
