@@ -1,0 +1,177 @@
+/**
+ * Together AI Content Generation Client
+ * 
+ * Uses Llama 4 Maverick for high-quality blog content generation.
+ * Replaces OpenRouter for unified LLM provider infrastructure.
+ */
+
+import { fetchWithRetry } from '@/lib/utils/api-client';
+import { TOGETHER_CONTENT_RETRY, TOGETHER_CONTENT_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
+
+interface TogetherMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+interface TogetherRequest {
+  model: string;
+  messages: TogetherMessage[];
+  temperature?: number;
+  max_tokens?: number;
+  top_p?: number;
+}
+
+interface TogetherResponse {
+  id: string;
+  model: string;
+  choices: Array<{
+    message: {
+      role: string;
+      content: string;
+    };
+    finish_reason: string;
+  }>;
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+interface GenerationResult<T = unknown> {
+  content: T;
+  usage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+  cost: number; // In USD
+}
+
+// Configuration
+const MODEL = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
+const API_URL = 'https://api.together.xyz/v1/chat/completions';
+const PRICING = {
+  inputCostPerMillion: 0.27,  // USD per 1M tokens
+  outputCostPerMillion: 0.85, // USD per 1M tokens
+};
+
+/**
+ * Calculate content generation cost
+ */
+function calculateCost(inputTokens: number, outputTokens: number): number {
+  const inputCost = (inputTokens / 1_000_000) * PRICING.inputCostPerMillion;
+  const outputCost = (outputTokens / 1_000_000) * PRICING.outputCostPerMillion;
+  return inputCost + outputCost;
+}
+
+/**
+ * Generate content using Llama 4 Maverick via Together AI
+ */
+export async function generateWithTogetherAI<T = unknown>(
+  systemPrompt: string,
+  userPrompt: string,
+  temperature: number = 0.7,
+  maxTokens: number = 3000
+): Promise<GenerationResult<T>> {
+  const apiKey = process.env.TOGETHER_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error('TOGETHER_API_KEY environment variable is not set');
+  }
+
+  const request: TogetherRequest = {
+    model: MODEL,
+    messages: [
+      {
+        role: 'system',
+        content: systemPrompt,
+      },
+      {
+        role: 'user',
+        content: userPrompt,
+      },
+    ],
+    temperature,
+    max_tokens: maxTokens,
+    top_p: 0.9,
+  };
+
+  const startTime = Date.now();
+
+  try {
+    const response = await fetchWithRetry(
+      API_URL,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(request),
+      },
+      TOGETHER_CONTENT_RETRY,
+      TOGETHER_CONTENT_TIMEOUT_MS,
+      SERVICE_NAMES.TOGETHER_CONTENT
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Together AI API error (${response.status}): ${errorText}`);
+    }
+
+    const data = await response.json() as TogetherResponse;
+
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error('No response from Together AI API');
+    }
+
+    const content = data.choices[0].message.content;
+    const usage = data.usage;
+    const cost = calculateCost(usage.prompt_tokens, usage.completion_tokens);
+    const duration = Date.now() - startTime;
+
+    console.log(
+      `[Together AI] Content generated (${duration}ms): ` +
+      `${usage.prompt_tokens} input + ${usage.completion_tokens} output tokens, ` +
+      `cost: $${cost.toFixed(4)}`
+    );
+
+    // Parse JSON response
+    let parsedContent: T;
+    try {
+      // Extract JSON from markdown code blocks if present
+      const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || content.match(/```\n?([\s\S]*?)\n?```/);
+      const jsonString = jsonMatch ? jsonMatch[1] : content;
+      parsedContent = JSON.parse(jsonString.trim()) as T;
+    } catch (parseError) {
+      // If JSON parsing fails, try to clean and retry
+      const cleanedContent = content
+        .replace(/^[^{]*/, '')    // Remove leading non-JSON text
+        .replace(/[^}]*$/, '');   // Remove trailing non-JSON text
+      
+      try {
+        parsedContent = JSON.parse(cleanedContent) as T;
+      } catch {
+        console.error('[Together AI] Failed to parse response as JSON:', content);
+        throw new Error(`Failed to parse AI response as JSON: ${parseError}`);
+      }
+    }
+
+    return {
+      content: parsedContent,
+      usage: {
+        promptTokens: usage.prompt_tokens,
+        completionTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens,
+      },
+      cost,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error('[Together AI] Generation failed:', error.message);
+      throw error;
+    }
+    throw new Error('Unknown error during content generation');
+  }
+}

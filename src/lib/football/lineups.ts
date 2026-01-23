@@ -1,9 +1,9 @@
 import { APIFootballLineupsResponse } from '@/types';
 import { updateMatchAnalysisLineups, getMatchAnalysisByMatchId, getMatchById } from '@/lib/db/queries';
 import { fetchWithRetry, APIError } from '@/lib/utils/api-client';
+import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
-const API_TIMEOUT_MS = 30000;
 
 // Fetch lineups from API-Football
 export async function fetchLineups(fixtureId: number): Promise<APIFootballLineupsResponse | null> {
@@ -19,21 +19,18 @@ export async function fetchLineups(fixtureId: number): Promise<APIFootballLineup
   console.log(`[Lineups] Fetching: ${url.toString()}`);
 
   try {
-    const response = await fetchWithRetry(
-      url.toString(),
-      {
-        method: 'GET',
-        headers: {
-          'x-apisports-key': apiKey,
-        },
-      },
-      {
-        maxRetries: 2,
-        baseDelayMs: 1000,
-        retryableStatusCodes: [408, 429, 500, 502, 503, 504],
-      },
-      API_TIMEOUT_MS
-    );
+     const response = await fetchWithRetry(
+       url.toString(),
+       {
+         method: 'GET',
+         headers: {
+           'x-apisports-key': apiKey,
+         },
+       },
+       API_FOOTBALL_RETRY,
+       API_FOOTBALL_TIMEOUT_MS,
+       SERVICE_NAMES.API_FOOTBALL
+     );
 
     if (!response.ok) {
       throw new APIError(

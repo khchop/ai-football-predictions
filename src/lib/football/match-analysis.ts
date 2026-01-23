@@ -10,6 +10,7 @@ import { upsertMatchAnalysis, getMatchAnalysisByMatchId } from '@/lib/db/queries
 import { v4 as uuidv4 } from 'uuid';
 import type { MatchAnalysis, NewMatchAnalysis } from '@/lib/db/schema';
 import { fetchWithRetry, APIError } from '@/lib/utils/api-client';
+import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
 import { 
   fetchTeamStatistics, 
   extractTeamStatistics 
@@ -22,7 +23,6 @@ import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
 import pLimit from 'p-limit';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
-const API_TIMEOUT_MS = 30000;
 
 interface FetchOptions {
   endpoint: string;
@@ -46,21 +46,18 @@ async function fetchFromAPI<T>({ endpoint, params }: FetchOptions): Promise<T> {
 
   console.log(`[Match Analysis] Fetching: ${url.toString()}`);
 
-  const response = await fetchWithRetry(
-    url.toString(),
-    {
-      method: 'GET',
-      headers: {
-        'x-apisports-key': apiKey,
-      },
-    },
-    {
-      maxRetries: 3,
-      baseDelayMs: 1000,
-      retryableStatusCodes: [408, 429, 500, 502, 503, 504],
-    },
-    API_TIMEOUT_MS
-  );
+   const response = await fetchWithRetry(
+     url.toString(),
+     {
+       method: 'GET',
+       headers: {
+         'x-apisports-key': apiKey,
+       },
+     },
+     API_FOOTBALL_RETRY,
+     API_FOOTBALL_TIMEOUT_MS,
+     SERVICE_NAMES.API_FOOTBALL
+   );
 
   if (!response.ok) {
     throw new APIError(

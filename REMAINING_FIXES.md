@@ -1,8 +1,8 @@
 # Remaining Fixes - Football Predictions System
 
 **Last Updated:** 2026-01-23  
-**Completed:** 26/200 issues (13%)  
-**Status:** Fresh start complete + Rate limiting deployed, ready for Phase 3
+**Completed:** 29/200 issues (15%)  
+**Status:** Batch 2 complete: Robust retry infrastructure + Content migration to Together AI
 
 ## 🧹 Fresh Start Complete
 
@@ -22,7 +22,7 @@
 - [x] Race conditions in database queries
 - [x] Build failure (duplicate code)
 
-### HIGH (22/60)
+### HIGH (25/60)
 - [x] Worker error handling (throw for retry)
 - [x] LLM API retry logic with backoff
 - [x] Scheduler job ID mismatch
@@ -45,10 +45,32 @@
 - [x] Update About page (30 → 35 models, OpenRouter → Together AI)
 - [x] Add Redis-based rate limiting (all endpoints)
 - [x] Worker error handling analysis (confirmed not bugs)
+- [x] **Batch 2: Circuit breaker pattern implementation**
+- [x] **Batch 2: Service-specific retry configurations**
+- [x] **Batch 2: Content generation migration (OpenRouter → Together AI Llama 4 Maverick)**
 
 ---
 
-## 🔴 HIGH Priority Remaining (37/60)
+## Architecture Decisions
+
+### Finalized
+- **LLM Provider:** Together AI (35 models for predictions + Llama 4 Maverick for content)
+- **Content Generation:** Llama 4 Maverick via Together AI ($0.27/M input, $0.85/M output)
+- **Retry Logic:** Service-specific configs with exponential backoff
+- **Resilience:** Circuit breaker pattern for cascading failure prevention
+- **Rate Limiting:** Redis-based, distributed (admin: 10 req/min, public API: 60 req/min)
+- **Queue:** BullMQ with Redis backend
+- **Database:** PostgreSQL via Drizzle ORM
+
+### Content Generation Schedule
+- **Match Previews:** Every hour (1-6h before kickoff)
+- **League Roundups:** Weekly (Monday 10 AM UTC) - all 9 tracked leagues
+- **Model Reports:** Weekly (Sunday 10 PM UTC) - top 10 models
+- **Estimated Cost:** ~$0.71/month
+
+---
+
+## 🔴 HIGH Priority Remaining (34/60)
 
 ### Database & Performance
 1. **Add database indexes** - `src/lib/db/schema.ts`
@@ -418,9 +440,9 @@ git push
 
 ---
 
-**Total Remaining:** 174/200 issues (87%)  
-**Estimated Time:** 12-16 hours  
-**Priority Focus:** HIGH (37) → MEDIUM (79) → LOW (43)
+**Total Remaining:** 171/200 issues (86%)  
+**Estimated Time:** 10-14 hours  
+**Priority Focus:** HIGH (34) → MEDIUM (79) → LOW (43)
 
 ---
 

@@ -8,7 +8,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getDb, matchPreviews, blogPosts } from '@/lib/db';
 import type { NewMatchPreview, NewBlogPost } from '@/lib/db/schema';
-import { getOpenRouterClient } from './openrouter-client';
+import { generateWithTogetherAI } from './together-client';
 import {
   buildMatchPreviewPrompt,
   buildLeagueRoundupPrompt,
@@ -34,8 +34,8 @@ export async function generateMatchPreview(matchData: {
 }): Promise<string> {
   console.log(`[ContentGen] Generating preview for ${matchData.homeTeam} vs ${matchData.awayTeam}`);
   
-  const client = getOpenRouterClient();
-  const prompt = buildMatchPreviewPrompt({
+  const systemPrompt = 'You are a professional football analyst writing a match preview for SEO and AI search engines (ChatGPT, Perplexity, Claude).';
+  const userPrompt = buildMatchPreviewPrompt({
     homeTeam: matchData.homeTeam,
     awayTeam: matchData.awayTeam,
     competition: matchData.competition,
@@ -61,7 +61,7 @@ export async function generateMatchPreview(matchData: {
     aiPredictions: matchData.aiPredictions,
   });
 
-  const result = await client.generate<MatchPreviewResponse>(prompt);
+  const result = await generateWithTogetherAI<MatchPreviewResponse>(systemPrompt, userPrompt);
   
   // Save to database
   const db = getDb();
@@ -126,8 +126,8 @@ export async function generateLeagueRoundup(roundupData: {
 }): Promise<string> {
   console.log(`[ContentGen] Generating ${roundupData.competition} roundup for ${roundupData.week}`);
   
-  const client = getOpenRouterClient();
-  const prompt = buildLeagueRoundupPrompt({
+  const systemPrompt = `You are a professional football journalist writing a weekly league roundup for ${roundupData.competition}.`;
+  const userPrompt = buildLeagueRoundupPrompt({
     competition: roundupData.competition,
     competitionSlug: roundupData.competitionSlug,
     week: roundupData.week,
@@ -135,7 +135,7 @@ export async function generateLeagueRoundup(roundupData: {
     standingsTop5: roundupData.standings?.slice(0, 5),
   });
 
-  const result = await client.generate<ArticleResponse>(prompt);
+  const result = await generateWithTogetherAI<ArticleResponse>(systemPrompt, userPrompt);
   
   // Save to database
   const db = getDb();
@@ -203,14 +203,14 @@ export async function generateModelReport(reportData: {
 }): Promise<string> {
   console.log(`[ContentGen] Generating model performance report for ${reportData.period}`);
   
-  const client = getOpenRouterClient();
-  const prompt = buildModelReportPrompt({
+  const systemPrompt = 'You are a data analyst writing a performance report on AI football betting models.';
+  const userPrompt = buildModelReportPrompt({
     period: reportData.period,
     topModels: reportData.topModels,
     overallStats: reportData.overallStats,
   });
 
-  const result = await client.generate<ArticleResponse>(prompt);
+  const result = await generateWithTogetherAI<ArticleResponse>(systemPrompt, userPrompt);
   
   // Save to database
   const db = getDb();

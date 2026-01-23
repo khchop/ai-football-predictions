@@ -5,9 +5,9 @@
 
 import { fetchWithRetry, APIError, RateLimitError } from '@/lib/utils/api-client';
 import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
+import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
-const API_TIMEOUT_MS = 30000;
 
 interface FetchOptions {
   endpoint: string;
@@ -43,12 +43,9 @@ export async function fetchFromAPIFootball<T>({ endpoint, params }: FetchOptions
         'x-apisports-key': apiKey,
       },
     },
-    {
-      maxRetries: 3,
-      baseDelayMs: 1000,
-      retryableStatusCodes: [408, 429, 500, 502, 503, 504],
-    },
-    API_TIMEOUT_MS
+    API_FOOTBALL_RETRY,
+    API_FOOTBALL_TIMEOUT_MS,
+    SERVICE_NAMES.API_FOOTBALL
   );
 
   // Parse rate limit headers for logging

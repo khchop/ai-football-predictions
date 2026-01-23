@@ -8,6 +8,7 @@ import {
   BatchParsedResult,
 } from '../prompt';
 import { fetchWithRetry, APIError, RateLimitError } from '@/lib/utils/api-client';
+import { TOGETHER_PREDICTION_RETRY, TOGETHER_PREDICTION_TIMEOUT_MS, TOGETHER_PREDICTION_BATCH_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
 
 // Result for batch predictions
 export interface BatchPredictionResult {
@@ -157,36 +158,32 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
     
     try {
       // Use fetchWithRetry for automatic retry on transient failures
-      // Retries: 429 (rate limit), 5xx (server errors), timeouts
-      const response = await fetchWithRetry(
-        this.endpoint,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...this.getHeaders(),
-          },
-          body: JSON.stringify({
-            model: this.model,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPrompt },
-            ],
-            // OPTIMIZED: Lower temperature for more reliable JSON output
-            temperature: 0.3,
-            max_tokens: maxTokens,
-            // Force JSON output mode for all models
-            response_format: { type: 'json_object' },
-          }),
-        },
-        {
-          maxRetries: 3,
-          baseDelayMs: 1000,
-          maxDelayMs: 10000,
-          retryableStatusCodes: [408, 429, 500, 502, 503, 504],
-        },
-        timeout
-      );
+       // Retries: 429 (rate limit), 5xx (server errors), timeouts
+       const response = await fetchWithRetry(
+         this.endpoint,
+         {
+           method: 'POST',
+           headers: {
+             'Content-Type': 'application/json',
+             ...this.getHeaders(),
+           },
+           body: JSON.stringify({
+             model: this.model,
+             messages: [
+               { role: 'system', content: systemPrompt },
+               { role: 'user', content: userPrompt },
+             ],
+             // OPTIMIZED: Lower temperature for more reliable JSON output
+             temperature: 0.3,
+             max_tokens: maxTokens,
+             // Force JSON output mode for all models
+             response_format: { type: 'json_object' },
+           }),
+         },
+         TOGETHER_PREDICTION_RETRY,
+         timeout,
+         SERVICE_NAMES.TOGETHER_PREDICTIONS
+       );
 
       if (!response.ok) {
         // Safely read error text

@@ -3,12 +3,12 @@ import { eq, and, inArray, sql } from 'drizzle-orm';
 import type { NewLeagueStanding, LeagueStanding } from '@/lib/db/schema';
 import { COMPETITIONS } from './competitions';
 import { fetchWithRetry, APIError, sleep } from '@/lib/utils/api-client';
+import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
 
 // Re-export LeagueStanding for convenience
 export type { LeagueStanding };
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
-const API_TIMEOUT_MS = 30000;
 const RATE_LIMIT_DELAY_MS = 300;
 
 interface APIStandingTeam {
@@ -72,12 +72,9 @@ async function fetchStandingsFromAPI(leagueId: number, season: number): Promise<
         'x-apisports-key': apiKey,
       },
     },
-    {
-      maxRetries: 3,
-      baseDelayMs: 1000,
-      retryableStatusCodes: [408, 429, 500, 502, 503, 504],
-    },
-    API_TIMEOUT_MS
+    API_FOOTBALL_RETRY,
+    API_FOOTBALL_TIMEOUT_MS,
+    SERVICE_NAMES.API_FOOTBALL
   );
 
   if (!response.ok) {

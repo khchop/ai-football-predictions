@@ -50,8 +50,8 @@ export function createContentWorker() {
       connection: getQueueConnection(),
       concurrency: 1, // Process one at a time to avoid rate limits
       limiter: {
-        max: 10, // Max 10 requests
-        duration: 60000, // Per minute (OpenRouter free tier limit)
+        max: 30, // Max 30 requests per minute (Together AI limit)
+        duration: 60000, // Per minute
       },
     }
   );

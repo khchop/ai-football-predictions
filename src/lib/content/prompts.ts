@@ -52,9 +52,7 @@ interface MatchPreviewData {
 export function buildMatchPreviewPrompt(data: MatchPreviewData): string {
   const { homeTeam, awayTeam, competition, kickoffTime, venue } = data;
   
-  return `You are a professional football analyst writing a match preview for SEO and AI search engines (ChatGPT, Perplexity, Claude).
-
-Match Details:
+  return `Match Details:
 - ${homeTeam} vs ${awayTeam}
 - Competition: ${competition}
 - Kickoff: ${kickoffTime}${venue ? `\n- Venue: ${venue}` : ''}
@@ -142,9 +140,7 @@ interface LeagueRoundupData {
 export function buildLeagueRoundupPrompt(data: LeagueRoundupData): string {
   const { competition, week, matches, standingsTop5 } = data;
   
-  return `You are a professional football journalist writing a weekly league roundup for ${competition}.
-
-Week: ${week}
+  return `Week: ${week}
 
 Matches Covered:
 ${matches.map(m => {
@@ -223,9 +219,7 @@ interface ModelReportData {
 export function buildModelReportPrompt(data: ModelReportData): string {
   const { period, topModels, overallStats } = data;
   
-  return `You are a data analyst writing a performance report on AI football betting models.
-
-Period: ${period}
+  return `Period: ${period}
 
 Top Performing Models:
 ${topModels.map((m, i) => `
