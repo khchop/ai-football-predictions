@@ -17,12 +17,12 @@ import { loggers } from '@/lib/logger/modules';
 const POLL_INTERVAL_MS = 60 * 1000; // 60 seconds
 const MAX_POLLS = 150; // Stop after 150 polls (2.5 hours) to prevent infinite loops
 
-// Use consistent job ID for deduplication (no poll count in ID)
-function getLiveJobId(matchId: string): string {
-  return `live-${matchId}`;
+// Use unique job ID for each poll to avoid conflicts with completed jobs
+function getPollJobId(matchId: string, pollCount: number): string {
+  return `live-poll-${matchId}-${pollCount}`;
 }
 
-// Helper to safely schedule next poll with deduplication check
+// Helper to safely schedule next poll with unique job IDs
 async function scheduleNextPoll(
   matchId: string,
   externalId: string,
@@ -30,39 +30,31 @@ async function scheduleNextPoll(
   pollCount: number,
   log: any
 ): Promise<boolean> {
-  const nextJobId = getLiveJobId(matchId);
+  const nextPollCount = pollCount + 1;
+  const nextJobId = getPollJobId(matchId, nextPollCount);
   
   try {
-    // Check if job already exists (active, waiting, or delayed)
-    const existingJob = await liveQueue.getJob(nextJobId);
-    if (existingJob) {
-      const state = await existingJob.getState();
-      if (state === 'active' || state === 'waiting' || state === 'delayed') {
-        log.debug({ matchId, state }, 'Next poll already scheduled, skipping duplicate');
-        return false;
-      }
-    }
-    
     await liveQueue.add(
       JOB_TYPES.MONITOR_LIVE,
       {
         matchId,
         externalId,
         kickoffTime,
-        pollCount: pollCount + 1,
+        pollCount: nextPollCount,
       },
       {
         delay: POLL_INTERVAL_MS,
         jobId: nextJobId,
       }
     );
+    log.debug({ matchId, nextJobId, nextPollCount }, 'Scheduled next poll');
     return true;
   } catch (err: any) {
     if (err.message?.includes('already exists')) {
-      log.debug({ matchId }, 'Next poll job already exists');
+      log.debug({ matchId, nextJobId }, 'Next poll job already exists (race condition)');
       return false;
     }
-    log.error({ matchId, err }, 'Failed to schedule next poll');
+    log.error({ matchId, nextJobId, err: err.message }, 'Failed to schedule next poll');
     return false;
   }
 }

@@ -5,7 +5,7 @@
  * This ensures smooth deployments - new matches get jobs automatically.
  */
 
-import { getUpcomingMatches, getStuckScheduledMatches } from '@/lib/db/queries';
+import { getUpcomingMatches, getStuckScheduledMatches, getLiveMatches } from '@/lib/db/queries';
 import { scheduleMatchJobs } from './scheduler';
 import { liveQueue, JOB_TYPES } from './index';
 import { loggers } from '@/lib/logger/modules';
@@ -40,9 +40,12 @@ export async function catchUpScheduling(): Promise<{ scheduled: number; matches:
     log.info({ scheduledJobs: totalScheduled, matchCount: upcomingMatches.length }, 'Completed catch-up scheduling');
     
     // Check for stuck scheduled matches that should be live
-    const stuckFixed = await checkAndFixStuckMatches();
+    const stuckScheduledFixed = await checkAndFixStuckMatches();
     
-    return { scheduled: totalScheduled, matches: upcomingMatches.length, stuckFixed };
+    // Check for stuck live matches that have no active polling
+    const stuckLiveFixed = await checkAndFixStuckLiveMatches();
+    
+    return { scheduled: totalScheduled, matches: upcomingMatches.length, stuckFixed: stuckScheduledFixed + stuckLiveFixed };
   } catch (error) {
     log.error({ error: error instanceof Error ? error.message : String(error) }, 'Failed to catch up scheduling');
     throw error;
@@ -180,5 +183,145 @@ export async function checkAndFixStuckMatches(): Promise<number> {
       stack: error instanceof Error ? error.stack : undefined,
     }, 'Failed to check stuck matches');
     return 0;
+  }
+}
+
+/**
+ * Check for matches with 'live' status that have no active polling jobs
+ * This recovers matches where polling stopped but status is still live
+ */
+export async function checkAndFixStuckLiveMatches(): Promise<number> {
+  try {
+    log.info('Checking for live matches without active polling...');
+    
+    const liveMatches = await getLiveMatches();
+    
+    if (liveMatches.length === 0) {
+      log.debug('No live matches found');
+      return 0;
+    }
+    
+    log.info({ count: liveMatches.length }, 'Found live matches, checking for active polling');
+    
+    let fixed = 0;
+    let skipped = 0;
+    
+    for (const { match } of liveMatches) {
+      if (!match.externalId) {
+        log.warn({ 
+          matchId: match.id,
+          homeTeam: match.homeTeam,
+          awayTeam: match.awayTeam,
+        }, 'Skipping live match without externalId');
+        continue;
+      }
+      
+      // Check if there's any active polling job for this match
+      const hasActiveJob = await hasActivePollJob(match.id);
+      
+      if (hasActiveJob) {
+        log.debug({ 
+          matchId: match.id,
+          homeTeam: match.homeTeam,
+          awayTeam: match.awayTeam,
+        }, 'Live match has active polling, skipping');
+        skipped++;
+        continue;
+      }
+      
+      // No active polling - trigger recovery with unique job ID
+      const recoveryJobId = `live-poll-${match.id}-recovery-${Date.now()}`;
+      
+      try {
+        await liveQueue.add(
+          JOB_TYPES.MONITOR_LIVE,
+          {
+            matchId: match.id,
+            externalId: match.externalId,
+            kickoffTime: match.kickoffTime,
+            pollCount: 0,
+          },
+          {
+            priority: 1, // High priority
+            jobId: recoveryJobId,
+          }
+        );
+        
+        fixed++;
+        log.info({ 
+          matchId: match.id, 
+          homeTeam: match.homeTeam, 
+          awayTeam: match.awayTeam,
+          recoveryJobId,
+        }, '✓ Triggered recovery poll for stuck live match');
+      } catch (error: any) {
+        log.error({ 
+          matchId: match.id,
+          homeTeam: match.homeTeam,
+          awayTeam: match.awayTeam, 
+          error: error.message,
+        }, 'Failed to trigger recovery poll for stuck live match');
+      }
+    }
+    
+    log.info({ 
+      fixed, 
+      skipped, 
+      total: liveMatches.length,
+      summary: `Recovered ${fixed}/${liveMatches.length} stuck live matches`
+    }, 'Stuck live match recovery completed');
+    
+    return fixed;
+  } catch (error) {
+    log.error({ 
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    }, 'Failed to check stuck live matches');
+    return 0;
+  }
+}
+
+/**
+ * Check if a match has any active polling jobs (waiting, delayed, or active)
+ */
+async function hasActivePollJob(matchId: string): Promise<boolean> {
+  const jobPattern = `live-poll-${matchId}-`;
+  const initialJobId = `live-${matchId}`;
+  
+  // Helper to check if any job matches our pattern
+  const matchesPattern = (jobId: string | undefined): boolean => {
+    if (!jobId) return false;
+    return jobId.startsWith(jobPattern) || jobId === initialJobId;
+  };
+  
+  try {
+    // Check delayed jobs
+    const delayed = await liveQueue.getDelayed(0, 1000);
+    for (const job of delayed) {
+      if (matchesPattern(job.id)) {
+        return true;
+      }
+    }
+    
+    // Check waiting jobs
+    const waiting = await liveQueue.getWaiting(0, 1000);
+    for (const job of waiting) {
+      if (matchesPattern(job.id)) {
+        return true;
+      }
+    }
+    
+    // Check active jobs
+    const active = await liveQueue.getActive(0, 1000);
+    for (const job of active) {
+      if (matchesPattern(job.id)) {
+        return true;
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    log.error({ matchId, error }, 'Error checking for active poll jobs');
+    return false; // On error, assume no active job to trigger recovery
   }
 }

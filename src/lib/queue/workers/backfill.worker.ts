@@ -18,7 +18,7 @@ import {
   getMatchesMissingPredictions,
   getMatchesNeedingScoring,
 } from '@/lib/db/queries';
-import { checkAndFixStuckMatches } from '../catch-up';
+import { checkAndFixStuckMatches, checkAndFixStuckLiveMatches } from '../catch-up';
 import { loggers } from '@/lib/logger/modules';
 
 export function createBackfillWorker() {
@@ -30,14 +30,17 @@ export function createBackfillWorker() {
       
       // ============ STUCK MATCHES RECOVERY ============
       // Check for matches stuck in 'scheduled' status that should be live
+      // AND matches in 'live' status that have no active polling
       if (type === 'stuck-matches') {
         log.info('Starting stuck match recovery check...');
         
         try {
-          const stuckFixed = await checkAndFixStuckMatches();
+          const stuckScheduledFixed = await checkAndFixStuckMatches();
+          const stuckLiveFixed = await checkAndFixStuckLiveMatches();
+          const totalFixed = stuckScheduledFixed + stuckLiveFixed;
           
-          if (stuckFixed > 0) {
-            log.info({ stuckFixed }, '✓ Recovered stuck matches - triggered live monitoring');
+          if (totalFixed > 0) {
+            log.info({ stuckScheduledFixed, stuckLiveFixed, totalFixed }, '✓ Recovered stuck matches - triggered live monitoring');
           } else {
             log.debug('No stuck matches found');
           }
@@ -45,7 +48,9 @@ export function createBackfillWorker() {
           return {
             success: true,
             type: 'stuck-matches',
-            stuckFixed,
+            stuckScheduledFixed,
+            stuckLiveFixed,
+            stuckFixed: totalFixed,
           };
         } catch (error: any) {
           log.error({ err: error }, 'Failed to check stuck matches');
