@@ -1,16 +1,26 @@
 import { LLMProvider } from '@/types';
 import { TOGETHER_PROVIDERS } from './providers/together';
+import { getAutoDisabledModelIds } from '@/lib/db/queries';
 
 // All available providers - 35 open-source models via Together AI
 export const ALL_PROVIDERS: LLMProvider[] = [...TOGETHER_PROVIDERS];
 
-// Get active providers (checks if API keys are configured)
-export function getActiveProviders(): LLMProvider[] {
+// Get active providers (checks if API keys are configured and filters auto-disabled models)
+export async function getActiveProviders(): Promise<LLMProvider[]> {
   // All providers use Together AI
   if (!process.env.TOGETHER_API_KEY) {
     return [];
   }
-  return ALL_PROVIDERS;
+  
+  // Filter out auto-disabled models
+  const disabledIds = await getAutoDisabledModelIds();
+  const activeProviders = ALL_PROVIDERS.filter(p => !disabledIds.has(p.id));
+  
+  if (disabledIds.size > 0) {
+    console.log(`[LLM] Filtered ${disabledIds.size} auto-disabled models, ${activeProviders.length} active`);
+  }
+  
+  return activeProviders;
 }
 
 // Get provider by ID

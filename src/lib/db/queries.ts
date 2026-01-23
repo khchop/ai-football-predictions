@@ -483,6 +483,17 @@ export async function getAutoDisabledModels(): Promise<Model[]> {
     .orderBy(models.displayName);
 }
 
+// Get IDs of all auto-disabled models (for filtering in providers)
+export async function getAutoDisabledModelIds(): Promise<Set<string>> {
+  const db = getDb();
+  const results = await db
+    .select({ id: models.id })
+    .from(models)
+    .where(eq(models.autoDisabled, true));
+  
+  return new Set(results.map(r => r.id));
+}
+
 // Check if a model should be skipped due to health issues
 export function shouldSkipModelDueToHealth(model: Model): boolean {
   return model.autoDisabled === true;

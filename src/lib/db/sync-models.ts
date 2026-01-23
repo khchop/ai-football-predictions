@@ -26,11 +26,11 @@ export async function syncModelsToDatabase(): Promise<{
   
   const db = getDb();
   
-  try {
-    // Get all active providers from code
-    const providers = getActiveProviders();
-    
-    if (providers.length === 0) {
+   try {
+     // Get all active providers from code
+     const providers = await getActiveProviders();
+     
+     if (providers.length === 0) {
       console.warn('[Model Sync] ⚠️  No active providers found in code!');
       return { added: 0, updated: 0, deactivated: 0, total: 0 };
     }

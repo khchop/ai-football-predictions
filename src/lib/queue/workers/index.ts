@@ -15,6 +15,7 @@ import { createLiveScoreWorker } from './live-score.worker';
 import { createScoringWorker } from './scoring.worker';
 import { createBackfillWorker } from './backfill.worker';
 import { createContentWorker } from './content.worker';
+import { createModelRecoveryWorker } from './model-recovery.worker';
 import { addToDeadLetterQueue } from '../dead-letter';
 
 let workers: Worker[] = [];
@@ -78,6 +79,7 @@ export function startAllWorkers(): Worker[] {
     { name: 'scoring', create: createScoringWorker },
     { name: 'backfill', create: createBackfillWorker },
     { name: 'content', create: createContentWorker },
+    { name: 'model-recovery', create: createModelRecoveryWorker },
   ];
 
   workers = workerConfigs.map(({ name, create }) => {

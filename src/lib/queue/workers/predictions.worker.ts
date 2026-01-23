@@ -14,6 +14,8 @@ import {
   getMatchAnalysisByMatchId,
   getPredictionsForMatch,
   createPredictionsBatch,
+  recordModelSuccess,
+  recordModelFailure,
 } from '@/lib/db/queries';
 import type { NewPrediction } from '@/lib/db/schema';
 import { getActiveProviders } from '@/lib/llm';
@@ -76,9 +78,9 @@ export function createPredictionsWorker() {
           }
         }
         
-        // Get active providers
-        const providers = getActiveProviders();
-        console.log(`[Predictions Worker] Generating predictions from ${providers.length} models`);
+         // Get active providers (filtered to exclude auto-disabled models)
+         const providers = await getActiveProviders();
+         console.log(`[Predictions Worker] Generating predictions from ${providers.length} models`);
         
         let successCount = 0;
         let failCount = 0;
@@ -129,11 +131,16 @@ export function createPredictionsWorker() {
               status: 'pending',
             });
             
-            console.log(`  ✓ ${provider.id}: ${prediction.homeScore}-${prediction.awayScore}`);
-            successCount++;
-          } catch (error: any) {
-            console.error(`  ${provider.id}: Error - ${error.message}`);
-            failCount++;
+             console.log(`  ✓ ${provider.id}: ${prediction.homeScore}-${prediction.awayScore}`);
+             await recordModelSuccess(provider.id);
+             successCount++;
+           } catch (error: any) {
+             console.error(`  ${provider.id}: Error - ${error.message}`);
+             const { autoDisabled } = await recordModelFailure(provider.id, error.message);
+             if (autoDisabled) {
+               console.warn(`  ⚠️ ${provider.id}: Auto-disabled after 3 consecutive failures`);
+             }
+             failCount++;
           }
         }
         

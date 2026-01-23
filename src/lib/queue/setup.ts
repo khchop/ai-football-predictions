@@ -5,7 +5,7 @@
  * Call this once when the app starts (from instrumentation.ts).
  */
 
-import { fixturesQueue, backfillQueue, contentQueue, JOB_TYPES } from './index';
+import { fixturesQueue, backfillQueue, contentQueue, modelRecoveryQueue, JOB_TYPES } from './index';
 
 export async function setupRepeatableJobs(): Promise<void> {
   console.log('[Queue Setup] Registering repeatable jobs...');
@@ -96,6 +96,29 @@ export async function setupRepeatableJobs(): Promise<void> {
     }
   }
   
+  // Check for disabled models to re-enable every 30 minutes
+  try {
+    await modelRecoveryQueue.add(
+      JOB_TYPES.CHECK_MODEL_HEALTH,
+      {},
+      {
+        repeat: {
+          pattern: '15,45 * * * *', // Every 30 minutes at :15 and :45
+          tz: 'Europe/Berlin',
+        },
+        jobId: 'model-recovery-repeatable',
+      }
+    );
+    console.log('[Queue Setup] ✓ Registered: model-recovery (every 30 min, Berlin TZ)');
+  } catch (error: any) {
+    if (error.message?.includes('already exists')) {
+      console.log('[Queue Setup] model-recovery already registered');
+    } else {
+      console.error('[Queue Setup] Failed to register model-recovery:', error);
+      throw error;
+    }
+  }
+  
   console.log('[Queue Setup] All repeatable jobs registered');
 }
 
@@ -124,6 +147,13 @@ export async function removeRepeatableJobs(): Promise<void> {
   for (const job of contentRepeatableJobs) {
     await contentQueue.removeRepeatableByKey(job.key);
     console.log(`[Queue Setup] Removed from content-queue: ${job.name} (${job.pattern})`);
+  }
+  
+  // Remove from model recovery queue
+  const modelRecoveryRepeatableJobs = await modelRecoveryQueue.getRepeatableJobs();
+  for (const job of modelRecoveryRepeatableJobs) {
+    await modelRecoveryQueue.removeRepeatableByKey(job.key);
+    console.log(`[Queue Setup] Removed from model-recovery-queue: ${job.name} (${job.pattern})`);
   }
   
   console.log('[Queue Setup] All repeatable jobs removed');

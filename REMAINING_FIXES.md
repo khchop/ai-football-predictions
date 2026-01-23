@@ -354,17 +354,21 @@
 6. ✅ Updated 8 API routes with Zod validation
 7. ✅ Standardized validation error responses
 
-### Batch 4: External API Retry Logic (1-2 hours)
-1. Add retry wrapper to standings.ts, h2h.ts, team-statistics.ts
-2. Use exponential backoff pattern
-3. Add max retry attempts
-4. Log retry attempts
+### ✅ Batch 4: External API Retry Logic - Already Complete (0 min)
+**Status:** All three files (standings.ts, h2h.ts, team-statistics.ts) already have comprehensive retry infrastructure:
+1. ✅ Using `fetchWithRetry()` with exponential backoff (1s → 10s max)
+2. ✅ Max 3 retry attempts on retryable status codes (408, 429, 500, 502, 503, 504)
+3. ✅ Logging retry attempts in API client
+4. ✅ Circuit breaker integration for cascading failure prevention
+5. ✅ 30s timeout per request
+6. ✅ All implemented in previous batches
 
-### Batch 5: Model Failure Recovery (30 min)
-1. Add scheduled job to check auto-disabled models
-2. Attempt to re-enable after cooldown (e.g., 1 hour)
-3. Reset consecutive failure counter after successful prediction
-4. Log all state transitions
+### Batch 5: Model Failure Recovery (45-60 min)
+1. ✅ Wire recordModelSuccess/recordModelFailure into predictions worker
+2. ✅ Filter auto-disabled models from prediction generation
+3. ✅ Create model recovery worker with scheduled job (every 30 min)
+4. ✅ Attempt to re-enable models after 1-hour cooldown
+5. ✅ Log all state transitions
 
 ### Batch 6: Structured Logging (2-3 hours)
 1. Integrate pino logger
