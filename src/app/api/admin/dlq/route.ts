@@ -13,6 +13,8 @@ import {
   deleteDeadLetterEntry,
 } from '@/lib/queue/dead-letter';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
+import { validateQuery } from '@/lib/validation/middleware';
+import { getDlqQuerySchema } from '@/lib/validation/schemas';
 
 // Simple admin password check
 function validateAdminRequest(req: NextRequest): boolean {
@@ -57,8 +59,15 @@ export async function GET(req: NextRequest) {
   
   try {
     const { searchParams } = new URL(req.url);
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const queryParams = Object.fromEntries(searchParams.entries());
+    
+    // Validate query parameters
+    const { data: validatedQuery, error: validationError } = validateQuery(getDlqQuerySchema, queryParams);
+    if (validationError) {
+      return validationError;
+    }
+    
+    const { limit, offset } = validatedQuery;
     
     const [jobs, total] = await Promise.all([
       getDeadLetterJobs(limit, offset),

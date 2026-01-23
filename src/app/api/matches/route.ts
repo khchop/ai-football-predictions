@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUpcomingMatches, getRecentMatches, getFinishedMatches, getOverallStats } from '@/lib/db/queries';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
+import { validateQuery } from '@/lib/validation/middleware';
+import { getMatchesQuerySchema } from '@/lib/validation/schemas';
 
 export async function GET(request: NextRequest) {
   // Apply rate limiting (60 req/min)
@@ -23,12 +25,15 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') || 'upcoming';
-    const limitParam = searchParams.get('limit') || '20';
+    const queryParams = Object.fromEntries(searchParams.entries());
     
-    // Validate and bound the limit parameter
-    const parsedLimit = parseInt(limitParam, 10);
-    const limit = isNaN(parsedLimit) ? 20 : Math.min(Math.max(parsedLimit, 1), 100);
+    // Validate query parameters
+    const { data: validatedQuery, error: validationError } = validateQuery(getMatchesQuerySchema, queryParams);
+    if (validationError) {
+      return validationError;
+    }
+    
+    const { type, limit } = validatedQuery;
 
     let matches;
     

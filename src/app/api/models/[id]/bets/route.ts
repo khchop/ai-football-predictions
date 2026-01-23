@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getModelBettingHistory, getModelBettingStats } from '@/lib/db/queries';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
-
-// UUID regex for validation
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import { validateParams, validateQuery } from '@/lib/validation/middleware';
+import { getModelBetsParamsSchema, getModelBetsQuerySchema } from '@/lib/validation/schemas';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -28,21 +27,26 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     );
   }
 
-  const { id: modelId } = await params;
+  const resolvedParams = await params;
   
-  // Validate model ID format
-  if (!UUID_REGEX.test(modelId)) {
-    return NextResponse.json(
-      { success: false, error: 'Invalid model ID format' },
-      { status: 400, headers: createRateLimitHeaders(rateLimitResult) }
-    );
+  // Validate route parameters
+  const { data: validatedParams, error: paramsError } = validateParams(getModelBetsParamsSchema, resolvedParams);
+  if (paramsError) {
+    return paramsError;
   }
   
-  const searchParams = request.nextUrl.searchParams;
+  const { id: modelId } = validatedParams;
   
-  const limit = parseInt(searchParams.get('limit') || '20', 10);
-  const offset = parseInt(searchParams.get('offset') || '0', 10);
-  const status = searchParams.get('status') as 'pending' | 'won' | 'lost' | null;
+  const searchParams = request.nextUrl.searchParams;
+  const queryParams = Object.fromEntries(searchParams.entries());
+  
+  // Validate query parameters
+  const { data: validatedQuery, error: queryError } = validateQuery(getModelBetsQuerySchema, queryParams);
+  if (queryError) {
+    return queryError;
+  }
+  
+  const { limit, offset, status } = validatedQuery;
 
   try {
     // Fetch betting history

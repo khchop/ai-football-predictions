@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMatchWithAnalysis, getPredictionsForMatchWithDetails } from '@/lib/db/queries';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
-
-// UUID regex for validation
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import { validateParams } from '@/lib/validation/middleware';
+import { getMatchParamsSchema } from '@/lib/validation/schemas';
 
 export async function GET(
   request: NextRequest,
@@ -28,15 +27,15 @@ export async function GET(
   }
 
   try {
-    const { id } = await params;
+    const resolvedParams = await params;
     
-    // Validate ID format
-    if (!UUID_REGEX.test(id)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid match ID format' },
-        { status: 400, headers: createRateLimitHeaders(rateLimitResult) }
-      );
+    // Validate route parameters
+    const { data: validatedParams, error: validationError } = validateParams(getMatchParamsSchema, resolvedParams);
+    if (validationError) {
+      return validationError;
     }
+    
+    const { id } = validatedParams;
     
     const result = await getMatchWithAnalysis(id);
 

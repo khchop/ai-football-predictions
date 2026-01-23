@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reEnableModel } from '@/lib/db/queries';
+import { validateBody } from '@/lib/validation/middleware';
+import { reEnableModelBodySchema } from '@/lib/validation/schemas';
 
 function validateAdminRequest(request: NextRequest): NextResponse | null {
   const password = request.headers.get('X-Admin-Password');
@@ -32,15 +34,13 @@ export async function POST(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const body = await request.json();
-    const { modelId } = body;
-
-    if (!modelId || typeof modelId !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'Model ID is required' },
-        { status: 400 }
-      );
+    // Validate request body
+    const { data: validatedBody, error: validationError } = await validateBody(reEnableModelBodySchema, request);
+    if (validationError) {
+      return validationError;
     }
+
+    const { modelId } = validatedBody;
 
     await reEnableModel(modelId);
 

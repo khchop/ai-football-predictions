@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLeaderboard, getActiveModels } from '@/lib/db/queries';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
+import { validateQuery } from '@/lib/validation/middleware';
+import { getLeaderboardQuerySchema } from '@/lib/validation/schemas';
 
 export async function GET(request: NextRequest) {
   // Apply rate limiting (60 req/min)
@@ -23,8 +25,15 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams;
-    const activeOnlyParam = searchParams.get('activeOnly');
-    const activeOnly = activeOnlyParam !== 'false'; // Default true
+    const queryParams = Object.fromEntries(searchParams.entries());
+    
+    // Validate query parameters
+    const { data: validatedQuery, error: validationError } = validateQuery(getLeaderboardQuerySchema, queryParams);
+    if (validationError) {
+      return validationError;
+    }
+    
+    const { activeOnly } = validatedQuery;
 
     // Get leaderboard by total points (Kicktipp Quota Scoring)
     let leaderboard = await getLeaderboard();
