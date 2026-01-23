@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import * as Sentry from '@sentry/nextjs';
 
 export default function Error({
   error,
@@ -11,6 +12,14 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
+    // Send to GlitchTip error tracking
+    Sentry.captureException(error, {
+      level: 'error',
+      tags: {
+        error_boundary: 'app_error',
+      },
+    });
+    
     // Log the error to console in development
     console.error('[Error Boundary]', error);
   }, [error]);

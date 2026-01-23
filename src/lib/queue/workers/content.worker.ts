@@ -6,6 +6,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
+import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES, getQueue } from '../index';
 import type { GenerateContentPayload } from '../types';
 import { generateMatchPreview, generateLeagueRoundup, generateModelReport } from '@/lib/content/generator';
@@ -68,10 +69,21 @@ export function createContentWorker() {
           } else {
             throw new Error(`Unknown content type: ${type}`);
           }
-       } catch (error) {
-         log.error({ err: error }, `Error generating ${type}`);
-         throw error;
-       }
+        } catch (error) {
+          log.error({ err: error }, `Error generating ${type}`);
+          Sentry.captureException(error, {
+            level: 'error',
+            tags: {
+              worker: 'content',
+              content_type: type,
+            },
+            extra: {
+              jobId: job.id,
+              data,
+            },
+          });
+          throw error;
+        }
     },
     {
       connection: getQueueConnection(),

@@ -7,6 +7,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
+import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { PredictMatchPayload } from '../types';
 import { 
@@ -183,13 +184,27 @@ export function createPredictionsWorker() {
           totalModels: providers.length,
         };
        } catch (error: any) {
-          log.error({ 
-            matchId,
-            attemptsMade: job.attemptsMade,
-            err: error 
-          }, `Error processing predictions`);
-          // Throw error to enable BullMQ retry logic
-          // Only transient errors should retry (network, timeout, rate limit)
+           log.error({ 
+             matchId,
+             attemptsMade: job.attemptsMade,
+             err: error 
+           }, `Error processing predictions`);
+           
+           Sentry.captureException(error, {
+             level: 'error',
+             tags: {
+               worker: 'predictions',
+               matchId,
+             },
+             extra: {
+               jobId: job.id,
+               attempt: job.attemptsMade,
+               matchId,
+             },
+           });
+           
+           // Throw error to enable BullMQ retry logic
+           // Only transient errors should retry (network, timeout, rate limit)
           if (error.message?.includes('timeout') ||
              error.message?.includes('ECONNREFUSED') ||
              error.message?.includes('rate limit') ||

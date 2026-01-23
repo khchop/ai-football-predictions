@@ -10,6 +10,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
+import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { SettleMatchPayload } from '../types';
 import { 
@@ -200,11 +201,23 @@ export function createScoringWorker() {
           finalScore: `${actualHome}-${actualAway}`,
         };
        } catch (error: any) {
-         log.error({ err: error }, `Error scoring match ${matchId}`);
-        
-        // Throw error to enable BullMQ retry mechanism
-        // BullMQ will retry with exponential backoff based on queue config
-        throw error;
+          log.error({ err: error }, `Error scoring match ${matchId}`);
+          
+          Sentry.captureException(error, {
+            level: 'error',
+            tags: {
+              worker: 'scoring',
+              matchId,
+            },
+            extra: {
+              jobId: job.id,
+              matchId,
+            },
+          });
+         
+         // Throw error to enable BullMQ retry mechanism
+         // BullMQ will retry with exponential backoff based on queue config
+         throw error;
       }
     },
     {

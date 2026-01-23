@@ -6,6 +6,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
+import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { FetchFixturesPayload } from '../types';
 import { getUpcomingFixtures, mapFixtureStatus } from '@/lib/football/api-football';
@@ -139,12 +140,25 @@ export function createFixturesWorker() {
           errors: errors.length > 0 ? errors : undefined,
         };
        } catch (error: any) {
-          log.error({ 
-            manual,
-            attemptsMade: job.attemptsMade,
-            err: error 
-          }, `Error fetching fixtures`);
-          throw error; // Let BullMQ handle retry
+           log.error({ 
+             manual,
+             attemptsMade: job.attemptsMade,
+             err: error 
+           }, `Error fetching fixtures`);
+           
+           Sentry.captureException(error, {
+             level: 'error',
+             tags: {
+               worker: 'fixtures',
+             },
+             extra: {
+               jobId: job.id,
+               attempt: job.attemptsMade,
+               manual,
+             },
+           });
+           
+           throw error; // Let BullMQ handle retry
        }
     },
     {
