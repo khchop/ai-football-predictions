@@ -7,20 +7,23 @@
 
 import { getUpcomingMatches } from '@/lib/db/queries';
 import { scheduleMatchJobs } from './scheduler';
+import { loggers } from '@/lib/logger/modules';
+
+const log = loggers.queue;
 
 export async function catchUpScheduling(): Promise<{ scheduled: number; matches: number }> {
-  console.log('[Catch-up] Starting catch-up scheduling for existing matches...');
+  log.info('Starting catch-up scheduling for existing matches');
   
   try {
     // Get all upcoming matches in next 48 hours
     const upcomingMatches = await getUpcomingMatches(48);
     
     if (upcomingMatches.length === 0) {
-      console.log('[Catch-up] No upcoming matches found');
+      log.info('No upcoming matches found');
       return { scheduled: 0, matches: 0 };
     }
     
-    console.log(`[Catch-up] Found ${upcomingMatches.length} upcoming matches`);
+    log.info({ matchCount: upcomingMatches.length }, 'Found upcoming matches');
     
     let totalScheduled = 0;
     
@@ -30,15 +33,15 @@ export async function catchUpScheduling(): Promise<{ scheduled: number; matches:
         totalScheduled += scheduled;
       } catch (error: any) {
         // Log but don't fail entire catch-up if one match fails
-        console.error(`[Catch-up] Failed to schedule jobs for match ${match.id}:`, error.message);
+        log.error({ matchId: match.id, error: error.message }, 'Failed to schedule jobs for match');
       }
     }
     
-    console.log(`[Catch-up] ✓ Scheduled ${totalScheduled} jobs for ${upcomingMatches.length} matches`);
+    log.info({ scheduledJobs: totalScheduled, matchCount: upcomingMatches.length }, 'Completed catch-up scheduling');
     
     return { scheduled: totalScheduled, matches: upcomingMatches.length };
   } catch (error) {
-    console.error('[Catch-up] Failed to catch up scheduling:', error);
+    log.error({ error: error instanceof Error ? error.message : String(error) }, 'Failed to catch up scheduling');
     throw error;
   }
 }

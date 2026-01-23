@@ -8,6 +8,7 @@
 import { getDb } from './index';
 import { models } from './schema';
 import { getActiveProviders } from '../llm';
+import { loggers } from '@/lib/logger/modules';
 import { eq } from 'drizzle-orm';
 
 /**
@@ -22,16 +23,16 @@ export async function syncModelsToDatabase(): Promise<{
   deactivated: number;
   total: number;
 }> {
-  console.log('[Model Sync] Starting automatic sync...');
+  loggers.modelSync.info('Starting automatic sync');
   
   const db = getDb();
   
-   try {
-     // Get all active providers from code
-     const providers = await getActiveProviders();
-     
-     if (providers.length === 0) {
-      console.warn('[Model Sync] ⚠️  No active providers found in code!');
+  try {
+    // Get all active providers from code
+    const providers = await getActiveProviders();
+    
+    if (providers.length === 0) {
+      loggers.modelSync.warn('No active providers found in code');
       return { added: 0, updated: 0, deactivated: 0, total: 0 };
     }
     
@@ -77,7 +78,10 @@ export async function syncModelsToDatabase(): Promise<{
           updated++;
         }
       } catch (error) {
-        console.error(`[Model Sync] Error processing ${provider.id}:`, error);
+        loggers.modelSync.error(
+          { provider: provider.id, error: error instanceof Error ? error.message : String(error) },
+          'Error processing provider'
+        );
       }
     }
     
@@ -100,7 +104,10 @@ export async function syncModelsToDatabase(): Promise<{
       }
     }
     
-    console.log(`[Model Sync] ✓ Complete: ${added} added, ${updated} updated, ${deactivated} deactivated (${providers.length} total active)`);
+    loggers.modelSync.info(
+      { added, updated, deactivated, totalActive: providers.length },
+      'Sync completed'
+    );
     
     return {
       added,
@@ -109,7 +116,7 @@ export async function syncModelsToDatabase(): Promise<{
       total: providers.length,
     };
   } catch (error) {
-    console.error('[Model Sync] ❌ Failed:', error);
+    loggers.modelSync.error({ error: error instanceof Error ? error.message : String(error) }, 'Sync failed');
     throw error;
   }
 }

@@ -3,6 +3,7 @@
  */
 
 import { getDb, matches, competitions, matchAnalysis, matchPreviews, bets, models } from '@/lib/db';
+import { loggers } from '@/lib/logger/modules';
 import { eq, and, gte, lte, isNull, desc } from 'drizzle-orm';
 import { CONTENT_CONFIG } from './config';
 
@@ -102,13 +103,13 @@ export async function getMatchesForLeagueRoundup(competitionId: string) {
  * Get top models for performance report
  */
 export async function getTopModelsForReport(season: string, limit: number = 5) {
-  const db = getDb();
-  
-  // This would ideally use model_balances table
-  // For now, return a placeholder that can be implemented later
-  console.log('[ContentGen] getTopModelsForReport not yet implemented');
-  return [];
-}
+   const db = getDb();
+   
+   // This would ideally use model_balances table
+   // For now, return a placeholder that can be implemented later
+   loggers.content.debug({ season, limit }, 'getTopModelsForReport not yet implemented');
+   return [];
+ }
 
 /**
  * Check if a match already has a preview

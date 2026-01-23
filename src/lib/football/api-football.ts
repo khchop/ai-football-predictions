@@ -2,6 +2,9 @@ import { APIFootballFixture, APIFootballResponse } from '@/types';
 import { COMPETITIONS, CompetitionConfig } from './competitions';
 import { fetchWithRetry, sleep, APIError } from '@/lib/utils/api-client';
 import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
+import { loggers } from '@/lib/logger/modules';
+
+const log = loggers.apiFootball;
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 const RATE_LIMIT_DELAY_MS = 300;
@@ -26,7 +29,7 @@ async function fetchFromAPI<T>({ endpoint, params }: FetchOptions): Promise<T> {
     });
   }
 
-  console.log(`[API-Football] Fetching: ${url.toString()}`);
+  log.info({ url: url.toString() }, 'Fetching');
 
   const response = await fetchWithRetry(
     url.toString(),
@@ -51,14 +54,14 @@ async function fetchFromAPI<T>({ endpoint, params }: FetchOptions): Promise<T> {
 
   const data = await response.json();
   
-  if (data.errors && Object.keys(data.errors).length > 0) {
-    console.error('[API-Football] API Errors:', data.errors);
-    // Throw on API-level errors instead of silently continuing
-    const errorMsg = Object.values(data.errors).join(', ');
-    throw new APIError(`API-Football API error: ${errorMsg}`, undefined, endpoint);
-  }
-  
-  console.log(`[API-Football] Results: ${data.results || 0}`);
+   if (data.errors && Object.keys(data.errors).length > 0) {
+     log.error({ errors: data.errors }, 'API Errors');
+     // Throw on API-level errors instead of silently continuing
+     const errorMsg = Object.values(data.errors).join(', ');
+     throw new APIError(`API-Football API error: ${errorMsg}`, undefined, endpoint);
+   }
+   
+   log.info({ results: data.results || 0 }, 'Results');
 
   return data;
 }
@@ -108,7 +111,7 @@ export async function getUpcomingFixtures(
     current.setDate(current.getDate() + 1);
   }
 
-  console.log(`[API-Football] Fetching fixtures for dates: ${[...dates].join(', ')}`);
+   log.info({ dates: [...dates].join(', ') }, 'Fetching fixtures for dates');
 
   // Fetch all fixtures for these dates in one call per date
   const allFixtures: APIFootballFixture[] = [];
@@ -119,13 +122,13 @@ export async function getUpcomingFixtures(
       allFixtures.push(...fixtures);
       // Rate limit delay between requests
       await sleep(RATE_LIMIT_DELAY_MS);
-    } catch (error) {
-      console.error(`[API-Football] Error fetching fixtures for ${date}:`, error);
-      // Continue with other dates instead of failing completely
-    }
+     } catch (error) {
+       log.error({ date, error }, 'Error fetching fixtures');
+       // Continue with other dates instead of failing completely
+     }
   }
 
-  console.log(`[API-Football] Total fixtures fetched: ${allFixtures.length}`);
+   log.info({ count: allFixtures.length }, 'Total fixtures fetched');
 
   // Filter to only our tracked competitions and group by competition
   const results: { competition: CompetitionConfig; fixtures: APIFootballFixture[] }[] = [];
@@ -137,10 +140,10 @@ export async function getUpcomingFixtures(
       new Date(f.fixture.date) <= future
     );
 
-    if (competitionFixtures.length > 0) {
-      console.log(`[API-Football] ${competition.name}: ${competitionFixtures.length} fixtures`);
-      results.push({ competition, fixtures: competitionFixtures });
-    }
+     if (competitionFixtures.length > 0) {
+       log.info({ competition: competition.name, count: competitionFixtures.length }, 'Fixtures');
+       results.push({ competition, fixtures: competitionFixtures });
+     }
   }
 
   return results;
@@ -271,10 +274,10 @@ export async function getMatchEvents(fixtureId: number): Promise<MatchEvent[]> {
       },
     });
     return data.response || [];
-  } catch (error) {
-    console.error(`[API-Football] Error fetching events for fixture ${fixtureId}:`, error);
-    return [];
-  }
+   } catch (error) {
+     log.error({ fixtureId, error }, 'Error fetching events');
+     return [];
+   }
 }
 
 // Format match minute for live display (e.g., "45'", "HT", "67'", "90'+3")

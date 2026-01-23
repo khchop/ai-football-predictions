@@ -2,6 +2,7 @@
  * Shared API client utilities with retry logic and timeout handling
  */
 
+import { loggers } from '@/lib/logger/modules';
 import { isCircuitOpen, recordSuccess, recordFailure, getCircuitStatus, CircuitOpenError, type ServiceName } from './circuit-breaker';
 
 export interface RetryConfig {
@@ -96,13 +97,15 @@ export async function fetchWithRetry(
       const response = await fetchWithTimeout(url, options, timeoutMs);
       const duration = Date.now() - attemptStart;
 
-      // Log successful request
-      if (attempt > 0) {
-        console.log(
-          `[API Client] ${serviceName || 'unknown'}: Request succeeded after ${attempt} retries ` +
-          `(${duration}ms, total ${Date.now() - startTime}ms)`
-        );
-      }
+       // Log successful request
+       if (attempt > 0) {
+         loggers.api.info({
+           serviceName: serviceName || 'unknown',
+           attempt,
+           duration,
+           totalDuration: Date.now() - startTime,
+         }, 'Request succeeded after retries');
+       }
 
       // Check if we should retry based on status code
       if (
@@ -110,17 +113,20 @@ export async function fetchWithRetry(
         retryConfig.retryableStatusCodes.includes(response.status) &&
         attempt < retryConfig.maxRetries
       ) {
-        const delay = calculateBackoffDelay(
-          attempt,
-          retryConfig.baseDelayMs,
-          retryConfig.maxDelayMs
-        );
-        console.warn(
-          `[API Client] ${serviceName || 'unknown'}: HTTP ${response.status}, ` +
-          `retry ${attempt + 1}/${retryConfig.maxRetries} in ${Math.round(delay)}ms`
-        );
-        await sleep(delay);
-        continue;
+         const delay = calculateBackoffDelay(
+           attempt,
+           retryConfig.baseDelayMs,
+           retryConfig.maxDelayMs
+         );
+         loggers.api.warn({
+           serviceName: serviceName || 'unknown',
+           statusCode: response.status,
+           attempt: attempt + 1,
+           maxRetries: retryConfig.maxRetries,
+           delayMs: Math.round(delay),
+         }, 'HTTP error, retrying');
+         await sleep(delay);
+         continue;
       }
 
       // Record success with circuit breaker
@@ -141,46 +147,56 @@ export async function fetchWithRetry(
          error.message.includes('ENOTFOUND') ||
          error.message.includes('network'));
 
-      if ((isTimeout || isNetworkError) && attempt < retryConfig.maxRetries) {
-        const delay = calculateBackoffDelay(
-          attempt,
-          retryConfig.baseDelayMs,
-          retryConfig.maxDelayMs
-        );
-        console.warn(
-          `[API Client] ${serviceName || 'unknown'}: ${isTimeout ? 'Timeout' : 'Network error'} ` +
-          `(${duration}ms), retry ${attempt + 1}/${retryConfig.maxRetries} in ${Math.round(delay)}ms`
-        );
-        await sleep(delay);
-        continue;
-      }
+       if ((isTimeout || isNetworkError) && attempt < retryConfig.maxRetries) {
+         const delay = calculateBackoffDelay(
+           attempt,
+           retryConfig.baseDelayMs,
+           retryConfig.maxDelayMs
+         );
+         loggers.api.warn({
+           serviceName: serviceName || 'unknown',
+           errorType: isTimeout ? 'timeout' : 'network-error',
+           duration,
+           attempt: attempt + 1,
+           maxRetries: retryConfig.maxRetries,
+           delayMs: Math.round(delay),
+         }, `${isTimeout ? 'Timeout' : 'Network error'}, retrying`);
+         await sleep(delay);
+         continue;
+       }
 
-      // Max retries reached or non-retryable error
-      if (attempt >= retryConfig.maxRetries) {
-        console.error(
-          `[API Client] ${serviceName || 'unknown'}: Failed after ${attempt + 1} attempts ` +
-          `(total ${Date.now() - startTime}ms): ${lastError.message}`
-        );
-        
-        // Record failure with circuit breaker
-        if (serviceName) {
-          recordFailure(serviceName, lastError);
-        }
-        
-        throw lastError;
-      }
+       // Max retries reached or non-retryable error
+       if (attempt >= retryConfig.maxRetries) {
+         loggers.api.error({
+           serviceName: serviceName || 'unknown',
+           attempts: attempt + 1,
+           totalDuration: Date.now() - startTime,
+           error: lastError?.message,
+         }, 'Request failed after all retries');
+         
+         // Record failure with circuit breaker
+         if (serviceName) {
+           recordFailure(serviceName, lastError);
+         }
+         
+         throw lastError;
+       }
 
-      // Retry on other errors
-      const delay = calculateBackoffDelay(
-        attempt,
-        retryConfig.baseDelayMs,
-        retryConfig.maxDelayMs
-      );
-      console.warn(
-        `[API Client] ${serviceName || 'unknown'}: Error "${lastError.message}" (${duration}ms), ` +
-        `retry ${attempt + 1}/${retryConfig.maxRetries} in ${Math.round(delay)}ms`
-      );
-      await sleep(delay);
+       // Retry on other errors
+       const delay = calculateBackoffDelay(
+         attempt,
+         retryConfig.baseDelayMs,
+         retryConfig.maxDelayMs
+       );
+       loggers.api.warn({
+         serviceName: serviceName || 'unknown',
+         error: lastError?.message,
+         duration,
+         attempt: attempt + 1,
+         maxRetries: retryConfig.maxRetries,
+         delayMs: Math.round(delay),
+       }, 'Error occurred, retrying');
+       await sleep(delay);
     }
   }
 

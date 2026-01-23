@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
+import { loggers } from '@/lib/logger/modules';
 import * as schema from './schema';
 
 // Lazy initialization of database pool
@@ -20,10 +21,10 @@ function getPool(): Pool {
       connectionTimeoutMillis: 5000, // Timeout after 5s if can't connect
     });
     
-    // Handle pool errors
-    pool.on('error', (err) => {
-      console.error('[DB] Unexpected pool error:', err);
-    });
+     // Handle pool errors
+     pool.on('error', (err) => {
+       loggers.db.error({ error: err instanceof Error ? err.message : String(err) }, 'Unexpected pool error');
+     });
   }
   return pool;
 }
@@ -38,13 +39,13 @@ export function getDb() {
 
 // Close the pool gracefully (for shutdown)
 export async function closePool(): Promise<void> {
-  if (pool) {
-    await pool.end();
-    pool = null;
-    dbInstance = null;
-    console.log('[DB] Pool closed');
-  }
-}
+   if (pool) {
+     await pool.end();
+     pool = null;
+     dbInstance = null;
+     loggers.db.info('Pool closed');
+   }
+ }
 
 // Export schema for convenience
 export * from './schema';

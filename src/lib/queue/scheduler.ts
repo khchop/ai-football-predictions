@@ -18,7 +18,10 @@ import {
   liveQueue,
   JOB_TYPES 
 } from './index';
+import { loggers } from '@/lib/logger/modules';
 import type { Match, Competition } from '@/lib/db/schema';
+
+const log = loggers.scheduler;
 
 interface MatchWithCompetition {
   match: Match;
@@ -32,12 +35,12 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
   
   // Don't schedule if match already started
   if (kickoff <= now) {
-    console.log(`[Scheduler] Match ${match.id} already started, skipping job scheduling`);
+    log.info({ matchId: match.id }, 'Match already started, skipping job scheduling');
     return 0;
   }
   
   if (!match.externalId) {
-    console.log(`[Scheduler] Match ${match.id} has no externalId, skipping`);
+    log.info({ matchId: match.id }, 'Match has no externalId, skipping');
     return 0;
   }
   
@@ -129,7 +132,7 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
         if (error.message?.includes('already exists')) {
           continue;
         }
-        console.error(`[Scheduler] Failed to schedule ${job.name} for ${match.id}:`, error);
+         log.error({ matchId: match.id, jobName: job.name, error: error.message }, 'Failed to schedule job');
       }
     } else if (kickoff > now && lateRunnableJobs.has(job.name as any)) {
       // Job time passed but match hasn't started - run immediately
@@ -139,18 +142,18 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
           jobId: job.jobId,
         });
         scheduled++;
-        console.log(`[Scheduler] Running past-due ${job.name} immediately for ${match.homeTeam} vs ${match.awayTeam}`);
+        log.info({ jobName: job.name, homeTeam: match.homeTeam, awayTeam: match.awayTeam }, 'Running past-due job immediately');
       } catch (error: any) {
         if (error.message?.includes('already exists')) {
           continue;
         }
-        console.error(`[Scheduler] Failed to schedule late ${job.name} for ${match.id}:`, error);
+        log.error({ matchId: match.id, jobName: job.name, error: error.message }, 'Failed to schedule late job');
       }
     }
   }
   
   if (scheduled > 0) {
-    console.log(`[Scheduler] Scheduled ${scheduled} jobs for ${match.homeTeam} vs ${match.awayTeam} (kickoff: ${match.kickoffTime})`);
+    log.info({ jobCount: scheduled, homeTeam: match.homeTeam, awayTeam: match.awayTeam, kickoffTime: match.kickoffTime }, 'Scheduled jobs for match');
   }
   
   return scheduled;
@@ -182,7 +185,7 @@ export async function cancelMatchJobs(matchId: string): Promise<number> {
   }
   
   if (cancelled > 0) {
-    console.log(`[Scheduler] Cancelled ${cancelled} jobs for match ${matchId}`);
+    log.info({ jobCount: cancelled, matchId }, 'Cancelled jobs for match');
   }
   
   return cancelled;

@@ -2,6 +2,7 @@ import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalance
 import { eq, and, desc, gte, lte, sql, inArray, ne, or, lt, not, isNull, isNotNull } from 'drizzle-orm';
 import type { NewMatch, NewMatchAnalysis, NewBet, NewModelBalance, NewPrediction } from './schema';
 import { v4 as uuidv4 } from 'uuid';
+import { loggers } from '@/lib/logger/modules';
 
 import type { NewCompetition, NewModel, Match, MatchAnalysis, Model, Competition, Bet, ModelBalance, Prediction } from './schema';
 import type { ScoringBreakdown, EnhancedLeaderboardEntry } from '@/types';
@@ -12,23 +13,24 @@ import { BETTING_CONSTANTS } from '@/lib/betting/constants';
  * Log database query errors with full context
  */
 function logQueryError(operation: string, error: any, context?: Record<string, any>) {
-  console.error(`[DB Query Error] ${operation}:`, {
-    message: error.message,
-    code: error.code,
-    severity: error.severity,
-    detail: error.detail,
-    hint: error.hint,
-    position: error.position,
-    table: error.table,
-    column: error.column,
-    constraint: error.constraint,
-    dataType: error.dataType,
-    file: error.file,
-    line: error.line,
-    routine: error.routine,
-    ...context,
-  });
-}
+   loggers.db.error({
+     operation,
+     message: error.message,
+     code: error.code,
+     severity: error.severity,
+     detail: error.detail,
+     hint: error.hint,
+     position: error.position,
+     table: error.table,
+     column: error.column,
+     constraint: error.constraint,
+     dataType: error.dataType,
+     file: error.file,
+     line: error.line,
+     routine: error.routine,
+     ...context,
+   }, 'Database query error');
+ }
 
 // ============= COMPETITIONS =============
 

@@ -7,6 +7,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { getDb, matchPreviews, blogPosts } from '@/lib/db';
+import { loggers } from '@/lib/logger/modules';
 import type { NewMatchPreview, NewBlogPost } from '@/lib/db/schema';
 import { generateWithTogetherAI } from './together-client';
 import {
@@ -23,16 +24,20 @@ import { slugify } from '@/lib/utils/slugify';
  * Generate a match preview using AI
  */
 export async function generateMatchPreview(matchData: {
-  matchId: string;
-  homeTeam: string;
-  awayTeam: string;
-  competition: string;
-  kickoffTime: string;
-  venue?: string;
-  analysis?: Record<string, unknown>;
-  aiPredictions?: Array<{ model: string; prediction: string }>;
+   matchId: string;
+   homeTeam: string;
+   awayTeam: string;
+   competition: string;
+   kickoffTime: string;
+   venue?: string;
+   analysis?: Record<string, unknown>;
+   aiPredictions?: Array<{ model: string; prediction: string }>;
 }): Promise<string> {
-  console.log(`[ContentGen] Generating preview for ${matchData.homeTeam} vs ${matchData.awayTeam}`);
+   loggers.content.info({
+     matchId: matchData.matchId,
+     homeTeam: matchData.homeTeam,
+     awayTeam: matchData.awayTeam,
+   }, 'Generating match preview');
   
   const systemPrompt = 'You are a professional football analyst writing a match preview for SEO and AI search engines (ChatGPT, Perplexity, Claude).';
   const userPrompt = buildMatchPreviewPrompt({
@@ -95,9 +100,11 @@ export async function generateMatchPreview(matchData: {
     },
   });
 
-  console.log(
-    `[ContentGen] Preview generated successfully. Cost: $${result.cost.toFixed(4)}, Tokens: ${result.usage.totalTokens}`
-  );
+   loggers.content.info({
+     previewId,
+     cost: result.cost,
+     tokens: result.usage.totalTokens,
+   }, 'Match preview generated');
 
   return previewId;
 }
@@ -124,7 +131,10 @@ export async function generateLeagueRoundup(roundupData: {
     played: number;
   }>;
 }): Promise<string> {
-  console.log(`[ContentGen] Generating ${roundupData.competition} roundup for ${roundupData.week}`);
+   loggers.content.info({
+     competition: roundupData.competition,
+     week: roundupData.week,
+   }, 'Generating league roundup');
   
   const systemPrompt = `You are a professional football journalist writing a weekly league roundup for ${roundupData.competition}.`;
   const userPrompt = buildLeagueRoundupPrompt({
@@ -171,9 +181,12 @@ export async function generateLeagueRoundup(roundupData: {
     },
   });
 
-  console.log(
-    `[ContentGen] League roundup generated. Cost: $${result.cost.toFixed(4)}, Tokens: ${result.usage.totalTokens}`
-  );
+   loggers.content.info({
+     postId,
+     competition: roundupData.competition,
+     cost: result.cost,
+     tokens: result.usage.totalTokens,
+   }, 'League roundup generated');
 
   return postId;
 }
@@ -201,7 +214,9 @@ export async function generateModelReport(reportData: {
     averageROI: number;
   };
 }): Promise<string> {
-  console.log(`[ContentGen] Generating model performance report for ${reportData.period}`);
+   loggers.content.info({
+     period: reportData.period,
+   }, 'Generating model performance report');
   
   const systemPrompt = 'You are a data analyst writing a performance report on AI football betting models.';
   const userPrompt = buildModelReportPrompt({
@@ -243,9 +258,12 @@ export async function generateModelReport(reportData: {
     },
   });
 
-  console.log(
-    `[ContentGen] Model report generated. Cost: $${result.cost.toFixed(4)}, Tokens: ${result.usage.totalTokens}`
-  );
+   loggers.content.info({
+     postId,
+     period: reportData.period,
+     cost: result.cost,
+     tokens: result.usage.totalTokens,
+   }, 'Model report generated');
 
   return postId;
 }

@@ -1,6 +1,9 @@
 import { APIFootballH2HResponse } from '@/types';
 import { fetchWithRetry, APIError } from '@/lib/utils/api-client';
 import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
+import { loggers } from '@/lib/logger/modules';
+
+const log = loggers.h2h;
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 
@@ -24,7 +27,7 @@ async function fetchFromAPI<T>({ endpoint, params }: FetchOptions): Promise<T> {
     });
   }
 
-  console.log(`[H2H] Fetching: ${url.toString()}`);
+   log.info({ url: url.toString() }, 'Fetching');
 
   const response = await fetchWithRetry(
     url.toString(),
@@ -49,11 +52,11 @@ async function fetchFromAPI<T>({ endpoint, params }: FetchOptions): Promise<T> {
 
   const data = await response.json();
   
-  if (data.errors && Object.keys(data.errors).length > 0) {
-    console.error('[H2H] API Errors:', data.errors);
-  }
-  
-  console.log(`[H2H] Results: ${data.results || 0}`);
+   if (data.errors && Object.keys(data.errors).length > 0) {
+     log.error({ errors: data.errors }, 'API Errors');
+   }
+   
+   log.info({ results: data.results || 0 }, 'Results');
 
   return data;
 }
@@ -73,10 +76,10 @@ export async function fetchH2HDetailed(
       },
     });
     return data;
-  } catch (error) {
-    console.error(`[H2H] Error fetching H2H for ${team1Id} vs ${team2Id}:`, error);
-    return null;
-  }
+   } catch (error) {
+     log.error({ team1Id, team2Id, error }, 'Error fetching H2H');
+     return null;
+   }
 }
 
 // Detailed H2H match info

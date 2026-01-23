@@ -6,9 +6,13 @@
  */
 
 import { fixturesQueue, backfillQueue, contentQueue, modelRecoveryQueue, JOB_TYPES } from './index';
+import { loggers } from '@/lib/logger/modules';
+import { startPeriodicMetricsLogging } from '@/lib/logger/metrics';
+
+const log = loggers.queue;
 
 export async function setupRepeatableJobs(): Promise<void> {
-  console.log('[Queue Setup] Registering repeatable jobs...');
+  log.info('Registering repeatable jobs');
   
   try {
     // Fetch fixtures every 6 hours (00:00, 06:00, 12:00, 18:00 Berlin time)
@@ -24,13 +28,13 @@ export async function setupRepeatableJobs(): Promise<void> {
       }
     );
     
-    console.log('[Queue Setup] ✓ Registered: fetch-fixtures (every 6h, Berlin TZ)');
+    log.info({ schedule: 'every 6h', timezone: 'Europe/Berlin' }, 'Registered: fetch-fixtures');
   } catch (error: any) {
     // If job already exists, that's fine (happens on hot reload)
     if (error.message?.includes('already exists')) {
-      console.log('[Queue Setup] fetch-fixtures already registered');
+      log.info('fetch-fixtures already registered');
     } else {
-      console.error('[Queue Setup] Failed to register fetch-fixtures:', error);
+      log.error({ error: error.message }, 'Failed to register fetch-fixtures');
       throw error;
     }
   }
@@ -48,12 +52,12 @@ export async function setupRepeatableJobs(): Promise<void> {
         jobId: 'backfill-missing-repeatable',
       }
     );
-    console.log('[Queue Setup] ✓ Registered: backfill-missing (every hour, Berlin TZ)');
+    log.info({ schedule: 'every hour', timezone: 'Europe/Berlin' }, 'Registered: backfill-missing');
   } catch (error: any) {
     if (error.message?.includes('already exists')) {
-      console.log('[Queue Setup] backfill-missing already registered');
+      log.info('backfill-missing already registered');
     } else {
-      console.error('[Queue Setup] Failed to register backfill-missing:', error);
+      log.error({ error: error.message }, 'Failed to register backfill-missing');
       throw error;
     }
   }
@@ -68,9 +72,9 @@ export async function setupRepeatableJobs(): Promise<void> {
         jobId: `backfill-startup-${Date.now()}`, // Unique ID each startup
       }
     );
-    console.log('[Queue Setup] ✓ Scheduled: one-time startup backfill (runs in 5s)');
+    log.info({ delay: '5s' }, 'Scheduled: one-time startup backfill');
   } catch (error: any) {
-    console.error('[Queue Setup] Failed to schedule startup backfill:', error);
+    log.error({ error: error.message }, 'Failed to schedule startup backfill');
   }
   
   // Scan for matches needing previews every hour
@@ -86,12 +90,12 @@ export async function setupRepeatableJobs(): Promise<void> {
         jobId: 'scan-matches-repeatable',
       }
     );
-    console.log('[Queue Setup] ✓ Registered: scan-matches (every hour, Berlin TZ)');
+    log.info({ schedule: 'every hour', timezone: 'Europe/Berlin' }, 'Registered: scan-matches');
   } catch (error: any) {
     if (error.message?.includes('already exists')) {
-      console.log('[Queue Setup] scan-matches already registered');
+      log.info('scan-matches already registered');
     } else {
-      console.error('[Queue Setup] Failed to register scan-matches:', error);
+      log.error({ error: error.message }, 'Failed to register scan-matches');
       throw error;
     }
   }
@@ -109,52 +113,53 @@ export async function setupRepeatableJobs(): Promise<void> {
         jobId: 'model-recovery-repeatable',
       }
     );
-    console.log('[Queue Setup] ✓ Registered: model-recovery (every 30 min, Berlin TZ)');
+    log.info({ schedule: 'every 30 min', timezone: 'Europe/Berlin' }, 'Registered: model-recovery');
   } catch (error: any) {
     if (error.message?.includes('already exists')) {
-      console.log('[Queue Setup] model-recovery already registered');
+      log.info('model-recovery already registered');
     } else {
-      console.error('[Queue Setup] Failed to register model-recovery:', error);
+      log.error({ error: error.message }, 'Failed to register model-recovery');
       throw error;
     }
   }
   
-  console.log('[Queue Setup] All repeatable jobs registered');
+  log.info('All repeatable jobs registered');
+  startPeriodicMetricsLogging();
 }
 
 /**
  * Remove all repeatable jobs (for cleanup/testing)
  */
 export async function removeRepeatableJobs(): Promise<void> {
-  console.log('[Queue Setup] Removing repeatable jobs...');
+  log.info('Removing repeatable jobs');
   
   // Remove from fixtures queue
   const fixturesRepeatableJobs = await fixturesQueue.getRepeatableJobs();
   for (const job of fixturesRepeatableJobs) {
     await fixturesQueue.removeRepeatableByKey(job.key);
-    console.log(`[Queue Setup] Removed from fixtures-queue: ${job.name} (${job.pattern})`);
+    log.info({ queue: 'fixtures-queue', jobName: job.name, pattern: job.pattern }, 'Removed repeatable job');
   }
   
   // Remove from backfill queue
   const backfillRepeatableJobs = await backfillQueue.getRepeatableJobs();
   for (const job of backfillRepeatableJobs) {
     await backfillQueue.removeRepeatableByKey(job.key);
-    console.log(`[Queue Setup] Removed from backfill-queue: ${job.name} (${job.pattern})`);
+    log.info({ queue: 'backfill-queue', jobName: job.name, pattern: job.pattern }, 'Removed repeatable job');
   }
   
   // Remove from content queue
   const contentRepeatableJobs = await contentQueue.getRepeatableJobs();
   for (const job of contentRepeatableJobs) {
     await contentQueue.removeRepeatableByKey(job.key);
-    console.log(`[Queue Setup] Removed from content-queue: ${job.name} (${job.pattern})`);
+    log.info({ queue: 'content-queue', jobName: job.name, pattern: job.pattern }, 'Removed repeatable job');
   }
   
   // Remove from model recovery queue
   const modelRecoveryRepeatableJobs = await modelRecoveryQueue.getRepeatableJobs();
   for (const job of modelRecoveryRepeatableJobs) {
     await modelRecoveryQueue.removeRepeatableByKey(job.key);
-    console.log(`[Queue Setup] Removed from model-recovery-queue: ${job.name} (${job.pattern})`);
+    log.info({ queue: 'model-recovery-queue', jobName: job.name, pattern: job.pattern }, 'Removed repeatable job');
   }
   
-  console.log('[Queue Setup] All repeatable jobs removed');
+  log.info('All repeatable jobs removed');
 }

@@ -5,6 +5,8 @@
  * Provides clear error messages if any are missing.
  */
 
+import { loggers } from '@/lib/logger/modules';
+
 interface EnvVar {
   name: string;
   required: boolean;
@@ -65,6 +67,12 @@ const ENV_VARS: EnvVar[] = [
     description: 'Node environment (development/production)',
     validate: (val) => ['development', 'production', 'test'].includes(val),
   },
+  {
+    name: 'LOG_LEVEL',
+    required: false,
+    description: 'Logging level (debug/info/warn/error/fatal) - defaults to debug in dev, info in prod',
+    validate: (val) => ['debug', 'info', 'warn', 'error', 'fatal', 'silent'].includes(val),
+  },
 ];
 
 export interface ValidationResult {
@@ -119,24 +127,22 @@ export function validateEnvironment(): ValidationResult {
  * Use this at application startup
  */
 export function validateEnvironmentOrThrow(): void {
-  const result = validateEnvironment();
-  
-  if (result.warnings.length > 0) {
-    console.warn('[Env Validation] Warnings:');
-    result.warnings.forEach(warning => console.warn(`  ⚠  ${warning}`));
-  }
-  
-  if (!result.valid) {
-    console.error('[Env Validation] Errors:');
-    result.errors.forEach(error => console.error(`  ✗  ${error}`));
-    throw new Error(
-      `Environment validation failed with ${result.errors.length} error(s). ` +
-      'Please check your .env file and ensure all required variables are set.'
-    );
-  }
-  
-  console.log('[Env Validation] ✓ All required environment variables are set');
-}
+   const result = validateEnvironment();
+   
+   if (result.warnings.length > 0) {
+     loggers.envValidation.warn({ warnings: result.warnings }, 'Environment warnings');
+   }
+   
+   if (!result.valid) {
+     loggers.envValidation.error({ errors: result.errors }, 'Environment validation failed');
+     throw new Error(
+       `Environment validation failed with ${result.errors.length} error(s). ` +
+       'Please check your .env file and ensure all required variables are set.'
+     );
+   }
+   
+   loggers.envValidation.info('All required environment variables are set');
+ }
 
 /**
  * Get a required environment variable or throw

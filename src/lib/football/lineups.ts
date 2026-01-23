@@ -2,6 +2,9 @@ import { APIFootballLineupsResponse } from '@/types';
 import { updateMatchAnalysisLineups, getMatchAnalysisByMatchId, getMatchById } from '@/lib/db/queries';
 import { fetchWithRetry, APIError } from '@/lib/utils/api-client';
 import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
+import { loggers } from '@/lib/logger/modules';
+
+const log = loggers.lineups;
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 
@@ -16,7 +19,7 @@ export async function fetchLineups(fixtureId: number): Promise<APIFootballLineup
   const url = new URL(`${API_BASE_URL}/fixtures/lineups`);
   url.searchParams.append('fixture', String(fixtureId));
 
-  console.log(`[Lineups] Fetching: ${url.toString()}`);
+   log.info({ url: url.toString() }, 'Fetching');
 
   try {
      const response = await fetchWithRetry(
@@ -42,23 +45,23 @@ export async function fetchLineups(fixtureId: number): Promise<APIFootballLineup
 
     const data = await response.json();
     
-    if (data.errors && Object.keys(data.errors).length > 0) {
-      console.error('[Lineups] API Errors:', data.errors);
-    }
-    
-    console.log(`[Lineups] Results: ${data.results || 0}`);
+     if (data.errors && Object.keys(data.errors).length > 0) {
+       log.error({ errors: data.errors }, 'API Errors');
+     }
+     
+     log.info({ results: data.results || 0 }, 'Results');
 
-    // If no lineups available yet, return null
-    if (!data.response || data.response.length === 0) {
-      console.log(`[Lineups] No lineups available yet for fixture ${fixtureId}`);
-      return null;
-    }
+     // If no lineups available yet, return null
+     if (!data.response || data.response.length === 0) {
+       log.info({ fixtureId }, 'No lineups available yet');
+       return null;
+     }
 
     return data;
-  } catch (error) {
-    console.error(`[Lineups] Error fetching lineups for fixture ${fixtureId}:`, error);
-    return null;
-  }
+   } catch (error) {
+     log.error({ fixtureId, error }, 'Error fetching lineups');
+     return null;
+   }
 }
 
 // Extract starting XI player names as a simple string
@@ -72,21 +75,21 @@ export async function updateMatchLineups(
   matchId: string,
   fixtureId: number
 ): Promise<boolean> {
-  console.log(`[Lineups] Fetching lineups for match ${matchId} (fixture ${fixtureId})`);
+   log.info({ matchId, fixtureId }, 'Fetching lineups');
 
   const lineupsData = await fetchLineups(fixtureId);
   
-  if (!lineupsData?.response || lineupsData.response.length < 2) {
-    console.log(`[Lineups] Lineups not available yet for match ${matchId}`);
-    return false;
-  }
+   if (!lineupsData?.response || lineupsData.response.length < 2) {
+     log.info({ matchId }, 'Lineups not available yet');
+     return false;
+   }
 
-  // Get match data to verify team order
-  const matchData = await getMatchById(matchId);
-  if (!matchData) {
-    console.error(`[Lineups] Match ${matchId} not found in database`);
-    return false;
-  }
+   // Get match data to verify team order
+   const matchData = await getMatchById(matchId);
+   if (!matchData) {
+     log.error({ matchId }, 'Match not found in database');
+     return false;
+   }
 
   const [lineup1, lineup2] = lineupsData.response;
   
@@ -103,14 +106,12 @@ export async function updateMatchLineups(
   } else if (lineup2IsHome && !lineup1IsHome) {
     homeLineup = lineup2;
     awayLineup = lineup1;
-  } else {
-    // Fallback to API order if matching is ambiguous
-    console.warn(`[Lineups] Could not verify team order for match ${matchId}, using API order`);
-    console.warn(`  - API teams: ${lineup1.team.name}, ${lineup2.team.name}`);
-    console.warn(`  - DB teams: ${matchData.match.homeTeam}, ${matchData.match.awayTeam}`);
-    homeLineup = lineup1;
-    awayLineup = lineup2;
-  }
+   } else {
+     // Fallback to API order if matching is ambiguous
+     log.warn({ matchId, apiTeams: `${lineup1.team.name}, ${lineup2.team.name}`, dbTeams: `${matchData.match.homeTeam}, ${matchData.match.awayTeam}` }, 'Could not verify team order, using API order');
+     homeLineup = lineup1;
+     awayLineup = lineup2;
+   }
 
   const lineupData = {
     homeFormation: homeLineup.formation || null,
@@ -124,11 +125,19 @@ export async function updateMatchLineups(
     rawLineupsData: JSON.stringify(lineupsData),
   };
 
-  await updateMatchAnalysisLineups(matchId, lineupData);
-  
-  console.log(`[Lineups] Stored lineups for match ${matchId}`);
-  console.log(`  - Home (${matchData.match.homeTeam}): ${lineupData.homeFormation} (Coach: ${lineupData.homeCoach})`);
-  console.log(`  - Away (${matchData.match.awayTeam}): ${lineupData.awayFormation} (Coach: ${lineupData.awayCoach})`);
+   await updateMatchAnalysisLineups(matchId, lineupData);
+   
+   log.info({ matchId }, 'Stored lineups');
+   log.info({ 
+     team: matchData.match.homeTeam, 
+     formation: lineupData.homeFormation, 
+     coach: lineupData.homeCoach 
+   }, 'Home');
+   log.info({ 
+     team: matchData.match.awayTeam, 
+     formation: lineupData.awayFormation, 
+     coach: lineupData.awayCoach 
+   }, 'Away');
 
   return true;
 }

@@ -1,26 +1,29 @@
 import {
-  APIFootballPredictionResponse,
-  APIFootballInjuryResponse,
-  APIFootballOddsResponse,
-  LikelyScore,
-  KeyInjury,
-  H2HMatch,
-} from '@/types';
-import { upsertMatchAnalysis, getMatchAnalysisByMatchId } from '@/lib/db/queries';
-import { v4 as uuidv4 } from 'uuid';
-import type { MatchAnalysis, NewMatchAnalysis } from '@/lib/db/schema';
-import { fetchWithRetry, APIError } from '@/lib/utils/api-client';
-import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
-import { 
-  fetchTeamStatistics, 
-  extractTeamStatistics 
-} from '@/lib/football/team-statistics';
-import { 
-  fetchH2HDetailed, 
-  extractH2HStatistics 
-} from '@/lib/football/h2h';
-import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
-import pLimit from 'p-limit';
+   APIFootballPredictionResponse,
+   APIFootballInjuryResponse,
+   APIFootballOddsResponse,
+   LikelyScore,
+   KeyInjury,
+   H2HMatch,
+ } from '@/types';
+ import { upsertMatchAnalysis, getMatchAnalysisByMatchId } from '@/lib/db/queries';
+ import { v4 as uuidv4 } from 'uuid';
+ import type { MatchAnalysis, NewMatchAnalysis } from '@/lib/db/schema';
+ import { fetchWithRetry, APIError } from '@/lib/utils/api-client';
+ import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
+ import { 
+   fetchTeamStatistics, 
+   extractTeamStatistics 
+ } from '@/lib/football/team-statistics';
+ import { 
+   fetchH2HDetailed, 
+   extractH2HStatistics 
+ } from '@/lib/football/h2h';
+ import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
+ import pLimit from 'p-limit';
+ import { loggers } from '@/lib/logger/modules';
+
+const log = loggers.matchAnalysis;
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 
@@ -44,7 +47,7 @@ async function fetchFromAPI<T>({ endpoint, params }: FetchOptions): Promise<T> {
     });
   }
 
-  console.log(`[Match Analysis] Fetching: ${url.toString()}`);
+   log.info({ url: url.toString() }, 'Fetching');
 
    const response = await fetchWithRetry(
      url.toString(),
@@ -69,11 +72,11 @@ async function fetchFromAPI<T>({ endpoint, params }: FetchOptions): Promise<T> {
 
   const data = await response.json();
   
-  if (data.errors && Object.keys(data.errors).length > 0) {
-    console.error('[Match Analysis] API Errors:', data.errors);
-  }
-  
-  console.log(`[Match Analysis] Results: ${data.results || 0}`);
+   if (data.errors && Object.keys(data.errors).length > 0) {
+     log.error({ errors: data.errors }, 'API Errors');
+   }
+   
+   log.info({ results: data.results || 0 }, 'Results');
 
   return data;
 }
@@ -93,10 +96,10 @@ export async function fetchPrediction(fixtureId: number): Promise<APIFootballPre
       params: { fixture: fixtureId },
     });
     return data;
-  } catch (error) {
-    console.error(`[Match Analysis] Error fetching prediction for fixture ${fixtureId}:`, error);
-    return null;
-  }
+   } catch (error) {
+     log.error({ fixtureId, error }, 'Error fetching prediction');
+     return null;
+   }
 }
 
 // Fetch injuries from API-Football
@@ -107,10 +110,10 @@ export async function fetchInjuries(fixtureId: number): Promise<APIFootballInjur
       params: { fixture: fixtureId },
     });
     return data;
-  } catch (error) {
-    console.error(`[Match Analysis] Error fetching injuries for fixture ${fixtureId}:`, error);
-    return null;
-  }
+   } catch (error) {
+     log.error({ fixtureId, error }, 'Error fetching injuries');
+     return null;
+   }
 }
 
 // Fetch odds from API-Football (prefer Bet365, bookmaker id: 8)
@@ -121,10 +124,10 @@ export async function fetchOdds(fixtureId: number): Promise<APIFootballOddsRespo
       params: { fixture: fixtureId },
     });
     return data;
-  } catch (error) {
-    console.error(`[Match Analysis] Error fetching odds for fixture ${fixtureId}:`, error);
-    return null;
-  }
+   } catch (error) {
+     log.error({ fixtureId, error }, 'Error fetching odds');
+     return null;
+   }
 }
 
 // Extract all betting odds from odds response
@@ -383,7 +386,7 @@ export async function fetchAndStoreAnalysis(
   matchId: string,
   fixtureId: number
 ): Promise<MatchAnalysis | null> {
-  console.log(`[Match Analysis] Fetching analysis for match ${matchId} (fixture ${fixtureId})`);
+   log.info({ matchId, fixtureId }, 'Fetching analysis');
 
   // Fetch basic data in parallel
   const [predictionData, injuriesData, oddsData] = await Promise.all([
@@ -392,11 +395,11 @@ export async function fetchAndStoreAnalysis(
     fetchOdds(fixtureId),
   ]);
 
-  // Check if we got any useful data
-  if (!predictionData?.response?.[0] && !injuriesData?.response && !oddsData?.response) {
-    console.log(`[Match Analysis] No data available for fixture ${fixtureId}`);
-    return null;
-  }
+   // Check if we got any useful data
+   if (!predictionData?.response?.[0] && !injuriesData?.response && !oddsData?.response) {
+     log.info({ fixtureId }, 'No data available');
+     return null;
+   }
 
   const prediction = predictionData?.response?.[0];
   const teams = prediction?.teams;
@@ -420,22 +423,22 @@ export async function fetchAndStoreAnalysis(
   let teamStatsAwayData = null;
   let h2hDetailedData = null;
 
-  if (homeTeamId && awayTeamId && leagueId && season) {
-    console.log(`[Match Analysis] Fetching enhanced data for teams ${homeTeamId} vs ${awayTeamId}, league ${leagueId}, season ${season}`);
-    
-    try {
-      [teamStatsHomeData, teamStatsAwayData, h2hDetailedData] = await Promise.all([
-        fetchTeamStatisticsCached(homeTeamId, leagueId, season),
-        fetchTeamStatisticsCached(awayTeamId, leagueId, season),
-        fetchH2HDetailedCached(homeTeamId, awayTeamId, 10),
-      ]);
-    } catch (error) {
-      console.error(`[Match Analysis] Error fetching enhanced data:`, error);
-      // Continue with basic data even if enhanced data fails
-    }
-  } else {
-    console.log(`[Match Analysis] Missing data for enhanced fetch (home:${homeTeamId}, away:${awayTeamId}, league:${leagueId}, season:${season})`);
-  }
+   if (homeTeamId && awayTeamId && leagueId && season) {
+     log.info({ homeTeamId, awayTeamId, leagueId, season }, 'Fetching enhanced data');
+     
+     try {
+       [teamStatsHomeData, teamStatsAwayData, h2hDetailedData] = await Promise.all([
+         fetchTeamStatisticsCached(homeTeamId, leagueId, season),
+         fetchTeamStatisticsCached(awayTeamId, leagueId, season),
+         fetchH2HDetailedCached(homeTeamId, awayTeamId, 10),
+       ]);
+     } catch (error) {
+       log.error({ error }, 'Error fetching enhanced data');
+       // Continue with basic data even if enhanced data fails
+     }
+   } else {
+     log.info({ homeTeamId, awayTeamId, leagueId, season }, 'Missing data for enhanced fetch');
+   }
 
   // Extract enhanced statistics
   const homeSeasonStats = homeTeamId && teamStatsHomeData 
@@ -567,21 +570,47 @@ export async function fetchAndStoreAnalysis(
     createdAt: existing?.createdAt || new Date().toISOString(),
   };
 
-  await upsertMatchAnalysis(analysisData);
-  
-  console.log(`[Match Analysis] Stored analysis for match ${matchId}`);
-  console.log(`  - Favorite: ${analysisData.favoriteTeamName} (${analysisData.homeWinPct}% vs ${analysisData.awayWinPct}%)`);
-  console.log(`  - Odds: ${analysisData.oddsHome} | ${analysisData.oddsDraw} | ${analysisData.oddsAway}`);
-  console.log(`  - Injuries: Home ${analysisData.homeInjuriesCount}, Away ${analysisData.awayInjuriesCount}`);
-  console.log(`  - H2H (basic): ${h2h.total} matches (H:${h2h.homeWins} D:${h2h.draws} A:${h2h.awayWins})`);
-  
-  if (h2hDetailed) {
-    console.log(`  - H2H (detailed): ${h2hDetailed.total} matches (H:${h2hDetailed.homeWins} D:${h2hDetailed.draws} A:${h2hDetailed.awayWins})`);
-  }
-  
-  if (homeSeasonStats && awaySeasonStats) {
-    console.log(`  - Season stats: Home ${homeSeasonStats.totalGoalsFor}GF/${homeSeasonStats.totalGoalsAgainst}GA, Away ${awaySeasonStats.totalGoalsFor}GF/${awaySeasonStats.totalGoalsAgainst}GA`);
-  }
+   await upsertMatchAnalysis(analysisData);
+   
+   log.info({ matchId }, 'Stored analysis');
+   log.info({ 
+     favorite: analysisData.favoriteTeamName, 
+     homeWinPct: analysisData.homeWinPct, 
+     awayWinPct: analysisData.awayWinPct 
+   }, 'Favorite');
+   log.info({ 
+     oddsHome: analysisData.oddsHome, 
+     oddsDraw: analysisData.oddsDraw, 
+     oddsAway: analysisData.oddsAway 
+   }, 'Odds');
+   log.info({ 
+     homeInjuriesCount: analysisData.homeInjuriesCount, 
+     awayInjuriesCount: analysisData.awayInjuriesCount 
+   }, 'Injuries');
+   log.info({ 
+     total: h2h.total, 
+     homeWins: h2h.homeWins, 
+     draws: h2h.draws, 
+     awayWins: h2h.awayWins 
+   }, 'H2H (basic)');
+   
+   if (h2hDetailed) {
+     log.info({ 
+       total: h2hDetailed.total, 
+       homeWins: h2hDetailed.homeWins, 
+       draws: h2hDetailed.draws, 
+       awayWins: h2hDetailed.awayWins 
+     }, 'H2H (detailed)');
+   }
+   
+   if (homeSeasonStats && awaySeasonStats) {
+     log.info({ 
+       homeGoalsFor: homeSeasonStats.totalGoalsFor, 
+       homeGoalsAgainst: homeSeasonStats.totalGoalsAgainst, 
+       awayGoalsFor: awaySeasonStats.totalGoalsFor, 
+       awayGoalsAgainst: awaySeasonStats.totalGoalsAgainst 
+     }, 'Season stats');
+   }
 
   return await getMatchAnalysisByMatchId(matchId);
 }
@@ -596,26 +625,26 @@ export async function refreshOddsForMatch(
   matchId: string,
   fixtureId: number
 ): Promise<boolean> {
-  console.log(`[Match Analysis] Refreshing odds for match ${matchId} (fixture ${fixtureId})`);
+   log.info({ matchId, fixtureId }, 'Refreshing odds');
 
   try {
     // Fetch latest odds only
     const oddsData = await fetchOdds(fixtureId);
     
-    if (!oddsData?.response?.[0]?.bookmakers) {
-      console.log(`[Match Analysis] No odds available for fixture ${fixtureId}`);
-      return false;
-    }
+     if (!oddsData?.response?.[0]?.bookmakers) {
+       log.info({ fixtureId }, 'No odds available');
+       return false;
+     }
 
     // Extract all odds
     const odds = extractAllOdds(oddsData);
 
-    // Get existing analysis
-    const existing = await getMatchAnalysisByMatchId(matchId);
-    if (!existing) {
-      console.log(`[Match Analysis] No existing analysis for match ${matchId}`);
-      return false;
-    }
+     // Get existing analysis
+     const existing = await getMatchAnalysisByMatchId(matchId);
+     if (!existing) {
+       log.info({ matchId }, 'No existing analysis');
+       return false;
+     }
 
     // Update only odds fields
     const updatedAnalysis: NewMatchAnalysis = {
@@ -644,18 +673,18 @@ export async function refreshOddsForMatch(
       analysisUpdatedAt: new Date().toISOString(),
     };
 
-    await upsertMatchAnalysis(updatedAnalysis);
-    console.log(`[Match Analysis] Refreshed odds for match ${matchId}`);
-    return true;
-  } catch (error) {
-    // Re-throw rate limit errors so BullMQ can retry with backoff
-    if (error instanceof Error && error.name === 'RateLimitError') {
-      console.error(`[Match Analysis] Rate limit hit for match ${matchId}, will retry`);
-      throw error;
-    }
-    console.error(`[Match Analysis] Error refreshing odds for match ${matchId}:`, error);
-    return false;
-  }
+     await upsertMatchAnalysis(updatedAnalysis);
+     log.info({ matchId }, 'Refreshed odds');
+     return true;
+   } catch (error) {
+     // Re-throw rate limit errors so BullMQ can retry with backoff
+     if (error instanceof Error && error.name === 'RateLimitError') {
+       log.error({ matchId }, 'Rate limit hit, will retry');
+       throw error;
+     }
+     log.error({ matchId, error }, 'Error refreshing odds');
+     return false;
+   }
 }
 
 // ===== CACHED VERSIONS FOR OPTIMIZATION =====
@@ -704,8 +733,8 @@ export async function refreshOddsBatch(
     return new Map();
   }
   
-  console.log(`[Odds Batch] Refreshing odds for ${matchFixturePairs.length} matches...`);
-  const results = new Map<string, boolean>();
+   log.info({ count: matchFixturePairs.length }, 'Refreshing odds batch');
+   const results = new Map<string, boolean>();
   
   // Process in parallel with rate limiting (max 5 concurrent)
   const limit = pLimit(5);
@@ -738,17 +767,17 @@ export async function refreshOddsBatch(
         });
         
         results.set(matchId, true);
-      } catch (error) {
-        console.error(`[Odds Batch] Error for match ${matchId}:`, error);
-        results.set(matchId, false);
-      }
+       } catch (error) {
+         log.error({ matchId, error }, 'Error processing batch');
+         results.set(matchId, false);
+       }
     })
   );
   
   await Promise.all(tasks);
   
-  const successCount = [...results.values()].filter(v => v).length;
-  console.log(`[Odds Batch] Complete: ${successCount}/${matchFixturePairs.length} successful`);
+   const successCount = [...results.values()].filter(v => v).length;
+   log.info({ successCount, total: matchFixturePairs.length }, 'Batch complete');
   
   return results;
 }

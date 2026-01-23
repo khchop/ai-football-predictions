@@ -6,6 +6,9 @@
 import { fetchWithRetry, APIError, RateLimitError } from '@/lib/utils/api-client';
 import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
 import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
+import { loggers } from '@/lib/logger/modules';
+
+const log = loggers.apiFootball;
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 
@@ -33,7 +36,7 @@ export async function fetchFromAPIFootball<T>({ endpoint, params }: FetchOptions
     });
   }
 
-  console.log(`[API-Football] Fetching: ${url.toString()}`);
+   log.info({ url: url.toString() }, 'Fetching');
 
   const response = await fetchWithRetry(
     url.toString(),
@@ -48,11 +51,11 @@ export async function fetchFromAPIFootball<T>({ endpoint, params }: FetchOptions
     SERVICE_NAMES.API_FOOTBALL
   );
 
-  // Parse rate limit headers for logging
-  const remaining = response.headers.get('x-ratelimit-requests-remaining');
-  if (remaining) {
-    console.log(`[API-Football] Rate limit remaining: ${remaining}`);
-  }
+   // Parse rate limit headers for logging
+   const remaining = response.headers.get('x-ratelimit-requests-remaining');
+   if (remaining) {
+     log.info({ remaining }, 'Rate limit remaining');
+   }
 
   if (!response.ok) {
     throw new APIError(
@@ -64,25 +67,25 @@ export async function fetchFromAPIFootball<T>({ endpoint, params }: FetchOptions
 
   const data = await response.json();
   
-  if (data.errors && Object.keys(data.errors).length > 0) {
-    console.error('[API-Football] API Errors:', data.errors);
-    const errorMsg = Object.values(data.errors).join(', ');
-    
-    // Detect rate limit errors
-    if (errorMsg.toLowerCase().includes('rate limit') || 
-        errorMsg.toLowerCase().includes('too many requests') ||
-        errorMsg.toLowerCase().includes('exceeded the limit')) {
-      throw new RateLimitError(
-        `API-Football rate limit exceeded: ${errorMsg}`,
-        endpoint,
-        60 // Suggest retry after 60 seconds
-      );
-    }
-    
-    throw new APIError(`API-Football API error: ${errorMsg}`, undefined, endpoint);
-  }
-  
-  console.log(`[API-Football] Results: ${data.results || 0}`);
+   if (data.errors && Object.keys(data.errors).length > 0) {
+     log.error({ errors: data.errors }, 'API Errors');
+     const errorMsg = Object.values(data.errors).join(', ');
+     
+     // Detect rate limit errors
+     if (errorMsg.toLowerCase().includes('rate limit') || 
+         errorMsg.toLowerCase().includes('too many requests') ||
+         errorMsg.toLowerCase().includes('exceeded the limit')) {
+       throw new RateLimitError(
+         `API-Football rate limit exceeded: ${errorMsg}`,
+         endpoint,
+         60 // Suggest retry after 60 seconds
+       );
+     }
+     
+     throw new APIError(`API-Football API error: ${errorMsg}`, undefined, endpoint);
+   }
+   
+   log.info({ results: data.results || 0 }, 'Results');
 
   return data;
 }
@@ -141,10 +144,10 @@ export async function fetchPrediction(fixtureId: number): Promise<APIFootballPre
         params: { fixture: fixtureId },
       })
     );
-  } catch (error) {
-    console.error(`[API-Football] Error fetching prediction for fixture ${fixtureId}:`, error);
-    return null;
-  }
+   } catch (error) {
+     log.error({ fixtureId, error }, 'Error fetching prediction');
+     return null;
+   }
 }
 
 /**
@@ -160,10 +163,10 @@ export async function fetchInjuries(fixtureId: number): Promise<APIFootballInjur
         params: { fixture: fixtureId },
       })
     );
-  } catch (error) {
-    console.error(`[API-Football] Error fetching injuries for fixture ${fixtureId}:`, error);
-    return null;
-  }
+   } catch (error) {
+     log.error({ fixtureId, error }, 'Error fetching injuries');
+     return null;
+   }
 }
 
 /**
@@ -179,10 +182,10 @@ export async function fetchOdds(fixtureId: number): Promise<APIFootballOddsRespo
         params: { fixture: fixtureId },
       })
     );
-  } catch (error) {
-    console.error(`[API-Football] Error fetching odds for fixture ${fixtureId}:`, error);
-    return null;
-  }
+   } catch (error) {
+     log.error({ fixtureId, error }, 'Error fetching odds');
+     return null;
+   }
 }
 
 /**
@@ -198,10 +201,10 @@ export async function fetchLineups(fixtureId: number): Promise<APIFootballLineup
         params: { fixture: fixtureId },
       })
     );
-  } catch (error) {
-    console.error(`[API-Football] Error fetching lineups for fixture ${fixtureId}:`, error);
-    return null;
-  }
+   } catch (error) {
+     log.error({ fixtureId, error }, 'Error fetching lineups');
+     return null;
+   }
 }
 
 /**

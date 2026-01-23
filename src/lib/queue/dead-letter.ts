@@ -7,6 +7,9 @@
 
 import { Job } from 'bullmq';
 import { getQueueConnection } from './index';
+import { loggers } from '@/lib/logger/modules';
+
+const log = loggers.dlq;
 
 const DLQ_KEY_PREFIX = 'dlq:';
 const DLQ_INDEX_KEY = 'dlq:index';
@@ -58,7 +61,7 @@ export async function addToDeadLetterQueue(
     await redis.zremrangebyrank(DLQ_INDEX_KEY, 0, count - MAX_DLQ_ENTRIES - 1);
   }
   
-  console.error(`[DLQ] Added failed job to DLQ: ${job.queueName}/${job.name}/${job.id}`);
+   log.error({ queue: job.queueName, jobName: job.name, jobId: job.id }, 'Added failed job to DLQ');
 }
 
 /**
@@ -84,9 +87,9 @@ export async function getDeadLetterJobs(
     if (data) {
       try {
         entries.push(JSON.parse(data));
-      } catch (error) {
-        console.error(`[DLQ] Failed to parse entry ${key}:`, error);
-      }
+       } catch (error) {
+         log.error({ entryKey: key, error: error instanceof Error ? error.message : String(error) }, 'Failed to parse DLQ entry');
+       }
     }
   }
   
@@ -115,11 +118,11 @@ export async function clearDeadLetterQueue(): Promise<number> {
     await redis.del(...keys);
   }
   
-  // Clear index
-  await redis.del(DLQ_INDEX_KEY);
-  
-  console.log(`[DLQ] Cleared ${keys.length} entries from DLQ`);
-  return keys.length;
+   // Clear index
+   await redis.del(DLQ_INDEX_KEY);
+   
+   log.info({ entryCount: keys.length }, 'Cleared entries from DLQ');
+   return keys.length;
 }
 
 /**

@@ -7,6 +7,7 @@
 
 import { Queue, Worker, Job } from 'bullmq';
 import IORedis from 'ioredis';
+import { loggers } from '@/lib/logger/modules';
 
 // Job type constants
 export const JOB_TYPES = {
@@ -32,15 +33,16 @@ export type JobType = typeof JOB_TYPES[keyof typeof JOB_TYPES];
 // Redis connection for BullMQ (separate from cache to avoid conflicts)
 let connection: IORedis | null = null;
 let connectionId = 0;
+const log = loggers.queue;
 
 export function getQueueConnection(): IORedis {
   if (connection) {
-    console.log(`[Queue] Reusing existing Redis connection #${connectionId}`);
+    log.info({ connectionId }, 'Reusing existing Redis connection');
     return connection;
   }
   
   connectionId++;
-  console.log(`[Queue] Creating new Redis connection #${connectionId}...`);
+  log.info({ connectionId }, 'Creating new Redis connection');
   
   const redisUrl = process.env.REDIS_URL;
   if (!redisUrl) {
@@ -53,19 +55,19 @@ export function getQueueConnection(): IORedis {
   });
   
   connection.on('error', (err) => {
-    console.error(`[Queue:Conn#${connectionId}] Redis error:`, err.message);
+    log.error({ connectionId, error: err.message }, 'Redis error');
   });
   
   connection.on('connect', () => {
-    console.log(`[Queue:Conn#${connectionId}] ✓ Redis connected`);
+    log.info({ connectionId }, 'Redis connected');
   });
   
   connection.on('ready', () => {
-    console.log(`[Queue:Conn#${connectionId}] ✓ Redis ready`);
+    log.info({ connectionId }, 'Redis ready');
   });
   
   connection.on('close', () => {
-    console.log(`[Queue:Conn#${connectionId}] Redis connection closed`);
+    log.info({ connectionId }, 'Redis connection closed');
   });
   
   return connection;

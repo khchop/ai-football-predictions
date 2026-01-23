@@ -1,4 +1,5 @@
 import { LLMProvider } from '@/types';
+import { loggers } from '@/lib/logger/modules';
 import { TOGETHER_PROVIDERS } from './providers/together';
 import { getAutoDisabledModelIds } from '@/lib/db/queries';
 
@@ -12,15 +13,18 @@ export async function getActiveProviders(): Promise<LLMProvider[]> {
     return [];
   }
   
-  // Filter out auto-disabled models
-  const disabledIds = await getAutoDisabledModelIds();
-  const activeProviders = ALL_PROVIDERS.filter(p => !disabledIds.has(p.id));
-  
-  if (disabledIds.size > 0) {
-    console.log(`[LLM] Filtered ${disabledIds.size} auto-disabled models, ${activeProviders.length} active`);
-  }
-  
-  return activeProviders;
+   // Filter out auto-disabled models
+   const disabledIds = await getAutoDisabledModelIds();
+   const activeProviders = ALL_PROVIDERS.filter(p => !disabledIds.has(p.id));
+   
+   if (disabledIds.size > 0) {
+     loggers.llm.info({
+       disabledCount: disabledIds.size,
+       activeCount: activeProviders.length,
+     }, 'Filtered auto-disabled models');
+   }
+   
+   return activeProviders;
 }
 
 // Get provider by ID

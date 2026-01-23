@@ -6,6 +6,7 @@
  */
 
 import { fetchWithRetry } from '@/lib/utils/api-client';
+import { loggers } from '@/lib/logger/modules';
 import { TOGETHER_CONTENT_RETRY, TOGETHER_CONTENT_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
 
 interface TogetherMessage {
@@ -128,14 +129,15 @@ export async function generateWithTogetherAI<T = unknown>(
 
     const content = data.choices[0].message.content;
     const usage = data.usage;
-    const cost = calculateCost(usage.prompt_tokens, usage.completion_tokens);
-    const duration = Date.now() - startTime;
+     const cost = calculateCost(usage.prompt_tokens, usage.completion_tokens);
+     const duration = Date.now() - startTime;
 
-    console.log(
-      `[Together AI] Content generated (${duration}ms): ` +
-      `${usage.prompt_tokens} input + ${usage.completion_tokens} output tokens, ` +
-      `cost: $${cost.toFixed(4)}`
-    );
+     loggers.togetherClient.info({
+       duration,
+       inputTokens: usage.prompt_tokens,
+       outputTokens: usage.completion_tokens,
+       cost,
+     }, 'Content generated');
 
     // Parse JSON response
     let parsedContent: T;
@@ -150,12 +152,12 @@ export async function generateWithTogetherAI<T = unknown>(
         .replace(/^[^{]*/, '')    // Remove leading non-JSON text
         .replace(/[^}]*$/, '');   // Remove trailing non-JSON text
       
-      try {
-        parsedContent = JSON.parse(cleanedContent) as T;
-      } catch {
-        console.error('[Together AI] Failed to parse response as JSON:', content);
-        throw new Error(`Failed to parse AI response as JSON: ${parseError}`);
-      }
+       try {
+         parsedContent = JSON.parse(cleanedContent) as T;
+       } catch {
+         loggers.togetherClient.error({ content }, 'Failed to parse response as JSON');
+         throw new Error(`Failed to parse AI response as JSON: ${parseError}`);
+       }
     }
 
     return {
@@ -167,11 +169,12 @@ export async function generateWithTogetherAI<T = unknown>(
       },
       cost,
     };
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error('[Together AI] Generation failed:', error.message);
-      throw error;
-    }
-    throw new Error('Unknown error during content generation');
-  }
+   } catch (error) {
+     if (error instanceof Error) {
+       loggers.togetherClient.error({ error: error.message }, 'Content generation failed');
+       throw error;
+     }
+     loggers.togetherClient.error({}, 'Unknown error during content generation');
+     throw new Error('Unknown error during content generation');
+   }
 }

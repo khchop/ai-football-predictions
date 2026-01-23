@@ -14,6 +14,7 @@
  * - Closes again after successful request in half-open state
  */
 
+import { loggers } from '@/lib/logger/modules';
 import type { ServiceName } from './retry-config';
 
 // Re-export for convenience
@@ -105,18 +106,18 @@ export function isCircuitOpen(service: ServiceName): boolean {
     return false;
   }
   
-  if (circuit.state === 'open') {
-    // Check if we should transition to half-open
-    const timeSinceFailure = Date.now() - circuit.lastFailureAt;
-    if (timeSinceFailure >= config.resetTimeoutMs) {
-      circuit.state = 'half-open';
-      circuit.successes = 0;
-      circuit.lastStateChange = Date.now();
-      console.log(`[Circuit Breaker] ${service}: OPEN -> HALF_OPEN (testing recovery)`);
-      return false; // Allow request through
-    }
-    return true; // Still open, fail fast
-  }
+    if (circuit.state === 'open') {
+     // Check if we should transition to half-open
+     const timeSinceFailure = Date.now() - circuit.lastFailureAt;
+     if (timeSinceFailure >= config.resetTimeoutMs) {
+       circuit.state = 'half-open';
+       circuit.successes = 0;
+       circuit.lastStateChange = Date.now();
+       loggers.circuitBreaker.info({ service }, 'OPEN -> HALF_OPEN (testing recovery)');
+       return false; // Allow request through
+     }
+     return true; // Still open, fail fast
+   }
   
   // half-open: allow limited requests through
   return false;
@@ -130,21 +131,21 @@ export function recordSuccess(service: ServiceName): void {
   
   circuit.totalSuccesses++;
   
-  if (circuit.state === 'half-open') {
-    circuit.successes++;
-    // After successful request in half-open, close the circuit
-    if (circuit.successes >= 1) {
-      const previousState = circuit.state;
-      circuit.state = 'closed';
-      circuit.failures = 0;
-      circuit.successes = 0;
-      circuit.lastStateChange = Date.now();
-      console.log(`[Circuit Breaker] ${service}: ${previousState.toUpperCase()} -> CLOSED (service recovered)`);
-    }
-  } else if (circuit.state === 'closed') {
-    // Reset failure counter on success
-    circuit.failures = 0;
-  }
+   if (circuit.state === 'half-open') {
+     circuit.successes++;
+     // After successful request in half-open, close the circuit
+     if (circuit.successes >= 1) {
+       const previousState = circuit.state;
+       circuit.state = 'closed';
+       circuit.failures = 0;
+       circuit.successes = 0;
+       circuit.lastStateChange = Date.now();
+       loggers.circuitBreaker.info({ service, previousState }, 'HALF_OPEN -> CLOSED (service recovered)');
+     }
+   } else if (circuit.state === 'closed') {
+     // Reset failure counter on success
+     circuit.failures = 0;
+   }
 }
 
 /**
@@ -160,27 +161,28 @@ export function recordFailure(service: ServiceName, error?: Error): void {
   
   const errorMsg = error?.message || 'Unknown error';
   
-  if (circuit.state === 'half-open') {
-    // Failure in half-open immediately opens circuit
-    circuit.state = 'open';
-    circuit.lastStateChange = Date.now();
-    console.warn(
-      `[Circuit Breaker] ${service}: HALF_OPEN -> OPEN (recovery failed: ${errorMsg})`
-    );
-  } else if (circuit.state === 'closed' && circuit.failures >= config.failureThreshold) {
-    // Too many failures, open the circuit
-    circuit.state = 'open';
-    circuit.lastStateChange = Date.now();
-    console.warn(
-      `[Circuit Breaker] ${service}: CLOSED -> OPEN after ${circuit.failures} failures ` +
-      `(last error: ${errorMsg})`
-    );
-  } else if (circuit.state === 'closed') {
-    console.warn(
-      `[Circuit Breaker] ${service}: Failure ${circuit.failures}/${config.failureThreshold} ` +
-      `(${errorMsg})`
-    );
-  }
+   if (circuit.state === 'half-open') {
+     // Failure in half-open immediately opens circuit
+     circuit.state = 'open';
+     circuit.lastStateChange = Date.now();
+     loggers.circuitBreaker.warn(
+       { service, error: errorMsg },
+       'HALF_OPEN -> OPEN (recovery failed)'
+     );
+   } else if (circuit.state === 'closed' && circuit.failures >= config.failureThreshold) {
+     // Too many failures, open the circuit
+     circuit.state = 'open';
+     circuit.lastStateChange = Date.now();
+     loggers.circuitBreaker.warn(
+       { service, failures: circuit.failures, error: errorMsg },
+       'CLOSED -> OPEN after too many failures'
+     );
+   } else if (circuit.state === 'closed') {
+     loggers.circuitBreaker.warn(
+       { service, currentFailures: circuit.failures, threshold: config.failureThreshold, error: errorMsg },
+       'Failure recorded'
+     );
+   }
 }
 
 /**
@@ -207,14 +209,14 @@ export function getAllCircuitStatuses(): Map<ServiceName, CircuitStatus & { conf
  * Manually reset a circuit (for admin use)
  */
 export function resetCircuit(service: ServiceName): void {
-  const circuit = getOrCreateCircuit(service);
-  const previousState = circuit.state;
-  circuit.state = 'closed';
-  circuit.failures = 0;
-  circuit.successes = 0;
-  circuit.lastStateChange = Date.now();
-  console.log(`[Circuit Breaker] ${service}: ${previousState.toUpperCase()} -> CLOSED (manual reset)`);
-}
+   const circuit = getOrCreateCircuit(service);
+   const previousState = circuit.state;
+   circuit.state = 'closed';
+   circuit.failures = 0;
+   circuit.successes = 0;
+   circuit.lastStateChange = Date.now();
+   loggers.circuitBreaker.info({ service, previousState }, 'Manual reset');
+ }
 
 // ============================================================================
 // ERROR CLASS

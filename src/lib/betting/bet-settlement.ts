@@ -1,5 +1,7 @@
 // Bet settlement logic - evaluate bets and calculate payouts
 
+import { loggers } from '@/lib/logger/modules';
+
 /**
  * Evaluate a result bet (match winner or double chance)
  * @param selection - '1', 'X', '2', '1X', 'X2', '12'
@@ -27,11 +29,11 @@ export function evaluateResultBet(
       return homeWin || draw;
     case 'X2': // Draw or away win
       return draw || awayWin;
-    case '12': // Home win or away win (no draw)
-      return homeWin || awayWin;
-    default:
-      console.error(`Unknown result bet selection: ${selection}`);
-      return false;
+     case '12': // Home win or away win (no draw)
+       return homeWin || awayWin;
+     default:
+       loggers.betSettlement.error({ selection }, 'Unknown result bet selection');
+       return false;
   }
 }
 
@@ -51,12 +53,12 @@ export function evaluateOverUnderBet(
   
   // Parse selection (e.g., "O2.5" or "U1.5")
   const isOver = selection.startsWith('O');
-  const line = parseFloat(selection.substring(1)); // Remove 'O' or 'U' and parse
+   const line = parseFloat(selection.substring(1)); // Remove 'O' or 'U' and parse
 
-  if (isNaN(line)) {
-    console.error(`Invalid over/under selection: ${selection}`);
-    return false;
-  }
+   if (isNaN(line)) {
+     loggers.betSettlement.error({ selection }, 'Invalid over/under selection');
+     return false;
+   }
 
   if (isOver) {
     return totalGoals > line;
@@ -79,14 +81,14 @@ export function evaluateBttsBet(
 ): boolean {
   const bothScored = homeScore > 0 && awayScore > 0;
 
-  if (selection === 'Yes') {
-    return bothScored;
-  } else if (selection === 'No') {
-    return !bothScored;
-  } else {
-    console.error(`Unknown BTTS selection: ${selection}`);
-    return false;
-  }
+   if (selection === 'Yes') {
+     return bothScored;
+   } else if (selection === 'No') {
+     return !bothScored;
+   } else {
+     loggers.betSettlement.error({ selection }, 'Unknown BTTS selection');
+     return false;
+   }
 }
 
 /**

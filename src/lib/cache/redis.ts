@@ -4,6 +4,7 @@
  */
 
 import Redis from 'ioredis';
+import { loggers } from '@/lib/logger/modules';
 
 // Singleton Redis client
 let redisClient: Redis | null = null;
@@ -17,51 +18,51 @@ export function getRedis(): Redis | null {
     return redisClient;
   }
 
-  const redisUrl = process.env.REDIS_URL;
-  
-  if (!redisUrl) {
-    console.warn('[Cache] REDIS_URL not configured - caching disabled');
-    return null;
-  }
+   const redisUrl = process.env.REDIS_URL;
+   
+   if (!redisUrl) {
+     loggers.cache.warn('REDIS_URL not configured - caching disabled');
+     return null;
+   }
 
-  try {
-    redisClient = new Redis(redisUrl, {
-      maxRetriesPerRequest: 3,
-      retryStrategy(times) {
-        if (times > 3) {
-          console.error('[Cache] Redis connection failed after 3 retries');
-          return null; // Stop retrying
-        }
-        return Math.min(times * 200, 2000); // Exponential backoff
-      },
-      lazyConnect: true,
-    });
+   try {
+     redisClient = new Redis(redisUrl, {
+       maxRetriesPerRequest: 3,
+       retryStrategy(times) {
+         if (times > 3) {
+           loggers.cache.error({retries: times}, 'Redis connection failed after retries');
+           return null; // Stop retrying
+         }
+         return Math.min(times * 200, 2000); // Exponential backoff
+       },
+       lazyConnect: true,
+     });
 
-    redisClient.on('error', (err) => {
-      console.error('[Cache] Redis error:', err.message);
-    });
+     redisClient.on('error', (err) => {
+       loggers.cache.error({ error: err.message }, 'Redis error');
+     });
 
-    redisClient.on('connect', () => {
-      console.log('[Cache] Redis connected');
-    });
+     redisClient.on('connect', () => {
+       loggers.cache.info('Redis connected');
+     });
 
-    return redisClient;
-  } catch (error) {
-    console.error('[Cache] Failed to create Redis client:', error);
-    return null;
-  }
+     return redisClient;
+   } catch (error) {
+     loggers.cache.error({ error: error instanceof Error ? error.message : String(error) }, 'Failed to create Redis client');
+     return null;
+   }
 }
 
 /**
  * Close Redis connection gracefully
  */
 export async function closeRedis(): Promise<void> {
-  if (redisClient) {
-    await redisClient.quit();
-    redisClient = null;
-    console.log('[Cache] Redis connection closed');
-  }
-}
+   if (redisClient) {
+     await redisClient.quit();
+     redisClient = null;
+     loggers.cache.info('Redis connection closed');
+   }
+ }
 
 /**
  * Cache TTL presets (in seconds)
@@ -95,16 +96,16 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
   const redis = getRedis();
   if (!redis) return null;
 
-  try {
-    const cached = await redis.get(key);
-    if (cached) {
-      return JSON.parse(cached) as T;
-    }
-    return null;
-  } catch (error) {
-    console.error(`[Cache] Error getting ${key}:`, error);
-    return null;
-  }
+   try {
+     const cached = await redis.get(key);
+     if (cached) {
+       return JSON.parse(cached) as T;
+     }
+     return null;
+   } catch (error) {
+     loggers.cache.error({ key, error: error instanceof Error ? error.message : String(error) }, 'Error getting cache value');
+     return null;
+   }
 }
 
 /**
@@ -118,13 +119,13 @@ export async function cacheSet<T>(
   const redis = getRedis();
   if (!redis) return false;
 
-  try {
-    await redis.setex(key, ttlSeconds, JSON.stringify(value));
-    return true;
-  } catch (error) {
-    console.error(`[Cache] Error setting ${key}:`, error);
-    return false;
-  }
+   try {
+     await redis.setex(key, ttlSeconds, JSON.stringify(value));
+     return true;
+   } catch (error) {
+     loggers.cache.error({ key, ttl: ttlSeconds, error: error instanceof Error ? error.message : String(error) }, 'Error setting cache value');
+     return false;
+   }
 }
 
 /**
@@ -134,13 +135,13 @@ export async function cacheDelete(key: string): Promise<boolean> {
   const redis = getRedis();
   if (!redis) return false;
 
-  try {
-    await redis.del(key);
-    return true;
-  } catch (error) {
-    console.error(`[Cache] Error deleting ${key}:`, error);
-    return false;
-  }
+   try {
+     await redis.del(key);
+     return true;
+   } catch (error) {
+     loggers.cache.error({ key, error: error instanceof Error ? error.message : String(error) }, 'Error deleting cache value');
+     return false;
+   }
 }
 
 /**
@@ -151,14 +152,14 @@ export async function cacheDeletePattern(pattern: string): Promise<number> {
   const redis = getRedis();
   if (!redis) return 0;
 
-  try {
-    const keys = await redis.keys(pattern);
-    if (keys.length === 0) return 0;
-    return await redis.del(...keys);
-  } catch (error) {
-    console.error(`[Cache] Error deleting pattern ${pattern}:`, error);
-    return 0;
-  }
+   try {
+     const keys = await redis.keys(pattern);
+     if (keys.length === 0) return 0;
+     return await redis.del(...keys);
+   } catch (error) {
+     loggers.cache.error({ pattern, error: error instanceof Error ? error.message : String(error) }, 'Error deleting cache pattern');
+     return 0;
+   }
 }
 
 /**
@@ -198,18 +199,18 @@ export async function invalidateMatchCaches(matchId: string): Promise<void> {
   const redis = getRedis();
   if (!redis) return;
 
-  try {
-    // Invalidate leaderboard caches (all filter combinations)
-    await cacheDeletePattern('db:leaderboard:*');
-    // Invalidate overall stats
-    await cacheDelete(cacheKeys.overallStats());
-    // Invalidate specific match predictions
-    await cacheDelete(cacheKeys.matchPredictions(matchId));
-    
-    console.log(`[Cache] Invalidated caches for match ${matchId}`);
-  } catch (error) {
-    console.error(`[Cache] Error invalidating match caches:`, error);
-  }
+   try {
+     // Invalidate leaderboard caches (all filter combinations)
+     await cacheDeletePattern('db:leaderboard:*');
+     // Invalidate overall stats
+     await cacheDelete(cacheKeys.overallStats());
+     // Invalidate specific match predictions
+     await cacheDelete(cacheKeys.matchPredictions(matchId));
+     
+     loggers.cache.debug({ matchId }, 'Invalidated match caches');
+   } catch (error) {
+     loggers.cache.error({ matchId, error: error instanceof Error ? error.message : String(error) }, 'Error invalidating match caches');
+   }
 }
 
 /**

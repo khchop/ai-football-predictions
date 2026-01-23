@@ -4,6 +4,9 @@ import type { NewLeagueStanding, LeagueStanding } from '@/lib/db/schema';
 import { COMPETITIONS } from './competitions';
 import { fetchWithRetry, APIError, sleep } from '@/lib/utils/api-client';
 import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
+import { loggers } from '@/lib/logger/modules';
+
+const log = loggers.standings;
 
 // Re-export LeagueStanding for convenience
 export type { LeagueStanding };
@@ -62,7 +65,7 @@ async function fetchStandingsFromAPI(leagueId: number, season: number): Promise<
   url.searchParams.append('league', String(leagueId));
   url.searchParams.append('season', String(season));
 
-  console.log(`[Standings] Fetching: ${url.toString()}`);
+   log.info({ url: url.toString() }, 'Fetching');
 
   const response = await fetchWithRetry(
     url.toString(),
@@ -98,8 +101,8 @@ async function fetchStandingsFromAPI(leagueId: number, season: number): Promise<
     }
   }
 
-  console.log(`[Standings] Found ${allStandings.length} teams for league ${leagueId}`);
-  return allStandings;
+   log.info({ leagueId, count: allStandings.length }, 'Found teams');
+   return allStandings;
 }
 
 // Update standings for a single league
@@ -173,12 +176,12 @@ export async function updateLeagueStandings(leagueId: number, season: number): P
       updated++;
     }
 
-    console.log(`[Standings] Updated ${updated} teams for league ${leagueId}`);
-    return updated;
-  } catch (error) {
-    console.error(`[Standings] Error updating league ${leagueId}:`, error);
-    return 0;
-  }
+     log.info({ leagueId, count: updated }, 'Updated teams');
+     return updated;
+   } catch (error) {
+     log.error({ leagueId, error }, 'Error updating league');
+     return 0;
+   }
 }
 
 // Update standings for all tracked competitions
@@ -194,15 +197,15 @@ export async function updateAllStandings(): Promise<{ updated: number; leagues: 
       totalUpdated += updated;
       if (updated > 0) leaguesProcessed++;
       
-      // Rate limit delay between API calls
-      await sleep(RATE_LIMIT_DELAY_MS);
-    } catch (error) {
-      console.error(`[Standings] Failed to update ${competition.name}:`, error);
-    }
-  }
+       // Rate limit delay between API calls
+       await sleep(RATE_LIMIT_DELAY_MS);
+     } catch (error) {
+       log.error({ competition: competition.name, error }, 'Failed to update');
+     }
+   }
 
-  console.log(`[Standings] Total: ${totalUpdated} teams across ${leaguesProcessed} leagues`);
-  return { updated: totalUpdated, leagues: leaguesProcessed };
+   log.info({ totalUpdated, leaguesProcessed }, 'Total');
+   return { updated: totalUpdated, leagues: leaguesProcessed };
 }
 
 // Check if standings are stale (older than specified hours)
@@ -258,21 +261,21 @@ export async function getStaleLeagueIds(maxAgeHours: number = 24): Promise<numbe
 export async function updateStandingsIfStale(maxAgeHours: number = 24): Promise<number> {
   const staleLeagueIds = await getStaleLeagueIds(maxAgeHours);
   
-  if (staleLeagueIds.length === 0) {
-    console.log('[Standings] All leagues are fresh');
-    return 0;
-  }
-  
-  console.log(`[Standings] ${staleLeagueIds.length} leagues are stale: ${staleLeagueIds.join(', ')}`);
+   if (staleLeagueIds.length === 0) {
+     log.info({}, 'All leagues are fresh');
+     return 0;
+   }
+   
+   log.info({ count: staleLeagueIds.length, leagueIds: staleLeagueIds.join(', ') }, 'Leagues are stale');
   
   let updated = 0;
   for (const leagueId of staleLeagueIds) {
     const competition = COMPETITIONS.find(c => c.apiFootballId === leagueId);
     if (!competition) continue;
     
-    console.log(`[Standings] Updating ${competition.name}...`);
-    const count = await updateLeagueStandings(leagueId, competition.season);
-    updated += count;
+     log.info({ competition: competition.name }, 'Updating');
+     const count = await updateLeagueStandings(leagueId, competition.season);
+     updated += count;
     
     await new Promise(resolve => setTimeout(resolve, 300)); // Rate limit
   }

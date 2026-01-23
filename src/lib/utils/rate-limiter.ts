@@ -3,6 +3,7 @@
  * Uses INCR + EXPIRE for atomic counter operations across instances
  */
 
+import { loggers } from '@/lib/logger/modules';
 import { getRedis } from '@/lib/cache/redis';
 
 export interface RateLimitConfig {
@@ -35,16 +36,16 @@ export async function checkRateLimit(key: string, config: RateLimitConfig): Prom
   const redis = getRedis();
   const windowSeconds = Math.ceil(config.windowMs / 1000);
   
-  // Fail-open: if Redis unavailable, allow request
-  if (!redis) {
-    console.warn('[Rate Limit] Redis unavailable, allowing request');
-    return {
-      allowed: true,
-      remaining: config.limit,
-      resetAt: Math.floor(Date.now() / 1000) + windowSeconds,
-      current: 1,
-    };
-  }
+   // Fail-open: if Redis unavailable, allow request
+   if (!redis) {
+     loggers.rateLimiter.warn({ key }, 'Redis unavailable, allowing request');
+     return {
+       allowed: true,
+       remaining: config.limit,
+       resetAt: Math.floor(Date.now() / 1000) + windowSeconds,
+       current: 1,
+     };
+   }
 
   try {
     const redisKey = `rate:${key}`;
@@ -70,16 +71,16 @@ export async function checkRateLimit(key: string, config: RateLimitConfig): Prom
       resetAt: resetAtSeconds,
       current: count,
     };
-  } catch (error) {
-    // Fail-open: if Redis operation fails, allow request
-    console.warn('[Rate Limit] Redis error, allowing request:', error);
-    return {
-      allowed: true,
-      remaining: config.limit,
-      resetAt: Math.floor(Date.now() / 1000) + Math.ceil(config.windowMs / 1000),
-      current: 1,
-    };
-  }
+   } catch (error) {
+     // Fail-open: if Redis operation fails, allow request
+     loggers.rateLimiter.warn({ key, error: error instanceof Error ? error.message : String(error) }, 'Redis operation failed, allowing request');
+     return {
+       allowed: true,
+       remaining: config.limit,
+       resetAt: Math.floor(Date.now() / 1000) + Math.ceil(config.windowMs / 1000),
+       current: 1,
+     };
+   }
 }
 
 /**

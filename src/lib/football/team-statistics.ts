@@ -1,6 +1,9 @@
 import { APIFootballTeamStatisticsResponse } from '@/types';
 import { fetchWithRetry, APIError } from '@/lib/utils/api-client';
 import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
+import { loggers } from '@/lib/logger/modules';
+
+const log = loggers.teamStats;
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 
@@ -24,7 +27,7 @@ async function fetchFromAPI<T>({ endpoint, params }: FetchOptions): Promise<T> {
     });
   }
 
-  console.log(`[Team Statistics] Fetching: ${url.toString()}`);
+   log.info({ url: url.toString() }, 'Fetching');
 
   const response = await fetchWithRetry(
     url.toString(),
@@ -49,11 +52,11 @@ async function fetchFromAPI<T>({ endpoint, params }: FetchOptions): Promise<T> {
 
   const data = await response.json();
   
-  if (data.errors && Object.keys(data.errors).length > 0) {
-    console.error('[Team Statistics] API Errors:', data.errors);
-  }
-  
-  console.log(`[Team Statistics] Results: ${data.results || 0}`);
+   if (data.errors && Object.keys(data.errors).length > 0) {
+     log.error({ errors: data.errors }, 'API Errors');
+   }
+   
+   log.info({ results: data.results || 0 }, 'Results');
 
   return data;
 }
@@ -70,10 +73,10 @@ export async function fetchTeamStatistics(
       params: { team: teamId, league: leagueId, season },
     });
     return data;
-  } catch (error) {
-    console.error(`[Team Statistics] Error fetching stats for team ${teamId}:`, error);
-    return null;
-  }
+   } catch (error) {
+     log.error({ teamId, error }, 'Error fetching stats');
+     return null;
+   }
 }
 
 // Extract useful statistics for predictions
@@ -124,11 +127,11 @@ export function extractTeamStatistics(
 
   const stats = statsResponse.response;
   
-  // Defensive null checks - API may return incomplete data on errors
-  if (!stats?.fixtures || !stats?.goals || !stats?.clean_sheet || !stats?.failed_to_score || !stats?.biggest) {
-    console.error('[Team Statistics] Incomplete stats response, missing required fields');
-    return null;
-  }
+   // Defensive null checks - API may return incomplete data on errors
+   if (!stats?.fixtures || !stats?.goals || !stats?.clean_sheet || !stats?.failed_to_score || !stats?.biggest) {
+     log.error({}, 'Incomplete stats response, missing required fields');
+     return null;
+   }
   
   return {
     // Home/Away record
