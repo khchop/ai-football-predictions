@@ -18,15 +18,42 @@ import {
   getMatchesMissingPredictions,
   getMatchesNeedingScoring,
 } from '@/lib/db/queries';
+import { checkAndFixStuckMatches } from '../catch-up';
 import { loggers } from '@/lib/logger/modules';
 
 export function createBackfillWorker() {
   return new Worker<BackfillMissingPayload>(
     QUEUE_NAMES.BACKFILL,
     async (job: Job<BackfillMissingPayload>) => {
-      const { hoursAhead = 12 } = job.data;
+      const { hoursAhead = 12, type } = job.data;
       const log = loggers.backfillWorker.child({ jobId: job.id, jobName: job.name });
       
+      // ============ STUCK MATCHES RECOVERY ============
+      // Check for matches stuck in 'scheduled' status that should be live
+      if (type === 'stuck-matches') {
+        log.info('Starting stuck match recovery check...');
+        
+        try {
+          const stuckFixed = await checkAndFixStuckMatches();
+          
+          if (stuckFixed > 0) {
+            log.info({ stuckFixed }, '✓ Recovered stuck matches - triggered live monitoring');
+          } else {
+            log.debug('No stuck matches found');
+          }
+          
+          return {
+            success: true,
+            type: 'stuck-matches',
+            stuckFixed,
+          };
+        } catch (error: any) {
+          log.error({ err: error }, 'Failed to check stuck matches');
+          throw error;
+        }
+      }
+      
+      // ============ REGULAR BACKFILL ============
       log.info(`Checking for matches with missing data (next ${hoursAhead}h)...`);
       
       const MAX_ERRORS = 100;

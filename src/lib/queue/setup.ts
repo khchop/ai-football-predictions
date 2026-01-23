@@ -180,6 +180,21 @@ export async function setupRepeatableJobs(): Promise<void> {
     }
   );
   
+  // Check for stuck matches every 2 minutes
+  // Recovers matches that should be live but are stuck in 'scheduled' status
+  await registerRepeatableJob(
+    backfillQueue,
+    JOB_TYPES.BACKFILL_MISSING,
+    { manual: false, type: 'stuck-matches' },
+    {
+      repeat: {
+        pattern: '*/2 * * * *', // Every 2 minutes
+        tz: 'Europe/Berlin',
+      },
+      jobId: 'check-stuck-matches-repeatable',
+    }
+  );
+  
    // One-time immediate backfill on startup (use fixed ID to prevent accumulation)
    const STARTUP_BACKFILL_JOB_ID = 'backfill-startup-once';
    try {

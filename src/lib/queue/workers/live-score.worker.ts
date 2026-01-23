@@ -164,7 +164,14 @@ export function createLiveScoreWorker() {
            nextPollScheduled,
          };
        } catch (error: any) {
-           log.error({ matchId, externalId, pollCount, err: error }, `Error polling live score`);
+           log.error({ 
+             matchId, 
+             externalId, 
+             pollCount,
+             errorMessage: error.message,
+             errorCode: error.code,
+             err: error 
+           }, `Error polling live score`);
            
            Sentry.captureException(error, {
              level: 'error',
@@ -180,10 +187,32 @@ export function createLiveScoreWorker() {
              },
            });
           
-          // Throw error to enable BullMQ retry mechanism
-          // BullMQ will retry with exponential backoff based on queue config
-          // For transient errors, BullMQ retry handles the recovery
-          // For non-retryable errors, they'll be moved to DLQ after max retries
+          // IMPORTANT: Schedule next poll even on error to maintain continuity
+          // This ensures transient API failures don't permanently break live tracking
+          if (pollCount < MAX_POLLS) {
+            try {
+              const nextPollScheduled = await scheduleNextPoll(
+                matchId, 
+                externalId, 
+                job.data.kickoffTime, 
+                pollCount, 
+                log
+              );
+              log.info({ 
+                matchId, 
+                pollCount, 
+                nextPollScheduled 
+              }, 'Scheduled recovery poll after error');
+            } catch (scheduleError: any) {
+              log.error({ 
+                matchId, 
+                scheduleError: scheduleError.message 
+              }, 'Failed to schedule recovery poll');
+            }
+          }
+          
+          // Still throw for BullMQ retry mechanism
+          // But next poll is already scheduled as backup
           throw error;
        }
     },

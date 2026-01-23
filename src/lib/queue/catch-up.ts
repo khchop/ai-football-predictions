@@ -55,20 +55,35 @@ export async function catchUpScheduling(): Promise<{ scheduled: number; matches:
  */
 export async function checkAndFixStuckMatches(): Promise<number> {
   try {
+    log.info('Checking for matches stuck in scheduled status...');
+    
     const stuckMatches = await getStuckScheduledMatches();
     
     if (stuckMatches.length === 0) {
+      log.debug('No stuck matches found - all matches have correct status');
       return 0;
     }
     
-    log.warn({ count: stuckMatches.length }, 'Found matches stuck in scheduled status after kickoff');
+    log.warn({ 
+      count: stuckMatches.length,
+      matches: stuckMatches.map(m => ({
+        id: m.match.id,
+        teams: `${m.match.homeTeam} vs ${m.match.awayTeam}`,
+        kickoff: m.match.kickoffTime,
+        status: m.match.status,
+      }))
+    }, 'Found matches stuck in scheduled status after kickoff - initiating recovery');
     
     let fixed = 0;
     let skipped = 0;
     
     for (const { match } of stuckMatches) {
       if (!match.externalId) {
-        log.warn({ matchId: match.id }, 'Skipping stuck match without externalId');
+        log.warn({ 
+          matchId: match.id,
+          homeTeam: match.homeTeam,
+          awayTeam: match.awayTeam,
+        }, 'Skipping stuck match without externalId');
         continue;
       }
       
@@ -81,6 +96,13 @@ export async function checkAndFixStuckMatches(): Promise<number> {
         if (existingJob) {
           const state = await existingJob.getState();
           
+          log.info({ 
+            matchId: match.id, 
+            homeTeam: match.homeTeam,
+            awayTeam: match.awayTeam,
+            existingJobState: state 
+          }, 'Found existing live monitoring job');
+          
           if (state === 'completed' || state === 'failed') {
             // Job completed/failed but match still stuck - remove old job and create new one
             log.info({ 
@@ -88,7 +110,7 @@ export async function checkAndFixStuckMatches(): Promise<number> {
               homeTeam: match.homeTeam,
               awayTeam: match.awayTeam,
               oldJobState: state 
-            }, 'Removing old job and creating recovery job for stuck match');
+            }, 'Removing stale job and creating recovery job for stuck match');
             
             await existingJob.remove();
           } else if (state === 'active' || state === 'waiting' || state === 'delayed') {
@@ -98,7 +120,7 @@ export async function checkAndFixStuckMatches(): Promise<number> {
               homeTeam: match.homeTeam,
               awayTeam: match.awayTeam,
               jobState: state 
-            }, 'Live monitoring job already exists and is active, skipping');
+            }, 'Live monitoring job already active, skipping');
             
             skipped++;
             continue;
@@ -125,25 +147,38 @@ export async function checkAndFixStuckMatches(): Promise<number> {
           matchId: match.id, 
           homeTeam: match.homeTeam, 
           awayTeam: match.awayTeam,
-          kickoffTime: match.kickoffTime 
-        }, 'Triggered live monitoring for stuck match');
+          kickoffTime: match.kickoffTime,
+          externalId: match.externalId,
+        }, '✓ Triggered live monitoring for stuck match');
       } catch (error: any) {
         if (!error.message?.includes('already exists')) {
-          log.error({ matchId: match.id, error: error.message }, 'Failed to fix stuck match');
+          log.error({ 
+            matchId: match.id,
+            homeTeam: match.homeTeam,
+            awayTeam: match.awayTeam, 
+            error: error.message,
+            stack: error.stack,
+          }, 'Failed to fix stuck match');
         } else {
-          log.warn({ matchId: match.id }, 'Job already exists (race condition), skipping');
+          log.debug({ matchId: match.id }, 'Job already exists (race condition), skipping');
           skipped++;
         }
       }
     }
     
-    if (fixed > 0 || skipped > 0) {
-      log.info({ fixed, skipped, total: stuckMatches.length }, 'Stuck match recovery completed');
-    }
+    log.info({ 
+      fixed, 
+      skipped, 
+      total: stuckMatches.length,
+      summary: `Recovered ${fixed}/${stuckMatches.length} stuck matches`
+    }, 'Stuck match recovery completed');
     
     return fixed;
   } catch (error) {
-    log.error({ error: error instanceof Error ? error.message : String(error) }, 'Failed to check stuck matches');
+    log.error({ 
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    }, 'Failed to check stuck matches');
     return 0;
   }
 }
