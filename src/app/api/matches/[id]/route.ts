@@ -3,6 +3,7 @@ import { getMatchWithAnalysis, getPredictionsForMatchWithDetails } from '@/lib/d
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 import { validateParams } from '@/lib/validation/middleware';
 import { getMatchParamsSchema } from '@/lib/validation/schemas';
+import { sanitizeError } from '@/lib/utils/error-sanitizer';
 
 export async function GET(
   request: NextRequest,
@@ -144,13 +145,10 @@ export async function GET(
       { headers: createRateLimitHeaders(rateLimitResult) }
     );
   } catch (error) {
-    console.error('Error fetching match:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: process.env.NODE_ENV === 'development' 
-          ? (error instanceof Error ? error.message : 'Unknown error')
-          : 'An internal error occurred'
+        error: sanitizeError(error, 'match')
       },
       { status: 500, headers: createRateLimitHeaders(rateLimitResult) }
     );

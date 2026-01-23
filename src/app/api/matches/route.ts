@@ -3,6 +3,7 @@ import { getUpcomingMatches, getRecentMatches, getFinishedMatches, getOverallSta
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 import { validateQuery } from '@/lib/validation/middleware';
 import { getMatchesQuerySchema } from '@/lib/validation/schemas';
+import { sanitizeError } from '@/lib/utils/error-sanitizer';
 
 export async function GET(request: NextRequest) {
   // Apply rate limiting (60 req/min)
@@ -84,13 +85,10 @@ export async function GET(request: NextRequest) {
       { headers: createRateLimitHeaders(rateLimitResult) }
     );
   } catch (error) {
-    console.error('Error fetching matches:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: process.env.NODE_ENV === 'development' 
-          ? (error instanceof Error ? error.message : 'Unknown error')
-          : 'An internal error occurred'
+        error: sanitizeError(error, 'matches')
       },
       { status: 500, headers: createRateLimitHeaders(rateLimitResult) }
     );

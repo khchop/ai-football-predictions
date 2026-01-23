@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import {
   getDeadLetterJobs,
   getDeadLetterCount,
@@ -15,19 +16,14 @@ import {
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 import { validateQuery } from '@/lib/validation/middleware';
 import { getDlqQuerySchema } from '@/lib/validation/schemas';
+import { requireAdminAuth } from '@/lib/utils/admin-auth';
+import { createValidationErrorResponse } from '@/lib/utils/error-sanitizer';
 
-// Simple admin password check
-function validateAdminRequest(req: NextRequest): boolean {
-  const adminPassword = req.headers.get('X-Admin-Password');
-  const expectedPassword = process.env.ADMIN_PASSWORD;
-  
-  if (!expectedPassword) {
-    console.warn('[Admin DLQ API] ADMIN_PASSWORD not configured');
-    return false;
-  }
-  
-  return adminPassword === expectedPassword;
-}
+// Zod schema for DELETE query parameters
+const dlqDeleteSchema = z.object({
+  queueName: z.string().min(1, 'Queue name required').optional(),
+  jobId: z.string().min(1, 'Job ID required').optional(),
+});
 
 /**
  * GET /api/admin/dlq - Get failed jobs from DLQ
@@ -53,9 +49,9 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  if (!validateAdminRequest(req)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  // Admin authentication (timing-safe comparison)
+  const authError = requireAdminAuth(req);
+  if (authError) return authError;
   
   try {
     const { searchParams } = new URL(req.url);
@@ -118,14 +114,24 @@ export async function DELETE(req: NextRequest) {
     );
   }
 
-  if (!validateAdminRequest(req)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  // Admin authentication (timing-safe comparison)
+  const authError = requireAdminAuth(req);
+  if (authError) return authError;
   
   try {
     const { searchParams } = new URL(req.url);
-    const queueName = searchParams.get('queueName');
-    const jobId = searchParams.get('jobId');
+    
+    // Validate DELETE query parameters
+    const parseResult = dlqDeleteSchema.safeParse({
+      queueName: searchParams.get('queueName'),
+      jobId: searchParams.get('jobId'),
+    });
+    
+    if (!parseResult.success) {
+      return createValidationErrorResponse(parseResult.error.flatten().fieldErrors);
+    }
+    
+    const { queueName, jobId } = parseResult.data;
     
     if (queueName && jobId) {
       // Delete specific entry

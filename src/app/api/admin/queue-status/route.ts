@@ -11,33 +11,7 @@ import { getAllQueues, QUEUE_NAMES } from '@/lib/queue';
 import { NextRequest, NextResponse } from 'next/server';
 import type { Queue } from 'bullmq';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
-
-function validateAdminRequest(request: NextRequest): NextResponse | null {
-  const password = request.headers.get('X-Admin-Password');
-  
-  if (!process.env.ADMIN_PASSWORD) {
-    // SECURITY: Fail closed in production
-    if (process.env.NODE_ENV === 'production') {
-      console.error('[Queue Status] CRITICAL: ADMIN_PASSWORD not configured in production!');
-      return NextResponse.json(
-        { success: false, error: 'Server misconfigured' },
-        { status: 500 }
-      );
-    }
-    // Allow in development without password
-    console.warn('[Queue Status] ADMIN_PASSWORD not configured - allowing in development mode');
-    return null;
-  }
-  
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return NextResponse.json(
-      { success: false, error: 'Unauthorized' },
-      { status: 401 }
-    );
-  }
-  
-  return null;
-}
+import { requireAdminAuth } from '@/lib/utils/admin-auth';
 
 async function getQueueStats(queue: Queue) {
   const [waiting, active, completed, failed, delayed, paused] = await Promise.all([
@@ -71,8 +45,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Validate password
-  const authError = validateAdminRequest(request);
+  // Admin authentication (timing-safe comparison)
+  const authError = requireAdminAuth(request);
   if (authError) return authError;
 
   try {

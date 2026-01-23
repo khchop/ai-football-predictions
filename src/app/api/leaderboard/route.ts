@@ -3,6 +3,7 @@ import { getLeaderboard, getActiveModels } from '@/lib/db/queries';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 import { validateQuery } from '@/lib/validation/middleware';
 import { getLeaderboardQuerySchema } from '@/lib/validation/schemas';
+import { sanitizeError } from '@/lib/utils/error-sanitizer';
 
 export async function GET(request: NextRequest) {
   // Apply rate limiting (60 req/min)
@@ -54,16 +55,13 @@ export async function GET(request: NextRequest) {
       },
       { headers: createRateLimitHeaders(rateLimitResult) }
     );
-  } catch (error) {
-    console.error('Error fetching leaderboard:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: process.env.NODE_ENV === 'development' 
-          ? (error instanceof Error ? error.message : 'Unknown error')
-          : 'An internal error occurred'
-      },
-      { status: 500, headers: createRateLimitHeaders(rateLimitResult) }
-    );
-  }
+   } catch (error) {
+     return NextResponse.json(
+       { 
+         success: false, 
+         error: sanitizeError(error, 'leaderboard')
+       },
+       { status: 500, headers: createRateLimitHeaders(rateLimitResult) }
+     );
+   }
 }

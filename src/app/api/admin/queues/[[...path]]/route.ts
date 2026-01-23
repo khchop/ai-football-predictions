@@ -11,33 +11,8 @@ import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 import { NextRequest, NextResponse } from 'next/server';
-
-function validateAdminRequest(request: NextRequest): NextResponse | null {
-  const password = request.headers.get('X-Admin-Password');
-  
-  if (!process.env.ADMIN_PASSWORD) {
-    // SECURITY: Fail closed in production
-    if (process.env.NODE_ENV === 'production') {
-      console.error('[Bull Board] CRITICAL: ADMIN_PASSWORD not configured in production!');
-      return NextResponse.json(
-        { success: false, error: 'Server misconfigured' },
-        { status: 500 }
-      );
-    }
-    // Allow in development without password
-    console.warn('[Bull Board] ADMIN_PASSWORD not configured - allowing in development mode');
-    return null;
-  }
-  
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return NextResponse.json(
-      { success: false, error: 'Unauthorized' },
-      { status: 401 }
-    );
-  }
-  
-  return null;
-}
+import { requireAdminAuth } from '@/lib/utils/admin-auth';
+import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 
 // Lazy initialization to avoid build-time errors
 let serverAdapter: ExpressAdapter | null = null;
@@ -77,8 +52,26 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
 }
 
 async function handleRequest(req: NextRequest, params: { path?: string[] }) {
-  // Validate password
-  const authError = validateAdminRequest(req);
+  // Rate limit check (first, before auth)
+  const rateLimitKey = getRateLimitKey(req);
+  const rateLimitResult = await checkRateLimit(`admin:bullboard:${rateLimitKey}`, RATE_LIMIT_PRESETS.admin);
+  
+  if (!rateLimitResult.allowed) {
+    const retryAfter = Math.ceil((rateLimitResult.resetAt * 1000 - Date.now()) / 1000);
+    return NextResponse.json(
+      { error: 'Too many requests', retryAfter },
+      {
+        status: 429,
+        headers: {
+          ...createRateLimitHeaders(rateLimitResult),
+          'Retry-After': String(retryAfter),
+        },
+      }
+    );
+  }
+
+  // Admin authentication (timing-safe comparison)
+  const authError = requireAdminAuth(req);
   if (authError) return authError;
 
   const path = params.path ? params.path.join('/') : '';

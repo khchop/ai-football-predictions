@@ -3,33 +3,7 @@ import { getAllModelsWithHealth } from '@/lib/db/queries';
 import { getBudgetStatus } from '@/lib/llm/budget';
 import { TOGETHER_PROVIDERS } from '@/lib/llm/providers/together';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
-
-function validateAdminRequest(request: NextRequest): NextResponse | null {
-  const password = request.headers.get('X-Admin-Password');
-  
-  if (!process.env.ADMIN_PASSWORD) {
-    // SECURITY: Fail closed in production
-    if (process.env.NODE_ENV === 'production') {
-      console.error('[Admin Auth] CRITICAL: ADMIN_PASSWORD not configured in production!');
-      return NextResponse.json(
-        { success: false, error: 'Server misconfigured' },
-        { status: 500 }
-      );
-    }
-    // Allow in development without password
-    console.warn('[Admin Auth] ADMIN_PASSWORD not configured - allowing in development mode');
-    return null;
-  }
-  
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return NextResponse.json(
-      { success: false, error: 'Unauthorized' },
-      { status: 401 }
-    );
-  }
-  
-  return null;
-}
+import { requireAdminAuth } from '@/lib/utils/admin-auth';
 
 export async function GET(request: NextRequest) {
   // Rate limit check (first, before auth)
@@ -50,8 +24,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Validate password
-  const authError = validateAdminRequest(request);
+  // Admin authentication (timing-safe comparison)
+  const authError = requireAdminAuth(request);
   if (authError) return authError;
 
   try {

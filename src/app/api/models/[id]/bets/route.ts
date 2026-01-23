@@ -3,6 +3,7 @@ import { getModelBettingHistory, getModelBettingStats } from '@/lib/db/queries';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 import { validateParams, validateQuery } from '@/lib/validation/middleware';
 import { getModelBetsParamsSchema, getModelBetsQuerySchema } from '@/lib/validation/schemas';
+import { sanitizeError } from '@/lib/utils/error-sanitizer';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -73,13 +74,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       { headers: createRateLimitHeaders(rateLimitResult) }
     );
   } catch (error) {
-    console.error('Error fetching model bets:', error);
     return NextResponse.json(
       { 
         success: false,
-        error: process.env.NODE_ENV === 'development'
-          ? (error instanceof Error ? error.message : 'Unknown error')
-          : 'Failed to fetch bets'
+        error: sanitizeError(error, 'model-bets')
       },
       { status: 500, headers: createRateLimitHeaders(rateLimitResult) }
     );
