@@ -48,15 +48,15 @@ export function createFixturesWorker() {
           for (const fixture of fixtures) {
             totalFixtures++;
             
+            // Generate SEO-friendly slug before try block for error logging
+            const slug = generateMatchSlug(
+              fixture.teams.home.name,
+              fixture.teams.away.name,
+              fixture.fixture.date
+            );
+            
             try {
               const matchId = uuidv4();
-              
-              // Generate SEO-friendly slug
-              const slug = generateMatchSlug(
-                fixture.teams.home.name,
-                fixture.teams.away.name,
-                fixture.fixture.date
-              );
               
               // Save match to DB
               await upsertMatch({
@@ -77,6 +77,15 @@ export function createFixturesWorker() {
               });
               
               savedFixtures++;
+              
+              // Debug logging for successful save
+              log.debug({ 
+                fixtureId: fixture.fixture.id,
+                homeTeam: fixture.teams.home.name,
+                awayTeam: fixture.teams.away.name,
+                matchId,
+                slug,
+              }, 'Saved fixture');
               
               // Schedule jobs for this match (only if status is 'scheduled')
               if (mapFixtureStatus(fixture.fixture.status.short) === 'scheduled') {
@@ -118,13 +127,43 @@ export function createFixturesWorker() {
                 jobsScheduled += scheduled;
               }
              } catch (error: any) {
-                const errorMsg = `Failed to process fixture ${fixture.fixture.id}: ${error.message}`;
-                log.error({ 
+                const errorContext = {
                   fixtureId: fixture.fixture.id,
+                  externalId: String(fixture.fixture.id),
                   competitionId: competition.apiFootballId,
-                  err: error 
-                }, `Error processing fixture`);
+                  competitionName: competition.name,
+                  homeTeam: fixture.teams.home.name,
+                  awayTeam: fixture.teams.away.name,
+                  kickoffTime: fixture.fixture.date,
+                  apiStatus: fixture.fixture.status.short,
+                  slug,
+                  // Database error details
+                  errorCode: error.code,
+                  errorConstraint: error.constraint,
+                  errorDetail: error.detail,
+                  errorTable: error.table,
+                  errorColumn: error.column,
+                };
+                
+                log.error({ 
+                  ...errorContext,
+                  err: error,
+                  stack: error.stack,
+                }, `Failed to save fixture: ${error.message}`);
+                
+                const errorMsg = `${fixture.teams.home.name} vs ${fixture.teams.away.name}: ${error.message}`;
                 errors.push(errorMsg);
+                
+                // Report to Sentry for visibility
+                Sentry.captureException(error, {
+                  level: 'warning',
+                  tags: { 
+                    worker: 'fixtures',
+                    operation: 'upsertMatch',
+                    competition: competition.name,
+                  },
+                  extra: errorContext,
+                });
               }
           }
         }

@@ -28,6 +28,35 @@ import { generateBettingContent } from '@/lib/content/match-content';
 import { v4 as uuidv4 } from 'uuid';
 import { loggers } from '@/lib/logger/modules';
 
+/**
+ * Retry helper for fetching match data with exponential backoff
+ * Handles race condition where prediction jobs run before DB write completes
+ */
+async function getMatchWithRetry(
+  matchId: string,
+  maxRetries: number = 3,
+  initialDelayMs: number = 2000,
+  log: any
+): Promise<Awaited<ReturnType<typeof getMatchById>> | null> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const matchData = await getMatchById(matchId);
+    if (matchData) {
+      if (attempt > 1) {
+        log.info({ matchId, attempt, totalRetries: attempt - 1 }, 'Match found after retry');
+      }
+      return matchData;
+    }
+    
+    if (attempt < maxRetries) {
+      const delayMs = initialDelayMs * Math.pow(2, attempt - 1); // 2s, 4s, 8s
+      log.info({ matchId, attempt, nextRetryMs: delayMs }, 'Match not found, retrying...');
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+  
+  return null;
+}
+
 export function createPredictionsWorker() {
   return new Worker<PredictMatchPayload>(
     QUEUE_NAMES.PREDICTIONS,
@@ -47,10 +76,10 @@ export function createPredictionsWorker() {
            }
          }
         
-         // Get match data
-         const matchData = await getMatchById(matchId);
+         // Get match data with retry (handles race condition where job runs before DB write completes)
+         const matchData = await getMatchWithRetry(matchId, 3, 2000, log);
          if (!matchData) {
-           log.info(`Match ${matchId} not found`);
+           log.warn({ matchId, retriesAttempted: 3 }, 'Match not found after retries');
            return { skipped: true, reason: 'match_not_found' };
          }
         

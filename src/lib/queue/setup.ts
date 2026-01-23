@@ -152,14 +152,14 @@ async function registerRepeatableJob(
 export async function setupRepeatableJobs(): Promise<void> {
   log.info('Registering repeatable jobs');
   
-  // Fetch fixtures every 6 hours (00:00, 06:00, 12:00, 18:00 Berlin time)
+  // Fetch fixtures every 3 hours to ensure new matches are discovered early
   await registerRepeatableJob(
     fixturesQueue,
     JOB_TYPES.FETCH_FIXTURES,
     { manual: false },
     {
       repeat: {
-        pattern: '0 0,6,12,18 * * *', // CRON: Every 6 hours at :00
+        pattern: '0 0,3,6,9,12,15,18,21 * * *', // CRON: Every 3 hours at :00
         tz: 'Europe/Berlin',
       },
       jobId: 'fetch-fixtures-repeatable',
