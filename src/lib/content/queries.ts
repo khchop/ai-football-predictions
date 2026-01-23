@@ -2,9 +2,9 @@
  * Database queries for content generation
  */
 
-import { getDb, matches, competitions, matchAnalysis, matchPreviews, bets, models } from '@/lib/db';
+import { getDb, matches, competitions, matchAnalysis, matchPreviews, bets, models, matchContent, predictions } from '@/lib/db';
 import { loggers } from '@/lib/logger/modules';
-import { eq, and, gte, lte, isNull, desc } from 'drizzle-orm';
+import { eq, and, gte, lte, isNull, isNotNull, desc, or } from 'drizzle-orm';
 import { CONTENT_CONFIG } from './config';
 
 /**
@@ -155,4 +155,112 @@ export async function getMatchContent(matchId: string) {
     .limit(1);
 
   return result[0] || null;
+}
+
+/**
+ * Get scheduled matches with odds but missing pre-match content
+ * For backfill: finds matches within hoursAhead that have odds but no preMatchContent
+ */
+export async function getMatchesMissingPreMatchContent(hoursAhead: number = 24) {
+  const db = getDb();
+  const now = new Date();
+  const targetTime = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
+
+  const result = await db
+    .select({
+      matchId: matches.id,
+      homeTeam: matches.homeTeam,
+      awayTeam: matches.awayTeam,
+      kickoffTime: matches.kickoffTime,
+    })
+    .from(matches)
+    .innerJoin(matchAnalysis, eq(matches.id, matchAnalysis.matchId))
+    .leftJoin(matchContent, eq(matches.id, matchContent.matchId))
+    .where(
+      and(
+        eq(matches.status, 'scheduled'),
+        gte(matches.kickoffTime, now.toISOString()),
+        lte(matches.kickoffTime, targetTime.toISOString()),
+        isNotNull(matchAnalysis.oddsHome), // Has odds data
+        or(
+          isNull(matchContent.id), // No content record exists
+          isNull(matchContent.preMatchContent) // Or pre-match content is null
+        )
+      )
+    )
+    .orderBy(matches.kickoffTime);
+
+  return result;
+}
+
+/**
+ * Get scheduled matches with predictions but missing betting content
+ * For backfill: finds matches within hoursAhead that have predictions but no bettingContent
+ */
+export async function getMatchesMissingBettingContent(hoursAhead: number = 24) {
+  const db = getDb();
+  const now = new Date();
+  const targetTime = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
+
+  const result = await db
+    .select({
+      matchId: matches.id,
+      homeTeam: matches.homeTeam,
+      awayTeam: matches.awayTeam,
+      kickoffTime: matches.kickoffTime,
+    })
+    .from(matches)
+    .innerJoin(predictions, eq(matches.id, predictions.matchId))
+    .leftJoin(matchContent, eq(matches.id, matchContent.matchId))
+    .where(
+      and(
+        eq(matches.status, 'scheduled'),
+        gte(matches.kickoffTime, now.toISOString()),
+        lte(matches.kickoffTime, targetTime.toISOString()),
+        or(
+          isNull(matchContent.id), // No content record exists
+          isNull(matchContent.bettingContent) // Or betting content is null
+        )
+      )
+    )
+    .groupBy(matches.id)
+    .orderBy(matches.kickoffTime);
+
+  return result;
+}
+
+/**
+ * Get finished matches with scored predictions but missing post-match content
+ * For backfill: finds matches finished within daysBack that have scored predictions but no postMatchContent
+ */
+export async function getMatchesMissingPostMatchContent(daysBack: number = 7) {
+  const db = getDb();
+  const now = new Date();
+  const daysAgo = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
+
+  const result = await db
+    .select({
+      matchId: matches.id,
+      homeTeam: matches.homeTeam,
+      awayTeam: matches.awayTeam,
+    })
+    .from(matches)
+    .innerJoin(predictions, eq(matches.id, predictions.matchId))
+    .leftJoin(matchContent, eq(matches.id, matchContent.matchId))
+    .where(
+      and(
+        eq(matches.status, 'finished'),
+        gte(matches.kickoffTime, daysAgo.toISOString()),
+        lte(matches.kickoffTime, now.toISOString()),
+        eq(predictions.status, 'scored'), // Predictions have been scored
+        or(
+          isNull(matchContent.id), // No content record exists
+          isNull(matchContent.postMatchContent) // Or post-match content is null
+        )
+      )
+    )
+    .groupBy(matches.id)
+    .orderBy(desc(matches.kickoffTime));
+
+  return result;
 }

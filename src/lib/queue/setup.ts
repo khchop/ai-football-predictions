@@ -207,21 +207,62 @@ export async function setupRepeatableJobs(): Promise<void> {
      log.error({ error: error.message }, 'Failed to schedule startup backfill');
    }
   
-  // Scan for matches needing previews every hour
-  await registerRepeatableJob(
-    contentQueue,
-    'scan-matches',
-    { type: 'scan_matches', data: {} },
-    {
-      repeat: {
-        pattern: '10 * * * *', // Every hour at :10 (after backfill at :05)
-        tz: 'Europe/Berlin',
-      },
-      jobId: 'scan-matches-repeatable',
-    }
-  );
-  
-  // Check for disabled models to re-enable every 30 minutes
+   // Scan for matches needing previews every hour
+   await registerRepeatableJob(
+     contentQueue,
+     'scan-matches',
+     { type: 'scan_matches', data: {} },
+     {
+       repeat: {
+         pattern: '10 * * * *', // Every hour at :10 (after backfill at :05)
+         tz: 'Europe/Berlin',
+       },
+       jobId: 'scan-matches-repeatable',
+     }
+   );
+   
+   // Scan for matches missing content sections (backfill) every hour at :15
+   await registerRepeatableJob(
+     contentQueue,
+     'scan-match-content',
+     { type: 'scan_match_content', data: {} },
+     {
+       repeat: {
+         pattern: '15 * * * *', // Every hour at :15 (after scan-matches at :10)
+         tz: 'Europe/Berlin',
+       },
+       jobId: 'scan-match-content-repeatable',
+     }
+   );
+   
+   // One-time immediate content backfill on startup (after 15s delay)
+   const STARTUP_CONTENT_BACKFILL_JOB_ID = 'content-backfill-startup-once';
+   try {
+     // Clean up any existing startup content backfill job
+     try {
+       const existingJob = await contentQueue.getJob(STARTUP_CONTENT_BACKFILL_JOB_ID);
+       if (existingJob) {
+         await existingJob.remove();
+         log.debug({}, 'Removed old startup content backfill job');
+       }
+     } catch (error) {
+       // Job doesn't exist, that's fine
+     }
+     
+     await contentQueue.add(
+       'scan-match-content',
+       { type: 'scan_match_content', data: {} },
+       {
+         delay: 15000, // 15 second delay to let workers start
+         jobId: STARTUP_CONTENT_BACKFILL_JOB_ID, // Fixed ID prevents accumulation
+       }
+     );
+     log.info({ delay: '15s' }, 'Scheduled: one-time startup content backfill');
+   } catch (error: any) {
+     log.error({ error: error.message }, 'Failed to schedule startup content backfill');
+   }
+   
+   // Check for disabled models to re-enable every 30 minutes
   await registerRepeatableJob(
     modelRecoveryQueue,
     JOB_TYPES.CHECK_MODEL_HEALTH,

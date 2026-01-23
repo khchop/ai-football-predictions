@@ -9,7 +9,19 @@ import { Worker, Job } from 'bullmq';
 import { getQueueConnection, QUEUE_NAMES, getQueue } from '../index';
 import type { GenerateContentPayload } from '../types';
 import { generateMatchPreview } from '@/lib/content/generator';
-import { getMatchesNeedingPreviews, getMatchBetsForPreview, hasMatchPreview } from '@/lib/content/queries';
+import { 
+  getMatchesNeedingPreviews, 
+  getMatchBetsForPreview, 
+  hasMatchPreview,
+  getMatchesMissingPreMatchContent,
+  getMatchesMissingBettingContent,
+  getMatchesMissingPostMatchContent,
+} from '@/lib/content/queries';
+import { 
+  generatePreMatchContent,
+  generateBettingContent,
+  generatePostMatchContent,
+} from '@/lib/content/match-content';
 import { loggers } from '@/lib/logger/modules';
 
 export function createContentWorker() {
@@ -37,12 +49,15 @@ export function createContentWorker() {
          } else if (type === 'model_report') {
            log.info('Model report generation not yet implemented');
            return { skipped: true, reason: 'not_implemented' };
-        } else if (type === 'scan_matches') {
-          // Scan for matches that need previews and queue them
-          return await scanMatchesNeedingPreviews();
-        } else {
-          throw new Error(`Unknown content type: ${type}`);
-        }
+         } else if (type === 'scan_matches') {
+           // Scan for matches that need previews and queue them
+           return await scanMatchesNeedingPreviews();
+         } else if (type === 'scan_match_content') {
+           // Scan for matches missing content sections and generate backfill
+           return await scanMatchesMissingContent();
+         } else {
+           throw new Error(`Unknown content type: ${type}`);
+         }
        } catch (error) {
          log.error({ err: error }, `Error generating ${type}`);
          throw error;
@@ -181,6 +196,97 @@ async function scanMatchesNeedingPreviews() {
      partialSuccess: failedCount > 0 && queuedCount > 0,
      failedMatches: failedMatches.slice(0, 10), // Cap to prevent huge payloads
    };
+}
+
+/**
+ * Scan for matches missing content sections and generate backfill
+ * Prioritizes: pre-match (upcoming) → betting (medium) → post-match (historical)
+ * Rate limited to 10 generations per scan to respect Together AI limits
+ */
+async function scanMatchesMissingContent() {
+  const log = loggers.contentWorker;
+  const MAX_GENERATIONS_PER_SCAN = 10;
+  
+  log.info('Scanning for matches missing content sections...');
+  
+  let generated = 0;
+  const results = {
+    preMatch: { found: 0, generated: 0, failed: 0 },
+    betting: { found: 0, generated: 0, failed: 0 },
+    postMatch: { found: 0, generated: 0, failed: 0 },
+  };
+
+  try {
+    // 1. Pre-match content (highest priority - upcoming matches need content first)
+    const missingPreMatch = await getMatchesMissingPreMatchContent(24);
+    results.preMatch.found = missingPreMatch.length;
+    
+    for (const match of missingPreMatch) {
+      if (generated >= MAX_GENERATIONS_PER_SCAN) break;
+      try {
+        await generatePreMatchContent(match.matchId);
+        results.preMatch.generated++;
+        generated++;
+        log.info({ matchId: match.matchId, teams: `${match.homeTeam} vs ${match.awayTeam}` }, 'Backfilled pre-match content');
+      } catch (err) {
+        results.preMatch.failed++;
+        log.warn({ matchId: match.matchId, err }, 'Pre-match backfill failed (non-blocking)');
+      }
+    }
+
+    // 2. Betting content (medium priority)
+    const missingBetting = await getMatchesMissingBettingContent(24);
+    results.betting.found = missingBetting.length;
+    
+    for (const match of missingBetting) {
+      if (generated >= MAX_GENERATIONS_PER_SCAN) break;
+      try {
+        await generateBettingContent(match.matchId);
+        results.betting.generated++;
+        generated++;
+        log.info({ matchId: match.matchId, teams: `${match.homeTeam} vs ${match.awayTeam}` }, 'Backfilled betting content');
+      } catch (err) {
+        results.betting.failed++;
+        log.warn({ matchId: match.matchId, err }, 'Betting backfill failed (non-blocking)');
+      }
+    }
+
+    // 3. Post-match content (lowest priority - historical)
+    const missingPostMatch = await getMatchesMissingPostMatchContent(7);
+    results.postMatch.found = missingPostMatch.length;
+    
+    for (const match of missingPostMatch) {
+      if (generated >= MAX_GENERATIONS_PER_SCAN) break;
+      try {
+        await generatePostMatchContent(match.matchId);
+        results.postMatch.generated++;
+        generated++;
+        log.info({ matchId: match.matchId, teams: `${match.homeTeam} vs ${match.awayTeam}` }, 'Backfilled post-match content');
+      } catch (err) {
+        results.postMatch.failed++;
+        log.warn({ matchId: match.matchId, err }, 'Post-match backfill failed (non-blocking)');
+      }
+    }
+
+    const totalFound = results.preMatch.found + results.betting.found + results.postMatch.found;
+    const totalRemaining = totalFound - generated;
+    
+    log.info({
+      generated,
+      remaining: totalRemaining,
+      ...results,
+    }, `Content scan complete: ${generated} generated, ${totalRemaining} remaining`);
+
+    return {
+      success: true,
+      generated,
+      remaining: totalRemaining,
+      results,
+    };
+  } catch (error) {
+    log.error({ err: error }, 'Error during content scan');
+    throw error;
+  }
 }
 
 // Worker event handlers
