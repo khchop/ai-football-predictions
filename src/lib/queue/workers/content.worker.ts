@@ -8,15 +8,19 @@
 import { Worker, Job } from 'bullmq';
 import { getQueueConnection, QUEUE_NAMES, getQueue } from '../index';
 import type { GenerateContentPayload } from '../types';
-import { generateMatchPreview } from '@/lib/content/generator';
+import { generateMatchPreview, generateLeagueRoundup, generateModelReport } from '@/lib/content/generator';
 import { 
-  getMatchesNeedingPreviews, 
-  getMatchBetsForPreview, 
-  hasMatchPreview,
-  getMatchesMissingPreMatchContent,
-  getMatchesMissingBettingContent,
-  getMatchesMissingPostMatchContent,
-} from '@/lib/content/queries';
+   getMatchesNeedingPreviews, 
+   getMatchBetsForPreview, 
+   hasMatchPreview,
+   getMatchesMissingPreMatchContent,
+   getMatchesMissingBettingContent,
+   getMatchesMissingPostMatchContent,
+   getLeagueRoundupData,
+   getTopModelsForReport,
+   getOverallModelStats,
+ } from '@/lib/content/queries';
+import { getActiveCompetitions } from '@/lib/db/queries';
 import { 
   generatePreMatchContent,
   generateBettingContent,
@@ -44,20 +48,26 @@ export function createContentWorker() {
             venue?: string;
           });
          } else if (type === 'league_roundup') {
-           log.info('League roundup generation not yet implemented');
-           return { skipped: true, reason: 'not_implemented' };
-         } else if (type === 'model_report') {
-           log.info('Model report generation not yet implemented');
-           return { skipped: true, reason: 'not_implemented' };
-         } else if (type === 'scan_matches') {
-           // Scan for matches that need previews and queue them
-           return await scanMatchesNeedingPreviews();
-         } else if (type === 'scan_match_content') {
-           // Scan for matches missing content sections and generate backfill
-           return await scanMatchesMissingContent();
-         } else {
-           throw new Error(`Unknown content type: ${type}`);
-         }
+            return await generateLeagueRoundupContent(data as {
+              competitionId: string;
+              week: string;
+            });
+          } else if (type === 'model_report') {
+            return await generateModelReportContent(data as {
+              period: string;
+            });
+          } else if (type === 'scan_matches') {
+            // Scan for matches that need previews and queue them
+            return await scanMatchesNeedingPreviews();
+          } else if (type === 'scan_match_content') {
+            // Scan for matches missing content sections and generate backfill
+            return await scanMatchesMissingContent();
+          } else if (type === 'scan_league_roundups') {
+            // Scan all competitions and generate roundups for those with finished matches
+            return await scanAndGenerateLeagueRoundups();
+          } else {
+            throw new Error(`Unknown content type: ${type}`);
+          }
        } catch (error) {
          log.error({ err: error }, `Error generating ${type}`);
          throw error;
@@ -304,19 +314,160 @@ async function scanMatchesMissingContent() {
   }
 }
 
+/**
+ * Generate league roundup for a specific competition
+ */
+async function generateLeagueRoundupContent(data: {
+  competitionId: string;
+  week: string;
+}) {
+  const { competitionId, week } = data;
+  const log = loggers.contentWorker.child({ competitionId, week });
+
+  try {
+    log.info('Generating league roundup');
+
+    const roundupData = await getLeagueRoundupData(competitionId);
+
+    if (!roundupData) {
+      log.info('No finished matches for roundup');
+      return { skipped: true, reason: 'no_data' };
+    }
+
+    const postId = await generateLeagueRoundup(roundupData);
+
+    log.info({ postId }, '✓ League roundup generated');
+
+    return { success: true, postId };
+  } catch (error) {
+    log.error({ err: error }, 'League roundup generation failed');
+    throw error;
+  }
+}
+
+/**
+ * Generate model performance report
+ */
+async function generateModelReportContent(data: { period: string }) {
+  const { period } = data;
+  const log = loggers.contentWorker.child({ period });
+
+  try {
+    log.info('Generating model performance report');
+
+    const topModels = await getTopModelsForReport(10);
+    const overallStats = await getOverallModelStats();
+
+    if (topModels.length === 0) {
+      log.warn('No model data available for report');
+      return { skipped: true, reason: 'no_data' };
+    }
+
+    const postId = await generateModelReport({
+      period,
+      topModels: topModels as any, // Type will be correct from getTopModelsForReport
+      overallStats,
+    });
+
+    log.info({ postId, period }, '✓ Model report generated');
+
+    return { success: true, postId };
+  } catch (error) {
+    log.error({ err: error }, 'Model report generation failed');
+    throw error;
+  }
+}
+
+/**
+ * Scan all competitions and generate league roundups for those with finished matches
+ * Runs weekly to generate roundups for each competition
+ */
+async function scanAndGenerateLeagueRoundups() {
+  const log = loggers.contentWorker;
+  const contentQueue = getQueue(QUEUE_NAMES.CONTENT);
+
+  try {
+    log.info('Scanning for competitions needing roundups');
+
+    const competitions = await getActiveCompetitions();
+
+    if (competitions.length === 0) {
+      log.info('No active competitions');
+      return { scanned: 0, queued: 0 };
+    }
+
+    let queuedCount = 0;
+
+    for (const competition of competitions) {
+      try {
+        const roundupData = await getLeagueRoundupData(competition.id);
+
+        if (!roundupData) {
+          log.debug({ competitionId: competition.id }, 'No finished matches for this competition');
+          continue;
+        }
+
+        // Queue the roundup generation
+        await contentQueue.add(
+          'generate-league-roundup',
+          {
+            type: 'league_roundup',
+            data: {
+              competitionId: competition.id,
+              week: roundupData.week,
+            },
+          },
+          {
+            jobId: `roundup-${competition.id}-${roundupData.week}`, // Prevent duplicates
+            removeOnComplete: {
+              age: 86400, // Keep for 24 hours
+              count: 100,
+            },
+            removeOnFail: {
+              age: 604800, // Keep failed jobs for 7 days
+            },
+          }
+        );
+
+        queuedCount++;
+        log.info(
+          { competitionId: competition.id, competition: competition.name, week: roundupData.week },
+          'Queued league roundup'
+        );
+      } catch (error: any) {
+        log.warn(
+          { competitionId: competition.id, err: error.message },
+          'Failed to queue roundup for competition'
+        );
+      }
+    }
+
+    log.info({ scanned: competitions.length, queued: queuedCount }, 'Roundup scan complete');
+
+    return {
+      success: true,
+      scanned: competitions.length,
+      queued: queuedCount,
+    };
+  } catch (error) {
+    log.error({ err: error }, 'Error during roundup scan');
+    throw error;
+  }
+}
+
 // Worker event handlers
 export function setupContentWorkerEvents(worker: Worker) {
-  const log = loggers.contentWorker;
-  
-  worker.on('completed', (job) => {
-    log.info({ jobId: job.id }, `Job completed`);
-  });
+   const log = loggers.contentWorker;
+   
+   worker.on('completed', (job) => {
+     log.info({ jobId: job.id }, `Job completed`);
+   });
 
-  worker.on('failed', (job, err) => {
-    log.error({ jobId: job?.id, err }, `Job failed`);
-  });
+   worker.on('failed', (job, err) => {
+     log.error({ jobId: job?.id, err }, `Job failed`);
+   });
 
-  worker.on('error', (err) => {
-    log.error({ err }, `Worker error`);
-  });
+   worker.on('error', (err) => {
+     log.error({ err }, `Worker error`);
+   });
 }

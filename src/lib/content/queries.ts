@@ -4,7 +4,7 @@
 
 import { getDb, matches, competitions, matchAnalysis, matchPreviews, bets, models, matchContent, predictions } from '@/lib/db';
 import { loggers } from '@/lib/logger/modules';
-import { eq, and, gte, lte, isNull, isNotNull, desc, or } from 'drizzle-orm';
+import { eq, and, gte, lte, isNull, isNotNull, desc, or, sql } from 'drizzle-orm';
 import { CONTENT_CONFIG } from './config';
 
 /**
@@ -102,14 +102,75 @@ export async function getMatchesForLeagueRoundup(competitionId: string) {
 /**
  * Get top models for performance report
  */
-export async function getTopModelsForReport(season: string, limit: number = 5) {
-   const db = getDb();
-   
-   // This would ideally use model_balances table
-   // For now, return a placeholder that can be implemented later
-   loggers.content.debug({ season, limit }, 'getTopModelsForReport not yet implemented');
-   return [];
- }
+export async function getTopModelsForReport(limit: number = 10) {
+  const db = getDb();
+  
+  // Get top models by total points with detailed stats
+  const leaderboard = await db
+    .select({
+      id: models.id,
+      name: models.displayName,
+      provider: models.provider,
+      totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
+      totalPredictions: sql<number>`COUNT(${predictions.id})`,
+      exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
+      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
+    })
+    .from(models)
+    .leftJoin(
+      predictions,
+      and(
+        eq(predictions.modelId, models.id),
+        eq(predictions.status, 'scored')
+      )
+    )
+    .where(eq(models.active, true))
+    .groupBy(models.id)
+    .orderBy(desc(sql`COALESCE(SUM(${predictions.totalPoints}), 0)`))
+    .limit(limit);
+
+  // Transform to report format
+  return leaderboard.map((m) => ({
+    id: m.id,
+    name: m.name,
+    provider: m.provider,
+    balance: m.totalPoints,
+    profit: m.totalPoints,
+    roi:
+      m.totalPredictions > 0
+        ? ((m.correctTendencies / m.totalPredictions) * 100).toFixed(2)
+        : '0.00',
+    winRate:
+      m.totalPredictions > 0
+        ? ((m.correctTendencies / m.totalPredictions) * 100).toFixed(1)
+        : '0.0',
+    totalBets: m.totalPredictions,
+    streak: 0, // TODO: calculate streak from recent predictions
+    streakType: 'W',
+  }));
+}
+
+/**
+ * Get overall model statistics for performance report
+ */
+export async function getOverallModelStats() {
+  const db = getDb();
+
+  const stats = await db
+    .select({
+      totalMatches: sql<number>`COUNT(DISTINCT ${predictions.matchId})`,
+      totalBets: sql<number>`COUNT(${predictions.id})`,
+      avgPoints: sql<number>`ROUND(AVG(${predictions.totalPoints})::numeric, 2)`,
+    })
+    .from(predictions)
+    .where(eq(predictions.status, 'scored'));
+
+  return {
+    totalMatches: stats[0]?.totalMatches || 0,
+    totalBets: stats[0]?.totalBets || 0,
+    averageROI: stats[0]?.avgPoints || 0,
+  };
+}
 
 /**
  * Check if a match already has a preview
@@ -259,8 +320,91 @@ export async function getMatchesMissingPostMatchContent(daysBack: number = 7) {
         )
       )
     )
-    .groupBy(matches.id)
+     .groupBy(matches.id)
+     .orderBy(desc(matches.kickoffTime));
+
+   return result;
+}
+
+/**
+ * Get data for league roundup generation
+ * Returns completed matches from past 7 days with predictions and upset analysis
+ */
+export async function getLeagueRoundupData(competitionId: string) {
+  const db = getDb();
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  // Get finished matches from the past week
+  const finishedMatches = await db
+    .select({
+      match: matches,
+      competition: competitions,
+    })
+    .from(matches)
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .leftJoin(matchAnalysis, eq(matches.id, matchAnalysis.matchId))
+    .where(
+      and(
+        eq(matches.competitionId, competitionId),
+        eq(matches.status, 'finished'),
+        gte(matches.kickoffTime, weekAgo.toISOString()),
+        lte(matches.kickoffTime, now.toISOString())
+      )
+    )
     .orderBy(desc(matches.kickoffTime));
 
-  return result;
+  if (finishedMatches.length === 0) {
+    return null;
+  }
+
+  // Transform matches and get predictions for upset analysis
+  const matchesWithPredictions = await Promise.all(
+    finishedMatches.map(async (item) => {
+      const { match } = item;
+      
+      // Get predictions for this match to see if consensus was correct
+      const matchPredictions = await db
+        .select({
+          modelName: models.displayName,
+          correct: predictions.tendencyPoints,
+          points: predictions.totalPoints,
+        })
+        .from(predictions)
+        .innerJoin(models, eq(predictions.modelId, models.id))
+        .where(
+          and(
+            eq(predictions.matchId, match.id),
+            eq(predictions.status, 'scored')
+          )
+        );
+
+      const correctPredictions = matchPredictions.filter((p) => p.correct !== null).length;
+      const totalPredictions = matchPredictions.length;
+
+      return {
+        homeTeam: match.homeTeam,
+        awayTeam: match.awayTeam,
+        result: `${match.homeScore}-${match.awayScore}`,
+        prediction:
+          totalPredictions > 0
+            ? `${correctPredictions}/${totalPredictions} models correct`
+            : 'No predictions',
+        wasUpset: false, // Could be enhanced with odds data
+      };
+    })
+  );
+
+  // Format week identifier from most recent match's round
+  const mostRecentMatch = finishedMatches[0];
+  const week = mostRecentMatch.match.round || 'Week of ' + new Date(mostRecentMatch.match.kickoffTime).toLocaleDateString();
+
+  return {
+    competition: finishedMatches[0].competition.name,
+    competitionSlug: finishedMatches[0].competition.slug || finishedMatches[0].competition.id,
+    competitionId,
+    week,
+    matches: matchesWithPredictions,
+    standings: undefined, // Could be enhanced with league table data
+  };
 }

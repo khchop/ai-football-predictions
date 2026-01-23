@@ -262,22 +262,55 @@ export async function setupRepeatableJobs(): Promise<void> {
      log.error({ error: error.message }, 'Failed to schedule startup content backfill');
    }
    
-   // Check for disabled models to re-enable every 30 minutes
-  await registerRepeatableJob(
-    modelRecoveryQueue,
-    JOB_TYPES.CHECK_MODEL_HEALTH,
-    {},
-    {
-      repeat: {
-        pattern: '15,45 * * * *', // Every 30 minutes at :15 and :45
-        tz: 'Europe/Berlin',
-      },
-      jobId: 'model-recovery-repeatable',
-    }
-  );
-  
-  log.info('All repeatable jobs registered');
-  startPeriodicMetricsLogging();
+    // Check for disabled models to re-enable every 30 minutes
+   await registerRepeatableJob(
+     modelRecoveryQueue,
+     JOB_TYPES.CHECK_MODEL_HEALTH,
+     {},
+     {
+       repeat: {
+         pattern: '15,45 * * * *', // Every 30 minutes at :15 and :45
+         tz: 'Europe/Berlin',
+       },
+       jobId: 'model-recovery-repeatable',
+     }
+   );
+   
+   // Generate league roundups every Monday at 08:00 (after weekend matches finish)
+   await registerRepeatableJob(
+     contentQueue,
+     'scan-league-roundups',
+     { type: 'scan_league_roundups', data: {} },
+     {
+       repeat: {
+         pattern: '0 8 * * 1', // Every Monday at 08:00
+         tz: 'Europe/Berlin',
+       },
+       jobId: 'league-roundups-weekly',
+     }
+   );
+   
+   // Generate monthly model performance report on the 1st of every month at 09:00
+   await registerRepeatableJob(
+     contentQueue,
+     'generate-model-report',
+     { 
+       type: 'model_report', 
+       data: { 
+         period: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+       } 
+     },
+     {
+       repeat: {
+         pattern: '0 9 1 * *', // 1st of every month at 09:00
+         tz: 'Europe/Berlin',
+       },
+       jobId: 'model-report-monthly',
+     }
+   );
+   
+   log.info('All repeatable jobs registered');
+   startPeriodicMetricsLogging();
 }
 
 /**

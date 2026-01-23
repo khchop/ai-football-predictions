@@ -66,7 +66,7 @@ export interface BackfillMissingPayload {
 
 // Generate AI content (match previews, league roundups, model reports)
 export interface GenerateContentPayload {
-  type: 'match_preview' | 'league_roundup' | 'model_report' | 'scan_matches';
+  type: 'match_preview' | 'league_roundup' | 'model_report' | 'scan_matches' | 'scan_match_content' | 'scan_league_roundups';
   data: Record<string, unknown>;
 }
 
