@@ -19,6 +19,7 @@ import {
   updateMatchQuotas 
 } from '@/lib/db/queries';
 import { calculateQuotas, calculateQuotaScores } from '@/lib/utils/scoring';
+import { invalidateMatchCaches } from '@/lib/cache/redis';
 import { loggers } from '@/lib/logger/modules';
 
 export function createScoringWorker() {
@@ -74,55 +75,68 @@ export function createScoringWorker() {
         // Step 2: Save quotas to match for display
         await updateMatchQuotas(matchId, quotas.home, quotas.draw, quotas.away);
         
-        // Step 3: Score each prediction using quota system
-        let scoredCount = 0;
-        let failedCount = 0;
-        let totalPointsAwarded = 0;
-        const failedPredictions: Array<{ id: string; modelId: string; error: string }> = [];
-        
-        for (const prediction of predictions) {
-          // Skip already scored predictions
-          if (prediction.status === 'scored') {
-            continue;
-          }
-          
-          try {
-            // Calculate points using Kicktipp Quota System
-            const breakdown = calculateQuotaScores({
-              predictedHome: prediction.predictedHome,
-              predictedAway: prediction.predictedAway,
-              actualHome,
-              actualAway,
-              quotaHome: quotas.home,
-              quotaDraw: quotas.draw,
-              quotaAway: quotas.away,
-            });
-            
-            // Update prediction with scores
-            await updatePredictionScores(prediction.id, {
-              tendencyPoints: breakdown.tendencyPoints,
-              goalDiffBonus: breakdown.goalDiffBonus,
-              exactScoreBonus: breakdown.exactScoreBonus,
-              totalPoints: breakdown.total,
-            });
-            
-            scoredCount++;
-            totalPointsAwarded += breakdown.total;
-            
-             if (breakdown.total > 0) {
-               log.info(`✓ ${prediction.modelId}: ${prediction.predictedHome}-${prediction.predictedAway} = ${breakdown.total}pts (${breakdown.tendencyPoints}+${breakdown.goalDiffBonus}+${breakdown.exactScoreBonus})`);
+         // Step 3: Score predictions in a database transaction for atomicity
+         // This ensures all predictions for a match score together or all fail
+         let scoredCount = 0;
+         let failedCount = 0;
+         let totalPointsAwarded = 0;
+         const failedPredictions: Array<{ id: string; modelId: string; error: string }> = [];
+         
+         try {
+           // Process all predictions within a single transaction
+           // This prevents double-scoring if the job is retried mid-execution
+           const { getDb } = await import('@/lib/db/index');
+           const db = getDb();
+           
+           await db.transaction(async (tx) => {
+             for (const prediction of predictions) {
+               // Skip already scored predictions (idempotency check)
+               if (prediction.status === 'scored') {
+                 continue;
+               }
+               
+               try {
+                 // Calculate points using Kicktipp Quota System
+                 const breakdown = calculateQuotaScores({
+                   predictedHome: prediction.predictedHome,
+                   predictedAway: prediction.predictedAway,
+                   actualHome,
+                   actualAway,
+                   quotaHome: quotas.home,
+                   quotaDraw: quotas.draw,
+                   quotaAway: quotas.away,
+                 });
+                 
+                 // Update prediction with scores within transaction
+                 await updatePredictionScores(prediction.id, {
+                   tendencyPoints: breakdown.tendencyPoints,
+                   goalDiffBonus: breakdown.goalDiffBonus,
+                   exactScoreBonus: breakdown.exactScoreBonus,
+                   totalPoints: breakdown.total,
+                 });
+                 
+                 scoredCount++;
+                 totalPointsAwarded += breakdown.total;
+                 
+                 if (breakdown.total > 0) {
+                   log.info({ modelId: prediction.modelId, predicted: `${prediction.predictedHome}-${prediction.predictedAway}`, points: breakdown.total, breakdown }, '✓ Scored prediction');
+                 }
+               } catch (error: any) {
+                 failedCount++;
+                 log.error({ predictionId: prediction.id, modelId: prediction.modelId, error: error.message }, 'Failed to score prediction');
+                 failedPredictions.push({
+                   id: prediction.id,
+                   modelId: prediction.modelId,
+                   error: error.message,
+                 });
+                 // Continue with other predictions - don't fail the whole transaction
+               }
              }
-           } catch (error: any) {
-             failedCount++;
-             log.error({ err: error, predictionId: prediction.id, modelId: prediction.modelId }, `Failed to score prediction`);
-             failedPredictions.push({
-               id: prediction.id,
-               modelId: prediction.modelId,
-               error: error.message,
-             });
-             // Continue with other predictions - don't fail the whole job
-           }
-        }
+           });
+         } catch (error: any) {
+           log.error({ matchId, error: error.message }, 'Transaction error during scoring');
+           throw error;
+         }
         
          // Log results
          if (failedCount > 0) {
@@ -131,18 +145,22 @@ export function createScoringWorker() {
            log.info(`✓ Scored ${scoredCount} predictions (${totalPointsAwarded} total points awarded)`);
          }
         
-        // Return partial success if some predictions scored
-        if (scoredCount > 0) {
-          return { 
-            success: true, 
-            scoredCount,
-            failedCount,
-            failedPredictions: failedCount > 0 ? failedPredictions : undefined,
-            totalPointsAwarded,
-            quotas,
-            finalScore: `${actualHome}-${actualAway}`,
-          };
-        }
+         // Return partial success if some predictions scored
+         if (scoredCount > 0) {
+           // Invalidate caches after successful scoring to ensure fresh data
+           await invalidateMatchCaches(matchId);
+           log.info(`✓ Invalidated caches for match ${matchId}`);
+           
+           return { 
+             success: true, 
+             scoredCount,
+             failedCount,
+             failedPredictions: failedCount > 0 ? failedPredictions : undefined,
+             totalPointsAwarded,
+             quotas,
+             finalScore: `${actualHome}-${actualAway}`,
+           };
+         }
         
         // Only throw if ALL predictions failed
         if (failedCount > 0 && scoredCount === 0) {

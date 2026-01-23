@@ -40,19 +40,19 @@ function attachWorkerEvents(worker: Worker, name: string): void {
     log.info({ jobId: job.id, jobName: job.name, result: resultStr }, `✓ Completed job`);
   });
 
-  worker.on('failed', async (job, err) => {
-    log.error({ jobId: job?.id, jobName: job?.name, err }, `✗ Failed job`);
-    
-    // If job has exhausted all retry attempts, add to DLQ
-    if (job && job.attemptsMade >= (job.opts.attempts || 5)) {
-      log.error({ jobId: job.id }, `Job exhausted all retries, adding to DLQ`);
-      try {
-        await addToDeadLetterQueue(job, err);
-      } catch (dlqError) {
-        log.error({ jobId: job.id, err: dlqError }, `Failed to add job to DLQ`);
-      }
-    }
-  });
+   worker.on('failed', (job, err) => {
+     log.error({ jobId: job?.id, jobName: job?.name, err }, `✗ Failed job`);
+     
+     // If job has exhausted all retry attempts, add to DLQ
+     if (job && job.attemptsMade >= (job.opts.attempts || 5)) {
+       log.error({ jobId: job.id }, `Job exhausted all retries, adding to DLQ`);
+       
+       // Handle async DLQ addition with proper error handling
+       addToDeadLetterQueue(job, err).catch((dlqError) => {
+         log.error({ jobId: job.id, err: dlqError }, `Failed to add job to DLQ`);
+       });
+     }
+   });
 
   worker.on('error', (err) => {
     log.error({ err }, `⚠ Error`);

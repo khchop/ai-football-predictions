@@ -141,43 +141,14 @@ export function createLiveScoreWorker() {
           nextPollScheduled: true,
         };
        } catch (error: any) {
-         log.error({ err: error }, `Error`);
-        
-        // Classify error type
-        const isRetryable = 
-          error.code === 'ECONNREFUSED' ||
-          error.code === 'ETIMEDOUT' ||
-          error.message?.includes('timeout') ||
-          error.message?.includes('rate limit') ||
-          error.status === 429 ||
-          error.status === 503;
-        
-        if (isRetryable) {
-          // For transient errors, schedule next poll to recover automatically
-          try {
-            await liveQueue.add(
-              JOB_TYPES.MONITOR_LIVE,
-              {
-                matchId,
-                externalId,
-                kickoffTime: job.data.kickoffTime,
-                pollCount: pollCount + 1,
-              },
-              {
-                delay: POLL_INTERVAL_MS,
-                jobId: `live-poll-${matchId}-${pollCount + 1}`,
-              }
-            );
-            return { success: false, error: error.message, nextPollScheduled: true, retryable: true };
-          } catch (scheduleError) {
-            // Already exists, that's fine
-            return { success: false, error: error.message, nextPollScheduled: false, retryable: true };
-          }
-        } else {
-          // For non-retryable errors (business logic), throw to fail the job
-          throw error;
-        }
-      }
+          log.error({ matchId, externalId, pollCount, err: error }, `Error polling live score`);
+         
+         // Throw error to enable BullMQ retry mechanism
+         // BullMQ will retry with exponential backoff based on queue config
+         // For transient errors, BullMQ retry handles the recovery
+         // For non-retryable errors, they'll be moved to DLQ after max retries
+         throw error;
+       }
     },
     {
       connection: getQueueConnection(),

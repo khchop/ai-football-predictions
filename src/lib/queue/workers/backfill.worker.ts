@@ -64,21 +64,29 @@ export function createBackfillWorker() {
               }
             }
             
-            // Create new job with timestamp to avoid ID collision
-            await analysisQueue.add(
-              JOB_TYPES.ANALYZE_MATCH,
-              {
-                matchId: match.id,
-                externalId: match.externalId,
-                homeTeam: match.homeTeam,
-                awayTeam: match.awayTeam,
-              },
-              {
-                delay: 1000,
-                jobId: `backfill-analyze-${match.id}-${Date.now()}`,
-              }
-            );
-            results.analysisTriggered++;
+             // Check if job already exists (deterministic ID)
+             const jobId = `analyze-${match.id}`;
+             const existingJob = await analysisQueue.getJob(jobId);
+             
+             if (!existingJob) {
+               // Create new job with deterministic ID
+               await analysisQueue.add(
+                 JOB_TYPES.ANALYZE_MATCH,
+                 {
+                   matchId: match.id,
+                   externalId: match.externalId,
+                   homeTeam: match.homeTeam,
+                   awayTeam: match.awayTeam,
+                 },
+                 {
+                   delay: 1000,
+                   jobId,
+                 }
+               );
+               results.analysisTriggered++;
+             } else {
+               log.debug(`Analysis job already exists for match ${match.id}`);
+             }
           } catch (error: any) {
             if (!error.message?.includes('already exists')) {
               results.errors.push(`Analysis ${match.id}: ${error.message}`);
@@ -114,19 +122,27 @@ export function createBackfillWorker() {
               }
             }
             
-            // Create new odds job with timestamp
-            await oddsQueue.add(
-              JOB_TYPES.REFRESH_ODDS,
-              {
-                matchId: match.id,
-                externalId: match.externalId,
-              },
-              {
-                delay: 1000,
-                jobId: `backfill-odds-${match.id}-${Date.now()}`,
-              }
-            );
-            results.oddsTriggered++;
+             // Check if job already exists (deterministic ID)
+             const jobId = `refresh-odds-backfill-${match.id}`;
+             const existingJob = await oddsQueue.getJob(jobId);
+             
+             if (!existingJob) {
+               // Create new odds job with deterministic ID
+               await oddsQueue.add(
+                 JOB_TYPES.REFRESH_ODDS,
+                 {
+                   matchId: match.id,
+                   externalId: match.externalId,
+                 },
+                 {
+                   delay: 1000,
+                   jobId,
+                 }
+               );
+               results.oddsTriggered++;
+             } else {
+               log.debug(`Odds job already exists for match ${match.id}`);
+             }
           } catch (error: any) {
             if (!error.message?.includes('already exists')) {
               results.errors.push(`Odds ${match.id}: ${error.message}`);
@@ -159,21 +175,29 @@ export function createBackfillWorker() {
               }
             }
             
-            // Create new lineups job with timestamp
-            await lineupsQueue.add(
-              JOB_TYPES.FETCH_LINEUPS,
-              {
-                matchId: match.id,
-                externalId: match.externalId,
-                homeTeam: match.homeTeam,
-                awayTeam: match.awayTeam,
-              },
-              {
-                delay: 1000,
-                jobId: `backfill-lineups-${match.id}-${Date.now()}`,
-              }
-            );
-            results.lineupsTriggered++;
+             // Check if job already exists (deterministic ID)
+             const jobId = `lineups-${match.id}`;
+             const existingJob = await lineupsQueue.getJob(jobId);
+             
+             if (!existingJob) {
+               // Create new lineups job with deterministic ID
+               await lineupsQueue.add(
+                 JOB_TYPES.FETCH_LINEUPS,
+                 {
+                   matchId: match.id,
+                   externalId: match.externalId,
+                   homeTeam: match.homeTeam,
+                   awayTeam: match.awayTeam,
+                 },
+                 {
+                   delay: 1000,
+                   jobId,
+                 }
+               );
+               results.lineupsTriggered++;
+             } else {
+               log.debug(`Lineups job already exists for match ${match.id}`);
+             }
           } catch (error: any) {
             if (!error.message?.includes('already exists')) {
               results.errors.push(`Lineups ${match.id}: ${error.message}`);
@@ -207,21 +231,29 @@ export function createBackfillWorker() {
               }
             }
             
-            // Create new prediction job with timestamp
-            await predictionsQueue.add(
-              JOB_TYPES.PREDICT_MATCH,
-              {
-                matchId: match.id,
-                attempt: 1,
-                skipIfDone: true,
-                force: false,
-              },
-              {
-                delay: 1000,
-                jobId: `backfill-predict-${match.id}-${Date.now()}`,
-              }
-            );
-            results.predictionsTriggered++;
+             // Check if job already exists (deterministic ID)
+             const jobId = `predict-immediate-${match.id}`;
+             const existingJob = await predictionsQueue.getJob(jobId);
+             
+             if (!existingJob) {
+               // Create new prediction job with deterministic ID
+               await predictionsQueue.add(
+                 JOB_TYPES.PREDICT_MATCH,
+                 {
+                   matchId: match.id,
+                   attempt: 1,
+                   skipIfDone: true,
+                   force: false,
+                 },
+                 {
+                   delay: 1000,
+                   jobId,
+                 }
+               );
+               results.predictionsTriggered++;
+             } else {
+               log.debug(`Prediction job already exists for match ${match.id}`);
+             }
           } catch (error: any) {
             if (!error.message?.includes('already exists')) {
               results.errors.push(`Predict ${match.id}: ${error.message}`);
@@ -252,22 +284,30 @@ export function createBackfillWorker() {
               }
             }
             
-            // Create new settlement job with timestamp
-            await settlementQueue.add(
-              JOB_TYPES.SETTLE_MATCH,
-              {
-                matchId: match.id,
-                homeScore: match.homeScore ?? 0,
-                awayScore: match.awayScore ?? 0,
-                status: match.status,
-              },
-              {
-                delay: 1000,
-                priority: 1, // High priority - settle bets ASAP
-                jobId: `backfill-settle-${match.id}-${Date.now()}`,
-              }
-            );
-            results.scoringsTriggered++;
+             // Check if job already exists (deterministic ID)
+             const jobId = `settle-${match.id}`;
+             const existingJob = await settlementQueue.getJob(jobId);
+             
+             if (!existingJob) {
+               // Create new settlement job with deterministic ID
+               await settlementQueue.add(
+                 JOB_TYPES.SETTLE_MATCH,
+                 {
+                   matchId: match.id,
+                   homeScore: match.homeScore ?? 0,
+                   awayScore: match.awayScore ?? 0,
+                   status: match.status,
+                 },
+                 {
+                   delay: 1000,
+                   priority: 1, // High priority - settle bets ASAP
+                   jobId,
+                 }
+               );
+               results.scoringsTriggered++;
+             } else {
+               log.debug(`Settlement job already exists for match ${match.id}`);
+             }
           } catch (error: any) {
             if (!error.message?.includes('already exists')) {
               results.errors.push(`Settlement ${match.id}: ${error.message}`);

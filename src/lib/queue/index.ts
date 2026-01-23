@@ -115,8 +115,36 @@ export const QUEUE_NAMES = {
   MODEL_RECOVERY: 'model-recovery-queue',
 } as const;
 
+// Queue-specific timeout configurations
+const QUEUE_TIMEOUTS = {
+  [QUEUE_NAMES.PREDICTIONS]: 10 * 60 * 1000, // 10 minutes - LLM calls are slow
+  [QUEUE_NAMES.ANALYSIS]: 5 * 60 * 1000,     // 5 minutes - multiple API calls
+  [QUEUE_NAMES.BACKFILL]: 5 * 60 * 1000,     // 5 minutes - many database operations
+  default: 2 * 60 * 1000,                     // 2 minutes - default for fast operations
+} as const;
+
+// Worker lock duration configurations (must be >= timeout)
+const WORKER_LOCK_DURATIONS = {
+  [QUEUE_NAMES.PREDICTIONS]: 10 * 60 * 1000, // 10 minutes
+  [QUEUE_NAMES.ANALYSIS]: 5 * 60 * 1000,     // 5 minutes
+  [QUEUE_NAMES.BACKFILL]: 5 * 60 * 1000,     // 5 minutes
+  default: 30 * 1000,                        // 30 seconds - prevents stalled marking
+} as const;
+
+// Get timeout for a specific queue
+export function getQueueTimeout(queueName: string): number {
+  return QUEUE_TIMEOUTS[queueName as keyof typeof QUEUE_TIMEOUTS] ?? QUEUE_TIMEOUTS.default;
+}
+
+// Get lock duration for a specific queue
+export function getWorkerLockDuration(queueName: string): number {
+  return WORKER_LOCK_DURATIONS[queueName as keyof typeof WORKER_LOCK_DURATIONS] ?? WORKER_LOCK_DURATIONS.default;
+}
+
 // Default options for all queues
-function createQueueOptions() {
+function createQueueOptions(queueName?: string) {
+  const timeout = queueName ? getQueueTimeout(queueName) : QUEUE_TIMEOUTS.default;
+  
   return {
     connection: getQueueConnection(),
     defaultJobOptions: {
@@ -132,7 +160,7 @@ function createQueueOptions() {
       removeOnFail: {
         age: 7 * 24 * 60 * 60, // Keep failed jobs for 7 days
       },
-      timeout: 120000, // 2 minute timeout per job (individual workers may have shorter timeouts)
+      timeout, // Queue-specific timeout
     },
   };
 }
@@ -153,70 +181,70 @@ let _matchQueue: Queue;
 
 export const analysisQueue = new Proxy({} as Queue, {
   get(target, prop) {
-    if (!_analysisQueue) _analysisQueue = new Queue(QUEUE_NAMES.ANALYSIS, createQueueOptions());
+    if (!_analysisQueue) _analysisQueue = new Queue(QUEUE_NAMES.ANALYSIS, createQueueOptions(QUEUE_NAMES.ANALYSIS));
     return (_analysisQueue as any)[prop];
   }
 });
 
 export const predictionsQueue = new Proxy({} as Queue, {
   get(target, prop) {
-    if (!_predictionsQueue) _predictionsQueue = new Queue(QUEUE_NAMES.PREDICTIONS, createQueueOptions());
+    if (!_predictionsQueue) _predictionsQueue = new Queue(QUEUE_NAMES.PREDICTIONS, createQueueOptions(QUEUE_NAMES.PREDICTIONS));
     return (_predictionsQueue as any)[prop];
   }
 });
 
 export const lineupsQueue = new Proxy({} as Queue, {
   get(target, prop) {
-    if (!_lineupsQueue) _lineupsQueue = new Queue(QUEUE_NAMES.LINEUPS, createQueueOptions());
+    if (!_lineupsQueue) _lineupsQueue = new Queue(QUEUE_NAMES.LINEUPS, createQueueOptions(QUEUE_NAMES.LINEUPS));
     return (_lineupsQueue as any)[prop];
   }
 });
 
 export const oddsQueue = new Proxy({} as Queue, {
   get(target, prop) {
-    if (!_oddsQueue) _oddsQueue = new Queue(QUEUE_NAMES.ODDS, createQueueOptions());
+    if (!_oddsQueue) _oddsQueue = new Queue(QUEUE_NAMES.ODDS, createQueueOptions(QUEUE_NAMES.ODDS));
     return (_oddsQueue as any)[prop];
   }
 });
 
 export const liveQueue = new Proxy({} as Queue, {
   get(target, prop) {
-    if (!_liveQueue) _liveQueue = new Queue(QUEUE_NAMES.LIVE, createQueueOptions());
+    if (!_liveQueue) _liveQueue = new Queue(QUEUE_NAMES.LIVE, createQueueOptions(QUEUE_NAMES.LIVE));
     return (_liveQueue as any)[prop];
   }
 });
 
 export const settlementQueue = new Proxy({} as Queue, {
   get(target, prop) {
-    if (!_settlementQueue) _settlementQueue = new Queue(QUEUE_NAMES.SETTLEMENT, createQueueOptions());
+    if (!_settlementQueue) _settlementQueue = new Queue(QUEUE_NAMES.SETTLEMENT, createQueueOptions(QUEUE_NAMES.SETTLEMENT));
     return (_settlementQueue as any)[prop];
   }
 });
 
 export const fixturesQueue = new Proxy({} as Queue, {
   get(target, prop) {
-    if (!_fixturesQueue) _fixturesQueue = new Queue(QUEUE_NAMES.FIXTURES, createQueueOptions());
+    if (!_fixturesQueue) _fixturesQueue = new Queue(QUEUE_NAMES.FIXTURES, createQueueOptions(QUEUE_NAMES.FIXTURES));
     return (_fixturesQueue as any)[prop];
   }
 });
 
 export const backfillQueue = new Proxy({} as Queue, {
   get(target, prop) {
-    if (!_backfillQueue) _backfillQueue = new Queue(QUEUE_NAMES.BACKFILL, createQueueOptions());
+    if (!_backfillQueue) _backfillQueue = new Queue(QUEUE_NAMES.BACKFILL, createQueueOptions(QUEUE_NAMES.BACKFILL));
     return (_backfillQueue as any)[prop];
   }
 });
 
 export const contentQueue = new Proxy({} as Queue, {
   get(target, prop) {
-    if (!_contentQueue) _contentQueue = new Queue(QUEUE_NAMES.CONTENT, createQueueOptions());
+    if (!_contentQueue) _contentQueue = new Queue(QUEUE_NAMES.CONTENT, createQueueOptions(QUEUE_NAMES.CONTENT));
     return (_contentQueue as any)[prop];
   }
 });
 
 export const modelRecoveryQueue = new Proxy({} as Queue, {
   get(target, prop) {
-    if (!_modelRecoveryQueue) _modelRecoveryQueue = new Queue(QUEUE_NAMES.MODEL_RECOVERY, createQueueOptions());
+    if (!_modelRecoveryQueue) _modelRecoveryQueue = new Queue(QUEUE_NAMES.MODEL_RECOVERY, createQueueOptions(QUEUE_NAMES.MODEL_RECOVERY));
     return (_modelRecoveryQueue as any)[prop];
   }
 });

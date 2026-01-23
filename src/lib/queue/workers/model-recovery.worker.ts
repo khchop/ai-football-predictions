@@ -20,35 +20,53 @@ export function createModelRecoveryWorker() {
     async (job: Job) => {
       const log = loggers.modelRecoveryWorker.child({ jobId: job.id, jobName: job.name });
       
-      log.info('Checking for models ready to re-enable...');
-      
-      const disabledModels = await getAutoDisabledModels();
-      
-      if (disabledModels.length === 0) {
-        log.info('No disabled models found');
-        return { recovered: 0, checked: 0 };
-      }
-      
-      const cooldownMs = COOLDOWN_HOURS * 60 * 60 * 1000;
-      const now = Date.now();
-      let recovered = 0;
-      
-      for (const model of disabledModels) {
-        const lastFailure = model.lastFailureAt ? new Date(model.lastFailureAt).getTime() : 0;
-        const timeSinceFailure = now - lastFailure;
+      try {
+        log.info('Checking for models ready to re-enable...');
         
-         if (timeSinceFailure >= cooldownMs) {
-           await reEnableModel(model.id);
-           log.info(`✓ Re-enabled ${model.displayName} (was disabled for ${Math.round(timeSinceFailure / 60000)} min)`);
-           recovered++;
-         } else {
-           const remainingMin = Math.ceil((cooldownMs - timeSinceFailure) / 60000);
-           log.info(`${model.displayName}: ${remainingMin} min until re-enable`);
-         }
-       }
-       
-       log.info(`Complete: ${recovered}/${disabledModels.length} models re-enabled`);
-      return { recovered, checked: disabledModels.length };
+        const disabledModels = await getAutoDisabledModels();
+        
+        if (disabledModels.length === 0) {
+          log.info('No disabled models found');
+          return { recovered: 0, checked: 0, failed: 0, errors: [] };
+        }
+        
+        const cooldownMs = COOLDOWN_HOURS * 60 * 60 * 1000;
+        const now = Date.now();
+        let recovered = 0;
+        let failed = 0;
+        const errors: Array<{ modelId: string; displayName: string; error: string }> = [];
+        
+        for (const model of disabledModels) {
+          const lastFailure = model.lastFailureAt ? new Date(model.lastFailureAt).getTime() : 0;
+          const timeSinceFailure = now - lastFailure;
+          
+          if (timeSinceFailure >= cooldownMs) {
+            try {
+              // Attempt to re-enable this model
+              await reEnableModel(model.id);
+              log.info({ modelId: model.id, displayName: model.displayName, disabledMinutes: Math.round(timeSinceFailure / 60000) }, '✓ Re-enabled model');
+              recovered++;
+            } catch (error) {
+              // Isolate failures - continue with other models
+              failed++;
+              const errorMsg = error instanceof Error ? error.message : String(error);
+              errors.push({ modelId: model.id, displayName: model.displayName, error: errorMsg });
+              log.warn({ modelId: model.id, displayName: model.displayName, error: errorMsg }, '✗ Failed to re-enable model');
+            }
+          } else {
+            const remainingMin = Math.ceil((cooldownMs - timeSinceFailure) / 60000);
+            log.debug({ modelId: model.id, displayName: model.displayName, remainingMinutes: remainingMin }, 'Model still in cooldown');
+          }
+        }
+        
+        log.info({ recovered, checked: disabledModels.length, failed }, 'Model recovery complete');
+        return { recovered, checked: disabledModels.length, failed, errors };
+      } catch (error) {
+        // Outer catch for critical errors
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        log.error({ error: errorMsg }, 'Model recovery worker failed');
+        throw error; // Re-throw for BullMQ retry
+      }
     },
     {
       connection: getQueueConnection(),
