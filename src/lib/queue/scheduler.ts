@@ -203,6 +203,24 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
   ]);
   
    for (const job of jobsToSchedule) {
+     // Check for stale completed/failed jobs that would block scheduling
+     try {
+       const existingJob = await job.queue.getJob(job.jobId);
+       if (existingJob) {
+         const state = await existingJob.getState();
+         if (state === 'completed' || state === 'failed') {
+           await existingJob.remove();
+           log.debug({ jobId: job.jobId, oldState: state, homeTeam: match.homeTeam, awayTeam: match.awayTeam }, 'Removed stale job before scheduling');
+         } else if (state === 'active' || state === 'waiting' || state === 'delayed') {
+           // Job already exists and is running/queued - skip
+           log.debug({ jobId: job.jobId, state, homeTeam: match.homeTeam, awayTeam: match.awayTeam }, 'Job already exists and is active/queued, skipping');
+           continue;
+         }
+       }
+     } catch (e) {
+       // Ignore errors checking for existing job - proceed with scheduling
+     }
+     
      if (job.delay > 0) {
        // Schedule for future
        try {
@@ -217,8 +235,9 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
          });
          scheduled++;
        } catch (error: any) {
-         // Job with same ID already exists - that's fine, skip it
+         // Job with same ID already exists - log and skip
          if (error.message?.includes('already exists')) {
+           log.warn({ jobId: job.jobId, jobName: job.name, matchId: match.id, homeTeam: match.homeTeam, awayTeam: match.awayTeam }, 'Job already exists (race condition), skipping');
            continue;
          }
           log.error({ matchId: match.id, jobName: job.name, error: error.message }, 'Failed to schedule job');
@@ -241,6 +260,7 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
             log.info({ jobName: job.name, homeTeam: match.homeTeam, awayTeam: match.awayTeam }, 'Running past-due job immediately');
           } catch (error: any) {
             if (error.message?.includes('already exists')) {
+              log.warn({ jobId: job.jobId, jobName: job.name, matchId: match.id, homeTeam: match.homeTeam, awayTeam: match.awayTeam }, 'Late job already exists (race condition), skipping');
               continue;
             }
             log.error({ matchId: match.id, jobName: job.name, error: error.message }, 'Failed to schedule late job');
