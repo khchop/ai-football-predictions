@@ -238,7 +238,7 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
               entry.averagePoints >= 2 && entry.averagePoints < 4 && "text-yellow-400",
               entry.averagePoints < 2 && "text-muted-foreground"
             )}>
-              {entry.averagePoints.toFixed(2)}
+              {Number(entry.averagePoints).toFixed(2)}
             </p>
             <p className="text-xs text-muted-foreground">Avg/Match</p>
           </div>
@@ -420,7 +420,7 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
                       entry.averagePoints >= 2 && entry.averagePoints < 4 && "bg-yellow-500/20 text-yellow-400",
                       entry.averagePoints < 2 && "bg-muted text-muted-foreground"
                     )}>
-                      {entry.averagePoints.toFixed(2)}
+                      {Number(entry.averagePoints).toFixed(2)}
                     </span>
                   </td>
                   <td className="py-4 px-4">

@@ -211,7 +211,7 @@ export function ModelCompetitionBreakdown({
                     row.averagePoints >= 2 && row.averagePoints < 4 && "bg-yellow-500/20 text-yellow-400",
                     row.averagePoints < 2 && "bg-muted text-muted-foreground"
                   )}>
-                    {row.averagePoints.toFixed(2)}
+                    {Number(row.averagePoints).toFixed(2)}
                   </span>
                 </td>
                 <td className="py-3 px-3 text-center">

@@ -31,11 +31,11 @@ async function LeaderboardContent({ searchParams }: { searchParams: { [key: stri
     modelId: entry.model.id,
     displayName: entry.model.displayName,
     provider: entry.model.provider,
-    totalPredictions: entry.totalPredictions,
-    totalPoints: entry.totalPoints,
-    averagePoints: entry.avgPoints ?? 0, // Null safety for models with no predictions
-    exactScores: entry.exactScores ?? 0,
-    correctTendencies: entry.correctTendencies ?? 0,
+    totalPredictions: Number(entry.totalPredictions) || 0,
+    totalPoints: Number(entry.totalPoints) || 0,
+    averagePoints: Number(entry.avgPoints) || 0, // Convert to number (DB may return string)
+    exactScores: Number(entry.exactScores) || 0,
+    correctTendencies: Number(entry.correctTendencies) || 0,
   }));
   
   return (

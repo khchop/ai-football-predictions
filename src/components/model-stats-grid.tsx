@@ -80,7 +80,7 @@ export function ModelStatsGrid({ model, stats, tier }: ModelStatsGridProps) {
     },
     {
       label: 'Avg/Match',
-      value: stats.averagePoints.toFixed(2),
+      value: Number(stats.averagePoints).toFixed(2),
       icon: TrendingUp,
       color: stats.averagePoints >= 4 ? 'text-green-400' : stats.averagePoints >= 2 ? 'text-yellow-400' : 'text-muted-foreground',
     },
