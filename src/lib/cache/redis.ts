@@ -8,49 +8,117 @@ import { loggers } from '@/lib/logger/modules';
 
 // Singleton Redis client
 let redisClient: Redis | null = null;
+let isRedisHealthy = false;
+let lastHealthCheck = 0;
+const HEALTH_CHECK_INTERVAL_MS = 30000; // 30 seconds
 
 /**
  * Get or create Redis client
  * Supports both REDIS_URL and UPSTASH_REDIS_REST_URL formats
  */
 export function getRedis(): Redis | null {
-  if (redisClient) {
-    return redisClient;
+   if (redisClient) {
+     return redisClient;
+   }
+
+    const redisUrl = process.env.REDIS_URL;
+    
+    if (!redisUrl) {
+      loggers.cache.warn('REDIS_URL not configured - caching disabled');
+      return null;
+    }
+
+    try {
+      redisClient = new Redis(redisUrl, {
+        maxRetriesPerRequest: 3,
+        retryStrategy(times) {
+          if (times > 3) {
+            loggers.cache.error({retries: times}, 'Redis connection failed after retries');
+            isRedisHealthy = false;
+            return null; // Stop retrying
+          }
+          return Math.min(times * 200, 2000); // Exponential backoff
+        },
+        lazyConnect: true,
+      });
+
+      redisClient.on('error', (err) => {
+        isRedisHealthy = false;
+        loggers.cache.error({ error: err.message }, 'Redis error');
+      });
+
+      redisClient.on('connect', () => {
+        isRedisHealthy = true;
+        loggers.cache.info('Redis connected');
+      });
+
+      return redisClient;
+    } catch (error) {
+      loggers.cache.error({ error: error instanceof Error ? error.message : String(error) }, 'Failed to create Redis client');
+      return null;
+    }
   }
 
-   const redisUrl = process.env.REDIS_URL;
-   
-   if (!redisUrl) {
-     loggers.cache.warn('REDIS_URL not configured - caching disabled');
-     return null;
-   }
+/**
+ * Check if Redis is healthy (with cooldown to avoid spam checks)
+ */
+export async function isRedisAvailable(): Promise<boolean> {
+  const redis = getRedis();
+  if (!redis) return false;
+  
+  const now = Date.now();
+  // Use cached health status if check was recent
+  if (now - lastHealthCheck < HEALTH_CHECK_INTERVAL_MS) {
+    return isRedisHealthy;
+  }
+  
+  try {
+    await redis.ping();
+    isRedisHealthy = true;
+    lastHealthCheck = now;
+    return true;
+  } catch (error) {
+    isRedisHealthy = false;
+    lastHealthCheck = now;
+    loggers.cache.warn({ error: error instanceof Error ? error.message : String(error) }, 'Redis health check failed');
+    return false;
+  }
+}
 
-   try {
-     redisClient = new Redis(redisUrl, {
-       maxRetriesPerRequest: 3,
-       retryStrategy(times) {
-         if (times > 3) {
-           loggers.cache.error({retries: times}, 'Redis connection failed after retries');
-           return null; // Stop retrying
-         }
-         return Math.min(times * 200, 2000); // Exponential backoff
-       },
-       lazyConnect: true,
-     });
-
-     redisClient.on('error', (err) => {
-       loggers.cache.error({ error: err.message }, 'Redis error');
-     });
-
-     redisClient.on('connect', () => {
-       loggers.cache.info('Redis connected');
-     });
-
-     return redisClient;
-   } catch (error) {
-     loggers.cache.error({ error: error instanceof Error ? error.message : String(error) }, 'Failed to create Redis client');
-     return null;
-   }
+/**
+ * Attempt to reconnect to Redis if disconnected
+ */
+export async function ensureRedisConnection(): Promise<boolean> {
+  const redis = getRedis();
+  if (!redis) return false;
+  
+  if (redis.status === 'ready') return true;
+  
+  if (redis.status === 'connecting') {
+    // Wait for connection with timeout
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => resolve(false), 5000);
+      redis.once('ready', () => {
+        clearTimeout(timeout);
+        resolve(true);
+      });
+      redis.once('error', () => {
+        clearTimeout(timeout);
+        resolve(false);
+      });
+    });
+  }
+  
+  // Try to reconnect
+  try {
+    await redis.connect();
+    isRedisHealthy = true;
+    return true;
+  } catch (error) {
+    isRedisHealthy = false;
+    loggers.cache.error({ error: error instanceof Error ? error.message : String(error) }, 'Failed to reconnect to Redis');
+    return false;
+  }
 }
 
 /**

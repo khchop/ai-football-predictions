@@ -19,17 +19,27 @@ export async function register() {
        const { validateEnvironmentOrThrow } = await import('./lib/utils/env-validation');
        validateEnvironmentOrThrow();
        
-       // 1. Sync models from code to database (auto-sync on startup)
-       try {
-         const { syncModelsToDatabase } = await import('./lib/db/sync-models');
-         const result = await syncModelsToDatabase();
-         loggers.instrumentation.info({ activeModels: result.total }, 'Model sync completed');
-       } catch (syncError) {
-         loggers.instrumentation.warn({ error: syncError instanceof Error ? syncError.message : String(syncError) }, 'Model sync failed (non-fatal)');
-         // Continue startup even if sync fails
-       }
+        // 1. Sync models from code to database (auto-sync on startup)
+        try {
+          const { syncModelsToDatabase } = await import('./lib/db/sync-models');
+          const result = await syncModelsToDatabase();
+          loggers.instrumentation.info({ activeModels: result.total }, 'Model sync completed');
+        } catch (syncError) {
+          loggers.instrumentation.warn({ error: syncError instanceof Error ? syncError.message : String(syncError) }, 'Model sync failed (non-fatal)');
+          // Continue startup even if sync fails
+        }
 
-       // 2. Setup repeatable jobs (fetch-fixtures every 6h)
+        // 1.5. Warm cache with frequently accessed data
+        try {
+          const { warmCache } = await import('./lib/cache/warming');
+          const warmingResult = await warmCache();
+          loggers.instrumentation.info({ warmed: warmingResult.warmed.length, failed: warmingResult.failed.length, duration: warmingResult.duration }, 'Cache warming completed');
+        } catch (warmingError) {
+          loggers.instrumentation.warn({ error: warmingError instanceof Error ? warmingError.message : String(warmingError) }, 'Cache warming failed (non-fatal)');
+          // Continue startup even if warming fails
+        }
+
+        // 2. Setup repeatable jobs (fetch-fixtures every 6h)
        const { setupRepeatableJobs } = await import('./lib/queue/setup');
        await setupRepeatableJobs();
 

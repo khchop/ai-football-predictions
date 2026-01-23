@@ -28,40 +28,52 @@ export interface DLQEntry {
 
 /**
  * Add a failed job to the DLQ
+ * Gracefully handles Redis unavailability
  */
 export async function addToDeadLetterQueue(
-  job: Job,
-  error: Error
+   job: Job,
+   error: Error
 ): Promise<void> {
-  const redis = getQueueConnection();
-  
-  const entry: DLQEntry = {
-    jobId: job.id || 'unknown',
-    queueName: job.queueName,
-    jobType: job.name,
-    data: job.data,
-    failedReason: error.message,
-    attemptsMade: job.attemptsMade,
-    timestamp: new Date().toISOString(),
-    stackTrace: error.stack,
-  };
-  
-  const entryKey = `${DLQ_KEY_PREFIX}${job.queueName}:${job.id}`;
-  
-  // Store the entry
-  await redis.set(entryKey, JSON.stringify(entry), 'EX', 30 * 24 * 60 * 60); // 30 days TTL
-  
-  // Add to index (sorted by timestamp)
-  await redis.zadd(DLQ_INDEX_KEY, Date.now(), entryKey);
-  
-  // Trim index to max size
-  const count = await redis.zcard(DLQ_INDEX_KEY);
-  if (count > MAX_DLQ_ENTRIES) {
-    // Remove oldest entries
-    await redis.zremrangebyrank(DLQ_INDEX_KEY, 0, count - MAX_DLQ_ENTRIES - 1);
-  }
-  
-   log.error({ queue: job.queueName, jobName: job.name, jobId: job.id }, 'Added failed job to DLQ');
+   try {
+     const redis = getQueueConnection();
+     
+     const entry: DLQEntry = {
+       jobId: job.id || 'unknown',
+       queueName: job.queueName,
+       jobType: job.name,
+       data: job.data,
+       failedReason: error.message,
+       attemptsMade: job.attemptsMade,
+       timestamp: new Date().toISOString(),
+       stackTrace: error.stack,
+     };
+     
+     const entryKey = `${DLQ_KEY_PREFIX}${job.queueName}:${job.id}`;
+     
+     // Store the entry
+     await redis.set(entryKey, JSON.stringify(entry), 'EX', 30 * 24 * 60 * 60); // 30 days TTL
+     
+     // Add to index (sorted by timestamp)
+     await redis.zadd(DLQ_INDEX_KEY, Date.now(), entryKey);
+     
+     // Trim index to max size
+     const count = await redis.zcard(DLQ_INDEX_KEY);
+     if (count > MAX_DLQ_ENTRIES) {
+       // Remove oldest entries
+       await redis.zremrangebyrank(DLQ_INDEX_KEY, 0, count - MAX_DLQ_ENTRIES - 1);
+     }
+     
+      log.error({ queue: job.queueName, jobName: job.name, jobId: job.id }, 'Added failed job to DLQ');
+   } catch (dlqError) {
+     // If DLQ fails (Redis unavailable), log locally but don't fail the process
+     log.error({
+       jobId: job.id,
+       queueName: job.queueName,
+       jobType: job.name,
+       failedReason: error.message,
+       dlqError: dlqError instanceof Error ? dlqError.message : String(dlqError),
+     }, 'Failed to add job to DLQ - Redis unavailable, job information logged locally');
+   }
 }
 
 /**

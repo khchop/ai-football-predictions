@@ -33,44 +33,72 @@ export type JobType = typeof JOB_TYPES[keyof typeof JOB_TYPES];
 // Redis connection for BullMQ (separate from cache to avoid conflicts)
 let connection: IORedis | null = null;
 let connectionId = 0;
+let connectionHealthy = false;
 const log = loggers.queue;
 
 export function getQueueConnection(): IORedis {
-  if (connection) {
-    log.info({ connectionId }, 'Reusing existing Redis connection');
-    return connection;
-  }
-  
-  connectionId++;
-  log.info({ connectionId }, 'Creating new Redis connection');
-  
-  const redisUrl = process.env.REDIS_URL;
-  if (!redisUrl) {
-    throw new Error('REDIS_URL not configured - required for job queue');
-  }
-  
-  connection = new IORedis(redisUrl, {
-    maxRetriesPerRequest: null, // Required for BullMQ
-    enableReadyCheck: false,
-  });
-  
-  connection.on('error', (err) => {
-    log.error({ connectionId, error: err.message }, 'Redis error');
-  });
-  
-  connection.on('connect', () => {
-    log.info({ connectionId }, 'Redis connected');
-  });
-  
-  connection.on('ready', () => {
-    log.info({ connectionId }, 'Redis ready');
-  });
-  
-  connection.on('close', () => {
-    log.info({ connectionId }, 'Redis connection closed');
-  });
-  
-  return connection;
+   if (connection) {
+     log.debug({ connectionId }, 'Reusing existing Redis connection');
+     return connection;
+   }
+   
+   connectionId++;
+   log.info({ connectionId }, 'Creating new Redis connection for queue');
+   
+   const redisUrl = process.env.REDIS_URL;
+   if (!redisUrl) {
+     throw new Error('REDIS_URL not configured - required for job queue');
+   }
+   
+   connection = new IORedis(redisUrl, {
+     maxRetriesPerRequest: null, // Required for BullMQ
+     enableReadyCheck: false,
+     retryStrategy(times) {
+       if (times > 10) {
+         log.error({ connectionId, retries: times }, 'Queue Redis connection failed after max retries');
+         connectionHealthy = false;
+         return null; // Stop retrying
+       }
+       const delay = Math.min(times * 500, 5000); // 500ms → 5s exponential backoff
+       log.warn({ connectionId, retries: times, delayMs: delay }, 'Queue Redis retrying connection');
+       return delay;
+     },
+     reconnectOnError(err) {
+       const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND'];
+       return targetErrors.some(e => err.message.includes(e));
+     },
+   });
+   
+   connection.on('error', (err) => {
+     connectionHealthy = false;
+     log.error({ connectionId, error: err.message }, 'Queue Redis error');
+   });
+   
+   connection.on('connect', () => {
+     log.info({ connectionId }, 'Queue Redis connecting');
+   });
+   
+   connection.on('ready', () => {
+     connectionHealthy = true;
+     log.info({ connectionId }, 'Queue Redis ready');
+   });
+   
+   connection.on('reconnecting', () => {
+     log.info({ connectionId }, 'Queue Redis reconnecting');
+   });
+   
+   connection.on('close', () => {
+     log.info({ connectionId }, 'Queue Redis connection closed');
+   });
+   
+   return connection;
+}
+
+/**
+ * Check if queue connection is healthy
+ */
+export function isQueueConnectionHealthy(): boolean {
+  return connection !== null && connectionHealthy;
 }
 
 // Queue names for separate job type routing
