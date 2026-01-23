@@ -4,13 +4,14 @@ import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { MatchEvents } from '@/components/match-events';
 import { MatchContentSection } from '@/components/match/MatchContent';
-import { getMatchBySlug, getMatchWithAnalysis, getBetsForMatchWithDetails } from '@/lib/db/queries';
+import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails } from '@/lib/db/queries';
 import { getMatchEvents } from '@/lib/football/api-football';
-import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, Target, DollarSign } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, Target } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import type { LikelyScore } from '@/types';
 import type { Metadata } from 'next';
+import { PredictionTable } from '@/components/prediction-table';
 
 // Helper to find the lowest odds (favorite)
 function getLowestOdds(home: string, draw: string, away: string): 'home' | 'draw' | 'away' {
@@ -47,11 +48,11 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
   const kickoff = format(parseISO(match.kickoffTime), 'MMM d, yyyy HH:mm');
   
   return {
-    title: `${match.homeTeam} vs ${match.awayTeam} - AI Betting Predictions`,
-    description: `AI betting predictions for ${match.homeTeam} vs ${match.awayTeam} in ${competition.name}. Kickoff: ${kickoff}. See odds and AI model bets.`,
+    title: `${match.homeTeam} vs ${match.awayTeam} - AI Score Predictions`,
+    description: `AI score predictions for ${match.homeTeam} vs ${match.awayTeam} in ${competition.name}. Kickoff: ${kickoff}. See model predictions and Kicktipp scoring.`,
     openGraph: {
       title: `${match.homeTeam} vs ${match.awayTeam}`,
-      description: `AI betting predictions for ${competition.name} match`,
+      description: `AI score predictions for ${competition.name} match`,
       type: 'website',
     },
   };
@@ -81,8 +82,8 @@ export default async function PredictionPage({ params }: MatchPageProps) {
   const analysisData = await getMatchWithAnalysis(match.id);
   const analysis = analysisData?.analysis;
   
-  // Fetch bets for this match
-  const bets = await getBetsForMatchWithDetails(match.id);
+  // Fetch predictions for this match
+  const predictions = await getPredictionsForMatchWithDetails(match.id);
   const kickoff = parseISO(match.kickoffTime);
   const isFinished = match.status === 'finished';
   const isLive = match.status === 'live';
@@ -269,86 +270,31 @@ export default async function PredictionPage({ params }: MatchPageProps) {
        {/* Match Content Section */}
        <MatchContentSection matchId={match.id} />
 
-      {/* AI Model Bets */}
-      {bets && bets.length > 0 ? (
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="p-6">
-            <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-primary" />
-              AI Model Bets
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              {bets.length} bet{bets.length !== 1 ? 's' : ''} placed by AI models
-            </p>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border/50">
-                    <th className="text-left py-3 px-2 font-medium">Model</th>
-                    <th className="text-left py-3 px-2 font-medium">Bet Type</th>
-                    <th className="text-left py-3 px-2 font-medium">Selection</th>
-                    <th className="text-right py-3 px-2 font-medium">Odds</th>
-                    <th className="text-right py-3 px-2 font-medium">Stake</th>
-                    <th className="text-center py-3 px-2 font-medium">Status</th>
-                    <th className="text-right py-3 px-2 font-medium">Profit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bets.map((bet) => (
-                    <tr key={bet.betId} className="border-b border-border/30">
-                      <td className="py-3 px-2">
-                        <Link href={`/models/${bet.modelId}`} className="hover:text-primary transition-colors">
-                          {bet.modelDisplayName}
-                        </Link>
-                      </td>
-                      <td className="py-3 px-2">
-                        <span className="text-xs bg-muted px-2 py-1 rounded">
-                          {bet.betType}
-                        </span>
-                      </td>
-                      <td className="py-3 px-2 font-medium">{bet.selection}</td>
-                      <td className="text-right py-3 px-2 font-mono">{bet.odds?.toFixed(2)}</td>
-                      <td className="text-right py-3 px-2 font-mono">€{bet.stake?.toFixed(2)}</td>
-                      <td className="text-center py-3 px-2">
-                        <span className={cn(
-                          "px-2 py-1 rounded-full text-xs font-medium",
-                          bet.status === 'won' && "bg-green-500/20 text-green-400",
-                          bet.status === 'lost' && "bg-red-500/20 text-red-400",
-                          bet.status === 'pending' && "bg-yellow-500/20 text-yellow-400",
-                          bet.status === 'void' && "bg-muted text-muted-foreground"
-                        )}>
-                          {bet.status}
-                        </span>
-                      </td>
-                      <td className={cn(
-                        "text-right py-3 px-2 font-mono font-medium",
-                        (bet.profit ?? 0) > 0 && "text-green-400",
-                        (bet.profit ?? 0) < 0 && "text-red-400"
-                      )}>
-                        {bet.profit !== null ? (
-                          <>{bet.profit >= 0 ? '+' : ''}€{bet.profit.toFixed(2)}</>
-                        ) : '-'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      ) : !isFinished && !isLive && (
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="p-8 text-center">
-            <DollarSign className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-            <p className="text-muted-foreground mb-2 font-medium">
-              AI model bets will be placed approximately 1 hour before kickoff
-            </p>
-            <p className="text-sm text-muted-foreground/70">
-              Bets are generated when team lineups are confirmed
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {/* AI Model Predictions */}
+      <Card className="bg-card/50 border-border/50">
+        <CardContent className="p-6">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <Target className="h-5 w-5 text-primary" />
+            AI Model Predictions
+          </h2>
+          <PredictionTable
+            predictions={predictions.map(p => ({
+              id: p.predictionId,
+              modelId: p.modelId,
+              modelDisplayName: p.modelDisplayName,
+              provider: p.provider,
+              predictedHomeScore: p.predictedHome,
+              predictedAwayScore: p.predictedAway,
+              points: p.totalPoints,
+              isExact: p.exactScoreBonus !== null && p.exactScoreBonus > 0,
+              isCorrectResult: p.tendencyPoints !== null && p.tendencyPoints > 0,
+            }))}
+            homeTeam={match.homeTeam}
+            awayTeam={match.awayTeam}
+            isFinished={isFinished}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

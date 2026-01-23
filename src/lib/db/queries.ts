@@ -7,7 +7,9 @@ import { loggers } from '@/lib/logger/modules';
 import type { NewCompetition, NewModel, Match, MatchAnalysis, Model, Competition, Bet, ModelBalance, Prediction, BlogPost } from './schema';
 import type { ScoringBreakdown, EnhancedLeaderboardEntry } from '@/types';
 import { withCache, cacheKeys, CACHE_TTL, cacheDelete } from '@/lib/cache/redis';
-import { BETTING_CONSTANTS } from '@/lib/betting/constants';
+
+// Legacy betting system constant (unused, kept for model_balances table compatibility)
+const LEGACY_STARTING_BALANCE = 1000;
 
 /**
  * Log database query errors with full context
@@ -560,8 +562,8 @@ export async function getOrCreateModelBalance(modelId: string, season: string): 
       id: crypto.randomUUID(),
       modelId,
       season,
-      startingBalance: BETTING_CONSTANTS.STARTING_BALANCE,
-      currentBalance: BETTING_CONSTANTS.STARTING_BALANCE,
+      startingBalance: LEGACY_STARTING_BALANCE,
+      currentBalance: LEGACY_STARTING_BALANCE,
       totalWagered: 0,
       totalWon: 0,
       totalBets: 0,
@@ -867,13 +869,13 @@ export async function getModelBettingStats(modelId: string) {
     return null;
   }
 
-  const profit = (balance.currentBalance || 0) - (balance.startingBalance || BETTING_CONSTANTS.STARTING_BALANCE);
+  const profit = (balance.currentBalance || 0) - (balance.startingBalance || LEGACY_STARTING_BALANCE);
   const roi = balance.startingBalance ? (profit / balance.startingBalance) * 100 : 0;
   const winRate = balance.totalBets ? ((balance.winningBets || 0) / balance.totalBets) * 100 : 0;
 
   return {
     balance: balance.currentBalance || 0,
-    startingBalance: balance.startingBalance || BETTING_CONSTANTS.STARTING_BALANCE,
+    startingBalance: balance.startingBalance || LEGACY_STARTING_BALANCE,
     profit,
     roi,
     totalBets: balance.totalBets || 0,
@@ -885,83 +887,7 @@ export async function getModelBettingStats(modelId: string) {
   };
 }
 
-// Get bets for a match with model details
-export async function getBetsForMatchWithDetails(matchId: string) {
-  const db = getDb();
-  
-  return db
-    .select({
-      betId: bets.id,
-      modelId: bets.modelId,
-      modelDisplayName: models.displayName,
-      provider: models.provider,
-      betType: bets.betType,
-      selection: bets.selection,
-      odds: bets.odds,
-      stake: bets.stake,
-      status: bets.status,
-      payout: bets.payout,
-      profit: bets.profit,
-      createdAt: bets.createdAt,
-      settledAt: bets.settledAt,
-    })
-    .from(bets)
-    .innerJoin(models, eq(bets.modelId, models.id))
-    .where(eq(bets.matchId, matchId))
-    .orderBy(models.displayName, bets.betType);
-}
 
-// Get betting leaderboard for current season
-export async function getBettingLeaderboard() {
-  const db = getDb();
-  const currentSeason = await getCurrentSeason();
-
-  // Get all model balances with model details
-  const leaderboardData = await db
-    .select({
-      modelId: modelBalances.modelId,
-      displayName: models.displayName,
-      provider: models.provider,
-      active: models.active,
-      currentBalance: modelBalances.currentBalance,
-      startingBalance: modelBalances.startingBalance,
-      totalWagered: modelBalances.totalWagered,
-      totalWon: modelBalances.totalWon,
-      totalBets: modelBalances.totalBets,
-      winningBets: modelBalances.winningBets,
-    })
-    .from(modelBalances)
-    .innerJoin(models, eq(modelBalances.modelId, models.id))
-    .where(eq(modelBalances.season, currentSeason))
-    .orderBy(desc(modelBalances.currentBalance));
-
-  // Calculate derived stats
-  return leaderboardData.map(row => {
-    const profit = (row.currentBalance || 0) - (row.startingBalance || BETTING_CONSTANTS.STARTING_BALANCE);
-    const roi = row.startingBalance ? (profit / row.startingBalance) * 100 : 0;
-    const winRate = row.totalBets ? ((row.winningBets || 0) / row.totalBets) * 100 : 0;
-    const averageOdds = row.winningBets && row.totalWon && row.winningBets > 0
-      ? row.totalWon / row.winningBets
-      : 0;
-
-    return {
-      modelId: row.modelId,
-      displayName: row.displayName,
-      provider: row.provider,
-      active: row.active,
-      balance: row.currentBalance || 0,
-      profit: profit,
-      roi: roi,
-      totalBets: row.totalBets || 0,
-      winningBets: row.winningBets || 0,
-      losingBets: (row.totalBets || 0) - (row.winningBets || 0),
-      winRate: winRate,
-      totalWagered: row.totalWagered || 0,
-      totalWon: row.totalWon || 0,
-      averageOdds: averageOdds,
-    };
-  });
-}
 
 // Get health status for multiple models at once (batch query)
 export async function getModelHealthBatch(modelIds: string[]): Promise<Map<string, Model>> {
@@ -1229,16 +1155,6 @@ export async function getMatchByExternalId(externalId: string): Promise<Match | 
     .limit(1);
   
   return results[0] || null;
-}
-
-// Get all bets for a match (simple, no joins)
-export async function getBetsForMatch(matchId: string) {
-  const db = getDb();
-  
-  return db
-    .select()
-    .from(bets)
-    .where(eq(bets.matchId, matchId));
 }
 
 // ============= PREDICTIONS SYSTEM (Kicktipp Quota Scoring) =============

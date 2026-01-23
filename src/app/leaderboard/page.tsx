@@ -1,9 +1,8 @@
 import { Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BettingLeaderboardTable } from '@/components/betting-leaderboard-table';
-import { getBettingLeaderboard } from '@/lib/db/queries';
-import { BETTING_CONSTANTS } from '@/lib/betting/constants';
+import { LeaderboardTable } from '@/components/leaderboard-table';
+import { getLeaderboard } from '@/lib/db/queries';
 import { Trophy } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -13,24 +12,36 @@ interface PageProps {
 }
 
 async function LeaderboardContent({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
-  const leaderboard = await getBettingLeaderboard();
+  const leaderboard = await getLeaderboard();
   
   if (leaderboard.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border/50 bg-card/30 p-12 text-center">
         <Trophy className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-        <p className="text-muted-foreground">No betting data available yet.</p>
+        <p className="text-muted-foreground">No prediction data available yet.</p>
         <p className="text-sm text-muted-foreground/70 mt-1">
-          Models will start appearing once they place bets.
+          Models will start appearing once they make predictions.
         </p>
       </div>
     );
   }
   
+  // Map the data to match LeaderboardTable's expected format
+  const formattedLeaderboard = leaderboard.map(entry => ({
+    modelId: entry.model.id,
+    displayName: entry.model.displayName,
+    provider: entry.model.provider,
+    totalPredictions: entry.totalPredictions,
+    totalPoints: entry.totalPoints,
+    averagePoints: entry.avgPoints,
+    exactScores: entry.exactScores,
+    correctTendencies: entry.correctTendencies,
+  }));
+  
   return (
     <Card className="bg-card/50 border-border/50">
       <CardContent className="p-0">
-        <BettingLeaderboardTable entries={leaderboard} />
+        <LeaderboardTable entries={formattedLeaderboard} />
       </CardContent>
     </Card>
   );
@@ -73,33 +84,33 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      {/* Betting Info */}
+      {/* Scoring System Info */}
       <div className="rounded-xl bg-card/50 border border-border/50 p-5">
-        <h2 className="text-sm font-medium text-muted-foreground mb-4">Betting System</h2>
+        <h2 className="text-sm font-medium text-muted-foreground mb-4">Kicktipp Scoring System</h2>
         <div className="grid sm:grid-cols-4 gap-3">
-          <div className="rounded-lg bg-primary/10 border border-primary/20 p-3 text-center">
-            <p className="text-2xl font-bold text-primary">€{BETTING_CONSTANTS.STARTING_BALANCE.toFixed(0)}</p>
-            <p className="text-xs font-medium mt-1">Starting Balance</p>
-            <p className="text-xs text-muted-foreground">Per model</p>
+          <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/20 p-3 text-center">
+            <p className="text-2xl font-bold text-yellow-400">2</p>
+            <p className="text-xs font-medium mt-1">Correct Tendency</p>
+            <p className="text-xs text-muted-foreground">Right winner (H/D/A)</p>
           </div>
           <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-3 text-center">
-            <p className="text-2xl font-bold text-blue-400">{BETTING_CONSTANTS.BETS_PER_MATCH}</p>
-            <p className="text-xs font-medium mt-1">Bets Per Match</p>
-            <p className="text-xs text-muted-foreground">Result, O/U, BTTS</p>
+            <p className="text-2xl font-bold text-blue-400">+1</p>
+            <p className="text-xs font-medium mt-1">Goal Difference</p>
+            <p className="text-xs text-muted-foreground">Correct margin</p>
           </div>
           <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-3 text-center">
-            <p className="text-2xl font-bold text-green-400">€{BETTING_CONSTANTS.STAKE_PER_BET.toFixed(0)}</p>
-            <p className="text-xs font-medium mt-1">Stake Per Bet</p>
-            <p className="text-xs text-muted-foreground">Fixed amount</p>
+            <p className="text-2xl font-bold text-green-400">+3</p>
+            <p className="text-xs font-medium mt-1">Exact Score</p>
+            <p className="text-xs text-muted-foreground">Perfect prediction</p>
           </div>
           <div className="rounded-lg bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 p-3 text-center">
-            <p className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">ROI</p>
-            <p className="text-xs font-medium mt-1">Ranked By</p>
-            <p className="text-xs text-muted-foreground">Return on invest</p>
+            <p className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">6</p>
+            <p className="text-xs font-medium mt-1">Maximum Points</p>
+            <p className="text-xs text-muted-foreground">Per match</p>
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-3 text-center">
-          Models analyze matches and place 3 bets each: Match Result (1X2/Double Chance), Over/Under Goals, and Both Teams To Score (BTTS).
+          Models predict exact scorelines for each match. Points are awarded based on the Kicktipp scoring system: tendency (2), goal difference bonus (+1), and exact score bonus (+3).
         </p>
       </div>
 
