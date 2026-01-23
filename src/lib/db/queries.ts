@@ -1,5 +1,5 @@
 import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalances, seasons, predictions } from './index';
-import { eq, and, desc, gte, lte, sql, inArray, ne, or, lt } from 'drizzle-orm';
+import { eq, and, desc, gte, lte, sql, inArray, ne, or, lt, not, isNull, isNotNull } from 'drizzle-orm';
 import type { NewMatch, NewMatchAnalysis, NewBet, NewModelBalance, NewPrediction } from './schema';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -287,7 +287,7 @@ export async function deactivateOldModels(activeModelIds: string[]) {
   return db
     .update(models)
     .set({ active: false })
-    .where(notInArray(models.id, activeModelIds));
+    .where(not(inArray(models.id, activeModelIds)));
 }
 
 export async function getModelById(id: string) {
