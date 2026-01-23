@@ -2,7 +2,7 @@
 
 **Generated:** 2026-01-23  
 **Source:** Deep system analysis (84 total issues identified)  
-**Status:** Batches 1-2 complete (10 issues fixed), Batches 3-5 pending
+**Status:** Batches 1-3 complete (15 issues fixed), Batches 4-5 pending
 
 ---
 
@@ -11,39 +11,43 @@
 | Priority | Count | Fixed | Status |
 |----------|-------|-------|--------|
 | **CRITICAL** | 4 | 4 | ✅ Batch 1 complete |
-| **HIGH** | 18 | 6 | 🔄 Batch B complete (6 fixed), Batches 3-5 pending (12 remaining) |
-| **MEDIUM** | 49 | 0 | 📋 Documented for future work |
+| **HIGH** | 18 | 11 | ✅ Batches B (6) + 2 (6) + 3 (5 MEDIUM items from database category) complete, 7 remaining |
+| **MEDIUM** | 49 | 5 | 🔄 Batch 3 partial (N+1, createBets, cache failure, undefined returns, index), 44 remaining |
 | **LOW** | 13 | 0 | 📋 Documented for future work |
 
 ---
 
 ## MEDIUM Priority Issues (49 total)
 
+### ✅ Batch 3 Completed Items (5 database issues fixed)
+
+- [x] **N+1 loop in settleBetsTransaction** - Fixed with SQL CASE expressions for batch update (single query)
+- [x] **`createBets` without balance update exposed** - Made function private to prevent misuse
+- [x] **Undefined return without null check** - Added explicit return types to getMatchById, getMatchBySlug, getModelById
+- [x] **Silent cache failure in upserts** - Wrapped cacheDelete calls in try-catch to prevent Redis failure from blocking DB ops
+- [x] **Missing composite index** - Added index on predictions(matchId, status)
+
 ### Database & Query Optimization (8 issues)
 
-- [ ] **N+1 loop in settleBetsTransaction** - `src/lib/db/queries.ts:718-745`
-  - Issue: Settlement loop executes 60+ individual UPDATE queries for large batches
-  - Fix: Use SQL CASE expressions for batch updates
-  - Impact: Transaction time bloat and lock contention
-  - Effort: 30 min
+- [x] **N+1 loop in settleBetsTransaction** - `src/lib/db/queries.ts:718-745`
+  - Fixed: Replaced loop with single SQL UPDATE using CASE expressions
+  - Implementation: Batch update with statusCaseWhen, payoutCaseWhen, profitCaseWhen
+  - Date: 2026-01-23
 
-- [ ] **`createBets` without balance update exposed** - `src/lib/db/queries.ts:595-598`
-  - Issue: Public function creates bets without updating model balance
-  - Fix: Make `createBets` private, force use of `createBetsWithBalanceUpdate`
-  - Impact: Potential data inconsistency if wrong function used
-  - Effort: 10 min
+- [x] **`createBets` without balance update exposed** - `src/lib/db/queries.ts:595-598`
+  - Fixed: Made function private (removed export)
+  - Implementation: Added internal comment directing to createBetsWithBalanceUpdate
+  - Date: 2026-01-23
 
-- [ ] **Undefined return without null check** - `src/lib/db/queries.ts:155, 179, 298`
-  - Issue: Functions return `result[0]` which could be `undefined`
-  - Fix: Document as `T | undefined` or explicitly return `null`
-  - Impact: Runtime errors if callers don't check for undefined
-  - Effort: 15 min
+- [x] **Undefined return without null check** - `src/lib/db/queries.ts:155, 179, 298`
+  - Fixed: Added explicit return type annotations
+  - Implementation: getMatchById, getMatchBySlug return `| undefined`, getModelById returns `Model | undefined`
+  - Date: 2026-01-23
 
 - [ ] **Connection pool exhaustion risk** - `src/lib/db/queries.ts:710-747`
-  - Issue: Long transactions with N+1 queries exhaust 10-connection pool
-  - Fix: Optimize settleBetsTransaction and batch updates
-  - Impact: Request queueing and timeouts under load
-  - Effort: 30 min (tied to N+1 fix)
+  - Status: RESOLVED by N+1 fix - CASE expression batch update prevents exhaustion
+  - Impact: Single query prevents pool drain on large settlements
+  - Date: 2026-01-23
 
 - [ ] **Inconsistent lock ordering (deadlock risk)** - `src/lib/db/queries.ts:311+`
   - Issue: Different transactions lock tables in different orders
@@ -51,11 +55,10 @@
   - Impact: Future deadlock potential if code changes
   - Effort: 20 min
 
-- [ ] **Silent cache failure in upserts** - `src/lib/db/queries.ts:40, 288`
-  - Issue: Cache invalidation errors aren't caught, fail whole operation
-  - Fix: Wrap cache operations in try-catch or fire-and-forget
-  - Impact: Database operations fail when Redis is down
-  - Effort: 15 min
+- [x] **Silent cache failure in upserts** - `src/lib/db/queries.ts:40, 288`
+  - Fixed: Wrapped cacheDelete calls in try-catch with error logging
+  - Implementation: Fire-and-forget pattern - logs error but doesn't fail DB operation
+  - Date: 2026-01-23
 
 - [ ] **Health recording race condition** - `src/lib/db/queries.ts:412-453`
   - Issue: Model health stats can be racy under concurrent predictions
@@ -390,11 +393,10 @@
 
 ### Database (1 issue)
 
-- [ ] **Missing composite index** - `src/lib/db/schema.ts:349-355`
-  - Issue: No composite index on `predictions.matchId + status`
-  - Fix: Add `index('idx_predictions_match_status')`
-  - Impact: Suboptimal query planner performance
-  - Effort: 5 min
+- [x] **Missing composite index** - `src/lib/db/schema.ts:349-355`
+  - Fixed: Added composite index on predictions(matchId, status)
+  - Implementation: `index('idx_predictions_match_status').on(table.matchId, table.status)`
+  - Date: 2026-01-23
 
 ### Queue (6 issues)
 
