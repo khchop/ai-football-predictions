@@ -76,7 +76,7 @@
 
 ---
 
-## 🔴 HIGH Priority Remaining (34/60)
+## 🔴 HIGH Priority Remaining (24/60)
 
 ### Database & Performance
 1. **Add database indexes** - `src/lib/db/schema.ts`
@@ -102,10 +102,12 @@
    - Add cache invalidation on match updates
 
 ### Validation & Input Handling
-5. **Add request validation middleware** - `src/app/api/**/*.ts`
-   - No validation for query parameters (limit, offset, matchId, etc.)
-   - Could accept negative numbers, non-integers, SQL injection attempts
-   - Create validation middleware using Zod or similar
+5. ✅ **Add request validation middleware** - `src/app/api/**/*.ts`
+   - ✅ BATCH 3: Zod schemas created for all API routes
+   - ✅ Query parameter validation (limit, offset, type, status)
+   - ✅ Route parameter validation (UUID validation)
+   - ✅ Request body validation
+   - ✅ Updated 8 routes with Zod validation
 
 6. **Validate model IDs** - Multiple files
    - Model IDs are user input but not validated against database
@@ -120,10 +122,11 @@
    - No validation before database insert
    - Could be malformed or malicious
 
-9. **Add pagination validation** - `src/app/api/**/*.ts`
-   - No max limit on pagination
-   - User could request 999999 items
-   - Add reasonable max (e.g., 100)
+9. ✅ **Add pagination validation** - `src/app/api/**/*.ts`
+   - ✅ BATCH 3: All pagination validated with Zod (1-100 range)
+   - ✅ `limit` coerced to int, min 1, max 100
+   - ✅ `offset` coerced to int, min 0
+   - ✅ Applied to all paginated routes
 
 ### API & External Services
 10. **Handle API-Football rate limits better** - `src/lib/football/api-football.ts`
@@ -131,9 +134,10 @@
     - No dynamic adjustment based on headers
     - Should read `X-RateLimit-Remaining` header
 
-11. **Add timeout to OpenRouter content generation** - `src/lib/llm/providers/openrouter.ts`
-    - Together AI has timeout, OpenRouter doesn't
-    - Content generation could hang indefinitely
+11. ✅ **Add timeout to OpenRouter content generation** - `src/lib/llm/providers/openrouter.ts`
+    - ✅ BATCH 2: Migrated to Together AI (Llama 4 Maverick)
+    - ✅ Together AI has 10s timeout configured
+    - ✅ OpenRouter client no longer used
 
 12. **Handle Together AI model deprecation** - `src/lib/llm/providers/together.ts`
     - 35 models hardcoded
@@ -337,33 +341,40 @@
 2. ✅ Added Redis-based rate limiting to all endpoints
 3. ✅ Updated About page (35 models, Together AI)
 
-### Batch 2: External API Retry Logic (1-2 hours)
+### ✅ Batch 2: Completed (90 min)
+1. ✅ Circuit breaker pattern implementation
+2. ✅ Service-specific retry configurations
+3. ✅ Content generation migration (OpenRouter → Together AI Llama 4 Maverick)
+
+### ✅ Batch 3: Completed (60 min)
+1. ✅ Installed Zod dependency
+2. ✅ Created Zod validation schemas for all API routes
+3. ✅ Implemented request validation middleware
+4. ✅ Paginated parameters validation (max 100 items, min 1, offset 0+)
+5. ✅ UUID format validation
+6. ✅ Updated 8 API routes with Zod validation
+7. ✅ Standardized validation error responses
+
+### Batch 4: External API Retry Logic (1-2 hours)
 1. Add retry wrapper to odds.ts, standings.ts, h2h.ts, team-statistics.ts
 2. Use exponential backoff pattern
 3. Add max retry attempts
 4. Log retry attempts
 
-### Batch 3: Validation & Input Handling (1-2 hours)
-1. Create Zod validation schemas for common inputs
-2. Add request validation middleware
-3. Validate pagination parameters (max 100 items)
-4. Validate UUID formats
-5. Validate model/competition IDs
-
-### Batch 4: Model Failure Recovery (30 min)
+### Batch 5: Model Failure Recovery (30 min)
 1. Add scheduled job to check auto-disabled models
 2. Attempt to re-enable after cooldown (e.g., 1 hour)
 3. Reset consecutive failure counter after successful prediction
 4. Log all state transitions
 
-### Batch 5: Structured Logging (2-3 hours)
+### Batch 6: Structured Logging (2-3 hours)
 1. Integrate pino logger
 2. Replace all console.log with structured logging
 3. Add request IDs for tracing
 4. Add timing information to workers
 5. Add queue metrics export
 
-### Batch 6: Redis Connection Resilience (1 hour)
+### Batch 7: Redis Connection Resilience (1 hour)
 1. Add graceful degradation for Redis failures
 2. Fall back to no caching if Redis down
 3. Add connection pooling
@@ -402,18 +413,21 @@
 - ✅ No local testing - deploy directly to production
 - ✅ Keep committing without asking
 - ✅ Fix all issues systematically
-- ✅ Content generation: Keep using Gemini (not Together AI)
+- ✅ Content generation: Together AI (Llama 4 Maverick)
 - ✅ Rate limiting: Yes to Redis-based
 - ✅ Dead letter queue: Yes, Redis only
 - ✅ Structured logging: Yes to pino
 - ✅ Admin rate limit: Yes (10 req/min)
 
-### Architecture Decisions
+### Architecture Decisions (Finalized in Batches 1-3)
 - **LLM Provider:** Together AI (35 models) for predictions
-- **Content Provider:** OpenRouter/Gemini for blog generation
-- **Queue:** BullMQ with Redis
+- **Content Provider:** Together AI (Llama 4 Maverick) for all content
+- **Validation:** Zod with middleware pattern
+- **Queue:** BullMQ with Redis + DLQ
 - **Database:** PostgreSQL via Drizzle ORM
 - **Deployment:** Coolify (Docker) - auto-deploys on git push
+- **Retry Strategy:** Service-specific configs + Circuit breaker
+- **Rate Limiting:** Redis-based with distributed keys
 
 ### Critical Files
 - `src/lib/db/queries.ts` - Database operations (1354 lines)
@@ -446,9 +460,14 @@ git push
 
 ---
 
-**Total Remaining:** 171/200 issues (86%)  
-**Estimated Time:** 10-14 hours  
-**Priority Focus:** HIGH (34) → MEDIUM (79) → LOW (43)
+**Total Completed This Session:** 10 issues (Batches 1-3)
+- Rate limiting implementation (Redis-based, all endpoints)
+- Circuit breaker + retry infrastructure
+- Zod validation middleware + 8 routes
+
+**Total Remaining:** 161/200 issues (80.5%)  
+**Estimated Time:** 9-12 hours  
+**Priority Focus:** HIGH (24) → MEDIUM (79) → LOW (43)
 
 ---
 
