@@ -2,7 +2,7 @@
 
 **Generated:** 2026-01-23  
 **Source:** Deep system analysis (84 total issues identified)  
-**Status:** Batches 1-3 complete (15 issues fixed), Batches 4-5 pending
+**Status:** Batches 1-4 complete (35 issues fixed), Batch 5 in progress
 
 ---
 
@@ -11,8 +11,8 @@
 | Priority | Count | Fixed | Status |
 |----------|-------|-------|--------|
 | **CRITICAL** | 4 | 4 | ✅ Batch 1 complete |
-| **HIGH** | 18 | 11 | ✅ Batches B (6) + 2 (6) + 3 (5 MEDIUM items from database category) complete, 7 remaining |
-| **MEDIUM** | 49 | 5 | 🔄 Batch 3 partial (N+1, createBets, cache failure, undefined returns, index), 44 remaining |
+| **HIGH** | 18 | 18 | ✅ Batches B (6) + 2 (6) + 3-4 (6) all complete |
+| **MEDIUM** | 49 | 12 | 🔄 Batch 3 (5) + Batch 4 (7) complete, 37 remaining |
 | **LOW** | 13 | 0 | 📋 Documented for future work |
 
 ---
@@ -162,13 +162,19 @@
 
 ---
 
-### External API Integration (15 issues)
+### ✅ Batch 4 Completed Items (7 external API issues fixed)
 
-- [ ] **Hardcoded timeouts not configurable** - `src/lib/llm/providers/base.ts:147-148`
-  - Issue: 15s single / 20s batch timeouts hardcoded
-  - Fix: Make configurable via environment or constructor
-  - Impact: Batch predictions may timeout with many models
-  - Effort: 20 min
+- [x] **Hardcoded timeouts not configurable** - Made configurable via LLM_REQUEST_TIMEOUT_MS and LLM_BATCH_TIMEOUT_MS environment variables
+- [x] **Duplicated fetchFromAPI implementations** - Consolidated h2h.ts, team-statistics.ts, standings.ts to use central fetchFromAPIFootball
+- [x] **Rate limit detection via string matching** - Added HTTP 429 status check first, then fallback to string matching
+- [x] **Hardcoded 60s retry-after** - Now parses Retry-After header from response, fallback to 60s
+- [x] **Score range too permissive (0-20)** - Tightened to 0-10 with integer validation
+- [x] **No odds value validation** - Added validateOdds function (1.01-100.00 range) for all betting odds
+- [x] **Single success closes circuit breaker** - Require 3 consecutive successes to prevent oscillation
+- [x] **Lineups assumes exactly 2 elements** - Fixed array destructuring, safe access with validation
+- [x] **Incomplete array element validation** - Added element-level null checks in formatStartingXI
+
+### External API Integration (15 issues - 9 completed in Batch 4, 6 remaining)
 
 - [ ] **No retry on JSON parse failure** - `src/lib/llm/providers/base.ts:212-217`
   - Issue: JSON parse errors thrown immediately without retry
@@ -176,48 +182,17 @@
   - Impact: Transient network glitches cause permanent failure
   - Effort: 20 min
 
-- [ ] **Duplicated fetchFromAPI implementations** - Multiple files
-  - Files: `api-client.ts`, `api-football.ts`, `h2h.ts`, `team-statistics.ts`, `standings.ts`, etc.
-  - Issue: Retry logic duplicated across 7+ modules
-  - Fix: Consolidate into central `api-client.ts` utility
-  - Impact: Maintenance burden, inconsistent behavior
-  - Effort: 45 min
-
 - [ ] **URL logging pattern risk** - `src/lib/football/api-football.ts:32`
   - Issue: Logging full URLs could leak API keys if structure changes
   - Fix: Only log endpoints, not full URLs with params
   - Impact: Future API key exposure if URL structure changes
   - Effort: 10 min
 
-- [ ] **Rate limit detection via string matching** - `src/lib/football/api-client.ts:75-83`
-  - Issue: Uses `.includes()` to detect rate limit errors
-  - Fix: Prefer HTTP 429 status code detection
-  - Impact: Fragile - false positive/negatives if messages change
-  - Effort: 15 min
-
-- [ ] **Hardcoded 60s retry-after** - `src/lib/football/api-client.ts:78-82`
-  - Issue: Hardcoded retry-after instead of reading from headers
-  - Fix: Check `Retry-After` header, fallback to 60s
-  - Impact: May over/under-wait for rate limit recovery
-  - Effort: 15 min
-
 - [ ] **Rate limit headers not used proactively** - `src/lib/football/api-client.ts:54-58`
   - Issue: Remaining requests logged but not used for throttling
   - Fix: Slow requests proactively before hitting limit
   - Impact: System hits rate limit unnecessarily
   - Effort: 30 min
-
-- [ ] **Score range too permissive (0-20)** - `src/lib/llm/prompt.ts:103-111`
-  - Issue: LLMs can hallucinate scores like 15-0
-  - Fix: Tighter validation (e.g., 0-7 for safe range)
-  - Impact: Unrealistic predictions harm user trust
-  - Effort: 10 min
-
-- [ ] **No odds value validation** - `src/lib/football/match-analysis.ts:193-266`
-  - Issue: Odds values extracted without validation
-  - Fix: Verify decimal format and reasonable ranges
-  - Impact: Malformed odds displayed to users
-  - Effort: 20 min
 
 - [ ] **Standings error vs empty indistinguishable** - `src/lib/football/standings.ts:181-184`
   - Issue: Error returns 0 updated, same as "no standings available"
@@ -236,24 +211,6 @@
   - Fix: Process and cache fixtures in batches
   - Impact: Memory spike on busy days with 100+ fixtures
   - Effort: 25 min
-
-- [ ] **Single success closes circuit breaker** - `src/lib/utils/circuit-breaker.ts:134-148`
-  - Issue: Only 1 success in half-open closes circuit
-  - Fix: Require 2-3 consecutive successes
-  - Impact: Circuit oscillates with intermittent failures
-  - Effort: 10 min
-
-- [ ] **Lineups assumes exactly 2 elements** - `src/lib/football/lineups.ts:94`
-  - Issue: Destructuring `[lineup1, lineup2]` without length check
-  - Fix: Validate array length before destructuring
-  - Impact: Crash if API returns 1 or 3+ lineups
-  - Effort: 10 min
-
-- [ ] **Incomplete array element validation** - `src/lib/football/lineups.ts:68-71`
-  - Issue: `formatStartingXI` doesn't check if array elements are null
-  - Fix: Add element-level null checks
-  - Impact: Runtime error on malformed lineup data
-  - Effort: 10 min
 
 ---
 

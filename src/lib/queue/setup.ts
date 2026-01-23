@@ -8,59 +8,84 @@
 import { fixturesQueue, backfillQueue, contentQueue, modelRecoveryQueue, JOB_TYPES } from './index';
 import { loggers } from '@/lib/logger/modules';
 import { startPeriodicMetricsLogging } from '@/lib/logger/metrics';
+import { Queue } from 'bullmq';
 
 const log = loggers.queue;
+
+/**
+ * Register a repeatable job, automatically removing old jobs with the same jobId
+ * Prevents old cron patterns from persisting when pattern changes
+ */
+async function registerRepeatableJob(
+  queue: Queue,
+  jobName: string,
+  data: any,
+  options: {
+    repeat: { pattern: string; tz: string };
+    jobId: string;
+  }
+): Promise<void> {
+  try {
+    // Get existing repeatable jobs for this queue
+    const existingJobs = await queue.getRepeatableJobs();
+    
+    // Find and remove any jobs with the same jobId (old pattern)
+    for (const job of existingJobs) {
+      if (job.id === options.jobId) {
+        await queue.removeRepeatableByKey(job.key);
+        log.info(
+          { queue: queue.name, jobId: options.jobId, oldPattern: job.pattern },
+          'Removed old repeatable job pattern'
+        );
+      }
+    }
+    
+    // Add the new repeatable job
+    await queue.add(jobName, data, options);
+    log.info(
+      { queue: queue.name, jobId: options.jobId, pattern: options.repeat.pattern },
+      'Registered repeatable job'
+    );
+  } catch (error: any) {
+    if (error.message?.includes('already exists')) {
+      log.info({ jobId: options.jobId }, 'Job already exists');
+    } else {
+      log.error({ jobId: options.jobId, error: error.message }, 'Failed to register repeatable job');
+      throw error;
+    }
+  }
+}
 
 export async function setupRepeatableJobs(): Promise<void> {
   log.info('Registering repeatable jobs');
   
-  try {
-    // Fetch fixtures every 6 hours (00:00, 06:00, 12:00, 18:00 Berlin time)
-    await fixturesQueue.add(
-      JOB_TYPES.FETCH_FIXTURES,
-      { manual: false },
-      {
-        repeat: {
-          pattern: '0 0,6,12,18 * * *', // CRON: Every 6 hours at :00
-          tz: 'Europe/Berlin',
-        },
-        jobId: 'fetch-fixtures-repeatable',
-      }
-    );
-    
-    log.info({ schedule: 'every 6h', timezone: 'Europe/Berlin' }, 'Registered: fetch-fixtures');
-  } catch (error: any) {
-    // If job already exists, that's fine (happens on hot reload)
-    if (error.message?.includes('already exists')) {
-      log.info('fetch-fixtures already registered');
-    } else {
-      log.error({ error: error.message }, 'Failed to register fetch-fixtures');
-      throw error;
+  // Fetch fixtures every 6 hours (00:00, 06:00, 12:00, 18:00 Berlin time)
+  await registerRepeatableJob(
+    fixturesQueue,
+    JOB_TYPES.FETCH_FIXTURES,
+    { manual: false },
+    {
+      repeat: {
+        pattern: '0 0,6,12,18 * * *', // CRON: Every 6 hours at :00
+        tz: 'Europe/Berlin',
+      },
+      jobId: 'fetch-fixtures-repeatable',
     }
-  }
+  );
   
-  try {
-    // Backfill missing data every hour
-    await backfillQueue.add(
-      JOB_TYPES.BACKFILL_MISSING,
-      { manual: false, hoursAhead: 12 },
-      {
-        repeat: {
-          pattern: '5 * * * *', // Every hour at :05 (offset from fixtures at :00)
-          tz: 'Europe/Berlin',
-        },
-        jobId: 'backfill-missing-repeatable',
-      }
-    );
-    log.info({ schedule: 'every hour', timezone: 'Europe/Berlin' }, 'Registered: backfill-missing');
-  } catch (error: any) {
-    if (error.message?.includes('already exists')) {
-      log.info('backfill-missing already registered');
-    } else {
-      log.error({ error: error.message }, 'Failed to register backfill-missing');
-      throw error;
+  // Backfill missing data every hour
+  await registerRepeatableJob(
+    backfillQueue,
+    JOB_TYPES.BACKFILL_MISSING,
+    { manual: false, hoursAhead: 12 },
+    {
+      repeat: {
+        pattern: '5 * * * *', // Every hour at :05 (offset from fixtures at :00)
+        tz: 'Europe/Berlin',
+      },
+      jobId: 'backfill-missing-repeatable',
     }
-  }
+  );
   
   // One-time immediate backfill on startup
   try {
@@ -78,50 +103,32 @@ export async function setupRepeatableJobs(): Promise<void> {
   }
   
   // Scan for matches needing previews every hour
-  try {
-    await contentQueue.add(
-      'scan-matches',
-      { type: 'scan_matches', data: {} },
-      {
-        repeat: {
-          pattern: '10 * * * *', // Every hour at :10 (after backfill at :05)
-          tz: 'Europe/Berlin',
-        },
-        jobId: 'scan-matches-repeatable',
-      }
-    );
-    log.info({ schedule: 'every hour', timezone: 'Europe/Berlin' }, 'Registered: scan-matches');
-  } catch (error: any) {
-    if (error.message?.includes('already exists')) {
-      log.info('scan-matches already registered');
-    } else {
-      log.error({ error: error.message }, 'Failed to register scan-matches');
-      throw error;
+  await registerRepeatableJob(
+    contentQueue,
+    'scan-matches',
+    { type: 'scan_matches', data: {} },
+    {
+      repeat: {
+        pattern: '10 * * * *', // Every hour at :10 (after backfill at :05)
+        tz: 'Europe/Berlin',
+      },
+      jobId: 'scan-matches-repeatable',
     }
-  }
+  );
   
   // Check for disabled models to re-enable every 30 minutes
-  try {
-    await modelRecoveryQueue.add(
-      JOB_TYPES.CHECK_MODEL_HEALTH,
-      {},
-      {
-        repeat: {
-          pattern: '15,45 * * * *', // Every 30 minutes at :15 and :45
-          tz: 'Europe/Berlin',
-        },
-        jobId: 'model-recovery-repeatable',
-      }
-    );
-    log.info({ schedule: 'every 30 min', timezone: 'Europe/Berlin' }, 'Registered: model-recovery');
-  } catch (error: any) {
-    if (error.message?.includes('already exists')) {
-      log.info('model-recovery already registered');
-    } else {
-      log.error({ error: error.message }, 'Failed to register model-recovery');
-      throw error;
+  await registerRepeatableJob(
+    modelRecoveryQueue,
+    JOB_TYPES.CHECK_MODEL_HEALTH,
+    {},
+    {
+      repeat: {
+        pattern: '15,45 * * * *', // Every 30 minutes at :15 and :45
+        tz: 'Europe/Berlin',
+      },
+      jobId: 'model-recovery-repeatable',
     }
-  }
+  );
   
   log.info('All repeatable jobs registered');
   startPeriodicMetricsLogging();

@@ -14,6 +14,7 @@ const log = loggers.dlq;
 const DLQ_KEY_PREFIX = 'dlq:';
 const DLQ_INDEX_KEY = 'dlq:index';
 const MAX_DLQ_ENTRIES = 1000; // Maximum failed jobs to keep
+const DLQ_ALERT_THRESHOLD = 50; // Alert when DLQ exceeds this many entries
 
 export interface DLQEntry {
   jobId: string;
@@ -56,13 +57,21 @@ export async function addToDeadLetterQueue(
      // Add to index (sorted by timestamp)
      await redis.zadd(DLQ_INDEX_KEY, Date.now(), entryKey);
      
-     // Trim index to max size
-     const count = await redis.zcard(DLQ_INDEX_KEY);
-     if (count > MAX_DLQ_ENTRIES) {
-       // Remove oldest entries
-       await redis.zremrangebyrank(DLQ_INDEX_KEY, 0, count - MAX_DLQ_ENTRIES - 1);
-     }
-     
+      // Trim index to max size
+      const count = await redis.zcard(DLQ_INDEX_KEY);
+      if (count > MAX_DLQ_ENTRIES) {
+        // Remove oldest entries
+        await redis.zremrangebyrank(DLQ_INDEX_KEY, 0, count - MAX_DLQ_ENTRIES - 1);
+      }
+      
+      // Alert if DLQ threshold exceeded
+      if (count >= DLQ_ALERT_THRESHOLD) {
+        log.warn(
+          { dlqSize: count, threshold: DLQ_ALERT_THRESHOLD, maxEntries: MAX_DLQ_ENTRIES },
+          'DLQ threshold exceeded - investigate failed jobs'
+        );
+      }
+      
       log.error({ queue: job.queueName, jobName: job.name, jobId: job.id }, 'Added failed job to DLQ');
    } catch (dlqError) {
      // If DLQ fails (Redis unavailable), log locally but don't fail the process

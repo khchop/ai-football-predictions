@@ -19,6 +19,7 @@ import {
   JOB_TYPES 
 } from './index';
 import { loggers } from '@/lib/logger/modules';
+import { addToDeadLetterQueue } from './dead-letter';
 import type { Match, Competition } from '@/lib/db/schema';
 
 const log = loggers.scheduler;
@@ -171,22 +172,52 @@ export async function cancelMatchJobs(matchId: string): Promise<number> {
   ];
   
   let cancelled = 0;
+  let movedToDLQ = 0;
   
   for (const { queue, jobId } of jobsToCancel) {
     try {
       const job = await queue.getJob(jobId);
-      if (job && (await job.isDelayed() || await job.isWaiting())) {
+      if (!job) continue;
+      
+      // Check job state
+      const isActive = await job.isActive();
+      const isDelayed = await job.isDelayed();
+      const isWaiting = await job.isWaiting();
+      
+      if (isActive) {
+        // Active job: move to DLQ with cancellation reason
+        const error = new Error('Match cancelled/postponed - job terminated');
+        await addToDeadLetterQueue(job, error);
+        await job.remove();
+        movedToDLQ++;
+        
+        log.info(
+          { matchId, jobId, jobName: job.name, queue: queue.name },
+          'Moved active job to DLQ due to match cancellation'
+        );
+      } else if (isDelayed || isWaiting) {
+        // Waiting/delayed job: just remove
         await job.remove();
         cancelled++;
+        
+        log.debug(
+          { matchId, jobId, jobName: job.name, state: isDelayed ? 'delayed' : 'waiting' },
+          'Removed queued job for cancelled match'
+        );
       }
     } catch (error) {
-      // Job doesn't exist or already processed - that's fine
+      // Job doesn't exist or error processing - log but continue
+      log.debug({ matchId, jobId, error: error instanceof Error ? error.message : String(error) }, 'Error handling job cancellation');
     }
   }
   
-  if (cancelled > 0) {
-    log.info({ jobCount: cancelled, matchId }, 'Cancelled jobs for match');
+  const total = cancelled + movedToDLQ;
+  if (total > 0) {
+    log.info(
+      { matchId, cancelled, movedToDLQ, total },
+      'Cancelled/cleaned up jobs for match'
+    );
   }
   
-  return cancelled;
+  return total;
 }

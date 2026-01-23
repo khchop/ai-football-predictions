@@ -87,11 +87,14 @@ export function getQueueConnection(): IORedis {
      log.info({ connectionId }, 'Queue Redis reconnecting');
    });
    
-   connection.on('close', () => {
-     log.info({ connectionId }, 'Queue Redis connection closed');
-   });
-   
-   return connection;
+    connection.on('close', () => {
+      log.info({ connectionId }, 'Queue Redis connection closed');
+    });
+    
+    // Register graceful shutdown handler on first connection
+    registerShutdownHandler();
+    
+    return connection;
 }
 
 /**
@@ -99,6 +102,70 @@ export function getQueueConnection(): IORedis {
  */
 export function isQueueConnectionHealthy(): boolean {
   return connection !== null && connectionHealthy;
+}
+
+/**
+ * Ensure queue connection is healthy, throw if not
+ * Use before critical queue operations to fail-fast on unhealthy Redis
+ */
+export function ensureQueueHealthy(): void {
+  if (!isQueueConnectionHealthy()) {
+    const message = connection === null 
+      ? 'Queue connection not initialized'
+      : 'Queue connection unhealthy';
+    log.error({ connectionId }, `Critical operation rejected: ${message}`);
+    throw new Error(`Queue operation failed: ${message}`);
+  }
+}
+
+// Track if shutdown handler registered to avoid duplicate registrations
+let shutdownHandlerRegistered = false;
+
+/**
+ * Register graceful shutdown handler on first connection
+ * Closes Redis connection on SIGTERM/SIGINT
+ */
+function registerShutdownHandler(): void {
+  if (shutdownHandlerRegistered) return;
+  shutdownHandlerRegistered = true;
+  
+  const signals = ['SIGTERM', 'SIGINT'];
+  signals.forEach(signal => {
+    process.on(signal, async () => {
+      log.info({ signal }, 'Graceful shutdown initiated');
+      await closeQueueConnection();
+      process.exit(0);
+    });
+  });
+}
+
+/**
+ * Close queue Redis connection gracefully
+ */
+export async function closeQueueConnection(): Promise<void> {
+  if (!connection) {
+    log.debug('Queue connection not initialized, nothing to close');
+    return;
+  }
+  
+  try {
+    log.info({ connectionId }, 'Closing queue Redis connection');
+    connectionHealthy = false;
+    await connection.quit();
+    connection = null;
+    log.info({ connectionId }, 'Queue Redis connection closed successfully');
+  } catch (err) {
+    log.error({ connectionId, error: err instanceof Error ? err.message : String(err) }, 'Error closing queue connection');
+    // Force disconnect even if quit fails
+    try {
+      if (connection) {
+        connection.disconnect();
+      }
+    } catch (e) {
+      log.debug('Disconnect failed during error recovery');
+    }
+    connection = null;
+  }
 }
 
 // Queue names for separate job type routing

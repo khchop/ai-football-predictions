@@ -28,6 +28,8 @@ export function createBackfillWorker() {
       
       log.info(`Checking for matches with missing data (next ${hoursAhead}h)...`);
       
+      const MAX_ERRORS = 100;
+      
       const results = {
         analysisTriggered: 0,
         oddsTriggered: 0,
@@ -35,6 +37,15 @@ export function createBackfillWorker() {
         predictionsTriggered: 0,
         scoringsTriggered: 0,
         errors: [] as string[],
+      };
+      
+      // Helper to add errors with cap
+      const addError = (message: string) => {
+        if (results.errors.length < MAX_ERRORS) {
+          addError(message);
+        } else if (results.errors.length === MAX_ERRORS) {
+          addError(`... and more errors (truncated at ${MAX_ERRORS})`);
+        }
       };
       
       try {
@@ -89,7 +100,7 @@ export function createBackfillWorker() {
              }
           } catch (error: any) {
             if (!error.message?.includes('already exists')) {
-              results.errors.push(`Analysis ${match.id}: ${error.message}`);
+              addError(`Analysis ${match.id}: ${error.message}`);
             }
           }
         }
@@ -145,7 +156,7 @@ export function createBackfillWorker() {
              }
           } catch (error: any) {
             if (!error.message?.includes('already exists')) {
-              results.errors.push(`Odds ${match.id}: ${error.message}`);
+              addError(`Odds ${match.id}: ${error.message}`);
             }
           }
         }
@@ -200,7 +211,7 @@ export function createBackfillWorker() {
              }
           } catch (error: any) {
             if (!error.message?.includes('already exists')) {
-              results.errors.push(`Lineups ${match.id}: ${error.message}`);
+              addError(`Lineups ${match.id}: ${error.message}`);
             }
           }
         }
@@ -256,7 +267,7 @@ export function createBackfillWorker() {
              }
           } catch (error: any) {
             if (!error.message?.includes('already exists')) {
-              results.errors.push(`Predict ${match.id}: ${error.message}`);
+              addError(`Predict ${match.id}: ${error.message}`);
             }
           }
         }
@@ -310,7 +321,7 @@ export function createBackfillWorker() {
              }
           } catch (error: any) {
             if (!error.message?.includes('already exists')) {
-              results.errors.push(`Settlement ${match.id}: ${error.message}`);
+              addError(`Settlement ${match.id}: ${error.message}`);
             }
           }
         }
