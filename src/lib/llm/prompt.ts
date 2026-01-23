@@ -99,13 +99,18 @@ export interface ParsedPrediction {
   error?: string;
 }
 
-// Validate score is in reasonable range (0-20)
+// Validate score is in reasonable range (0-10)
+// Football scores in professional leagues rarely exceed 7-0
+// Tighter validation prevents LLM hallucinations
 function validateScore(score: number, label: string): { valid: boolean; error?: string } {
   if (isNaN(score)) {
     return { valid: false, error: `${label} is NaN` };
   }
-  if (score < 0 || score > 20) {
-    return { valid: false, error: `${label} out of range (0-20): ${score}` };
+  if (!Number.isInteger(score)) {
+    return { valid: false, error: `${label} is not an integer: ${score}` };
+  }
+  if (score < 0 || score > 10) {
+    return { valid: false, error: `${label} out of range (0-10): ${score}` };
   }
   return { valid: true };
 }

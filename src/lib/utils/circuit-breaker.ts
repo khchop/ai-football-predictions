@@ -125,27 +125,40 @@ export function isCircuitOpen(service: ServiceName): boolean {
 
 /**
  * Record a successful request
+ * Requires multiple consecutive successes to close circuit (prevents oscillation)
  */
 export function recordSuccess(service: ServiceName): void {
   const circuit = getOrCreateCircuit(service);
   
   circuit.totalSuccesses++;
   
-   if (circuit.state === 'half-open') {
-     circuit.successes++;
-     // After successful request in half-open, close the circuit
-     if (circuit.successes >= 1) {
-       const previousState = circuit.state;
-       circuit.state = 'closed';
-       circuit.failures = 0;
-       circuit.successes = 0;
-       circuit.lastStateChange = Date.now();
-       loggers.circuitBreaker.info({ service, previousState }, 'HALF_OPEN -> CLOSED (service recovered)');
-     }
-   } else if (circuit.state === 'closed') {
-     // Reset failure counter on success
-     circuit.failures = 0;
-   }
+  if (circuit.state === 'half-open') {
+    circuit.successes++;
+    
+    // Require 3 consecutive successes to close circuit
+    // This prevents oscillation with intermittent failures
+    const REQUIRED_SUCCESSES = 3;
+    
+    if (circuit.successes >= REQUIRED_SUCCESSES) {
+      const previousState = circuit.state;
+      circuit.state = 'closed';
+      circuit.failures = 0;
+      circuit.successes = 0;
+      circuit.lastStateChange = Date.now();
+      loggers.circuitBreaker.info(
+        { service, previousState, successesRequired: REQUIRED_SUCCESSES },
+        'HALF_OPEN -> CLOSED (service recovered)'
+      );
+    } else {
+      loggers.circuitBreaker.debug(
+        { service, successes: circuit.successes, required: REQUIRED_SUCCESSES },
+        'Half-open success recorded'
+      );
+    }
+  } else if (circuit.state === 'closed') {
+    // Reset failure counter on success
+    circuit.failures = 0;
+  }
 }
 
 /**

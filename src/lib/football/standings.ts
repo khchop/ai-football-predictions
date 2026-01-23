@@ -2,8 +2,8 @@ import { getDb, leagueStandings } from '@/lib/db';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import type { NewLeagueStanding, LeagueStanding } from '@/lib/db/schema';
 import { COMPETITIONS } from './competitions';
-import { fetchWithRetry, APIError, sleep } from '@/lib/utils/api-client';
-import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
+import { fetchFromAPIFootball } from './api-client';
+import { sleep } from '@/lib/utils/api-client';
 import { loggers } from '@/lib/logger/modules';
 
 const log = loggers.standings;
@@ -11,7 +11,6 @@ const log = loggers.standings;
 // Re-export LeagueStanding for convenience
 export type { LeagueStanding };
 
-const API_BASE_URL = 'https://v3.football.api-sports.io';
 const RATE_LIMIT_DELAY_MS = 300;
 
 interface APIStandingTeam {
@@ -55,40 +54,10 @@ interface APIStandingsResponse {
 
 // Fetch standings from API-Football
 async function fetchStandingsFromAPI(leagueId: number, season: number): Promise<APIStandingEntry[]> {
-  const apiKey = process.env.API_FOOTBALL_KEY;
-  
-  if (!apiKey) {
-    throw new Error('API_FOOTBALL_KEY is not configured');
-  }
-
-  const url = new URL(`${API_BASE_URL}/standings`);
-  url.searchParams.append('league', String(leagueId));
-  url.searchParams.append('season', String(season));
-
-   log.info({ url: url.toString() }, 'Fetching');
-
-  const response = await fetchWithRetry(
-    url.toString(),
-    {
-      method: 'GET',
-      headers: {
-        'x-apisports-key': apiKey,
-      },
-    },
-    API_FOOTBALL_RETRY,
-    API_FOOTBALL_TIMEOUT_MS,
-    SERVICE_NAMES.API_FOOTBALL
-  );
-
-  if (!response.ok) {
-    throw new APIError(
-      `API-Football standings error: ${response.status} ${response.statusText}`,
-      response.status,
-      '/standings'
-    );
-  }
-
-  const data: APIStandingsResponse = await response.json();
+  const data = await fetchFromAPIFootball<APIStandingsResponse>({
+    endpoint: '/standings',
+    params: { league: leagueId, season },
+  });
   
   // Standings come as array of arrays (for groups in group stages)
   // Flatten them all into one array
@@ -101,8 +70,8 @@ async function fetchStandingsFromAPI(leagueId: number, season: number): Promise<
     }
   }
 
-   log.info({ leagueId, count: allStandings.length }, 'Found teams');
-   return allStandings;
+  log.info({ leagueId, count: allStandings.length }, 'Found teams');
+  return allStandings;
 }
 
 // Update standings for a single league

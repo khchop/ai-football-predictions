@@ -142,10 +142,17 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
   protected abstract endpoint: string;
   protected abstract getHeaders(): Record<string, string>;
   
-  // Request timeout in milliseconds (15 seconds for single, 20 for batch)
-  // Reduced for faster failure detection in parallel processing
-  protected readonly requestTimeout = 15000;
-  protected readonly batchRequestTimeout = 20000;
+  // Request timeout in milliseconds (configurable via environment)
+  // Default: 15 seconds for single, 20 for batch
+  // Can be overridden with LLM_REQUEST_TIMEOUT_MS and LLM_BATCH_TIMEOUT_MS
+  protected readonly requestTimeout = parseInt(
+    process.env.LLM_REQUEST_TIMEOUT_MS || '15000',
+    10
+  );
+  protected readonly batchRequestTimeout = parseInt(
+    process.env.LLM_BATCH_TIMEOUT_MS || '20000',
+    10
+  );
 
   protected async callAPI(systemPrompt: string, userPrompt: string): Promise<string> {
     // Use longer timeout for batch requests (detected by system prompt)

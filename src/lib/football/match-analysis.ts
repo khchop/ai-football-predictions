@@ -130,6 +130,25 @@ export async function fetchOdds(fixtureId: number): Promise<APIFootballOddsRespo
    }
 }
 
+// Validate and format odds value
+// Reasonable range for football betting: 1.01 to 100.00
+function validateOdds(value: any): string | null {
+  if (!value) return null;
+  
+  const odds = typeof value === 'string' ? parseFloat(value) : value;
+  
+  // Check if valid number
+  if (isNaN(odds)) return null;
+  
+  // Check reasonable range (1.01 = minimum for winning bet, 100 = extreme limit)
+  if (odds < 1.01 || odds > 100) {
+    return null;
+  }
+  
+  // Round to 2 decimal places and convert back to string
+  return (Math.round(odds * 100) / 100).toString();
+}
+
 // Extract all betting odds from odds response
 function extractAllOdds(oddsResponse: APIFootballOddsResponse | null): {
   // Match Winner (1X2)
@@ -194,75 +213,91 @@ function extractAllOdds(oddsResponse: APIFootballOddsResponse | null): {
     b => b.id === 1 || b.name.toLowerCase().includes('match winner')
   );
 
-  if (matchWinnerBet) {
-    for (const value of matchWinnerBet.values) {
-      if (value.value === 'Home') result.oddsHome = value.odd;
-      else if (value.value === 'Draw') result.oddsDraw = value.odd;
-      else if (value.value === 'Away') result.oddsAway = value.odd;
-    }
-  }
+   if (matchWinnerBet) {
+     for (const value of matchWinnerBet.values) {
+       const validatedOdd = validateOdds(value.odd);
+       if (validatedOdd) {
+         if (value.value === 'Home') result.oddsHome = validatedOdd;
+         else if (value.value === 'Draw') result.oddsDraw = validatedOdd;
+         else if (value.value === 'Away') result.oddsAway = validatedOdd;
+       }
+     }
+   }
 
   // 2. Double Chance (Bet ID: 12)
   const doubleChanceBet = bookmaker.bets.find(
     b => b.id === 12 || b.name.toLowerCase().includes('double chance')
   );
 
-  if (doubleChanceBet) {
-    for (const value of doubleChanceBet.values) {
-      const val = value.value;
-      if (val === 'Home/Draw' || val === '1X') result.odds1X = value.odd;
-      else if (val === 'Draw/Away' || val === 'X2') result.oddsX2 = value.odd;
-      else if (val === 'Home/Away' || val === '12') result.odds12 = value.odd;
-    }
-  }
+   if (doubleChanceBet) {
+     for (const value of doubleChanceBet.values) {
+       const validatedOdd = validateOdds(value.odd);
+       if (validatedOdd) {
+         const val = value.value;
+         if (val === 'Home/Draw' || val === '1X') result.odds1X = validatedOdd;
+         else if (val === 'Draw/Away' || val === 'X2') result.oddsX2 = validatedOdd;
+         else if (val === 'Home/Away' || val === '12') result.odds12 = validatedOdd;
+       }
+     }
+   }
 
   // 3. Goals Over/Under (Bet ID: 5)
   const overUnderBet = bookmaker.bets.find(
     b => b.id === 5 || b.name.toLowerCase().includes('goals over/under')
   );
 
-  if (overUnderBet) {
-    for (const value of overUnderBet.values) {
-      const val = value.value;
-      if (val === 'Over 0.5') result.oddsOver05 = value.odd;
-      else if (val === 'Under 0.5') result.oddsUnder05 = value.odd;
-      else if (val === 'Over 1.5') result.oddsOver15 = value.odd;
-      else if (val === 'Under 1.5') result.oddsUnder15 = value.odd;
-      else if (val === 'Over 2.5') result.oddsOver25 = value.odd;
-      else if (val === 'Under 2.5') result.oddsUnder25 = value.odd;
-      else if (val === 'Over 3.5') result.oddsOver35 = value.odd;
-      else if (val === 'Under 3.5') result.oddsUnder35 = value.odd;
-      else if (val === 'Over 4.5') result.oddsOver45 = value.odd;
-      else if (val === 'Under 4.5') result.oddsUnder45 = value.odd;
-    }
-  }
+   if (overUnderBet) {
+     for (const value of overUnderBet.values) {
+       const validatedOdd = validateOdds(value.odd);
+       if (validatedOdd) {
+         const val = value.value;
+         if (val === 'Over 0.5') result.oddsOver05 = validatedOdd;
+         else if (val === 'Under 0.5') result.oddsUnder05 = validatedOdd;
+         else if (val === 'Over 1.5') result.oddsOver15 = validatedOdd;
+         else if (val === 'Under 1.5') result.oddsUnder15 = validatedOdd;
+         else if (val === 'Over 2.5') result.oddsOver25 = validatedOdd;
+         else if (val === 'Under 2.5') result.oddsUnder25 = validatedOdd;
+         else if (val === 'Over 3.5') result.oddsOver35 = validatedOdd;
+         else if (val === 'Under 3.5') result.oddsUnder35 = validatedOdd;
+         else if (val === 'Over 4.5') result.oddsOver45 = validatedOdd;
+         else if (val === 'Under 4.5') result.oddsUnder45 = validatedOdd;
+       }
+     }
+   }
 
   // 4. Both Teams Score (Bet ID: 8)
   const bttsBet = bookmaker.bets.find(
     b => b.id === 8 || b.name.toLowerCase().includes('both teams score')
   );
 
-  if (bttsBet) {
-    for (const value of bttsBet.values) {
-      if (value.value === 'Yes') result.oddsBttsYes = value.odd;
-      else if (value.value === 'No') result.oddsBttsNo = value.odd;
-    }
-  }
+   if (bttsBet) {
+     for (const value of bttsBet.values) {
+       const validatedOdd = validateOdds(value.odd);
+       if (validatedOdd) {
+         if (value.value === 'Yes') result.oddsBttsYes = validatedOdd;
+         else if (value.value === 'No') result.oddsBttsNo = validatedOdd;
+       }
+     }
+   }
 
   // 5. Exact Score (for display only, not betting)
   const exactScoreBet = bookmaker.bets.find(
     b => b.name.toLowerCase().includes('exact score')
   );
 
-  if (exactScoreBet) {
-    const sortedScores = exactScoreBet.values
-      .filter(v => v.value && v.odd)
-      .map(v => ({ score: v.value, odds: v.odd }))
-      .sort((a, b) => parseFloat(a.odds) - parseFloat(b.odds))
-      .slice(0, 5);
-    
-    result.likelyScores = sortedScores;
-  }
+   if (exactScoreBet) {
+     const sortedScores = exactScoreBet.values
+       .filter(v => v.value && v.odd)
+       .map(v => {
+         const validatedOdd = validateOdds(v.odd);
+         return validatedOdd ? { score: v.value, odds: validatedOdd } : null;
+       })
+       .filter((v): v is NonNullable<typeof v> => v !== null)
+       .sort((a, b) => parseFloat(a.odds) - parseFloat(b.odds))
+       .slice(0, 5);
+     
+     result.likelyScores = sortedScores;
+   }
 
   return result;
 }

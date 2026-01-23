@@ -57,21 +57,34 @@ export async function fetchFromAPIFootball<T>({ endpoint, params }: FetchOptions
      log.info({ remaining }, 'Rate limit remaining');
    }
 
-  if (!response.ok) {
-    throw new APIError(
-      `API-Football error: ${response.status} ${response.statusText}`,
-      response.status,
-      endpoint
-    );
-  }
+   // Check HTTP 429 status first (most reliable indicator)
+   if (response.status === 429) {
+     // Parse Retry-After header if present
+     const retryAfterHeader = response.headers.get('Retry-After');
+     const retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 60;
+     
+     throw new RateLimitError(
+       `API-Football rate limit exceeded (HTTP 429)`,
+       endpoint,
+       retryAfter
+     );
+   }
 
-  const data = await response.json();
-  
+   if (!response.ok) {
+     throw new APIError(
+       `API-Football error: ${response.status} ${response.statusText}`,
+       response.status,
+       endpoint
+     );
+   }
+
+   const data = await response.json();
+   
    if (data.errors && Object.keys(data.errors).length > 0) {
      log.error({ errors: data.errors }, 'API Errors');
      const errorMsg = Object.values(data.errors).join(', ');
      
-     // Detect rate limit errors
+     // Detect rate limit errors in response body (fallback)
      if (errorMsg.toLowerCase().includes('rate limit') || 
          errorMsg.toLowerCase().includes('too many requests') ||
          errorMsg.toLowerCase().includes('exceeded the limit')) {

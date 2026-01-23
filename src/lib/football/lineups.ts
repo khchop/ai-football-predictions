@@ -65,9 +65,13 @@ export async function fetchLineups(fixtureId: number): Promise<APIFootballLineup
 }
 
 // Extract starting XI player names as a simple string
+// Filters out null elements and safely accesses player names
 function formatStartingXI(startXI: Array<{ player: { name: string; pos: string } }> | null | undefined): string {
   if (!startXI || !Array.isArray(startXI)) return '';
-  return startXI.map(p => p.player?.name || 'Unknown').join(', ');
+  return startXI
+    .filter(p => p && p.player && p.player.name) // Filter out null/undefined elements
+    .map(p => p.player.name)
+    .join(', ');
 }
 
 // Update match analysis with lineup data
@@ -80,23 +84,31 @@ export async function updateMatchLineups(
   const lineupsData = await fetchLineups(fixtureId);
   
    if (!lineupsData?.response || lineupsData.response.length < 2) {
-     log.info({ matchId }, 'Lineups not available yet');
+      log.info({ matchId, length: lineupsData?.response?.length }, 'Lineups not available yet');
+      return false;
+    }
+
+    // Get match data to verify team order
+    const matchData = await getMatchById(matchId);
+    if (!matchData) {
+      log.error({ matchId }, 'Match not found in database');
+      return false;
+    }
+
+   // Safely access first two lineups (already checked length >= 2)
+   const lineup1 = lineupsData.response[0];
+   const lineup2 = lineupsData.response[1];
+   
+   // Validate lineup data has required fields
+   if (!lineup1?.team?.name || !lineup2?.team?.name) {
+     log.error({ matchId, hasLineup1: !!lineup1, hasLineup2: !!lineup2 }, 'Lineup data missing team information');
      return false;
    }
-
-   // Get match data to verify team order
-   const matchData = await getMatchById(matchId);
-   if (!matchData) {
-     log.error({ matchId }, 'Match not found in database');
-     return false;
-   }
-
-  const [lineup1, lineup2] = lineupsData.response;
-  
-  // Verify which lineup belongs to which team by matching team names
-  // Use case-insensitive partial matching to handle name variations
-  const lineup1IsHome = isTeamMatch(lineup1.team.name, matchData.match.homeTeam);
-  const lineup2IsHome = isTeamMatch(lineup2.team.name, matchData.match.homeTeam);
+   
+   // Verify which lineup belongs to which team by matching team names
+   // Use case-insensitive partial matching to handle name variations
+   const lineup1IsHome = isTeamMatch(lineup1.team.name, matchData.match.homeTeam);
+   const lineup2IsHome = isTeamMatch(lineup2.team.name, matchData.match.homeTeam);
   
   let homeLineup, awayLineup;
   

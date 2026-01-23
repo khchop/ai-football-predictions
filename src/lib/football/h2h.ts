@@ -1,65 +1,8 @@
 import { APIFootballH2HResponse } from '@/types';
-import { fetchWithRetry, APIError } from '@/lib/utils/api-client';
-import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
+import { fetchFromAPIFootball } from './api-client';
 import { loggers } from '@/lib/logger/modules';
 
 const log = loggers.h2h;
-
-const API_BASE_URL = 'https://v3.football.api-sports.io';
-
-interface FetchOptions {
-  endpoint: string;
-  params?: Record<string, string | number>;
-}
-
-async function fetchFromAPI<T>({ endpoint, params }: FetchOptions): Promise<T> {
-  const apiKey = process.env.API_FOOTBALL_KEY;
-  
-  if (!apiKey) {
-    throw new Error('API_FOOTBALL_KEY is not configured');
-  }
-
-  const url = new URL(`${API_BASE_URL}${endpoint}`);
-  
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      url.searchParams.append(key, String(value));
-    });
-  }
-
-   log.info({ url: url.toString() }, 'Fetching');
-
-  const response = await fetchWithRetry(
-    url.toString(),
-    {
-      method: 'GET',
-      headers: {
-        'x-apisports-key': apiKey,
-      },
-    },
-    API_FOOTBALL_RETRY,
-    API_FOOTBALL_TIMEOUT_MS,
-    SERVICE_NAMES.API_FOOTBALL
-  );
-
-  if (!response.ok) {
-    throw new APIError(
-      `API-Football error: ${response.status} ${response.statusText}`,
-      response.status,
-      endpoint
-    );
-  }
-
-  const data = await response.json();
-  
-   if (data.errors && Object.keys(data.errors).length > 0) {
-     log.error({ errors: data.errors }, 'API Errors');
-   }
-   
-   log.info({ results: data.results || 0 }, 'Results');
-
-  return data;
-}
 
 // Fetch detailed H2H data for two teams
 export async function fetchH2HDetailed(
@@ -68,7 +11,7 @@ export async function fetchH2HDetailed(
   count: number = 10
 ): Promise<APIFootballH2HResponse | null> {
   try {
-    const data = await fetchFromAPI<APIFootballH2HResponse>({
+    const data = await fetchFromAPIFootball<APIFootballH2HResponse>({
       endpoint: '/fixtures/headtohead',
       params: { 
         h2h: `${team1Id}-${team2Id}`,
@@ -76,10 +19,10 @@ export async function fetchH2HDetailed(
       },
     });
     return data;
-   } catch (error) {
-     log.error({ team1Id, team2Id, error }, 'Error fetching H2H');
-     return null;
-   }
+  } catch (error) {
+    log.error({ team1Id, team2Id, error }, 'Error fetching H2H');
+    return null;
+  }
 }
 
 // Detailed H2H match info
