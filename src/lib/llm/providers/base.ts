@@ -216,12 +216,37 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
         );
       }
 
-      let data;
-      try {
-        data = await response.json();
-      } catch {
-        throw new APIError('API returned invalid JSON response', response.status, this.endpoint);
-      }
+       let data;
+       let parseError: Error | null = null;
+       let retries = 0;
+       const maxParseRetries = 2; // Retry up to 2 times on parse failure
+       
+       while (retries <= maxParseRetries) {
+         try {
+           // Clone response to retry parsing if needed
+           const cloneResponse = response.clone ? response.clone() : response;
+           data = await cloneResponse.json();
+           parseError = null;
+           break;
+         } catch (e) {
+           parseError = e instanceof Error ? e : new Error('Unknown parse error');
+           retries++;
+           
+           // Retry if we haven't exceeded limit
+           if (retries <= maxParseRetries) {
+             // Wait before retrying (exponential backoff: 100ms, 200ms)
+             await new Promise(resolve => setTimeout(resolve, 100 * retries));
+             continue;
+           }
+           
+           // All retries exhausted
+           throw new APIError(
+             `API returned invalid JSON response (after ${maxParseRetries} retries): ${parseError.message}`,
+             response.status,
+             this.endpoint
+           );
+         }
+       }
       
       const message = data.choices?.[0]?.message;
       

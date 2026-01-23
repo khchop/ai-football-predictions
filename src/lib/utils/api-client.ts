@@ -21,11 +21,69 @@ export const DEFAULT_RETRY_CONFIG: RetryConfig = {
 
 export const DEFAULT_TIMEOUT_MS = 30000;
 
+// Track remaining requests per service
+const rateLimitTracker = new Map<string, { remaining: number; resetAt: number }>();
+
 /**
  * Sleep for a given duration
  */
 export function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Extract and track rate limit information from response headers
+ * Proactively throttle before hitting the rate limit
+ */
+function handleRateLimitHeaders(serviceName: ServiceName | undefined, response: Response): void {
+  if (!serviceName) return;
+
+  const remaining = response.headers.get('X-RateLimit-Remaining');
+  const resetStr = response.headers.get('X-RateLimit-Reset');
+  
+  if (remaining && resetStr) {
+    const remainingNum = parseInt(remaining, 10);
+    const resetUnix = parseInt(resetStr, 10);
+    const now = Math.floor(Date.now() / 1000);
+    const resetAt = resetUnix > 1000000000 ? resetUnix * 1000 : resetUnix; // Handle both Unix timestamps and ms
+    
+    rateLimitTracker.set(serviceName, {
+      remaining: remainingNum,
+      resetAt: resetAt,
+    });
+    
+    // Log low remaining count for monitoring
+    if (remainingNum <= 10) {
+      loggers.api.warn({
+        serviceName,
+        remaining: remainingNum,
+        resetAt: new Date(resetAt),
+      }, 'Rate limit approaching');
+    }
+  }
+}
+
+/**
+ * Check if we should throttle based on rate limit headers
+ * Returns delay in ms to wait before making next request, or 0 if no throttling needed
+ */
+function getProactiveThrottleDelay(serviceName: ServiceName | undefined): number {
+  if (!serviceName) return 0;
+
+  const tracking = rateLimitTracker.get(serviceName);
+  if (!tracking) return 0;
+
+  const now = Date.now();
+  const timeUntilReset = tracking.resetAt - now;
+
+  // If we have 5 or fewer requests remaining and reset is in the future
+  if (tracking.remaining <= 5 && timeUntilReset > 0) {
+    // Distribute remaining requests evenly until reset
+    const throttleDelayMs = Math.max(100, timeUntilReset / (tracking.remaining + 1));
+    return throttleDelayMs;
+  }
+
+  return 0;
 }
 
 /**
@@ -91,50 +149,63 @@ export async function fetchWithRetry(
   const startTime = Date.now();
 
   for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
-    const attemptStart = Date.now();
-    
-    try {
-      const response = await fetchWithTimeout(url, options, timeoutMs);
-      const duration = Date.now() - attemptStart;
+     // Proactive throttling based on rate limit headers from previous request
+     const throttleDelay = getProactiveThrottleDelay(serviceName);
+     if (throttleDelay > 0) {
+       loggers.api.info({
+         serviceName: serviceName || 'unknown',
+         delayMs: Math.round(throttleDelay),
+       }, 'Proactive rate limit throttling');
+       await sleep(throttleDelay);
+     }
 
-       // Log successful request
-       if (attempt > 0) {
-         loggers.api.info({
-           serviceName: serviceName || 'unknown',
-           attempt,
-           duration,
-           totalDuration: Date.now() - startTime,
-         }, 'Request succeeded after retries');
+     const attemptStart = Date.now();
+     
+     try {
+       const response = await fetchWithTimeout(url, options, timeoutMs);
+       const duration = Date.now() - attemptStart;
+
+        // Extract and track rate limit information
+        handleRateLimitHeaders(serviceName, response);
+
+        // Log successful request
+        if (attempt > 0) {
+          loggers.api.info({
+            serviceName: serviceName || 'unknown',
+            attempt,
+            duration,
+            totalDuration: Date.now() - startTime,
+          }, 'Request succeeded after retries');
+        }
+
+       // Check if we should retry based on status code
+       if (
+         !response.ok &&
+         retryConfig.retryableStatusCodes.includes(response.status) &&
+         attempt < retryConfig.maxRetries
+       ) {
+          const delay = calculateBackoffDelay(
+            attempt,
+            retryConfig.baseDelayMs,
+            retryConfig.maxDelayMs
+          );
+          loggers.api.warn({
+            serviceName: serviceName || 'unknown',
+            statusCode: response.status,
+            attempt: attempt + 1,
+            maxRetries: retryConfig.maxRetries,
+            delayMs: Math.round(delay),
+          }, 'HTTP error, retrying');
+          await sleep(delay);
+          continue;
        }
 
-      // Check if we should retry based on status code
-      if (
-        !response.ok &&
-        retryConfig.retryableStatusCodes.includes(response.status) &&
-        attempt < retryConfig.maxRetries
-      ) {
-         const delay = calculateBackoffDelay(
-           attempt,
-           retryConfig.baseDelayMs,
-           retryConfig.maxDelayMs
-         );
-         loggers.api.warn({
-           serviceName: serviceName || 'unknown',
-           statusCode: response.status,
-           attempt: attempt + 1,
-           maxRetries: retryConfig.maxRetries,
-           delayMs: Math.round(delay),
-         }, 'HTTP error, retrying');
-         await sleep(delay);
-         continue;
-      }
+       // Record success with circuit breaker
+       if (serviceName) {
+         recordSuccess(serviceName);
+       }
 
-      // Record success with circuit breaker
-      if (serviceName) {
-        recordSuccess(serviceName);
-      }
-
-      return response;
+       return response;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       const duration = Date.now() - attemptStart;

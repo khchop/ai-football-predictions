@@ -29,7 +29,13 @@ async function fetchFromAPI<T>({ endpoint, params }: FetchOptions): Promise<T> {
     });
   }
 
-  log.info({ url: url.toString() }, 'Fetching');
+  // Log endpoint and safe params only (not full URL to avoid exposing sensitive data)
+  const safeParams = params ? Object.fromEntries(
+    Object.entries(params).filter(([key]) => 
+      !['apiKey', 'key', 'token', 'secret', 'auth'].includes(key.toLowerCase())
+    )
+  ) : undefined;
+  log.info({ endpoint, params: safeParams }, 'Fetching from API-Football');
 
   const response = await fetchWithRetry(
     url.toString(),
@@ -113,13 +119,33 @@ export async function getUpcomingFixtures(
 
    log.info({ dates: [...dates].join(', ') }, 'Fetching fixtures for dates');
 
-  // Fetch all fixtures for these dates in one call per date
-  const allFixtures: APIFootballFixture[] = [];
+  // Process fixtures by competition to avoid loading all into memory at once
+  // Group by competition first, then fetch to enable batch processing
+  const results: { competition: CompetitionConfig; fixtures: APIFootballFixture[] }[] = [];
+  const competitionFixtures = new Map<number, APIFootballFixture[]>();
   
+  for (const competition of COMPETITIONS) {
+    competitionFixtures.set(competition.apiFootballId, []);
+  }
+  
+  // Fetch and process fixtures per date to reduce peak memory usage
+  let totalFetched = 0;
   for (const date of dates) {
     try {
       const fixtures = await getFixturesByDate(date);
-      allFixtures.push(...fixtures);
+      totalFetched += fixtures.length;
+      
+      // Process and categorize immediately instead of accumulating
+      for (const fixture of fixtures) {
+        const competitionId = fixture.league.id;
+        if (competitionFixtures.has(competitionId)) {
+          const fixtures = competitionFixtures.get(competitionId);
+          if (fixtures) {
+            fixtures.push(fixture);
+          }
+        }
+      }
+      
       // Rate limit delay between requests
       await sleep(RATE_LIMIT_DELAY_MS);
      } catch (error) {
@@ -128,21 +154,20 @@ export async function getUpcomingFixtures(
      }
   }
 
-   log.info({ count: allFixtures.length }, 'Total fixtures fetched');
+   log.info({ count: totalFetched }, 'Total fixtures fetched');
 
-  // Filter to only our tracked competitions and group by competition
-  const results: { competition: CompetitionConfig; fixtures: APIFootballFixture[] }[] = [];
-
+  // Build results from processed fixtures
   for (const competition of COMPETITIONS) {
-    const competitionFixtures = allFixtures.filter(f => 
-      f.league.id === competition.apiFootballId &&
+    const fixtures = competitionFixtures.get(competition.apiFootballId) || [];
+    // Filter by date range (should already be filtered by API, but just in case)
+    const validFixtures = fixtures.filter(f =>
       new Date(f.fixture.date) >= now &&
       new Date(f.fixture.date) <= future
     );
 
-     if (competitionFixtures.length > 0) {
-       log.info({ competition: competition.name, count: competitionFixtures.length }, 'Fixtures');
-       results.push({ competition, fixtures: competitionFixtures });
+     if (validFixtures.length > 0) {
+       log.info({ competition: competition.name, count: validFixtures.length }, 'Fixtures');
+       results.push({ competition, fixtures: validFixtures });
      }
   }
 

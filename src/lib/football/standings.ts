@@ -13,6 +13,13 @@ export type { LeagueStanding };
 
 const RATE_LIMIT_DELAY_MS = 300;
 
+// Result type for standings update operations
+interface StandingsUpdateResult {
+  updated: number;
+  success: boolean;
+  error?: string;
+}
+
 interface APIStandingTeam {
   id: number;
   name: string;
@@ -75,11 +82,17 @@ async function fetchStandingsFromAPI(leagueId: number, season: number): Promise<
 }
 
 // Update standings for a single league
-export async function updateLeagueStandings(leagueId: number, season: number): Promise<number> {
+export async function updateLeagueStandings(leagueId: number, season: number): Promise<StandingsUpdateResult> {
   const db = getDb();
   
   try {
     const standings = await fetchStandingsFromAPI(leagueId, season);
+    
+    // Distinguish between "no standings available" and "error fetching"
+    if (standings.length === 0) {
+      log.warn({ leagueId, season }, 'No standings available from API');
+      return { updated: 0, success: true, error: 'no_standings_available' };
+    }
     
     let updated = 0;
     for (const entry of standings) {
@@ -146,35 +159,39 @@ export async function updateLeagueStandings(leagueId: number, season: number): P
     }
 
      log.info({ leagueId, count: updated }, 'Updated teams');
-     return updated;
+     return { updated, success: true };
    } catch (error) {
+     const errorMsg = error instanceof Error ? error.message : 'Unknown error';
      log.error({ leagueId, error }, 'Error updating league');
-     return 0;
+     return { updated: 0, success: false, error: errorMsg };
    }
 }
 
 // Update standings for all tracked competitions
-export async function updateAllStandings(): Promise<{ updated: number; leagues: number }> {
+export async function updateAllStandings(): Promise<{ updated: number; leagues: number; errors: number }> {
   let totalUpdated = 0;
   let leaguesProcessed = 0;
+  let errors = 0;
 
   for (const competition of COMPETITIONS) {
     // Skip competitions without a regular standings structure (e.g., World Cup qualifiers)
     // Most domestic leagues and UCL/UEL have standings
     try {
-      const updated = await updateLeagueStandings(competition.apiFootballId, competition.season);
-      totalUpdated += updated;
-      if (updated > 0) leaguesProcessed++;
+      const result = await updateLeagueStandings(competition.apiFootballId, competition.season);
+      totalUpdated += result.updated;
+      if (result.success && result.updated > 0) leaguesProcessed++;
+      if (!result.success) errors++;
       
        // Rate limit delay between API calls
        await sleep(RATE_LIMIT_DELAY_MS);
      } catch (error) {
        log.error({ competition: competition.name, error }, 'Failed to update');
+       errors++;
      }
    }
 
-   log.info({ totalUpdated, leaguesProcessed }, 'Total');
-   return { updated: totalUpdated, leagues: leaguesProcessed };
+   log.info({ totalUpdated, leaguesProcessed, errors }, 'Total');
+   return { updated: totalUpdated, leagues: leaguesProcessed, errors };
 }
 
 // Check if standings are stale (older than specified hours)
@@ -243,8 +260,8 @@ export async function updateStandingsIfStale(maxAgeHours: number = 24): Promise<
     if (!competition) continue;
     
      log.info({ competition: competition.name }, 'Updating');
-     const count = await updateLeagueStandings(leagueId, competition.season);
-     updated += count;
+     const result = await updateLeagueStandings(leagueId, competition.season);
+     updated += result.updated;
     
     await new Promise(resolve => setTimeout(resolve, 300)); // Rate limit
   }

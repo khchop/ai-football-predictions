@@ -500,10 +500,11 @@ export async function fetchAndStoreAnalysis(
     // Enhanced data: Detailed H2H with 10 matches
     h2hDetailed: h2hDetailed ? JSON.stringify(h2hDetailed) : null,
     
-    // Raw enhanced data for debugging
-    rawTeamStatsHome: teamStatsHomeData ? JSON.stringify(teamStatsHomeData) : null,
-    rawTeamStatsAway: teamStatsAwayData ? JSON.stringify(teamStatsAwayData) : null,
-    rawH2HData: h2hDetailedData ? JSON.stringify(h2hDetailedData) : null,
+    // Archive raw data: Don't store raw API responses to reduce DB bloat (~50-100KB per match)
+    // Processed results (injuries, h2h, stats) are already stored above
+    rawTeamStatsHome: null,
+    rawTeamStatsAway: null,
+    rawH2HData: null,
     
     // Keep existing lineup data if present
     homeFormation: existing?.homeFormation || null,
@@ -516,10 +517,11 @@ export async function fetchAndStoreAnalysis(
     lineupsUpdatedAt: existing?.lineupsUpdatedAt || null,
     rawLineupsData: existing?.rawLineupsData || null,
     
-    // Raw data for debugging
-    rawPredictionsData: predictionData ? JSON.stringify(predictionData) : null,
-    rawInjuriesData: injuriesData ? JSON.stringify(injuriesData) : null,
-    rawOddsData: oddsData ? JSON.stringify(oddsData) : null,
+    // Archive raw data: Don't store raw API responses to reduce DB bloat
+    // Only processed results are stored (predictions, injuries, odds)
+    rawPredictionsData: null,
+    rawInjuriesData: null,
+    rawOddsData: null,
     
     analysisUpdatedAt: new Date().toISOString(),
     createdAt: existing?.createdAt || new Date().toISOString(),
@@ -621,11 +623,11 @@ export async function refreshOddsForMatch(
       oddsUnder35: odds.oddsUnder35,
       oddsOver45: odds.oddsOver45,
       oddsUnder45: odds.oddsUnder45,
-      oddsBttsYes: odds.oddsBttsYes,
-      oddsBttsNo: odds.oddsBttsNo,
-      likelyScores: odds.likelyScores.length > 0 ? JSON.stringify(odds.likelyScores) : existing.likelyScores,
-      rawOddsData: oddsData ? JSON.stringify(oddsData) : existing.rawOddsData,
-      analysisUpdatedAt: new Date().toISOString(),
+       oddsBttsYes: odds.oddsBttsYes,
+       oddsBttsNo: odds.oddsBttsNo,
+       likelyScores: odds.likelyScores.length > 0 ? JSON.stringify(odds.likelyScores) : existing.likelyScores,
+       rawOddsData: null, // Archive raw data to reduce DB bloat
+       analysisUpdatedAt: new Date().toISOString(),
     };
 
      await upsertMatchAnalysis(updatedAnalysis);
@@ -712,14 +714,14 @@ export async function refreshOddsBatch(
           return;
         }
         
-        // Update only odds fields
-        await upsertMatchAnalysis({
-          ...existing,
-          ...odds,
-          likelyScores: odds.likelyScores.length > 0 ? JSON.stringify(odds.likelyScores) : existing.likelyScores,
-          rawOddsData: JSON.stringify(oddsData),
-          analysisUpdatedAt: new Date().toISOString(),
-        });
+         // Update only odds fields
+         await upsertMatchAnalysis({
+           ...existing,
+           ...odds,
+           likelyScores: odds.likelyScores.length > 0 ? JSON.stringify(odds.likelyScores) : existing.likelyScores,
+           rawOddsData: null, // Archive raw data to reduce DB bloat
+           analysisUpdatedAt: new Date().toISOString(),
+         });
         
         results.set(matchId, true);
        } catch (error) {

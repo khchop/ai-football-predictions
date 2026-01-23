@@ -421,8 +421,11 @@ export async function updateModelRetryStats(
 // ============= MODEL HEALTH TRACKING =============
 
 // Record a successful prediction for a model (resets failure count)
+// Atomic SQL UPDATE prevents lost updates under concurrent predictions
 export async function recordModelSuccess(modelId: string): Promise<void> {
   const db = getDb();
+  
+  // PostgreSQL UPDATE is atomic - all fields updated atomically in a single operation
   await db
     .update(models)
     .set({
@@ -644,6 +647,14 @@ export async function getPendingBetsByMatch(matchId: string): Promise<Bet[]> {
     );
 }
 
+/**
+ * Lock ordering for transactions to prevent deadlocks:
+ * REQUIRED ORDER: models -> bets -> modelBalances
+ * 
+ * All transactions must acquire locks in this order to prevent circular wait conditions.
+ * If a transaction needs multiple tables, it must lock them in this order.
+ */
+
 // Create bets and update balance atomically (transaction)
 export async function createBetsWithBalanceUpdate(
   betsData: NewBet[],
@@ -653,38 +664,40 @@ export async function createBetsWithBalanceUpdate(
 ) {
   const db = getDb();
   
-  return db.transaction(async (tx) => {
-    // Verify balance exists
-    const balanceResult = await tx
-      .select()
-      .from(modelBalances)
-      .where(and(
-        eq(modelBalances.modelId, modelId),
-        eq(modelBalances.season, season)
-      ))
-      .limit(1);
-    
-    if (!balanceResult[0]) {
-      throw new Error(`No balance found for model ${modelId} in season ${season}`);
-    }
-    
-    // Insert all bets
-    await tx.insert(bets).values(betsData);
-    
-    // Update balance with atomic SQL operations
-    await tx
-      .update(modelBalances)
-      .set({
-        currentBalance: sql`${modelBalances.currentBalance} - ${totalStake}`,
-        totalWagered: sql`${modelBalances.totalWagered} + ${totalStake}`,
-        totalBets: sql`${modelBalances.totalBets} + ${betsData.length}`,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(and(
-        eq(modelBalances.modelId, modelId),
-        eq(modelBalances.season, season)
-      ));
-  });
+   return db.transaction(async (tx) => {
+     // LOCK ORDER: bets -> modelBalances (per global lock ordering policy)
+     
+     // Insert all bets (locks bets table)
+     await tx.insert(bets).values(betsData);
+     
+     // Verify balance exists (then lock modelBalances)
+     const balanceResult = await tx
+       .select()
+       .from(modelBalances)
+       .where(and(
+         eq(modelBalances.modelId, modelId),
+         eq(modelBalances.season, season)
+       ))
+       .limit(1);
+     
+     if (!balanceResult[0]) {
+       throw new Error(`No balance found for model ${modelId} in season ${season}`);
+     }
+     
+     // Update balance with atomic SQL operations
+     await tx
+       .update(modelBalances)
+       .set({
+         currentBalance: sql`${modelBalances.currentBalance} - ${totalStake}`,
+         totalWagered: sql`${modelBalances.totalWagered} + ${totalStake}`,
+         totalBets: sql`${modelBalances.totalBets} + ${betsData.length}`,
+         updatedAt: new Date().toISOString(),
+       })
+       .where(and(
+         eq(modelBalances.modelId, modelId),
+         eq(modelBalances.season, season)
+       ));
+   });
 }
 
 // Update bet outcome
@@ -719,11 +732,12 @@ export async function settleBetsTransaction(
 ) {
   const db = getDb();
   
-  return db.transaction(async (tx) => {
-    const settledAt = new Date().toISOString();
-    
-    // Batch update all bets using SQL CASE expressions (single query instead of N+1)
-    // This prevents connection pool exhaustion with large bet batches
+   return db.transaction(async (tx) => {
+     const settledAt = new Date().toISOString();
+     
+     // LOCK ORDER: bets -> modelBalances (per global lock ordering policy)
+     // Batch update all bets using SQL CASE expressions (single query instead of N+1)
+     // This prevents connection pool exhaustion with large bet batches
     if (betsToSettle.length > 0) {
       // Build CASE expressions for status, payout, and profit fields
       const statusCaseWhen = betsToSettle
