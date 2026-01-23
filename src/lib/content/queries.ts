@@ -100,6 +100,64 @@ export async function getMatchesForLeagueRoundup(competitionId: string) {
 }
 
 /**
+ * Get current prediction streak for a model
+ * Only returns streak if >= 3 consecutive results
+ * Streak = consecutive correct (W) or incorrect (L) predictions
+ */
+async function getModelCurrentStreak(modelId: string): Promise<{ streak: number; type: 'W' | 'L' }> {
+  const db = getDb();
+
+  try {
+    // Get last 20 scored predictions ordered by match kickoff time (most recent first)
+    const recentPredictions = await db
+      .select({
+        correct: predictions.tendencyPoints, // NOT NULL = correct, NULL = incorrect
+        kickoffTime: matches.kickoffTime,
+      })
+      .from(predictions)
+      .innerJoin(matches, eq(predictions.matchId, matches.id))
+      .where(
+        and(
+          eq(predictions.modelId, modelId),
+          eq(predictions.status, 'scored')
+        )
+      )
+      .orderBy(desc(matches.kickoffTime))
+      .limit(20);
+
+    if (recentPredictions.length === 0) {
+      return { streak: 0, type: 'W' };
+    }
+
+    // Count consecutive same results from most recent
+    const firstResult = recentPredictions[0].correct !== null;
+    let streak = 1;
+
+    for (let i = 1; i < recentPredictions.length; i++) {
+      const isCorrect = recentPredictions[i].correct !== null;
+      if (isCorrect === firstResult) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    // Only return if streak >= 3
+    if (streak < 3) {
+      return { streak: 0, type: 'W' };
+    }
+
+    return {
+      streak,
+      type: firstResult ? 'W' : 'L',
+    };
+  } catch (error) {
+    loggers.content.warn({ modelId, err: error }, 'Failed to calculate model streak');
+    return { streak: 0, type: 'W' };
+  }
+}
+
+/**
  * Get top models for performance report
  */
 export async function getTopModelsForReport(limit: number = 10) {
@@ -129,25 +187,30 @@ export async function getTopModelsForReport(limit: number = 10) {
     .orderBy(desc(sql`COALESCE(SUM(${predictions.totalPoints}), 0)`))
     .limit(limit);
 
-  // Transform to report format
-  return leaderboard.map((m) => ({
-    id: m.id,
-    name: m.name,
-    provider: m.provider,
-    balance: m.totalPoints,
-    profit: m.totalPoints,
-    roi:
-      m.totalPredictions > 0
-        ? ((m.correctTendencies / m.totalPredictions) * 100).toFixed(2)
-        : '0.00',
-    winRate:
-      m.totalPredictions > 0
-        ? ((m.correctTendencies / m.totalPredictions) * 100).toFixed(1)
-        : '0.0',
-    totalBets: m.totalPredictions,
-    streak: 0, // TODO: calculate streak from recent predictions
-    streakType: 'W',
-  }));
+  // Transform to report format with streak calculation
+  return await Promise.all(
+    leaderboard.map(async (m) => {
+      const streakData = await getModelCurrentStreak(m.id);
+      return {
+        id: m.id,
+        name: m.name,
+        provider: m.provider,
+        balance: m.totalPoints,
+        profit: m.totalPoints,
+        roi:
+          m.totalPredictions > 0
+            ? ((m.correctTendencies / m.totalPredictions) * 100).toFixed(2)
+            : '0.00',
+        winRate:
+          m.totalPredictions > 0
+            ? ((m.correctTendencies / m.totalPredictions) * 100).toFixed(1)
+            : '0.0',
+        totalBets: m.totalPredictions,
+        streak: streakData.streak,
+        streakType: streakData.type,
+      };
+    })
+  );
 }
 
 /**
@@ -327,6 +390,39 @@ export async function getMatchesMissingPostMatchContent(daysBack: number = 7) {
 }
 
 /**
+ * Determine if match result was an upset based on bookmaker odds
+ * Upset = winner had highest odds (least expected) AND odds > 2.5
+ */
+function isUpset(
+  homeScore: number | null,
+  awayScore: number | null,
+  oddsHome: string | null,
+  oddsDraw: string | null,
+  oddsAway: string | null
+): boolean {
+  // Can't determine without scores
+  if (homeScore === null || awayScore === null) return false;
+
+  // Determine result
+  const result = homeScore > awayScore ? 'H' : homeScore < awayScore ? 'A' : 'D';
+
+  // Parse odds
+  const home = parseFloat(oddsHome || '');
+  const draw = parseFloat(oddsDraw || '');
+  const away = parseFloat(oddsAway || '');
+
+  // If any odds missing, can't determine upset
+  if (isNaN(home) || isNaN(draw) || isNaN(away)) return false;
+
+  // Get winner's odds
+  const winnerOdds = result === 'H' ? home : result === 'A' ? away : draw;
+  const maxOdds = Math.max(home, draw, away);
+
+  // Upset = winner had highest odds AND odds > 2.5 threshold
+  return winnerOdds === maxOdds && winnerOdds > 2.5;
+}
+
+/**
  * Get data for league roundup generation
  * Returns completed matches from past 7 days with predictions and upset analysis
  */
@@ -340,6 +436,7 @@ export async function getLeagueRoundupData(competitionId: string) {
     .select({
       match: matches,
       competition: competitions,
+      analysis: matchAnalysis,
     })
     .from(matches)
     .innerJoin(competitions, eq(matches.competitionId, competitions.id))
@@ -361,7 +458,7 @@ export async function getLeagueRoundupData(competitionId: string) {
   // Transform matches and get predictions for upset analysis
   const matchesWithPredictions = await Promise.all(
     finishedMatches.map(async (item) => {
-      const { match } = item;
+      const { match, analysis } = item;
       
       // Get predictions for this match to see if consensus was correct
       const matchPredictions = await db
@@ -390,7 +487,13 @@ export async function getLeagueRoundupData(competitionId: string) {
           totalPredictions > 0
             ? `${correctPredictions}/${totalPredictions} models correct`
             : 'No predictions',
-        wasUpset: false, // Could be enhanced with odds data
+        wasUpset: isUpset(
+          match.homeScore,
+          match.awayScore,
+          analysis?.oddsHome || null,
+          analysis?.oddsDraw || null,
+          analysis?.oddsAway || null
+        ),
       };
     })
   );
