@@ -13,8 +13,11 @@ interface MatchStatsProps {
 export function MatchStats({ analysis, homeStanding, awayStanding }: MatchStatsProps) {
   const h2hResults = analysis?.h2hResults ? JSON.parse(analysis.h2hResults) as H2HMatch[] : [];
   
+  // Check if this is a cup match (teams not in same league standings)
+  const isCupMatch = !homeStanding || !awayStanding;
+  
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Standings & Form */}
       <Card className="bg-card/50 border-border/50">
         <CardContent className="p-6 space-y-6">
@@ -23,44 +26,39 @@ export function MatchStats({ analysis, homeStanding, awayStanding }: MatchStatsP
             League Context
           </h3>
           
-          <div className="space-y-4">
-            {/* Home Team Standing */}
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="font-bold text-sm">{homeStanding?.teamName || 'Home Team'}</span>
-                <span className="text-xs text-muted-foreground">Position: {homeStanding?.position || 'N/A'}</span>
-              </div>
-              <div className="flex gap-1">
-                {(homeStanding?.form || '').split('').map((char, i) => (
-                  <FormBadge key={i} result={char} />
-                ))}
-              </div>
+          {isCupMatch ? (
+            <div className="h-32 flex items-center justify-center text-muted-foreground text-sm italic">
+              Cup Match - No league standings
             </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Home Team Standing */}
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="font-bold text-sm">{homeStanding?.teamName || 'Home Team'}</span>
+                  <span className="text-xs text-muted-foreground">Position: {homeStanding?.position || 'N/A'}</span>
+                </div>
+                <div className="flex gap-1">
+                  {(homeStanding?.form || '').split('').map((char, i) => (
+                    <FormBadge key={i} result={char} />
+                  ))}
+                </div>
+              </div>
 
-            {/* Away Team Standing */}
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="font-bold text-sm">{awayStanding?.teamName || 'Away Team'}</span>
-                <span className="text-xs text-muted-foreground">Position: {awayStanding?.position || 'N/A'}</span>
+              {/* Away Team Standing */}
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="font-bold text-sm">{awayStanding?.teamName || 'Away Team'}</span>
+                  <span className="text-xs text-muted-foreground">Position: {awayStanding?.position || 'N/A'}</span>
+                </div>
+                <div className="flex gap-1">
+                  {(awayStanding?.form || '').split('').map((char, i) => (
+                    <FormBadge key={i} result={char} />
+                  ))}
+                </div>
               </div>
-              <div className="flex gap-1">
-                {(awayStanding?.form || '').split('').map((char, i) => (
-                  <FormBadge key={i} result={char} />
-                ))}
-              </div>
             </div>
-          </div>
-
-          <div className="pt-4 border-t border-border/30 grid grid-cols-2 gap-4 text-center">
-            <div>
-              <p className="text-xs text-muted-foreground uppercase">Home Win %</p>
-              <p className="text-xl font-bold">{analysis?.homeWinPct || 0}%</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase">Away Win %</p>
-              <p className="text-xl font-bold">{analysis?.awayWinPct || 0}%</p>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -93,9 +91,60 @@ export function MatchStats({ analysis, homeStanding, awayStanding }: MatchStatsP
             </div>
           )}
 
-          {analysis?.h2hTotal && (
+          {analysis?.h2hTotal && analysis.h2hTotal > 0 && (
             <div className="pt-2 text-xs text-center text-muted-foreground">
-              Total meetings: {analysis.h2hTotal} ({analysis.h2hHomeWins}W, {analysis.h2hDraws}D, {analysis.h2hAwayWins}L)
+              Total meetings: {analysis.h2hTotal}
+              {(analysis.h2hHomeWins ?? 0) > (analysis.h2hAwayWins ?? 0)
+                ? ` - ${homeStanding?.teamName || 'Home'} leads ${analysis.h2hHomeWins}-${analysis.h2hAwayWins}` 
+                : (analysis.h2hAwayWins ?? 0) > (analysis.h2hHomeWins ?? 0)
+                  ? ` - ${awayStanding?.teamName || 'Away'} leads ${analysis.h2hAwayWins}-${analysis.h2hHomeWins}`
+                  : ' - All square'}
+              {(analysis.h2hDraws ?? 0) > 0 && ` with ${analysis.h2hDraws} draw${(analysis.h2hDraws ?? 0) > 1 ? 's' : ''}`}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Match Predictions */}
+      <Card className="bg-card/50 border-border/50">
+        <CardContent className="p-6 space-y-6">
+          <h3 className="text-lg font-bold flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            Predictions
+          </h3>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Home Win</span>
+              <span className="text-xl font-bold">{analysis?.homeWinPct || 0}%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Draw</span>
+              <span className="text-xl font-bold">{analysis?.drawPct || 0}%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Away Win</span>
+              <span className="text-xl font-bold">{analysis?.awayWinPct || 0}%</span>
+            </div>
+          </div>
+
+          {analysis?.oddsHome && analysis?.oddsDraw && analysis?.oddsAway && (
+            <div className="pt-4 border-t border-border/30 space-y-2">
+              <p className="text-xs text-muted-foreground uppercase text-center">Odds</p>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="text-xs text-muted-foreground">Home</p>
+                  <p className="text-sm font-bold">{parseFloat(analysis.oddsHome).toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Draw</p>
+                  <p className="text-sm font-bold">{parseFloat(analysis.oddsDraw).toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Away</p>
+                  <p className="text-sm font-bold">{parseFloat(analysis.oddsAway).toFixed(2)}</p>
+                </div>
+              </div>
             </div>
           )}
         </CardContent>

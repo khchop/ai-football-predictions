@@ -76,7 +76,7 @@ export function createPredictionsWorker() {
         
         if (competition.apiFootballId) {
           try {
-            const standingsMap = await getStandingsForLeagues([competition.apiFootballId]);
+            const standingsMap = await getStandingsForLeagues([competition.apiFootballId], competition.season);
             homeStanding = getStandingFromMap(match.homeTeam, competition.apiFootballId, standingsMap);
             awayStanding = getStandingFromMap(match.awayTeam, competition.apiFootballId, standingsMap);
             } catch (error: any) {

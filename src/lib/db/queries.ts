@@ -263,7 +263,7 @@ export async function getStandingsByCompetitionId(competitionId: string) {
 /**
  * Get standings for specific teams in a competition
  */
-export async function getStandingsForTeams(leagueId: number, teamNames: string[]) {
+export async function getStandingsForTeams(leagueId: number, teamNames: string[], season: number) {
   const db = getDb();
   return db
     .select()
@@ -271,6 +271,7 @@ export async function getStandingsForTeams(leagueId: number, teamNames: string[]
     .where(
       and(
         eq(leagueStandings.leagueId, leagueId),
+        eq(leagueStandings.season, season),
         inArray(leagueStandings.teamName, teamNames)
       )
     );

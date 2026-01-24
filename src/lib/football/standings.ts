@@ -272,7 +272,8 @@ export async function updateStandingsIfStale(maxAgeHours: number = 24): Promise<
 // Get standing for a specific team by name (fuzzy match)
 export async function getStandingByTeamName(
   teamName: string, 
-  leagueId: number
+  leagueId: number,
+  season: number
 ): Promise<LeagueStanding | null> {
   const db = getDb();
   
@@ -283,6 +284,7 @@ export async function getStandingByTeamName(
     .where(
       and(
         eq(leagueStandings.leagueId, leagueId),
+        eq(leagueStandings.season, season),
         eq(leagueStandings.teamName, teamName)
       )
     )
@@ -296,7 +298,12 @@ export async function getStandingByTeamName(
   const allInLeague = await db
     .select()
     .from(leagueStandings)
-    .where(eq(leagueStandings.leagueId, leagueId));
+    .where(
+      and(
+        eq(leagueStandings.leagueId, leagueId),
+        eq(leagueStandings.season, season)
+      )
+    );
 
   // Fuzzy match: check if team name contains or is contained by search term
   const normalizedSearch = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -325,18 +332,23 @@ export async function getStandingByTeamName(
 }
 
 // Get all standings for a league
-export async function getStandingsForLeague(leagueId: number): Promise<LeagueStanding[]> {
+export async function getStandingsForLeague(leagueId: number, season: number): Promise<LeagueStanding[]> {
   const db = getDb();
   
   return db
     .select()
     .from(leagueStandings)
-    .where(eq(leagueStandings.leagueId, leagueId))
+    .where(
+      and(
+        eq(leagueStandings.leagueId, leagueId),
+        eq(leagueStandings.season, season)
+      )
+    )
     .orderBy(leagueStandings.position);
 }
 
 // Load all standings for multiple leagues at once (optimization for batch processing)
-export async function getStandingsForLeagues(leagueIds: number[]): Promise<Map<string, LeagueStanding>> {
+export async function getStandingsForLeagues(leagueIds: number[], season: number): Promise<Map<string, LeagueStanding>> {
   const db = getDb();
   
   if (leagueIds.length === 0) {
@@ -346,7 +358,12 @@ export async function getStandingsForLeagues(leagueIds: number[]): Promise<Map<s
   const results = await db
     .select()
     .from(leagueStandings)
-    .where(inArray(leagueStandings.leagueId, leagueIds));
+    .where(
+      and(
+        inArray(leagueStandings.leagueId, leagueIds),
+        eq(leagueStandings.season, season)
+      )
+    );
   
   // Create lookup map with multiple key formats for flexible lookup
   const standingsMap = new Map<string, LeagueStanding>();

@@ -107,7 +107,7 @@ export default async function PredictionPage({ params }: MatchPageProps) {
     : [];
 
   // Fetch standings for both teams
-  const teamStandings = await getStandingsForTeams(competition.apiFootballId, [match.homeTeam, match.awayTeam]);
+  const teamStandings = await getStandingsForTeams(competition.apiFootballId, [match.homeTeam, match.awayTeam], competition.season);
   const homeStanding = teamStandings.find(s => s.teamName === match.homeTeam) || null;
   const awayStanding = teamStandings.find(s => s.teamName === match.awayTeam) || null;
 
