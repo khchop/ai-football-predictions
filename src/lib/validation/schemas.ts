@@ -46,8 +46,10 @@ export type GetMatchParams = z.infer<typeof getMatchParamsSchema>;
 // GET /api/leaderboard
 export const getLeaderboardQuerySchema = z.object({
   activeOnly: booleanStringSchema.optional(),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
+  limit: z.coerce.number().int().min(1).max(100).default(30),
   offset: z.coerce.number().int().min(0).default(0),
+  competitionId: z.string().optional(), // Filter by competition (e.g., 'ucl', 'epl')
+  timeRange: z.enum(['7d', '30d', '90d', 'all']).default('all'), // Filter by time range
 });
 
 export type GetLeaderboardQuery = z.infer<typeof getLeaderboardQuerySchema>;

@@ -2,15 +2,21 @@
 
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { Star, ArrowUpDown, ArrowUp, ArrowDown, Trophy } from 'lucide-react';
+import { Star, ArrowUpDown, ArrowUp, ArrowDown, Trophy, Medal } from 'lucide-react';
 
-interface CompetitionStats {
+export interface CompetitionStats {
   competitionId: string;
   competitionName: string;
   totalPredictions: number;
   correctTendencies: number;
   exactScores: number;
   totalPoints: number;
+  avgPoints: number;      // From DB query
+  rank?: number | null;   // Competition-specific rank
+}
+
+// Internal type with computed fields
+interface NormalizedStats extends CompetitionStats {
   averagePoints: number;
   accuracy: number;
 }
@@ -21,7 +27,7 @@ interface ModelCompetitionBreakdownProps {
   selectedCompetition?: string | null;
 }
 
-type SortColumn = 'competitionName' | 'totalPredictions' | 'totalPoints' | 'averagePoints' | 'accuracy';
+type SortColumn = 'competitionName' | 'totalPredictions' | 'totalPoints' | 'averagePoints' | 'accuracy' | 'rank';
 type SortOrder = 'asc' | 'desc';
 
 export function ModelCompetitionBreakdown({ 
@@ -32,17 +38,28 @@ export function ModelCompetitionBreakdown({
   const [sortColumn, setSortColumn] = useState<SortColumn>('totalPredictions');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
+  // Normalize data: compute averagePoints and accuracy if not present
+  const normalizedData: NormalizedStats[] = useMemo(() => {
+    return data.map(d => ({
+      ...d,
+      averagePoints: d.avgPoints,
+      accuracy: d.totalPredictions > 0 
+        ? Math.round((d.correctTendencies / d.totalPredictions) * 100)
+        : 0,
+    }));
+  }, [data]);
+
   // Find best competition (highest avg points with min 5 predictions)
   const bestCompetitionId = useMemo(() => {
-    const eligible = data.filter(d => d.totalPredictions >= 5);
+    const eligible = normalizedData.filter(d => d.totalPredictions >= 5);
     if (eligible.length === 0) return null;
     return eligible.reduce((best, current) => 
       current.averagePoints > best.averagePoints ? current : best
     ).competitionId;
-  }, [data]);
+  }, [normalizedData]);
 
   const sortedData = useMemo(() => {
-    return [...data].sort((a, b) => {
+    return [...normalizedData].sort((a, b) => {
       let aVal: number | string;
       let bVal: number | string;
 
@@ -67,6 +84,11 @@ export function ModelCompetitionBreakdown({
           aVal = a.accuracy;
           bVal = b.accuracy;
           break;
+        case 'rank':
+          // Null ranks go to the end
+          aVal = a.rank ?? 9999;
+          bVal = b.rank ?? 9999;
+          break;
         default:
           aVal = a.totalPredictions;
           bVal = b.totalPredictions;
@@ -78,7 +100,7 @@ export function ModelCompetitionBreakdown({
 
       return sortOrder === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
     });
-  }, [data, sortColumn, sortOrder]);
+  }, [normalizedData, sortColumn, sortOrder]);
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -170,6 +192,15 @@ export function ModelCompetitionBreakdown({
             <th className="text-center py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Exact
             </th>
+            <th
+              className="text-center py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground transition-colors"
+              onClick={() => handleSort('rank')}
+            >
+              <span className="flex items-center justify-center">
+                Rank
+                {getSortIcon('rank')}
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -229,6 +260,22 @@ export function ModelCompetitionBreakdown({
                   )}>
                     {row.exactScores}
                   </span>
+                </td>
+                <td className="py-3 px-3 text-center">
+                  {row.rank ? (
+                    <span className={cn(
+                      "inline-flex items-center gap-1 px-2 py-0.5 rounded text-sm font-bold",
+                      row.rank === 1 && "bg-yellow-500/20 text-yellow-400",
+                      row.rank === 2 && "bg-slate-300/20 text-slate-300",
+                      row.rank === 3 && "bg-orange-500/20 text-orange-400",
+                      row.rank > 3 && "text-muted-foreground"
+                    )}>
+                      {row.rank <= 3 && <Medal className="h-3 w-3" />}
+                      #{row.rank}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">—</span>
+                  )}
                 </td>
               </tr>
             );

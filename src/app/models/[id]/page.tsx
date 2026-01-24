@@ -8,7 +8,7 @@ import {
   getModelBettingStats,
   getModelPredictionStats,
   getModelWeeklyPerformance,
-  getModelStatsByCompetition,
+  getModelStatsByCompetitionWithRank,
   getModelRank,
   getModelResultTypeBreakdown,
 } from '@/lib/db/queries';
@@ -90,7 +90,7 @@ export default async function ModelPage({ params }: ModelPageProps) {
     getModelBettingStats(id),
     getModelPredictionStats(id),
     getModelWeeklyPerformance(id),
-    getModelStatsByCompetition(id),
+    getModelStatsByCompetitionWithRank(id),
     getModelRank(id),
     getModelResultTypeBreakdown(id),
   ]);

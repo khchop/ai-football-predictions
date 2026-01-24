@@ -18,7 +18,20 @@ const COMPETITION_OPTIONS = [
   { id: 'uel', name: 'Europa League' },
   { id: 'uecl', name: 'Conference League' },
   { id: 'epl', name: 'Premier League' },
+  { id: 'laliga', name: 'La Liga' },
+  { id: 'bundesliga', name: 'Bundesliga' },
+  { id: 'seriea', name: 'Serie A' },
+  { id: 'ligue1', name: 'Ligue 1' },
+  { id: 'superlig', name: 'Super Lig' },
   { id: 'nations-league', name: 'Nations League' },
+];
+
+// Time range options matching API TimeRange type
+const TIME_RANGE_OPTIONS = [
+  { value: 'all', label: 'All Time' },
+  { value: '90d', label: 'Last 90 Days' },
+  { value: '30d', label: 'Last 30 Days' },
+  { value: '7d', label: 'Last 7 Days' },
 ];
 
 interface LeaderboardFiltersProps {
@@ -29,14 +42,14 @@ export function LeaderboardFilters({ className }: LeaderboardFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const currentDays = searchParams.get('days') || 'all';
-  const currentMinPredictions = searchParams.get('minPredictions') || '5';
+  const currentTimeRange = searchParams.get('timeRange') || 'all';
+  const currentMinPredictions = searchParams.get('minPredictions') || '0';
   const currentCompetition = searchParams.get('competition') || 'all';
 
   const updateParams = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     
-    if (value === 'all') {
+    if (value === 'all' || value === '0') {
       params.delete(key);
     } else {
       params.set(key, value);
@@ -61,7 +74,7 @@ export function LeaderboardFilters({ className }: LeaderboardFiltersProps) {
           value={currentCompetition}
           onValueChange={(value: string) => updateParams('competition', value)}
         >
-          <SelectTrigger className="w-[170px] bg-card/50 border-border/50">
+          <SelectTrigger className="w-[180px] bg-card/50 border-border/50">
             <SelectValue placeholder="Competition" />
           </SelectTrigger>
           <SelectContent>
@@ -78,16 +91,18 @@ export function LeaderboardFilters({ className }: LeaderboardFiltersProps) {
       <div className="flex items-center gap-2">
         <Calendar className="h-4 w-4 text-muted-foreground" />
         <Select
-          value={currentDays}
-          onValueChange={(value: string) => updateParams('days', value)}
+          value={currentTimeRange}
+          onValueChange={(value: string) => updateParams('timeRange', value)}
         >
-          <SelectTrigger className="w-[140px] bg-card/50 border-border/50">
+          <SelectTrigger className="w-[150px] bg-card/50 border-border/50">
             <SelectValue placeholder="Time period" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="7">Last 7 days</SelectItem>
-            <SelectItem value="30">Last 30 days</SelectItem>
-            <SelectItem value="all">All time</SelectItem>
+            {TIME_RANGE_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

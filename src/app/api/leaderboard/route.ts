@@ -34,12 +34,16 @@ export async function GET(request: NextRequest) {
       return validationError;
     }
     
-    const { activeOnly } = validatedQuery;
+    const { activeOnly, competitionId, timeRange, limit } = validatedQuery;
 
-    // Get leaderboard by total points (Kicktipp Quota Scoring)
-    let leaderboard = await getLeaderboard();
+    // Get leaderboard with filters (by average points, Kicktipp Quota Scoring)
+    let leaderboard = await getLeaderboard({
+      competitionId,
+      timeRange,
+      limit,
+    });
 
-    // Filter to active models only if requested
+    // Filter to active models only if requested (redundant since query already filters, but kept for API compatibility)
     if (activeOnly) {
       leaderboard = leaderboard.filter(m => m.model.active);
     }
@@ -52,6 +56,10 @@ export async function GET(request: NextRequest) {
         leaderboard,
         activeModels: activeModels.length,
         totalEntries: leaderboard.length,
+        filters: {
+          competitionId: competitionId || null,
+          timeRange,
+        },
       },
       { headers: createRateLimitHeaders(rateLimitResult) }
     );

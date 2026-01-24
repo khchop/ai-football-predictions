@@ -2,7 +2,8 @@ import { Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LeaderboardTable } from '@/components/leaderboard-table';
-import { getLeaderboard } from '@/lib/db/queries';
+import { LeaderboardFilters } from '@/components/leaderboard-filters';
+import { getLeaderboard, type TimeRange } from '@/lib/db/queries';
 import { Trophy } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +13,16 @@ interface PageProps {
 }
 
 async function LeaderboardContent({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
-  const leaderboard = await getLeaderboard();
+  // Parse filter parameters
+  const competitionId = typeof searchParams.competition === 'string' && searchParams.competition !== 'all' 
+    ? searchParams.competition 
+    : undefined;
+  const timeRange = (typeof searchParams.timeRange === 'string' ? searchParams.timeRange : 'all') as TimeRange;
+  const minPredictions = typeof searchParams.minPredictions === 'string' 
+    ? parseInt(searchParams.minPredictions, 10) 
+    : 0;
+  
+  const leaderboard = await getLeaderboard({ competitionId, timeRange });
   
   if (leaderboard.length === 0) {
     return (
@@ -27,16 +37,18 @@ async function LeaderboardContent({ searchParams }: { searchParams: { [key: stri
   }
   
   // Map the data to match LeaderboardTable's expected format
-  const formattedLeaderboard = leaderboard.map(entry => ({
-    modelId: entry.model.id,
-    displayName: entry.model.displayName,
-    provider: entry.model.provider,
-    totalPredictions: Number(entry.totalPredictions) || 0,
-    totalPoints: Number(entry.totalPoints) || 0,
-    averagePoints: Number(entry.avgPoints) || 0, // Convert to number (DB may return string)
-    exactScores: Number(entry.exactScores) || 0,
-    correctTendencies: Number(entry.correctTendencies) || 0,
-  }));
+  const formattedLeaderboard = leaderboard
+    .map(entry => ({
+      modelId: entry.model.id,
+      displayName: entry.model.displayName,
+      provider: entry.model.provider,
+      totalPredictions: Number(entry.totalPredictions) || 0,
+      totalPoints: Number(entry.totalPoints) || 0,
+      averagePoints: Number(entry.avgPoints) || 0, // Convert to number (DB may return string)
+      exactScores: Number(entry.exactScores) || 0,
+      correctTendencies: Number(entry.correctTendencies) || 0,
+    }))
+    .filter(entry => entry.totalPredictions >= minPredictions);
   
   return (
     <Card className="bg-card/50 border-border/50">
@@ -113,6 +125,11 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
           Models predict exact scorelines for each match. Points are awarded based on the Kicktipp Quota scoring system: tendency points (2-6, variable based on prediction rarity), goal difference bonus (+1), and exact score bonus (+3). Maximum: 10 points.
         </p>
       </div>
+
+      {/* Filters */}
+      <Suspense fallback={<Skeleton className="h-10 w-full" />}>
+        <LeaderboardFilters />
+      </Suspense>
 
       {/* Leaderboard Content */}
       <Suspense fallback={<LoadingSkeleton />}>

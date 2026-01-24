@@ -1427,9 +1427,96 @@ export async function updateMatchQuotas(
     .returning();
 }
 
-// Get leaderboard (by total points)
-export async function getLeaderboard(limit = 30) {
+// Time range options for leaderboard filtering
+export type TimeRange = '7d' | '30d' | '90d' | 'all';
+
+export interface LeaderboardFilters {
+  competitionId?: string;  // Filter by competition (e.g., 'ucl', 'epl')
+  timeRange?: TimeRange;   // Filter by time range
+  limit?: number;
+}
+
+// Calculate date cutoff for time range filter
+function getDateCutoff(timeRange: TimeRange): string | null {
+  if (timeRange === 'all') return null;
+  
+  const now = new Date();
+  const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
+  now.setDate(now.getDate() - days);
+  return now.toISOString();
+}
+
+// Get leaderboard with optional filters (competition and time range)
+export async function getLeaderboard(filters: LeaderboardFilters = {}) {
   const db = getDb();
+  const { competitionId, timeRange = 'all', limit = 30 } = filters;
+  
+  // Build join conditions
+  const joinConditions = [
+    eq(predictions.modelId, models.id),
+    eq(predictions.status, 'scored')
+  ];
+  
+  // Add competition filter if specified (join through matches)
+  if (competitionId) {
+    // Need to join with matches to filter by competition
+    const result = await db
+      .select({
+        model: models,
+        totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
+        totalPredictions: sql<number>`COUNT(${predictions.id})`,
+        exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
+        correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
+        avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
+      })
+      .from(models)
+      .leftJoin(predictions, and(
+        eq(predictions.modelId, models.id),
+        eq(predictions.status, 'scored')
+      ))
+      .leftJoin(matches, eq(predictions.matchId, matches.id))
+      .where(and(
+        eq(models.active, true),
+        eq(matches.competitionId, competitionId),
+        timeRange !== 'all' ? gte(matches.kickoffTime, getDateCutoff(timeRange)!) : undefined
+      ))
+      .groupBy(models.id)
+      .orderBy(desc(sql`COALESCE(AVG(${predictions.totalPoints})::numeric, 0)`))
+      .limit(limit);
+    
+    return result;
+  }
+  
+  // No competition filter - simpler query
+  const dateCutoff = getDateCutoff(timeRange);
+  
+  if (dateCutoff) {
+    // With time filter, need to join matches for kickoffTime
+    return db
+      .select({
+        model: models,
+        totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
+        totalPredictions: sql<number>`COUNT(${predictions.id})`,
+        exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
+        correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
+        avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
+      })
+      .from(models)
+      .leftJoin(predictions, and(
+        eq(predictions.modelId, models.id),
+        eq(predictions.status, 'scored')
+      ))
+      .leftJoin(matches, eq(predictions.matchId, matches.id))
+      .where(and(
+        eq(models.active, true),
+        gte(matches.kickoffTime, dateCutoff)
+      ))
+      .groupBy(models.id)
+      .orderBy(desc(sql`COALESCE(AVG(${predictions.totalPoints})::numeric, 0)`))
+      .limit(limit);
+  }
+  
+  // All-time, no competition filter - original simple query
   return db
     .select({
       model: models,
@@ -1446,7 +1533,7 @@ export async function getLeaderboard(limit = 30) {
     ))
     .where(eq(models.active, true))
     .groupBy(models.id)
-    .orderBy(desc(sql`COALESCE(SUM(${predictions.totalPoints}), 0)`))
+    .orderBy(desc(sql`COALESCE(AVG(${predictions.totalPoints})::numeric, 0)`))
     .limit(limit);
 }
 
@@ -1502,6 +1589,81 @@ export async function getModelRank(modelId: string) {
     .limit(1);
   
   return rankResult[0]?.rank ?? 1;
+}
+
+// Get model's rank for a specific competition by average points
+export async function getModelRankByCompetition(modelId: string, competitionId: string) {
+  const db = getDb();
+  
+  const rankResult = await db
+    .select({
+      rank: sql<number>`COALESCE(
+        (SELECT COUNT(*) + 1 FROM (
+          SELECT AVG(p.total_points) as avg_pts
+          FROM predictions p
+          INNER JOIN models m ON p.model_id = m.id
+          INNER JOIN matches mt ON p.match_id = mt.id
+          WHERE m.active = true 
+            AND mt.competition_id = ${competitionId}
+            AND p.status = 'scored'
+          GROUP BY p.model_id
+          HAVING AVG(p.total_points) > (
+            SELECT AVG(p2.total_points)
+            FROM predictions p2
+            INNER JOIN matches mt2 ON p2.match_id = mt2.id
+            WHERE p2.model_id = ${modelId}
+              AND mt2.competition_id = ${competitionId}
+              AND p2.status = 'scored'
+          )
+        ) as better_models),
+        1
+      )`,
+    })
+    .from(predictions)
+    .limit(1);
+  
+  return rankResult[0]?.rank ?? null;
+}
+
+// Get model's stats by competition (for model profile page)
+export async function getModelStatsByCompetitionWithRank(modelId: string) {
+  const db = getDb();
+  
+  // Get stats grouped by competition
+  const stats = await db
+    .select({
+      competitionId: matches.competitionId,
+      competitionName: competitions.name,
+      totalPredictions: sql<number>`COUNT(${predictions.id})`,
+      totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
+      avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
+      exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
+      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
+    })
+    .from(predictions)
+    .innerJoin(matches, eq(predictions.matchId, matches.id))
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(
+      and(
+        eq(predictions.modelId, modelId),
+        eq(predictions.status, 'scored')
+      )
+    )
+    .groupBy(matches.competitionId, competitions.name)
+    .orderBy(desc(sql`COUNT(${predictions.id})`));
+  
+  // Get rank for each competition
+  const statsWithRank = await Promise.all(
+    stats.map(async (stat) => {
+      const rank = await getModelRankByCompetition(modelId, stat.competitionId);
+      return {
+        ...stat,
+        rank,
+      };
+    })
+  );
+  
+  return statsWithRank;
 }
 
 // Get model's prediction breakdown by result type (Home Win, Draw, Away Win)
