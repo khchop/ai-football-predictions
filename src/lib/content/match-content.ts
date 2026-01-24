@@ -156,58 +156,74 @@ Write flowing prose without headers.`;
  * Returns: true if content generated and saved, false if failed (non-blocking)
  */
 export async function generateBettingContent(matchId: string): Promise<boolean> {
-  try {
-    const db = getDb();
+   try {
+     const db = getDb();
 
-    // Get match and predictions
-    const matchData = await db
-      .select({
-        match: matches,
-      })
-      .from(matches)
-      .where(eq(matches.id, matchId))
-      .limit(1);
+     // Get match and predictions
+     const matchData = await db
+       .select({
+         match: matches,
+       })
+       .from(matches)
+       .where(eq(matches.id, matchId))
+       .limit(1);
 
-     if (matchData.length === 0) {
-       log.warn({ matchId }, 'Match not found for betting content generation');
-       return false;
-     }
+      if (matchData.length === 0) {
+        log.warn({ matchId }, 'Match not found for betting content generation');
+        return false;
+      }
 
-     const match = matchData[0].match;
+      const match = matchData[0].match;
 
-    // Get AI model bets for this match
-    const modelBets = await db
-      .select({
-        modelName: models.displayName,
-        betType: bets.betType,
-        selection: bets.selection,
-        odds: bets.odds,
-      })
-      .from(bets)
-      .innerJoin(models, eq(bets.modelId, models.id))
-      .where(eq(bets.matchId, matchId));
+     // Get AI model predictions for this match
+     const modelPredictions = await db
+       .select({
+         modelName: models.displayName,
+         predictedHome: predictions.predictedHome,
+         predictedAway: predictions.predictedAway,
+         predictedResult: predictions.predictedResult,
+       })
+       .from(predictions)
+       .innerJoin(models, eq(predictions.modelId, models.id))
+       .where(eq(predictions.matchId, matchId));
 
-    // Build prediction summary
-    let predictionsSummary = '';
-    if (modelBets.length > 0) {
-      const resultBets = modelBets.filter((b) => b.betType === 'result');
-      const homeFavor = resultBets.filter((b) => b.selection === '1').length;
-      const drawFavor = resultBets.filter((b) => b.selection === 'X').length;
-      const awayFavor = resultBets.filter((b) => b.selection === '2').length;
+     // Build prediction summary
+     let predictionsSummary = '';
+     if (modelPredictions.length > 0) {
+       // Count result tendencies
+       const homeFavor = modelPredictions.filter((p) => p.predictedResult === 'H').length;
+       const drawFavor = modelPredictions.filter((p) => p.predictedResult === 'D').length;
+       const awayFavor = modelPredictions.filter((p) => p.predictedResult === 'A').length;
 
-      predictionsSummary = `
+       // Find most common scores
+       const scoreFrequency = modelPredictions.reduce((acc, p) => {
+         const score = `${p.predictedHome}-${p.predictedAway}`;
+         acc[score] = (acc[score] || 0) + 1;
+         return acc;
+       }, {} as Record<string, number>);
+
+       const topScores = Object.entries(scoreFrequency)
+         .sort(([, a], [, b]) => b - a)
+         .slice(0, 3)
+         .map(([score, count]) => `${score} (${count} models)`)
+         .join(', ');
+
+       predictionsSummary = `
 Prediction Distribution:
 - Home Win (${match.homeTeam}): ${homeFavor} models
 - Draw: ${drawFavor} models
 - Away Win (${match.awayTeam}): ${awayFavor} models
-Total Models: ${resultBets.length}
+Total Models: ${modelPredictions.length}
 
-Sample Model Bets:
-${modelBets
-  .slice(0, 5)
-  .map((b) => `- ${b.modelName}: ${b.betType} ${b.selection} @${b.odds}`)
-  .join('\n')}`;
-    }
+Top Predicted Scores:
+${topScores}
+
+Sample Model Predictions:
+${modelPredictions
+   .slice(0, 5)
+   .map((p) => `- ${p.modelName}: ${p.predictedHome}-${p.predictedAway}`)
+   .join('\n')}`;
+     }
 
     const prompt = `Write 4-5 sentences (~150-200 words) summarizing AI model predictions for ${match.homeTeam} vs ${match.awayTeam}.
 
