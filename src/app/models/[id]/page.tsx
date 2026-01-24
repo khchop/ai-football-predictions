@@ -99,6 +99,13 @@ export default async function ModelPage({ params }: ModelPageProps) {
   const provider = getProviderById(id);
   const tier = provider && 'tier' in provider ? (provider as { tier: ModelTier }).tier : undefined;
 
+   // Calculate hero stats
+   const totalPredictions = predictionStats?.totalPredictions || 0;
+   const avgPointsPerMatch = predictionStats?.avgPoints || '0.00';
+   const tendencyAccuracy = predictionStats?.scoredPredictions 
+     ? Math.round((predictionStats.correctTendencies / predictionStats.scoredPredictions) * 100)
+     : 0;
+
    return (
      <div className="space-y-8">
        {/* Model Header */}
@@ -136,169 +143,198 @@ export default async function ModelPage({ params }: ModelPageProps) {
          )}
        </div>
        
-       {/* Performance Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Stats */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Betting Performance */}
-          {bettingStats && (
-            <section>
-              <div className="flex items-center gap-2 mb-4">
-                <DollarSign className="h-5 w-5 text-primary" />
-                <h2 className="text-xl font-semibold">Betting Performance</h2>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="rounded-xl bg-card/50 border border-border/50 p-4">
-                  <p className="text-xs text-muted-foreground mb-1">Balance</p>
-                  <p className="text-2xl font-bold font-mono">€{bettingStats.balance.toFixed(2)}</p>
-                </div>
-                <div className="rounded-xl bg-card/50 border border-border/50 p-4">
-                  <p className="text-xs text-muted-foreground mb-1">Profit/Loss</p>
-                  <p className={cn(
-                    "text-2xl font-bold font-mono",
-                    bettingStats.profit > 0 && "text-green-400",
-                    bettingStats.profit < 0 && "text-red-400"
-                  )}>
-                    {bettingStats.profit >= 0 ? '+' : ''}€{bettingStats.profit.toFixed(2)}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-card/50 border border-border/50 p-4">
-                  <p className="text-xs text-muted-foreground mb-1">ROI</p>
-                  <p className={cn(
-                    "text-2xl font-bold font-mono",
-                    bettingStats.roi > 0 && "text-green-400",
-                    bettingStats.roi < 0 && "text-red-400"
-                  )}>
-                    {bettingStats.roi >= 0 ? '+' : ''}{bettingStats.roi.toFixed(1)}%
-                  </p>
-                </div>
-                <div className="rounded-xl bg-card/50 border border-border/50 p-4">
-                  <p className="text-xs text-muted-foreground mb-1">Win Rate</p>
-                  <p className="text-2xl font-bold font-mono">{bettingStats.winRate.toFixed(1)}%</p>
-                  <p className="text-xs text-muted-foreground mt-1">{bettingStats.winningBets}/{bettingStats.totalBets}</p>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Performance Chart */}
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Performance Trend</h2>
-            </div>
-            <Card className="bg-card/50 border-border/50">
-              <CardContent className="p-6">
-                <Suspense fallback={<ChartSkeleton />}>
-                  <ModelPerformanceChart data={weeklyPerformance} />
-                </Suspense>
-              </CardContent>
-            </Card>
-          </section>
-        </div>
-
-        {/* Sidebar Stats */}
-        <div className="space-y-8">
-          {/* Competition Breakdown */}
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <BarChart2 className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">By League</h2>
-            </div>
-            <Suspense fallback={<StatsSkeleton />}>
-              <ModelCompetitionBreakdown data={competitionStats} />
-            </Suspense>
-          </section>
-
-           {/* Model Rank */}
+       {/* Hero Stats - Key Metrics at a Glance */}
+       <section>
+         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+           {/* Global Rank */}
            {modelRank && (
-             <section>
-               <div className="flex items-center gap-2 mb-4">
-                 <Award className="h-5 w-5 text-primary" />
-                 <h2 className="text-xl font-semibold">Ranking</h2>
-               </div>
-               <Card className="bg-card/50 border-border/50">
-                 <CardContent className="p-4">
-                   <div className="text-center">
-                     <p className="text-sm text-muted-foreground mb-1">Global Rank</p>
-                     <p className="text-3xl font-bold text-primary">#{modelRank}</p>
-                   </div>
-                 </CardContent>
-               </Card>
-             </section>
+             <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+               <CardContent className="p-6">
+                 <div className="flex items-center gap-2 mb-2">
+                   <Award className="h-4 w-4 text-primary" />
+                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Global Rank</p>
+                 </div>
+                 <p className="text-4xl font-bold text-primary">#{modelRank}</p>
+               </CardContent>
+             </Card>
            )}
 
-           {/* Result Type Breakdown */}
-           {resultTypeBreakdown && resultTypeBreakdown.length === 3 && (
-             <section>
-               <div className="flex items-center gap-2 mb-4">
-                 <Target className="h-5 w-5 text-primary" />
-                 <h2 className="text-xl font-semibold">By Result Type</h2>
+           {/* Average Points */}
+           <Card className="bg-card/50 border-border/50">
+             <CardContent className="p-6">
+               <div className="flex items-center gap-2 mb-2">
+                 <TrendingUp className="h-4 w-4 text-primary" />
+                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Avg Points</p>
                </div>
-               <Card className="bg-card/50 border-border/50">
-                 <CardContent className="p-4 space-y-3">
-                   {resultTypeBreakdown.map((breakdown) => {
-                     const resultLabel = 
-                       breakdown.resultType === 'H' ? 'Home Win' :
-                       breakdown.resultType === 'D' ? 'Draw' :
-                       'Away Win';
-                     
-                     return (
-                       <div key={breakdown.resultType}>
-                         <div className="flex justify-between items-center mb-1">
-                           <span className="text-sm text-muted-foreground">{resultLabel}</span>
-                           <span className="text-sm font-semibold">{breakdown.count} predictions</span>
-                         </div>
-                         <div className="flex justify-between items-center text-xs">
-                           <span className="text-muted-foreground">Accuracy: {breakdown.accuracy}%</span>
-                           <span className="text-primary font-semibold">Avg: {breakdown.avgPoints} pts</span>
-                         </div>
-                       </div>
-                     );
-                   })}
-                 </CardContent>
-               </Card>
-             </section>
-           )}
+               <p className="text-4xl font-bold font-mono">{avgPointsPerMatch}</p>
+               <p className="text-xs text-muted-foreground mt-1">per match</p>
+             </CardContent>
+           </Card>
 
-           {/* Streaks & Records */}
-           <section>
-             <div className="flex items-center gap-2 mb-4">
-               <Sparkles className="h-5 w-5 text-primary" />
-               <h2 className="text-xl font-semibold">Streaks</h2>
+           {/* Total Predictions */}
+           <Card className="bg-card/50 border-border/50">
+             <CardContent className="p-6">
+               <div className="flex items-center gap-2 mb-2">
+                 <Target className="h-4 w-4 text-primary" />
+                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Predictions</p>
+               </div>
+               <p className="text-4xl font-bold font-mono">{totalPredictions}</p>
+               <p className="text-xs text-muted-foreground mt-1">matches</p>
+             </CardContent>
+           </Card>
+
+           {/* Tendency Accuracy */}
+           <Card className="bg-card/50 border-border/50">
+             <CardContent className="p-6">
+               <div className="flex items-center gap-2 mb-2">
+                 <Sparkles className="h-4 w-4 text-primary" />
+                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Accuracy</p>
+               </div>
+               <p className="text-4xl font-bold font-mono">{tendencyAccuracy}%</p>
+               <p className="text-xs text-muted-foreground mt-1">tendency</p>
+             </CardContent>
+           </Card>
+         </div>
+       </section>
+
+       {/* Betting Performance (only if data exists) */}
+       {bettingStats && (
+         <section>
+           <div className="flex items-center gap-2 mb-4">
+             <DollarSign className="h-5 w-5 text-primary" />
+             <h2 className="text-xl font-semibold">Betting Performance</h2>
+           </div>
+           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+             <div className="rounded-xl bg-card/50 border border-border/50 p-4">
+               <p className="text-xs text-muted-foreground mb-1">Balance</p>
+               <p className="text-2xl font-bold font-mono">€{bettingStats.balance.toFixed(2)}</p>
              </div>
-            <Card className="bg-card/50 border-border/50">
-              <CardContent className="p-4 space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Current Streak</span>
-                  <span className={cn(
-                    "font-bold",
-                    (model.currentStreak || 0) > 0 ? "text-green-400" : (model.currentStreak || 0) < 0 ? "text-red-400" : ""
-                  )}>
-                    {(model.currentStreak || 0) > 0 ? '+' : ''}{model.currentStreak || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Best Win Streak</span>
-                  <span className="font-bold text-green-400">+{model.bestStreak || 0}</span>
-                </div>
-                {predictionStats && (
-                  <>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Exact Scores</span>
-                      <span className="font-bold text-primary">{predictionStats.exactScores}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Avg Points/Match</span>
-                      <span className="font-bold">{predictionStats.avgPoints}</span>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </section>
-        </div>
-      </div>
-    </div>
-  );
+             <div className="rounded-xl bg-card/50 border border-border/50 p-4">
+               <p className="text-xs text-muted-foreground mb-1">Profit/Loss</p>
+               <p className={cn(
+                 "text-2xl font-bold font-mono",
+                 bettingStats.profit > 0 && "text-green-400",
+                 bettingStats.profit < 0 && "text-red-400"
+               )}>
+                 {bettingStats.profit >= 0 ? '+' : ''}€{bettingStats.profit.toFixed(2)}
+               </p>
+             </div>
+             <div className="rounded-xl bg-card/50 border border-border/50 p-4">
+               <p className="text-xs text-muted-foreground mb-1">ROI</p>
+               <p className={cn(
+                 "text-2xl font-bold font-mono",
+                 bettingStats.roi > 0 && "text-green-400",
+                 bettingStats.roi < 0 && "text-red-400"
+               )}>
+                 {bettingStats.roi >= 0 ? '+' : ''}{bettingStats.roi.toFixed(1)}%
+               </p>
+             </div>
+             <div className="rounded-xl bg-card/50 border border-border/50 p-4">
+               <p className="text-xs text-muted-foreground mb-1">Win Rate</p>
+               <p className="text-2xl font-bold font-mono">{bettingStats.winRate.toFixed(1)}%</p>
+               <p className="text-xs text-muted-foreground mt-1">{bettingStats.winningBets}/{bettingStats.totalBets}</p>
+             </div>
+           </div>
+         </section>
+       )}
+
+       {/* Performance Overview - Chart + Breakdown */}
+       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+         {/* Performance Chart */}
+         <section className="lg:col-span-2">
+           <div className="flex items-center gap-2 mb-4">
+             <TrendingUp className="h-5 w-5 text-primary" />
+             <h2 className="text-xl font-semibold">Performance Trend</h2>
+           </div>
+           <Card className="bg-card/50 border-border/50">
+             <CardContent className="p-6">
+               <Suspense fallback={<ChartSkeleton />}>
+                 <ModelPerformanceChart data={weeklyPerformance} />
+               </Suspense>
+             </CardContent>
+           </Card>
+         </section>
+
+         {/* Result Type + Streaks Combined */}
+         <section>
+           <div className="flex items-center gap-2 mb-4">
+             <Target className="h-5 w-5 text-primary" />
+             <h2 className="text-xl font-semibold">Performance Breakdown</h2>
+           </div>
+           <Card className="bg-card/50 border-border/50">
+             <CardContent className="p-4 space-y-6">
+               {/* Result Type Breakdown */}
+               {resultTypeBreakdown && resultTypeBreakdown.length === 3 && (
+                 <div>
+                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">By Result Type</h3>
+                   <div className="space-y-3">
+                     {resultTypeBreakdown.map((breakdown) => {
+                       const resultLabel = 
+                         breakdown.resultType === 'H' ? 'Home Win' :
+                         breakdown.resultType === 'D' ? 'Draw' :
+                         'Away Win';
+                       
+                       return (
+                         <div key={breakdown.resultType}>
+                           <div className="flex justify-between items-center mb-1">
+                             <span className="text-sm text-muted-foreground">{resultLabel}</span>
+                             <span className="text-sm font-semibold">{breakdown.count} predictions</span>
+                           </div>
+                           <div className="flex justify-between items-center text-xs">
+                             <span className="text-muted-foreground">Accuracy: {breakdown.accuracy}%</span>
+                             <span className="text-primary font-semibold">Avg: {breakdown.avgPoints} pts</span>
+                           </div>
+                         </div>
+                       );
+                     })}
+                   </div>
+                 </div>
+               )}
+
+               {/* Streaks */}
+               <div>
+                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Streaks</h3>
+                 <div className="space-y-3">
+                   <div className="flex justify-between items-center">
+                     <span className="text-sm text-muted-foreground">Current Streak</span>
+                     <span className={cn(
+                       "font-bold",
+                       (model.currentStreak || 0) > 0 ? "text-green-400" : (model.currentStreak || 0) < 0 ? "text-red-400" : ""
+                     )}>
+                       {(model.currentStreak || 0) > 0 ? '+' : ''}{model.currentStreak || 0}
+                     </span>
+                   </div>
+                   <div className="flex justify-between items-center">
+                     <span className="text-sm text-muted-foreground">Best Win Streak</span>
+                     <span className="font-bold text-green-400">+{model.bestStreak || 0}</span>
+                   </div>
+                   {predictionStats && (
+                     <div className="flex justify-between items-center">
+                       <span className="text-sm text-muted-foreground">Exact Scores</span>
+                       <span className="font-bold text-primary">{predictionStats.exactScores}</span>
+                     </div>
+                   )}
+                 </div>
+               </div>
+             </CardContent>
+           </Card>
+         </section>
+       </div>
+
+       {/* Competition Breakdown - Full Width */}
+       <section>
+         <div className="flex items-center gap-2 mb-4">
+           <BarChart2 className="h-5 w-5 text-primary" />
+           <h2 className="text-xl font-semibold">Performance by League</h2>
+         </div>
+         <Card className="bg-card/50 border-border/50">
+           <CardContent className="p-6">
+             <Suspense fallback={<TableSkeleton />}>
+               <ModelCompetitionBreakdown data={competitionStats} />
+             </Suspense>
+           </CardContent>
+         </Card>
+       </section>
+     </div>
+   );
 }
