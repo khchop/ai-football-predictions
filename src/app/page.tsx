@@ -88,7 +88,7 @@ async function LiveMatches() {
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {matches.map(({ match, competition }) => (
           <MatchCard
             key={match.id}
@@ -121,7 +121,7 @@ async function UpcomingMatches() {
   }
   
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
       {matches.slice(0, 9).map(({ match, competition }) => {
         return (
           <MatchCard
@@ -157,7 +157,7 @@ async function RecentResults() {
   }
   
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
       {matches.map(({ match, competition }) => (
         <MatchCard
           key={match.id}

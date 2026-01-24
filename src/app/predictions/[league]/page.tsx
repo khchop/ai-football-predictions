@@ -80,7 +80,7 @@ export default async function LeagueHubPage({ params }: LeaguePageProps) {
                 </span>
                 Live Now
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {liveMatches.map((m) => (
                   <MatchCard 
                     key={m.match.id} 
@@ -101,7 +101,7 @@ export default async function LeagueHubPage({ params }: LeaguePageProps) {
               Upcoming Predictions
             </h2>
             {upcomingMatches.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {upcomingMatches.map((m) => (
                   <MatchCard 
                     key={m.match.id} 
@@ -129,7 +129,7 @@ export default async function LeagueHubPage({ params }: LeaguePageProps) {
             Recent Results
           </h2>
           {pastMatches.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {pastMatches.map((m) => (
                 <MatchCard 
                   key={m.match.id} 

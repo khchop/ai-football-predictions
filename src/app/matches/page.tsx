@@ -29,7 +29,7 @@ async function LiveMatchesList() {
           <span>{matches.length} match{matches.length !== 1 ? 'es' : ''} in progress</span>
           <span className="text-xs text-muted-foreground/60">• Auto-updates every 30s</span>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {matches.map(({ match, competition }) => (
             <MatchCard
               key={match.id}
@@ -84,7 +84,7 @@ async function UpcomingMatchesList() {
               ({dayMatches.length} matches)
             </span>
           </h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {dayMatches.map(({ match, competition }) => (
               <MatchCard
                 key={match.id}
@@ -140,7 +140,7 @@ async function FinishedMatchesList() {
               ({dayMatches.length} matches)
             </span>
           </h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {dayMatches.map(({ match, competition }) => (
               <MatchCard
                 key={match.id}
@@ -195,7 +195,7 @@ async function AllMatchesList() {
               ({dayMatches.length} matches)
             </span>
           </h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {dayMatches.map(({ match, competition }) => (
               <MatchCard
                 key={match.id}
@@ -221,7 +221,7 @@ function LoadingSkeleton() {
     <div className="space-y-8">
       <div>
         <Skeleton className="h-6 w-48 mb-4" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="rounded-xl border border-border/50 bg-card/50 p-4">
               <Skeleton className="h-4 w-32 mb-4" />
