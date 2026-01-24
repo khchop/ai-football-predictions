@@ -286,6 +286,8 @@ export default async function PredictionPage({ params }: MatchPageProps) {
         analysis={analysis || null}
         homeStanding={homeStanding}
         awayStanding={awayStanding}
+        homeTeam={match.homeTeam}
+        awayTeam={match.awayTeam}
       />
 
        {/* Match Content Section */}

@@ -12,9 +12,10 @@ export interface CompetitionConfig {
 // Current season (auto-calculated: season starts in August)
 // January-July = previous year's season (e.g., Jan 2026 = 2025-26 season = 2025)
 // August-December = current year's season (e.g., Aug 2026 = 2026-27 season = 2026)
-const CURRENT_SEASON = new Date().getMonth() >= 7 
-  ? new Date().getFullYear() 
-  : new Date().getFullYear() - 1;
+const now = new Date();
+const CURRENT_SEASON = now.getMonth() >= 7 
+  ? now.getFullYear() 
+  : now.getFullYear() - 1;
 
 export const COMPETITIONS: CompetitionConfig[] = [
   // Club - European

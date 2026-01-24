@@ -8,9 +8,11 @@ interface MatchStatsProps {
   analysis: MatchAnalysis | null;
   homeStanding: LeagueStanding | null;
   awayStanding: LeagueStanding | null;
+  homeTeam: string;
+  awayTeam: string;
 }
 
-export function MatchStats({ analysis, homeStanding, awayStanding }: MatchStatsProps) {
+export function MatchStats({ analysis, homeStanding, awayStanding, homeTeam, awayTeam }: MatchStatsProps) {
   const h2hResults = analysis?.h2hResults ? JSON.parse(analysis.h2hResults) as H2HMatch[] : [];
   
   // Check if this is a cup match (teams not in same league standings)
@@ -95,9 +97,9 @@ export function MatchStats({ analysis, homeStanding, awayStanding }: MatchStatsP
             <div className="pt-2 text-xs text-center text-muted-foreground">
               Total meetings: {analysis.h2hTotal}
               {(analysis.h2hHomeWins ?? 0) > (analysis.h2hAwayWins ?? 0)
-                ? ` - ${homeStanding?.teamName || 'Home'} leads ${analysis.h2hHomeWins}-${analysis.h2hAwayWins}` 
+                ? ` - ${homeTeam} leads ${analysis.h2hHomeWins}-${analysis.h2hAwayWins}` 
                 : (analysis.h2hAwayWins ?? 0) > (analysis.h2hHomeWins ?? 0)
-                  ? ` - ${awayStanding?.teamName || 'Away'} leads ${analysis.h2hAwayWins}-${analysis.h2hHomeWins}`
+                  ? ` - ${awayTeam} leads ${analysis.h2hAwayWins}-${analysis.h2hHomeWins}`
                   : ' - All square'}
               {(analysis.h2hDraws ?? 0) > 0 && ` with ${analysis.h2hDraws} draw${(analysis.h2hDraws ?? 0) > 1 ? 's' : ''}`}
             </div>
@@ -134,15 +136,15 @@ export function MatchStats({ analysis, homeStanding, awayStanding }: MatchStatsP
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
                   <p className="text-xs text-muted-foreground">Home</p>
-                  <p className="text-sm font-bold">{parseFloat(analysis.oddsHome).toFixed(2)}</p>
+                  <p className="text-sm font-bold">{(parseFloat(analysis.oddsHome) || 0).toFixed(2)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Draw</p>
-                  <p className="text-sm font-bold">{parseFloat(analysis.oddsDraw).toFixed(2)}</p>
+                  <p className="text-sm font-bold">{(parseFloat(analysis.oddsDraw) || 0).toFixed(2)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Away</p>
-                  <p className="text-sm font-bold">{parseFloat(analysis.oddsAway).toFixed(2)}</p>
+                  <p className="text-sm font-bold">{(parseFloat(analysis.oddsAway) || 0).toFixed(2)}</p>
                 </div>
               </div>
             </div>
