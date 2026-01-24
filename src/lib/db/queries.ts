@@ -1712,7 +1712,7 @@ export async function getModelResultTypeBreakdown(modelId: string) {
       resultType: predictions.predictedResult, // 'H', 'D', or 'A'
       count: sql<number>`COUNT(*)`,
       avgPoints: sql<number>`ROUND(AVG(${predictions.totalPoints})::numeric, 2)`,
-      accuracy: sql<number>`ROUND(100.0 * SUM(CASE WHEN ${predictions.totalPoints} > 0 THEN 1 ELSE 0 END) / COUNT(*)::numeric, 1)`,
+      accuracy: sql<number>`ROUND(100.0 * SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END) / COUNT(*)::numeric, 1)`,
     })
     .from(predictions)
     .where(

@@ -254,23 +254,40 @@ Write flowing prose without headers.`;
      // Content is already a string
      const content = result.content;
 
-    // Save to database
+    // Save to database (upsert to handle cases where matchContent record doesn't exist yet)
     const db2 = getDb();
     const now = new Date().toISOString();
+    const contentId = uuidv4();
 
     await db2
-      .update(matchContent)
-      .set({
+      .insert(matchContent)
+      .values({
+        id: contentId,
+        matchId,
         bettingContent: content,
         bettingGeneratedAt: now,
+        generatedBy: CONTENT_CONFIG.model,
         totalTokens: result.usage.totalTokens,
         totalCost: estimateContentCost(
           result.usage.promptTokens,
           result.usage.completionTokens
         ).toFixed(4),
+        createdAt: now,
         updatedAt: now,
       })
-      .where(eq(matchContent.matchId, matchId));
+      .onConflictDoUpdate({
+        target: matchContent.matchId,
+        set: {
+          bettingContent: content,
+          bettingGeneratedAt: now,
+          totalTokens: result.usage.totalTokens,
+          totalCost: estimateContentCost(
+            result.usage.promptTokens,
+            result.usage.completionTokens
+          ).toFixed(4),
+          updatedAt: now,
+        },
+      });
 
      log.info(
        {
@@ -406,23 +423,40 @@ Write flowing prose without headers.`;
      // Content is already a string
      const content = result.content;
 
-    // Save to database
+    // Save to database (upsert to handle cases where matchContent record doesn't exist yet)
     const db2 = getDb();
     const now = new Date().toISOString();
+    const contentId = uuidv4();
 
     await db2
-      .update(matchContent)
-      .set({
+      .insert(matchContent)
+      .values({
+        id: contentId,
+        matchId,
         postMatchContent: content,
         postMatchGeneratedAt: now,
+        generatedBy: CONTENT_CONFIG.model,
         totalTokens: result.usage.totalTokens,
         totalCost: estimateContentCost(
           result.usage.promptTokens,
           result.usage.completionTokens
         ).toFixed(4),
+        createdAt: now,
         updatedAt: now,
       })
-      .where(eq(matchContent.matchId, matchId));
+      .onConflictDoUpdate({
+        target: matchContent.matchId,
+        set: {
+          postMatchContent: content,
+          postMatchGeneratedAt: now,
+          totalTokens: result.usage.totalTokens,
+          totalCost: estimateContentCost(
+            result.usage.promptTokens,
+            result.usage.completionTokens
+          ).toFixed(4),
+          updatedAt: now,
+        },
+      });
 
      log.info(
        {
