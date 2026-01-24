@@ -53,6 +53,7 @@ export const models = pgTable('models', {
   provider: text('provider').notNull(), // e.g., "groq"
   modelName: text('model_name').notNull(), // e.g., "llama-3.3-70b-versatile"
   displayName: text('display_name').notNull(), // e.g., "Llama 3.3 70B (Groq)"
+  modelDescription: text('model_description'), // AI-generated description of the model
   isPremium: boolean('is_premium').default(false),
   active: boolean('active').default(true),
   createdAt: text('created_at').default(sql`now()`),

@@ -9,9 +9,11 @@ import {
   getModelPredictionStats,
   getModelWeeklyPerformance,
   getModelStatsByCompetition,
+  getModelRank,
+  getModelResultTypeBreakdown,
 } from '@/lib/db/queries';
 import { getProviderById, type ModelTier } from '@/lib/llm';
-import { ArrowLeft, Bot, Sparkles, DollarSign, TrendingUp, BarChart2 } from 'lucide-react';
+import { ArrowLeft, Bot, Sparkles, DollarSign, TrendingUp, BarChart2, Award, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 import { ModelPerformanceChart } from '@/components/model-performance-chart';
@@ -84,22 +86,57 @@ export default async function ModelPage({ params }: ModelPageProps) {
   }
 
   // Fetch all model data
-  const [bettingStats, predictionStats, weeklyPerformance, competitionStats] = await Promise.all([
+  const [bettingStats, predictionStats, weeklyPerformance, competitionStats, modelRank, resultTypeBreakdown] = await Promise.all([
     getModelBettingStats(id),
     getModelPredictionStats(id),
     getModelWeeklyPerformance(id),
     getModelStatsByCompetition(id),
+    getModelRank(id),
+    getModelResultTypeBreakdown(id),
   ]);
 
   // Get provider info for tier badge
   const provider = getProviderById(id);
   const tier = provider && 'tier' in provider ? (provider as { tier: ModelTier }).tier : undefined;
 
-  return (
-    <div className="space-y-8">
-      {/* ... previous code ... */}
-      
-      {/* Performance Overview */}
+   return (
+     <div className="space-y-8">
+       {/* Model Header */}
+       <div className="border-b border-border/50 pb-6">
+         <div className="flex items-start justify-between gap-4 mb-4">
+           <Link 
+             href="/leaderboard" 
+             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+           >
+             <ArrowLeft className="h-4 w-4" />
+             Back to Leaderboard
+           </Link>
+         </div>
+
+         {/* Model Name and Provider */}
+         <div className="space-y-2 mb-4">
+           <div className="flex items-center gap-3">
+             <Bot className="h-8 w-8 text-primary" />
+             <div>
+               <h1 className="text-3xl font-bold">{model.displayName}</h1>
+               <p className="text-sm text-muted-foreground capitalize">
+                 {provider?.name || model.provider} AI Model
+               </p>
+             </div>
+           </div>
+         </div>
+
+         {/* Model Description */}
+         {model.modelDescription && (
+           <div className="bg-card/30 border border-border/50 rounded-lg p-4">
+             <p className="text-sm leading-relaxed text-foreground/80">
+               {model.modelDescription}
+             </p>
+           </div>
+         )}
+       </div>
+       
+       {/* Performance Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Stats */}
         <div className="lg:col-span-2 space-y-8">
@@ -173,12 +210,63 @@ export default async function ModelPage({ params }: ModelPageProps) {
             </Suspense>
           </section>
 
-          {/* Streaks & Records */}
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Streaks</h2>
-            </div>
+           {/* Model Rank */}
+           {modelRank && (
+             <section>
+               <div className="flex items-center gap-2 mb-4">
+                 <Award className="h-5 w-5 text-primary" />
+                 <h2 className="text-xl font-semibold">Ranking</h2>
+               </div>
+               <Card className="bg-card/50 border-border/50">
+                 <CardContent className="p-4">
+                   <div className="text-center">
+                     <p className="text-sm text-muted-foreground mb-1">Global Rank</p>
+                     <p className="text-3xl font-bold text-primary">#{modelRank}</p>
+                   </div>
+                 </CardContent>
+               </Card>
+             </section>
+           )}
+
+           {/* Result Type Breakdown */}
+           {resultTypeBreakdown && resultTypeBreakdown.length > 0 && (
+             <section>
+               <div className="flex items-center gap-2 mb-4">
+                 <Target className="h-5 w-5 text-primary" />
+                 <h2 className="text-xl font-semibold">By Result Type</h2>
+               </div>
+               <Card className="bg-card/50 border-border/50">
+                 <CardContent className="p-4 space-y-3">
+                   {resultTypeBreakdown.map((breakdown) => {
+                     const resultLabel = 
+                       breakdown.resultType === 'H' ? 'Home Win' :
+                       breakdown.resultType === 'D' ? 'Draw' :
+                       'Away Win';
+                     
+                     return (
+                       <div key={breakdown.resultType}>
+                         <div className="flex justify-between items-center mb-1">
+                           <span className="text-sm text-muted-foreground">{resultLabel}</span>
+                           <span className="text-sm font-semibold">{breakdown.count} predictions</span>
+                         </div>
+                         <div className="flex justify-between items-center text-xs">
+                           <span className="text-muted-foreground">Accuracy: {breakdown.accuracy}%</span>
+                           <span className="text-primary font-semibold">Avg: {breakdown.avgPoints} pts</span>
+                         </div>
+                       </div>
+                     );
+                   })}
+                 </CardContent>
+               </Card>
+             </section>
+           )}
+
+           {/* Streaks & Records */}
+           <section>
+             <div className="flex items-center gap-2 mb-4">
+               <Sparkles className="h-5 w-5 text-primary" />
+               <h2 className="text-xl font-semibold">Streaks</h2>
+             </div>
             <Card className="bg-card/50 border-border/50">
               <CardContent className="p-4 space-y-4">
                 <div className="flex justify-between items-center">

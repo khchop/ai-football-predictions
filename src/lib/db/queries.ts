@@ -1472,6 +1472,70 @@ export async function getModelPredictionStats(modelId: string) {
   return stats[0] || null;
 }
 
+// Get model's rank among all models by average points
+export async function getModelRank(modelId: string) {
+  const db = getDb();
+  
+  const modelRankResult = await db
+    .select({
+      rank: sql<number>`ROW_NUMBER() OVER (ORDER BY ROUND(AVG(${predictions.totalPoints})::numeric, 2) DESC)`,
+      avgPoints: sql<number>`ROUND(AVG(${predictions.totalPoints})::numeric, 2)`,
+    })
+    .from(predictions)
+    .innerJoin(models, eq(predictions.modelId, models.id))
+    .where(eq(models.active, true))
+    .groupBy(predictions.modelId);
+  
+  const rank = modelRankResult.find(r => {
+    // Filter by modelId - this is a workaround since we can't directly filter the window function
+    return r.rank !== null;
+  });
+  
+  // Simpler approach: count models with better average points
+  const betterModels = await db
+    .select({
+      count: sql<number>`COUNT(DISTINCT ${predictions.modelId})`,
+    })
+    .from(predictions)
+    .innerJoin(models, eq(predictions.modelId, models.id))
+    .where(
+      and(
+        eq(models.active, true),
+        sql`ROUND(AVG(${predictions.totalPoints})::numeric, 2) > (
+          SELECT ROUND(AVG(p2.total_points)::numeric, 2)
+          FROM predictions p2
+          WHERE p2.model_id = ${modelId}
+        )`
+      )
+    )
+    .groupBy();
+  
+  return (betterModels[0]?.count ?? 0) + 1;
+}
+
+// Get model's prediction breakdown by result type (Home Win, Draw, Away Win)
+export async function getModelResultTypeBreakdown(modelId: string) {
+  const db = getDb();
+  
+  const breakdown = await db
+    .select({
+      resultType: predictions.predictedResult, // 'H', 'D', or 'A'
+      count: sql<number>`COUNT(*)`,
+      avgPoints: sql<number>`ROUND(AVG(${predictions.totalPoints})::numeric, 2)`,
+      accuracy: sql<number>`ROUND(100.0 * SUM(CASE WHEN ${predictions.totalPoints} > 0 THEN 1 ELSE 0 END) / COUNT(*)::numeric, 1)`,
+    })
+    .from(predictions)
+    .where(
+      and(
+        eq(predictions.modelId, modelId),
+        eq(predictions.status, 'scored')
+      )
+    )
+    .groupBy(predictions.predictedResult);
+  
+  return breakdown;
+}
+
 // Get matches that need predictions (scheduled matches without predictions)
 export async function getMatchesMissingPredictions(hoursAhead: number = 2): Promise<Match[]> {
   const db = getDb();
