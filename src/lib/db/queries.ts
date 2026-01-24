@@ -1495,7 +1495,7 @@ export async function getLeaderboard(filters: LeaderboardFilters = {}) {
         totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
         totalPredictions: sql<number>`COUNT(${predictions.id})`,
         exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
-        correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)`,
+        correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
         avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
       })
       .from(models)
@@ -1527,7 +1527,7 @@ export async function getLeaderboard(filters: LeaderboardFilters = {}) {
         totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
         totalPredictions: sql<number>`COUNT(${predictions.id})`,
         exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
-        correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)`,
+        correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
         avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
       })
       .from(models)
@@ -1552,7 +1552,7 @@ export async function getLeaderboard(filters: LeaderboardFilters = {}) {
       totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
       totalPredictions: sql<number>`COUNT(${predictions.id})`,
       exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
-      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)`,
+      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
       avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
     })
     .from(models)
@@ -1577,8 +1577,8 @@ export async function getModelPredictionStats(modelId: string) {
       totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
       avgPoints: sql<number>`ROUND(AVG(${predictions.totalPoints})::numeric, 2)`,
       exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
-      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)`,
-      wrongTendencies: sql<number>`SUM(CASE WHEN ${predictions.status} = 'scored' AND (${predictions.tendencyPoints} IS NULL OR ${predictions.tendencyPoints} = 0) THEN 1 ELSE 0 END)`,
+      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
+      wrongTendencies: sql<number>`SUM(CASE WHEN ${predictions.status} = 'scored' AND ${predictions.tendencyPoints} IS NULL THEN 1 ELSE 0 END)`,
       maxPoints: sql<number>`MAX(${predictions.totalPoints})`,
       minPoints: sql<number>`MIN(${predictions.totalPoints})`,
     })
@@ -1667,7 +1667,7 @@ export async function getModelStatsByCompetitionWithRank(modelId: string) {
       totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
       avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
       exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
-      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)`,
+      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
     })
     .from(predictions)
     .innerJoin(matches, eq(predictions.matchId, matches.id))
