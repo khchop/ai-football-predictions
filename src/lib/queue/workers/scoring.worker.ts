@@ -109,13 +109,13 @@ export function createScoringWorker() {
                    quotaAway: quotas.away,
                  });
                  
-                 // Update prediction with scores within transaction
-                 await updatePredictionScores(prediction.id, {
-                   tendencyPoints: breakdown.tendencyPoints,
-                   goalDiffBonus: breakdown.goalDiffBonus,
-                   exactScoreBonus: breakdown.exactScoreBonus,
-                   totalPoints: breakdown.total,
-                 });
+                  // Update prediction with scores within transaction
+                  await updatePredictionScores(prediction.id, {
+                    tendencyPoints: breakdown.tendencyPoints,
+                    goalDiffBonus: breakdown.goalDiffBonus,
+                    exactScoreBonus: breakdown.exactScoreBonus,
+                    totalPoints: breakdown.total,
+                  }, tx);
                  
                   scoredCount++;
                   totalPointsAwarded += breakdown.total;

@@ -187,6 +187,7 @@ const QUEUE_TIMEOUTS = {
   [QUEUE_NAMES.PREDICTIONS]: 10 * 60 * 1000, // 10 minutes - LLM calls are slow
   [QUEUE_NAMES.ANALYSIS]: 5 * 60 * 1000,     // 5 minutes - multiple API calls
   [QUEUE_NAMES.BACKFILL]: 5 * 60 * 1000,     // 5 minutes - many database operations
+  [QUEUE_NAMES.SETTLEMENT]: 3 * 60 * 1000,   // 3 minutes - scoring many predictions
   default: 2 * 60 * 1000,                     // 2 minutes - default for fast operations
 } as const;
 
@@ -195,6 +196,7 @@ const WORKER_LOCK_DURATIONS = {
   [QUEUE_NAMES.PREDICTIONS]: 10 * 60 * 1000, // 10 minutes
   [QUEUE_NAMES.ANALYSIS]: 5 * 60 * 1000,     // 5 minutes
   [QUEUE_NAMES.BACKFILL]: 5 * 60 * 1000,     // 5 minutes
+  [QUEUE_NAMES.SETTLEMENT]: 3 * 60 * 1000,   // 3 minutes
   default: 30 * 1000,                        // 30 seconds - prevents stalled marking
 } as const;
 

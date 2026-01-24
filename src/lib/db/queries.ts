@@ -1389,9 +1389,10 @@ export async function updatePredictionScores(
     goalDiffBonus: number;
     exactScoreBonus: number;
     totalPoints: number;
-  }
+  },
+  tx?: any // Optional transaction context
 ) {
-  const db = getDb();
+  const db = tx ?? getDb();
   try {
     return await db
       .update(predictions)
@@ -1406,6 +1407,34 @@ export async function updatePredictionScores(
     logQueryError('updatePredictionScores', error, { predictionId, scores });
     throw error;
   }
+}
+
+// Get all finished matches that have unscored predictions
+export async function getMatchesNeedingRescore() {
+  const db = getDb();
+  
+  // Find matches that are finished, have a score, and have at least one pending prediction
+  const result = await db
+    .select({
+      id: matches.id,
+      homeTeam: matches.homeTeam,
+      awayTeam: matches.awayTeam,
+      kickoffTime: matches.kickoffTime,
+    })
+    .from(matches)
+    .innerJoin(predictions, eq(matches.id, predictions.matchId))
+    .where(
+      and(
+        eq(matches.status, 'finished'),
+        isNotNull(matches.homeScore),
+        isNotNull(matches.awayScore),
+        eq(predictions.status, 'pending')
+      )
+    )
+    .groupBy(matches.id)
+    .orderBy(desc(matches.kickoffTime));
+    
+  return result;
 }
 
 // Update match quotas after all predictions are in
