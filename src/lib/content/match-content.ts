@@ -346,11 +346,11 @@ export async function generatePostMatchContent(matchId: string): Promise<boolean
       .where(eq(predictions.matchId, matchId))
       .orderBy(desc(predictions.totalPoints));
 
-    const correctTendency = predictionsWithModels.filter((p) => p.totalPoints !== null && p.totalPoints > 0)
-      .length;
-    const exactScores = predictionsWithModels.filter(
-      (p) => p.exactScoreBonus !== null && p.exactScoreBonus > 0
-    ).length;
+     const correctTendency = predictionsWithModels.filter((p) => p.tendencyPoints !== null && p.tendencyPoints > 0)
+       .length;
+     const exactScores = predictionsWithModels.filter(
+       (p) => p.exactScoreBonus !== null && p.exactScoreBonus > 0
+     ).length;
 
     // Build top performers list with actual model names
     const topPerformers = predictionsWithModels
