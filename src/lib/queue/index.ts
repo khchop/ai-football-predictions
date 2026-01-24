@@ -15,6 +15,7 @@ export const JOB_TYPES = {
   FETCH_FIXTURES: 'fetch-fixtures',
   BACKFILL_MISSING: 'backfill-missing',
   CHECK_MODEL_HEALTH: 'check-disabled-models',
+  UPDATE_STANDINGS: 'update-standings',
   
   // Per-match scheduled
   ANALYZE_MATCH: 'analyze-match',
@@ -180,6 +181,7 @@ export const QUEUE_NAMES = {
   FIXTURES: 'fixtures-queue',
   BACKFILL: 'backfill-queue',
   MODEL_RECOVERY: 'model-recovery-queue',
+  STANDINGS: 'standings-queue',
 } as const;
 
 // Queue-specific timeout configurations
@@ -246,6 +248,7 @@ let _fixturesQueue: Queue;
 let _backfillQueue: Queue;
 let _contentQueue: Queue;
 let _modelRecoveryQueue: Queue;
+let _standingsQueue: Queue;
 let _matchQueue: Queue;
 
 export const analysisQueue = new Proxy({} as Queue, {
@@ -318,6 +321,13 @@ export const modelRecoveryQueue = new Proxy({} as Queue, {
   }
 });
 
+export const standingsQueue = new Proxy({} as Queue, {
+  get(target, prop) {
+    if (!_standingsQueue) _standingsQueue = new Queue(QUEUE_NAMES.STANDINGS, createQueueOptions(QUEUE_NAMES.STANDINGS));
+    return (_standingsQueue as any)[prop];
+  }
+});
+
 // Legacy queue (kept for backward compatibility during migration)
 export const matchQueue = new Proxy({} as Queue, {
   get(target, prop) {
@@ -349,6 +359,8 @@ export function getQueue(queueName: string): Queue {
       return contentQueue;
     case QUEUE_NAMES.MODEL_RECOVERY:
       return modelRecoveryQueue;
+    case QUEUE_NAMES.STANDINGS:
+      return standingsQueue;
     default:
       throw new Error(`Unknown queue name: ${queueName}`);
   }
@@ -368,6 +380,7 @@ export function getAllQueues(): Queue[] {
     backfillQueue,
     contentQueue,
     modelRecoveryQueue,
+    standingsQueue,
   ];
   // Access a property to trigger initialization
   queues.forEach(q => q.name);

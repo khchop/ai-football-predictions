@@ -71,6 +71,11 @@ export interface GenerateContentPayload {
   data: Record<string, unknown>;
 }
 
+// Update standings (repeatable, daily)
+export interface UpdateStandingsPayload {
+  maxAgeHours?: number; // Only update standings older than this (default 24)
+}
+
 // Union type for all payloads
 export type JobPayload =
   | FetchFixturesPayload
@@ -82,4 +87,5 @@ export type JobPayload =
   | MonitorLivePayload
   | SettleMatchPayload
   | CatchUpPayload
-  | GenerateContentPayload;
+  | GenerateContentPayload
+  | UpdateStandingsPayload;

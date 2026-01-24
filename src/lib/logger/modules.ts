@@ -27,6 +27,7 @@ export const loggers = {
   backfillWorker: createLogger('worker:backfill'),
   contentWorker: createLogger('worker:content'),
   modelRecoveryWorker: createLogger('worker:model-recovery'),
+  standingsWorker: createLogger('worker:standings'),
   
   // Football data
   apiFootball: createLogger('api-football'),

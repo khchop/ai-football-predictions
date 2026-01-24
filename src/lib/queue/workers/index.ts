@@ -16,6 +16,7 @@ import { createScoringWorker } from './scoring.worker';
 import { createBackfillWorker } from './backfill.worker';
 import { createContentWorker } from './content.worker';
 import { createModelRecoveryWorker } from './model-recovery.worker';
+import { createStandingsWorker } from './standings.worker';
 import { addToDeadLetterQueue } from '../dead-letter';
 import { loggers } from '@/lib/logger/modules';
 
@@ -85,6 +86,7 @@ export function startAllWorkers(): Worker[] {
     { name: 'backfill', create: createBackfillWorker },
     { name: 'content', create: createContentWorker },
     { name: 'model-recovery', create: createModelRecoveryWorker },
+    { name: 'standings', create: createStandingsWorker },
   ];
 
   workers = workerConfigs.map(({ name, create }) => {
