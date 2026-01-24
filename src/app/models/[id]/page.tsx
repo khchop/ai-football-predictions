@@ -99,10 +99,13 @@ export default async function ModelPage({ params }: ModelPageProps) {
   const provider = getProviderById(id);
 
    // Calculate hero stats
+   // Use scoredPredictions for consistency with accuracy calculation
+   const scoredPredictions = predictionStats?.scoredPredictions || 0;
    const totalPredictions = predictionStats?.totalPredictions || 0;
+   const pendingPredictions = totalPredictions - scoredPredictions;
    const avgPointsPerMatch = predictionStats?.avgPoints || '0.00';
-   const tendencyAccuracy = predictionStats?.scoredPredictions 
-     ? Math.round((predictionStats.correctTendencies / predictionStats.scoredPredictions) * 100)
+   const tendencyAccuracy = scoredPredictions 
+     ? Math.round((predictionStats.correctTendencies / scoredPredictions) * 100)
      : 0;
 
    return (
@@ -170,15 +173,17 @@ export default async function ModelPage({ params }: ModelPageProps) {
              </CardContent>
            </Card>
 
-           {/* Total Predictions */}
+           {/* Scored Predictions */}
            <Card className="bg-card/50 border-border/50">
              <CardContent className="p-6">
                <div className="flex items-center gap-2 mb-2">
                  <Target className="h-4 w-4 text-primary" />
                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Predictions</p>
                </div>
-               <p className="text-4xl font-bold font-mono">{totalPredictions}</p>
-               <p className="text-xs text-muted-foreground mt-1">matches</p>
+               <p className="text-4xl font-bold font-mono">{scoredPredictions}</p>
+               <p className="text-xs text-muted-foreground mt-1">
+                 {pendingPredictions > 0 ? `scored (${pendingPredictions} pending)` : 'matches'}
+               </p>
              </CardContent>
            </Card>
 
