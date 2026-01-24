@@ -10,7 +10,7 @@ import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { FetchFixturesPayload } from '../types';
 import { getUpcomingFixtures, mapFixtureStatus } from '@/lib/football/api-football';
-import { upsertMatch, upsertCompetition } from '@/lib/db/queries';
+import { upsertMatch, upsertCompetition, getMatchByExternalId } from '@/lib/db/queries';
 import { scheduleMatchJobs } from '../scheduler';
 import { v4 as uuidv4 } from 'uuid';
 import { generateMatchSlug, generateCompetitionSlug } from '@/lib/utils/slugify';
@@ -56,12 +56,18 @@ export function createFixturesWorker() {
             );
             
             try {
-              const matchId = uuidv4();
+              const externalId = String(fixture.fixture.id);
+              
+              // Check if match already exists - use existing ID if so
+              // This prevents UUID mismatch where jobs are scheduled with non-existent IDs
+              const existingMatch = await getMatchByExternalId(externalId);
+              const matchId = existingMatch?.id || uuidv4();
+              const isNewMatch = !existingMatch;
               
               // Save match to DB
               await upsertMatch({
                 id: matchId,
-                externalId: String(fixture.fixture.id),
+                externalId,
                 competitionId: competition.id,
                 homeTeam: fixture.teams.home.name,
                 awayTeam: fixture.teams.away.name,
@@ -85,14 +91,16 @@ export function createFixturesWorker() {
                 awayTeam: fixture.teams.away.name,
                 matchId,
                 slug,
+                isNewMatch,
               }, 'Saved fixture');
               
-              // Schedule jobs for this match (only if status is 'scheduled')
-              if (mapFixtureStatus(fixture.fixture.status.short) === 'scheduled') {
+              // Schedule jobs for NEW scheduled matches only
+              // (existing matches already have jobs scheduled from previous sync)
+              if (isNewMatch && mapFixtureStatus(fixture.fixture.status.short) === 'scheduled') {
                 const scheduled = await scheduleMatchJobs({
                   match: {
                     id: matchId,
-                    externalId: String(fixture.fixture.id),
+                    externalId,
                     competitionId: competition.id,
                     homeTeam: fixture.teams.home.name,
                     awayTeam: fixture.teams.away.name,
@@ -125,6 +133,9 @@ export function createFixturesWorker() {
                 });
                 
                 jobsScheduled += scheduled;
+                log.debug({ matchId, jobsScheduled: scheduled }, 'Scheduled jobs for new match');
+              } else if (!isNewMatch) {
+                log.debug({ matchId, externalId }, 'Skipped job scheduling for existing match');
               }
              } catch (error: any) {
                 const errorContext = {

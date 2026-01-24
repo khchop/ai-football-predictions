@@ -74,7 +74,7 @@ export async function getActiveCompetitions(): Promise<Competition[]> {
 
 // ============= MATCHES =============
 
-export async function upsertMatch(data: Omit<NewMatch, 'id'> & { id?: string }) {
+export async function upsertMatch(data: Omit<NewMatch, 'id'> & { id?: string }): Promise<{ id: string }> {
   const db = getDb();
   const id = data.id || uuidv4();
   
@@ -96,7 +96,7 @@ export async function upsertMatch(data: Omit<NewMatch, 'id'> & { id?: string }) 
     throw new Error(`kickoffTime is too far in the future: ${data.kickoffTime}`);
   }
   
-  return db
+  const result = await db
     .insert(matches)
     .values({ ...data, id })
     .onConflictDoUpdate({
@@ -107,7 +107,10 @@ export async function upsertMatch(data: Omit<NewMatch, 'id'> & { id?: string }) 
         status: data.status,
         updatedAt: new Date().toISOString(),
       },
-    });
+    })
+    .returning({ id: matches.id });
+  
+  return result[0];
 }
 
 export async function getUpcomingMatches(hoursAhead: number = 48) {

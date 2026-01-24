@@ -28,35 +28,7 @@ import { getResult, calculateQuotas } from '@/lib/utils/scoring';
 import { generateBettingContent } from '@/lib/content/match-content';
 import { v4 as uuidv4 } from 'uuid';
 import { loggers } from '@/lib/logger/modules';
-
-/**
- * Retry helper for fetching match data with exponential backoff
- * Handles race condition where prediction jobs run before DB write completes
- */
-async function getMatchWithRetry(
-  matchId: string,
-  maxRetries: number = 3,
-  initialDelayMs: number = 2000,
-  log: any
-): Promise<Awaited<ReturnType<typeof getMatchById>> | null> {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const matchData = await getMatchById(matchId);
-    if (matchData) {
-      if (attempt > 1) {
-        log.info({ matchId, attempt, totalRetries: attempt - 1 }, 'Match found after retry');
-      }
-      return matchData;
-    }
-    
-    if (attempt < maxRetries) {
-      const delayMs = initialDelayMs * Math.pow(2, attempt - 1); // 2s, 4s, 8s
-      log.info({ matchId, attempt, nextRetryMs: delayMs }, 'Match not found, retrying...');
-      await new Promise(resolve => setTimeout(resolve, delayMs));
-    }
-  }
-  
-  return null;
-}
+import { getMatchWithRetry } from '@/lib/utils/retry-helpers';
 
 export function createPredictionsWorker() {
   return new Worker<PredictMatchPayload>(

@@ -10,8 +10,8 @@ import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { AnalyzeMatchPayload } from '../types';
 import { fetchAndStoreAnalysis } from '@/lib/football/match-analysis';
-import { getMatchById } from '@/lib/db/queries';
 import { loggers } from '@/lib/logger/modules';
+import { getMatchWithRetry } from '@/lib/utils/retry-helpers';
 
 export function createAnalysisWorker() {
   return new Worker<AnalyzeMatchPayload>(
@@ -24,9 +24,10 @@ export function createAnalysisWorker() {
       
       try {
          // Verify match still exists and is scheduled
-         const matchData = await getMatchById(matchId);
+         // Use retry logic to handle race conditions where job runs before DB write completes
+         const matchData = await getMatchWithRetry(matchId, 3, 2000, log);
          if (!matchData) {
-           log.info(`Match ${matchId} not found, skipping`);
+           log.info(`Match ${matchId} not found after retries, skipping`);
            return { skipped: true, reason: 'match_not_found' };
          }
         
