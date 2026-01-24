@@ -80,6 +80,13 @@ export const COMPETITIONS: CompetitionConfig[] = [
     season: CURRENT_SEASON,
     category: 'club-domestic',
   },
+  {
+    id: 'superlig',
+    name: 'Turkish Super Lig',
+    apiFootballId: 203,
+    season: CURRENT_SEASON,
+    category: 'club-domestic',
+  },
   
   // International
   {
