@@ -75,5 +75,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...matchPages, ...modelPages];
+  // Get all active competitions for league hub pages
+  const activeCompetitions = await db
+    .select({
+      slug: competitions.slug,
+    })
+    .from(competitions)
+    .where(eq(competitions.active, true));
+
+  const leaguePages: MetadataRoute.Sitemap = activeCompetitions
+    .filter((comp) => comp.slug)
+    .map((comp) => ({
+      url: `${baseUrl}/predictions/${comp.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'hourly',
+      priority: 0.9,
+    }));
+
+  return [...staticPages, ...matchPages, ...modelPages, ...leaguePages];
 }

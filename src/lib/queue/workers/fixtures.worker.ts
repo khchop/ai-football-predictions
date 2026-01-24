@@ -15,6 +15,7 @@ import { scheduleMatchJobs } from '../scheduler';
 import { v4 as uuidv4 } from 'uuid';
 import { generateMatchSlug, generateCompetitionSlug } from '@/lib/utils/slugify';
 import { loggers } from '@/lib/logger/modules';
+import { pingIndexNow } from '@/lib/utils/indexnow';
 
 export function createFixturesWorker() {
   return new Worker<FetchFixturesPayload>(
@@ -33,8 +34,10 @@ export function createFixturesWorker() {
         let savedFixtures = 0;
         let jobsScheduled = 0;
         const errors: string[] = [];
+        const newMatchUrls: string[] = [];
 
         for (const { competition, fixtures } of fixturesByCompetition) {
+          const competitionSlug = generateCompetitionSlug(competition.name);
           // Ensure competition exists in DB
           await upsertCompetition({
             id: competition.id,
@@ -42,7 +45,7 @@ export function createFixturesWorker() {
             apiFootballId: competition.apiFootballId,
             season: competition.season,
             active: true,
-            slug: generateCompetitionSlug(competition.name),
+            slug: competitionSlug,
           });
 
           for (const fixture of fixtures) {
@@ -59,7 +62,6 @@ export function createFixturesWorker() {
               const externalId = String(fixture.fixture.id);
               
               // Check if match already exists - use existing ID if so
-              // This prevents UUID mismatch where jobs are scheduled with non-existent IDs
               const existingMatch = await getMatchByExternalId(externalId);
               const matchId = existingMatch?.id || uuidv4();
               const isNewMatch = !existingMatch;
@@ -84,19 +86,9 @@ export function createFixturesWorker() {
               
               savedFixtures++;
               
-              // Debug logging for successful save
-              log.debug({ 
-                fixtureId: fixture.fixture.id,
-                homeTeam: fixture.teams.home.name,
-                awayTeam: fixture.teams.away.name,
-                matchId,
-                slug,
-                isNewMatch,
-              }, 'Saved fixture');
-              
               // Schedule jobs for NEW scheduled matches only
-              // (existing matches already have jobs scheduled from previous sync)
               if (isNewMatch && mapFixtureStatus(fixture.fixture.status.short) === 'scheduled') {
+                newMatchUrls.push(`https://kroam.xyz/predictions/${competitionSlug}/${slug}`);
                 const scheduled = await scheduleMatchJobs({
                   match: {
                     id: matchId,
@@ -127,56 +119,24 @@ export function createFixturesWorker() {
                     apiFootballId: competition.apiFootballId,
                     season: competition.season,
                     active: true,
-                    slug: generateCompetitionSlug(competition.name),
+                    slug: competitionSlug,
                     createdAt: null,
                   },
                 });
                 
                 jobsScheduled += scheduled;
-                log.debug({ matchId, jobsScheduled: scheduled }, 'Scheduled jobs for new match');
-              } else if (!isNewMatch) {
-                log.debug({ matchId, externalId }, 'Skipped job scheduling for existing match');
               }
              } catch (error: any) {
-                const errorContext = {
-                  fixtureId: fixture.fixture.id,
-                  externalId: String(fixture.fixture.id),
-                  competitionId: competition.apiFootballId,
-                  competitionName: competition.name,
-                  homeTeam: fixture.teams.home.name,
-                  awayTeam: fixture.teams.away.name,
-                  kickoffTime: fixture.fixture.date,
-                  apiStatus: fixture.fixture.status.short,
-                  slug,
-                  // Database error details
-                  errorCode: error.code,
-                  errorConstraint: error.constraint,
-                  errorDetail: error.detail,
-                  errorTable: error.table,
-                  errorColumn: error.column,
-                };
-                
-                log.error({ 
-                  ...errorContext,
-                  err: error,
-                  stack: error.stack,
-                }, `Failed to save fixture: ${error.message}`);
-                
                 const errorMsg = `${fixture.teams.home.name} vs ${fixture.teams.away.name}: ${error.message}`;
                 errors.push(errorMsg);
-                
-                // Report to Sentry for visibility
-                Sentry.captureException(error, {
-                  level: 'warning',
-                  tags: { 
-                    worker: 'fixtures',
-                    operation: 'upsertMatch',
-                    competition: competition.name,
-                  },
-                  extra: errorContext,
-                });
+                Sentry.captureException(error);
               }
           }
+        }
+
+        // Ping IndexNow for new matches
+        if (newMatchUrls.length > 0) {
+          await pingIndexNow(newMatchUrls);
         }
 
         log.info(`✓ Fetched ${totalFixtures} fixtures, saved ${savedFixtures}, scheduled ${jobsScheduled} jobs`);
@@ -190,30 +150,13 @@ export function createFixturesWorker() {
           errors: errors.length > 0 ? errors : undefined,
         };
        } catch (error: any) {
-           log.error({ 
-             manual,
-             attemptsMade: job.attemptsMade,
-             err: error 
-           }, `Error fetching fixtures`);
-           
-           Sentry.captureException(error, {
-             level: 'error',
-             tags: {
-               worker: 'fixtures',
-             },
-             extra: {
-               jobId: job.id,
-               attempt: job.attemptsMade,
-               manual,
-             },
-           });
-           
-           throw error; // Let BullMQ handle retry
+            log.error({ manual, err: error }, `Error fetching fixtures`);
+            throw error;
        }
     },
     {
       connection: getQueueConnection(),
-      concurrency: 1, // Only one fixtures fetch at a time
+      concurrency: 1,
     }
   );
 }

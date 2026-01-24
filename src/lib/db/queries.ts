@@ -1,4 +1,4 @@
-import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalances, seasons, predictions, blogPosts } from './index';
+import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalances, seasons, predictions, blogPosts, leagueStandings } from './index';
 import { eq, and, desc, gte, lte, sql, inArray, ne, or, lt, not, isNull, isNotNull } from 'drizzle-orm';
 import type { NewMatch, NewMatchAnalysis, NewBet, NewModelBalance, NewPrediction } from './schema';
 import { v4 as uuidv4 } from 'uuid';
@@ -211,6 +211,96 @@ export async function getMatchBySlug(competitionSlug: string, matchSlug: string)
     .limit(1);
   
   return result[0];
+}
+
+/**
+ * Get matches for a specific competition by its slug
+ */
+export async function getMatchesByCompetitionSlug(competitionSlug: string, limit: number = 50) {
+  const db = getDb();
+  return db
+    .select({
+      match: matches,
+      competition: competitions,
+    })
+    .from(matches)
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(eq(competitions.slug, competitionSlug))
+    .orderBy(desc(matches.kickoffTime))
+    .limit(limit);
+}
+
+/**
+ * Get competition by slug
+ */
+export async function getCompetitionBySlug(slug: string): Promise<Competition | undefined> {
+  const db = getDb();
+  const result = await db
+    .select()
+    .from(competitions)
+    .where(eq(competitions.slug, slug))
+    .limit(1);
+  return result[0];
+}
+
+/**
+ * Get standings for a competition
+ */
+export async function getStandingsByCompetitionId(competitionId: string) {
+  const db = getDb();
+  // We need to map competition ID string (e.g. "epl") to API Football ID if needed, 
+  // or just use the competitions table to find it.
+  const comp = await db.select().from(competitions).where(eq(competitions.id, competitionId)).limit(1);
+  if (!comp[0]) return [];
+
+  return db
+    .select()
+    .from(leagueStandings)
+    .where(eq(leagueStandings.leagueId, comp[0].apiFootballId))
+    .orderBy(leagueStandings.position);
+}
+
+/**
+ * Get standings for specific teams in a competition
+ */
+export async function getStandingsForTeams(leagueId: number, teamNames: string[]) {
+  const db = getDb();
+  return db
+    .select()
+    .from(leagueStandings)
+    .where(
+      and(
+        eq(leagueStandings.leagueId, leagueId),
+        inArray(leagueStandings.teamName, teamNames)
+      )
+    );
+}
+
+/**
+ * Get next scheduled matches for specific teams
+ */
+export async function getNextMatchesForTeams(teamNames: string[], limit: number = 2) {
+  const db = getDb();
+  const now = new Date().toISOString();
+  return db
+    .select({
+      match: matches,
+      competition: competitions,
+    })
+    .from(matches)
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(
+      and(
+        eq(matches.status, 'scheduled'),
+        gte(matches.kickoffTime, now),
+        or(
+          inArray(matches.homeTeam, teamNames),
+          inArray(matches.awayTeam, teamNames)
+        )
+      )
+    )
+    .orderBy(matches.kickoffTime)
+    .limit(limit);
 }
 
 // Optimized: Single query for match with predictions
@@ -1064,13 +1154,51 @@ export async function getModelOverallStats(modelId: string) {
 }
 
 export async function getModelWeeklyPerformance(modelId: string, maxDays: number = 90) {
-  // Return empty array - should use betting history instead
-  return [];
+  const db = getDb();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - maxDays);
+
+  return db
+    .select({
+      weekStart: sql<string>`date_trunc('week', ${matches.kickoffTime}::timestamp)::text`,
+      matchCount: sql<number>`count(${predictions.id})`,
+      totalPoints: sql<number>`sum(${predictions.totalPoints})`,
+      avgPoints: sql<number>`round(avg(${predictions.totalPoints})::numeric, 2)`,
+      accuracy: sql<number>`round((sum(case when ${predictions.tendencyPoints} > 0 then 1 else 0 end)::float / count(${predictions.id})::float * 100)::numeric, 1)`,
+    })
+    .from(predictions)
+    .innerJoin(matches, eq(predictions.matchId, matches.id))
+    .where(and(
+      eq(predictions.modelId, modelId),
+      eq(predictions.status, 'scored'),
+      gte(matches.kickoffTime, cutoff.toISOString())
+    ))
+    .groupBy(sql`date_trunc('week', ${matches.kickoffTime}::timestamp)`)
+    .orderBy(sql`date_trunc('week', ${matches.kickoffTime}::timestamp)`);
 }
 
 export async function getModelStatsByCompetition(modelId: string) {
-  // Return empty array - should use betting stats by competition instead
-  return [];
+  const db = getDb();
+  return db
+    .select({
+      competitionId: competitions.id,
+      competitionName: competitions.name,
+      totalPredictions: sql<number>`count(${predictions.id})`,
+      correctTendencies: sql<number>`sum(case when ${predictions.tendencyPoints} > 0 then 1 else 0 end)`,
+      exactScores: sql<number>`sum(case when ${predictions.exactScoreBonus} = 3 then 1 else 0 end)`,
+      totalPoints: sql<number>`sum(${predictions.totalPoints})`,
+      averagePoints: sql<number>`round(avg(${predictions.totalPoints})::numeric, 2)`,
+      accuracy: sql<number>`round((sum(case when ${predictions.tendencyPoints} > 0 then 1 else 0 end)::float / count(${predictions.id})::float * 100)::numeric, 1)`,
+    })
+    .from(predictions)
+    .innerJoin(matches, eq(predictions.matchId, matches.id))
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(and(
+      eq(predictions.modelId, modelId),
+      eq(predictions.status, 'scored')
+    ))
+    .groupBy(competitions.id, competitions.name)
+    .orderBy(desc(sql`count(${predictions.id})`));
 }
 
 export async function getModelFunStats(modelId: string) {
