@@ -253,10 +253,17 @@ export async function getStandingsByCompetitionId(competitionId: string) {
   const comp = await db.select().from(competitions).where(eq(competitions.id, competitionId)).limit(1);
   if (!comp[0]) return [];
 
+  // IMPORTANT: Filter by BOTH leagueId AND season to get current season's standings
+  // comp[0].season contains the current season (e.g., 2025 for 2025-26 season)
   return db
     .select()
     .from(leagueStandings)
-    .where(eq(leagueStandings.leagueId, comp[0].apiFootballId))
+    .where(
+      and(
+        eq(leagueStandings.leagueId, comp[0].apiFootballId),
+        eq(leagueStandings.season, comp[0].season)
+      )
+    )
     .orderBy(leagueStandings.position);
 }
 
