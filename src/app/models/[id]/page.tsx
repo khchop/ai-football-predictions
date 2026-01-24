@@ -95,9 +95,8 @@ export default async function ModelPage({ params }: ModelPageProps) {
     getModelResultTypeBreakdown(id),
   ]);
 
-  // Get provider info for tier badge
+  // Get provider info
   const provider = getProviderById(id);
-  const tier = provider && 'tier' in provider ? (provider as { tier: ModelTier }).tier : undefined;
 
    // Calculate hero stats
    const totalPredictions = predictionStats?.totalPredictions || 0;
@@ -143,21 +142,21 @@ export default async function ModelPage({ params }: ModelPageProps) {
          )}
        </div>
        
-       {/* Hero Stats - Key Metrics at a Glance */}
-       <section>
-         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-           {/* Global Rank */}
-           {modelRank && (
-             <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-               <CardContent className="p-6">
-                 <div className="flex items-center gap-2 mb-2">
-                   <Award className="h-4 w-4 text-primary" />
-                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Global Rank</p>
-                 </div>
-                 <p className="text-4xl font-bold text-primary">#{modelRank}</p>
-               </CardContent>
-             </Card>
-           )}
+        {/* Hero Stats - Key Metrics at a Glance */}
+        <section aria-label="Key Performance Metrics">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Global Rank */}
+            <Card className={modelRank ? "bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20" : "bg-card/50 border-border/50"}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <Award className="h-4 w-4 text-primary" />
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Global Rank</p>
+                </div>
+                <p className="text-4xl font-bold text-primary">
+                  {modelRank ? `#${modelRank}` : "Unranked"}
+                </p>
+              </CardContent>
+            </Card>
 
            {/* Average Points */}
            <Card className="bg-card/50 border-border/50">
