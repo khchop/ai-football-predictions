@@ -229,7 +229,7 @@ export default async function ModelPage({ params }: ModelPageProps) {
            )}
 
            {/* Result Type Breakdown */}
-           {resultTypeBreakdown && resultTypeBreakdown.length > 0 && (
+           {resultTypeBreakdown && resultTypeBreakdown.length === 3 && (
              <section>
                <div className="flex items-center gap-2 mb-4">
                  <Target className="h-5 w-5 text-primary" />

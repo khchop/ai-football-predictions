@@ -1473,47 +1473,38 @@ export async function getModelPredictionStats(modelId: string) {
 }
 
 // Get model's rank among all models by average points
+// Single database query: count how many models have better average points
+// Performance: O(1) - database does the aggregation and counting in one pass
+// Future optimization: Consider caching this for 5-10 minutes as rankings don't change frequently
 export async function getModelRank(modelId: string) {
   const db = getDb();
   
-  const modelRankResult = await db
+  const rankResult = await db
     .select({
-      rank: sql<number>`ROW_NUMBER() OVER (ORDER BY ROUND(AVG(${predictions.totalPoints})::numeric, 2) DESC)`,
-      avgPoints: sql<number>`ROUND(AVG(${predictions.totalPoints})::numeric, 2)`,
+      rank: sql<number>`COALESCE(
+        (SELECT COUNT(*) + 1 FROM (
+          SELECT AVG(p.total_points) as avg_pts
+          FROM predictions p
+          INNER JOIN models m ON p.model_id = m.id
+          WHERE m.active = true
+          GROUP BY p.model_id
+          HAVING AVG(p.total_points) > (
+            SELECT AVG(p2.total_points)
+            FROM predictions p2
+            WHERE p2.model_id = ${modelId}
+          )
+        ) as better_models),
+        1
+      )`,
     })
     .from(predictions)
-    .innerJoin(models, eq(predictions.modelId, models.id))
-    .where(eq(models.active, true))
-    .groupBy(predictions.modelId);
+    .limit(1);
   
-  const rank = modelRankResult.find(r => {
-    // Filter by modelId - this is a workaround since we can't directly filter the window function
-    return r.rank !== null;
-  });
-  
-  // Simpler approach: count models with better average points
-  const betterModels = await db
-    .select({
-      count: sql<number>`COUNT(DISTINCT ${predictions.modelId})`,
-    })
-    .from(predictions)
-    .innerJoin(models, eq(predictions.modelId, models.id))
-    .where(
-      and(
-        eq(models.active, true),
-        sql`ROUND(AVG(${predictions.totalPoints})::numeric, 2) > (
-          SELECT ROUND(AVG(p2.total_points)::numeric, 2)
-          FROM predictions p2
-          WHERE p2.model_id = ${modelId}
-        )`
-      )
-    )
-    .groupBy();
-  
-  return (betterModels[0]?.count ?? 0) + 1;
+  return rankResult[0]?.rank ?? 1;
 }
 
 // Get model's prediction breakdown by result type (Home Win, Draw, Away Win)
+// Ensures all types (H, D, A) are returned, even if count is 0
 export async function getModelResultTypeBreakdown(modelId: string) {
   const db = getDb();
   
@@ -1533,7 +1524,28 @@ export async function getModelResultTypeBreakdown(modelId: string) {
     )
     .groupBy(predictions.predictedResult);
   
-  return breakdown;
+  // Ensure all result types are present (H, D, A)
+  // Fill in missing types with zero values
+  const resultTypeMap: Record<string, typeof breakdown[0]> = {};
+  breakdown.forEach(b => {
+    resultTypeMap[b.resultType || ''] = b;
+  });
+  
+  const allTypes = ['H', 'D', 'A'];
+  const completeBreakdown = allTypes.map(type => {
+    if (resultTypeMap[type]) {
+      return resultTypeMap[type];
+    }
+    // Return zero values for missing types
+    return {
+      resultType: type,
+      count: 0,
+      avgPoints: 0,
+      accuracy: 0,
+    };
+  });
+  
+  return completeBreakdown;
 }
 
 // Get matches that need predictions (scheduled matches without predictions)
