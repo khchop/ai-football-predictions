@@ -72,14 +72,14 @@ export function createBackfillWorker() {
         errors: [] as string[],
       };
       
-      // Helper to add errors with cap
-      const addError = (message: string) => {
-        if (results.errors.length < MAX_ERRORS) {
-          addError(message);
-        } else if (results.errors.length === MAX_ERRORS) {
-          addError(`... and more errors (truncated at ${MAX_ERRORS})`);
-        }
-      };
+       // Helper to add errors with cap
+       const addError = (message: string) => {
+         if (results.errors.length < MAX_ERRORS) {
+           results.errors.push(message);
+         } else if (results.errors.length === MAX_ERRORS) {
+           results.errors.push(`... and more errors (truncated at ${MAX_ERRORS})`);
+         }
+       };
       
       try {
         // 1. Find matches missing analysis (check full range)

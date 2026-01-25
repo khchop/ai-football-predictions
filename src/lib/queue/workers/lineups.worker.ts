@@ -10,8 +10,8 @@ import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, predictionsQueue } from '../index';
 import type { FetchLineupsPayload } from '../types';
 import { updateMatchLineups } from '@/lib/football/lineups';
-import { getMatchById } from '@/lib/db/queries';
 import { loggers } from '@/lib/logger/modules';
+import { getMatchWithRetry } from '@/lib/utils/retry-helpers';
 
 export function createLineupsWorker() {
   return new Worker<FetchLineupsPayload>(
@@ -22,13 +22,13 @@ export function createLineupsWorker() {
       
       log.info(`Fetching lineups for ${homeTeam} vs ${awayTeam} (match: ${matchId})`);
       
-      try {
-         // Verify match still exists and is scheduled
-         const matchData = await getMatchById(matchId);
-         if (!matchData) {
-           log.info(`Match ${matchId} not found, skipping`);
-           return { skipped: true, reason: 'match_not_found' };
-         }
+       try {
+          // Verify match still exists and is scheduled
+          const matchData = await getMatchWithRetry(matchId, 3, 2000, log);
+          if (!matchData) {
+            log.info(`Match ${matchId} not found after retries, skipping`);
+            return { skipped: true, reason: 'match_not_found' };
+          }
         
         const { match } = matchData;
         

@@ -10,9 +10,9 @@ import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { RefreshOddsPayload } from '../types';
 import { refreshOddsForMatch } from '@/lib/football/match-analysis';
-import { getMatchById } from '@/lib/db/queries';
 import { generatePreMatchContent } from '@/lib/content/match-content';
 import { loggers } from '@/lib/logger/modules';
+import { getMatchWithRetry } from '@/lib/utils/retry-helpers';
 
 export function createOddsWorker() {
   return new Worker<RefreshOddsPayload>(
@@ -23,13 +23,13 @@ export function createOddsWorker() {
       
       log.info(`Refreshing odds for match ${matchId} (fixture: ${externalId})`);
       
-      try {
-         // Verify match still exists and is scheduled
-         const matchData = await getMatchById(matchId);
-         if (!matchData) {
-           log.info(`Match ${matchId} not found, skipping`);
-           return { skipped: true, reason: 'match_not_found' };
-         }
+       try {
+          // Verify match still exists and is scheduled
+          const matchData = await getMatchWithRetry(matchId, 3, 2000, log);
+          if (!matchData) {
+            log.info(`Match ${matchId} not found after retries, skipping`);
+            return { skipped: true, reason: 'match_not_found' };
+          }
         
         const { match } = matchData;
         

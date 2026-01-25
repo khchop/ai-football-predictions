@@ -13,6 +13,7 @@ import type { MonitorLivePayload } from '../types';
 import { getMatchById, updateMatchResult } from '@/lib/db/queries';
 import { getFixtureById, mapFixtureStatus, formatMatchMinute } from '@/lib/football/api-football';
 import { loggers } from '@/lib/logger/modules';
+import { getMatchWithRetry } from '@/lib/utils/retry-helpers';
 
 const POLL_INTERVAL_MS = 60 * 1000; // 60 seconds
 const MAX_POLLS = 150; // Stop after 150 polls (2.5 hours) to prevent infinite loops
@@ -75,12 +76,12 @@ export function createLiveScoreWorker() {
            return { stopped: true, reason: 'max_polls_reached', pollCount };
          }
         
-         // Get match data
-         const matchData = await getMatchById(matchId);
-         if (!matchData) {
-           log.info(`Match ${matchId} not found`);
-           return { stopped: true, reason: 'match_not_found' };
-         }
+          // Get match data
+          const matchData = await getMatchWithRetry(matchId, 3, 2000, log);
+          if (!matchData) {
+            log.info(`Match ${matchId} not found after retries`);
+            return { stopped: true, reason: 'match_not_found' };
+          }
         
         const { match } = matchData;
         
