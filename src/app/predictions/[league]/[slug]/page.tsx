@@ -16,6 +16,7 @@ import type { Metadata } from 'next';
 import { PredictionTable } from '@/components/prediction-table';
 import { SportsEventSchema } from '@/components/SportsEventSchema';
 import { MatchStats } from '@/components/match/MatchStats';
+import { WebPageSchema } from '@/components/WebPageSchema';
 
 // Helper to find the lowest odds (favorite)
 function getLowestOdds(home: string, draw: string, away: string): 'home' | 'draw' | 'away' {
@@ -144,10 +145,21 @@ export default async function PredictionPage({ params }: MatchPageProps) {
   // Fetch next matches
   const nextMatches = await getNextMatchesForTeams([match.homeTeam, match.awayTeam], 4);
 
-  return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <SportsEventSchema match={match} competition={competition} />
-      {/* Back Link */}
+   return (
+     <div className="max-w-4xl mx-auto space-y-8">
+       <SportsEventSchema match={match} competition={competition} />
+       <WebPageSchema 
+         name={`${match.homeTeam} vs ${match.awayTeam} Prediction`}
+         description={`AI predictions for ${match.homeTeam} vs ${match.awayTeam} (${competition.name}). Compare forecasts from 35+ AI models.`}
+         url={`https://kroam.xyz/predictions/${competition.slug}/${match.slug}`}
+         breadcrumb={[
+           { name: 'Home', url: 'https://kroam.xyz' },
+           { name: 'Predictions', url: 'https://kroam.xyz/predictions' },
+           { name: competition.name, url: `https://kroam.xyz/predictions/${competition.slug}` },
+           { name: `${match.homeTeam} vs ${match.awayTeam}`, url: `https://kroam.xyz/predictions/${competition.slug}/${match.slug}` },
+         ]}
+       />
+       {/* Back Link */}
       <Link 
         href="/matches" 
         className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"

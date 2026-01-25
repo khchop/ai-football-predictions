@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 import { ModelPerformanceChart } from '@/components/model-performance-chart';
 import { ModelCompetitionBreakdown } from '@/components/model-competition-breakdown';
+import { WebPageSchema } from '@/components/WebPageSchema';
 
 // Memoize queries to avoid duplication between generateMetadata and page component
 const getModelStatsData = cache((modelId: string) => getModelPredictionStats(modelId));
@@ -148,8 +149,18 @@ export default async function ModelPage({ params }: ModelPageProps) {
      ? Math.round((predictionStats.correctTendencies / scoredPredictions) * 100)
      : 0;
 
-   return (
-     <div className="space-y-8">
+    return (
+      <div className="space-y-8">
+        <WebPageSchema 
+          name={`${model.displayName} - AI Football Prediction Model`}
+          description={`${model.displayName} AI model performance and statistics. Ranked #${modelRank || '—'} with ${scoredPredictions} predictions scored.`}
+          url={`https://kroam.xyz/models/${id}`}
+          breadcrumb={[
+            { name: 'Home', url: 'https://kroam.xyz' },
+            { name: 'Leaderboard', url: 'https://kroam.xyz/leaderboard' },
+            { name: model.displayName, url: `https://kroam.xyz/models/${id}` },
+          ]}
+        />
        {/* Model Header */}
        <div className="border-b border-border/50 pb-6">
          <div className="flex items-start justify-between gap-4 mb-4">

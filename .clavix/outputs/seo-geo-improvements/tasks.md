@@ -267,7 +267,7 @@
 
 ## Phase 5: Technical SEO Polish - Complete Coverage
 
-- [ ] **Add hreflang tags for future i18n support**
+- [x] **Add hreflang tags for future i18n support**
   Task ID: phase-5-polish-01
   > **Implementation**: Edit `src/app/layout.tsx` metadata generation.
   > **Details**:

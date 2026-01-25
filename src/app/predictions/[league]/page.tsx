@@ -7,6 +7,7 @@ import { MatchCard } from '@/components/match-card';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Metadata } from 'next';
+import { WebPageSchema } from '@/components/WebPageSchema';
 
 // Memoize matches query to avoid duplicate database calls
 const getMatchesData = cache((league: string) => getMatchesByCompetitionSlug(league, 100));
@@ -87,10 +88,20 @@ export default async function LeagueHubPage({ params }: LeaguePageProps) {
   const pastMatches = allMatches.filter(m => m.match.status === 'finished');
   const liveMatches = allMatches.filter(m => m.match.status === 'live');
 
-  return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
+   return (
+     <div className="max-w-6xl mx-auto space-y-8">
+       <WebPageSchema 
+         name={`${competition.name} Football Predictions`}
+         description={`AI predictions for all ${competition.name} matches. Compare forecasts from 35+ AI models with Kicktipp scoring.`}
+         url={`https://kroam.xyz/predictions/${league}`}
+         breadcrumb={[
+           { name: 'Home', url: 'https://kroam.xyz' },
+           { name: 'Predictions', url: 'https://kroam.xyz/predictions' },
+           { name: competition.name, url: `https://kroam.xyz/predictions/${league}` },
+         ]}
+       />
+       {/* Header */}
+       <div className="flex items-center gap-4 mb-8">
         <div className="p-3 rounded-2xl bg-primary/10">
           <Trophy className="h-8 w-8 text-primary" />
         </div>

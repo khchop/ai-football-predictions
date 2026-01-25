@@ -13,6 +13,7 @@ import { format, parseISO } from 'date-fns';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { Metadata } from 'next';
+import { WebPageSchema } from '@/components/WebPageSchema';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -106,15 +107,27 @@ export default async function BlogPostPage({ params }: PageProps) {
     url: `https://kroam.xyz/blog/${slug}`,
   });
 
-  return (
-    <div className="max-w-3xl mx-auto space-y-8">
-      {/* Article Schema for search engines */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
-      />
+   return (
+     <div className="max-w-3xl mx-auto space-y-8">
+       {/* Article Schema for search engines */}
+       <script
+         type="application/ld+json"
+         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+       />
 
-      {/* Back Link */}
+       <WebPageSchema 
+         name={post.title}
+         description={post.excerpt}
+         url={`https://kroam.xyz/blog/${post.slug}`}
+         datePublished={post.publishedAt || undefined}
+         breadcrumb={[
+           { name: 'Home', url: 'https://kroam.xyz' },
+           { name: 'Blog', url: 'https://kroam.xyz/blog' },
+           { name: post.title, url: `https://kroam.xyz/blog/${post.slug}` },
+         ]}
+       />
+
+       {/* Back Link */}
       <Link
         href="/blog"
         className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
