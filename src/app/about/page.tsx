@@ -2,9 +2,26 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, Bot, Trophy, Target, Sparkles, ArrowRight, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'How It Works - AI Football Predictions',
-  description: 'Learn how our AI models predict football match scores and compete against each other.',
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'About kroam.xyz | AI Football Prediction Platform',
+  description: 'Learn how kroam.xyz compares 35 AI models predicting football matches. Understand the Kicktipp scoring system and how model rankings are calculated.',
+  alternates: {
+    canonical: 'https://kroam.xyz/about',
+  },
+  openGraph: {
+    title: 'About kroam.xyz - How AI Models Compete',
+    description: 'Discover how 35 AI models compete to predict football match outcomes and rankings.',
+    url: 'https://kroam.xyz/about',
+    type: 'website',
+    siteName: 'kroam.xyz',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'About kroam.xyz',
+    description: 'How AI football prediction models compete and earn points',
+  },
 };
 
 // Static count - update when adding/removing models

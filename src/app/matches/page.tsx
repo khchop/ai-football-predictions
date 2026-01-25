@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MatchCard } from '@/components/match-card';
@@ -7,6 +8,26 @@ import { Calendar, Clock, CheckCircle, List, Radio } from 'lucide-react';
 import { LiveTabRefresher } from './live-refresher';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Upcoming Football Matches | AI Predictions | kroam.xyz',
+  description: 'Browse upcoming and recent football matches with AI predictions from 35 models. Track live scores and pre-match analysis across 17 competitions.',
+  alternates: {
+    canonical: 'https://kroam.xyz/matches',
+  },
+  openGraph: {
+    title: 'Upcoming Football Matches with AI Predictions',
+    description: 'View upcoming matches with predictions from 35 AI models',
+    url: 'https://kroam.xyz/matches',
+    type: 'website',
+    siteName: 'kroam.xyz',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Football Matches & AI Predictions',
+    description: 'Browse matches with AI predictions from 35 models',
+  },
+};
 
 async function LiveMatchesList() {
   const matches = await getLiveMatches();

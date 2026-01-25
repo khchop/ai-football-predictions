@@ -156,7 +156,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
                 {match.homeTeamLogo ? (
                   <Image
                     src={match.homeTeamLogo}
-                    alt={match.homeTeam}
+                    alt={`${match.homeTeam} team logo`}
                     width={64}
                     height={64}
                     className="object-contain"
@@ -208,7 +208,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
                 {match.awayTeamLogo ? (
                   <Image
                     src={match.awayTeamLogo}
-                    alt={match.awayTeam}
+                    alt={`${match.awayTeam} team logo`}
                     width={64}
                     height={64}
                     className="object-contain"

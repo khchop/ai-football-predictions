@@ -349,6 +349,60 @@ After each phase:
 
 ---
 
+## Phase 6: Advanced SEO - Coverage Gaps & Voice Search
+
+- [x] **Add metadata to About page**
+  Task ID: phase-6-coverage-01
+  > **Implementation**: Edit `src/app/about/page.tsx`.
+  > **Details**: Add `generateMetadata()` with title, description, canonical, and OpenGraph
+
+- [x] **Add metadata to Blog index page**
+  Task ID: phase-6-coverage-02
+  > **Implementation**: Edit `src/app/blog/page.tsx`.
+  > **Details**: Add metadata for blog listing page
+
+- [x] **Add metadata to Matches hub page**
+  Task ID: phase-6-coverage-03
+  > **Implementation**: Edit `src/app/matches/page.tsx`.
+  > **Details**: Add metadata for matches listing page
+
+- [x] **Enhance image alt text across components**
+  Task ID: phase-6-coverage-04
+  > **Implementation**: Edit multiple files with Image components.
+  > **Details**: Improve alt text from team names to descriptive text
+
+- [x] **Add SoftwareApplication schema to layout**
+  Task ID: phase-6-coverage-05
+  > **Implementation**: Edit `src/app/layout.tsx`.
+  > **Details**: Add JSON-LD SoftwareApplication schema
+
+- [x] **Add speakable schema to blog articles**
+  Task ID: phase-6-coverage-06
+  > **Implementation**: Edit `src/components/ArticleSchema.tsx`.
+  > **Details**: Add speakable property for voice search
+
+- [x] **Add blog posts to sitemap**
+  Task ID: phase-6-coverage-07
+  > **Implementation**: Edit `src/app/sitemap.ts`.
+  > **Details**: Include published blog posts in sitemap
+
+- [x] **Create WebPageSchema component**
+  Task ID: phase-6-coverage-08
+  > **Implementation**: Create `src/components/WebPageSchema.tsx`.
+  > **Details**: Reusable WebPage schema component
+
+- [x] **Make llms.txt dynamic with live stats**
+  Task ID: phase-6-coverage-09
+  > **Implementation**: Edit `src/app/llms.txt/route.ts`.
+  > **Details**: Add dynamic model count and performance stats
+
+- [x] **Add internal linking to match pages**
+  Task ID: phase-6-coverage-10
+  > **Implementation**: Edit `src/app/predictions/[league]/[slug]/page.tsx`.
+  > **Details**: Add "Related Predictions" and "Popular Models" sections
+
+---
+
 ## Success Metrics
 
 After implementation, track:

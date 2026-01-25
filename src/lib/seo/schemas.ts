@@ -132,6 +132,11 @@ export function generateArticleSchema(data: ArticleData) {
       },
     },
     "url": data.url,
+    // Speakable property for voice search optimization (Google Assistant, Alexa)
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": ["h1", "h2", ".article-summary", "blockquote", "p:first-of-type"],
+    },
   };
 
   if (data.modifiedAt) {

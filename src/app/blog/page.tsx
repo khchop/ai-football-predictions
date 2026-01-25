@@ -13,8 +13,29 @@ import type { Metadata } from 'next';
 import type { BlogPost } from '@/lib/db/schema';
 
 export const metadata: Metadata = {
-  title: 'Football Insights - Blog',
-  description: 'Weekly league roundups, AI model performance reports, and match analysis for football betting.',
+  title: 'AI Football Analysis Blog | kroam.xyz',
+  description: 'AI-generated match reports, league roundups, and model performance analysis. Deep insights into football predictions from 35 AI models.',
+  alternates: {
+    canonical: 'https://kroam.xyz/blog',
+  },
+  openGraph: {
+    title: 'AI Football Analysis Blog',
+    description: 'Match reports, league roundups, and AI model performance analysis',
+    url: 'https://kroam.xyz/blog',
+    type: 'website',
+    siteName: 'kroam.xyz',
+    images: [{
+      url: 'https://kroam.xyz/api/og/league?leagueName=AI+Analysis',
+      width: 1200,
+      height: 630,
+      alt: 'AI Football Analysis Blog',
+    }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AI Football Analysis Blog',
+    description: 'AI-generated insights into football predictions',
+  },
 };
 
 const POSTS_PER_PAGE = 12;

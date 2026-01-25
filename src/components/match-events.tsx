@@ -103,7 +103,7 @@ export function MatchEvents({ events, homeTeam, awayTeam: _awayTeam }: MatchEven
             <div className="w-5 h-5 flex-shrink-0">
               <Image
                 src={event.team.logo}
-                alt={event.team.name}
+                alt={`${event.team.name} team crest`}
                 width={20}
                 height={20}
                 className="object-contain"

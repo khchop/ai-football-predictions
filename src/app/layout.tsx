@@ -69,6 +69,23 @@ export default function RootLayout({
     "inLanguage": "en-US"
   };
 
+  const softwareApplicationSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "kroam.xyz - AI Football Prediction Platform",
+    "description": "Compare and track AI model predictions for football matches using the Kicktipp scoring system",
+    "applicationCategory": "SportsApplication",
+    "url": "https://kroam.xyz",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "operatingSystem": "Web",
+    "isAccessibleForFree": true,
+    "inLanguage": "en-US"
+  };
+
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} antialiased min-h-screen bg-background flex flex-col`}>
@@ -77,12 +94,17 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
-        {/* WebSite Schema */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-        />
-        {/* Swetrix Analytics */}
+         {/* WebSite Schema */}
+         <script
+           type="application/ld+json"
+           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+         />
+         {/* SoftwareApplication Schema */}
+         <script
+           type="application/ld+json"
+           dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
+         />
+         {/* Swetrix Analytics */}
         <Analytics />
         {/* Background gradient effect */}
         <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">

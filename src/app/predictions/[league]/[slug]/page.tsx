@@ -203,7 +203,7 @@ export default async function PredictionPage({ params }: MatchPageProps) {
                 {match.homeTeamLogo ? (
                   <Image
                     src={match.homeTeamLogo}
-                    alt={match.homeTeam}
+                    alt={`${match.homeTeam} team logo`}
                     width={64}
                     height={64}
                     className="object-contain"
@@ -255,7 +255,7 @@ export default async function PredictionPage({ params }: MatchPageProps) {
                 {match.awayTeamLogo ? (
                   <Image
                     src={match.awayTeamLogo}
-                    alt={match.awayTeam}
+                    alt={`${match.awayTeam} team logo`}
                     width={64}
                     height={64}
                     className="object-contain"
@@ -418,27 +418,75 @@ export default async function PredictionPage({ params }: MatchPageProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-bold mb-4">Upcoming Fixtures</h3>
-            <div className="space-y-3">
-              {nextMatches.filter(m => m.match.id !== match.id).slice(0, 2).map((m) => (
-                <Link 
-                  key={m.match.id}
-                  href={`/predictions/${m.competition.slug}/${m.match.slug}`}
-                  className="group flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors text-sm"
-                >
-                  <span className="truncate">{m.match.homeTeam} vs {m.match.awayTeam}</span>
-                  <ChevronRight className="h-3 w-3 text-muted-foreground group-hover:text-primary" />
-                </Link>
-              ))}
-              {nextMatches.length <= 1 && (
-                <p className="text-sm text-muted-foreground italic">No other upcoming matches found for these teams.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
+         <Card className="bg-card/50 border-border/50">
+           <CardContent className="p-6">
+             <h3 className="text-lg font-bold mb-4">Upcoming Fixtures</h3>
+             <div className="space-y-3">
+               {nextMatches.filter(m => m.match.id !== match.id).slice(0, 2).map((m) => (
+                 <Link 
+                   key={m.match.id}
+                   href={`/predictions/${m.competition.slug}/${m.match.slug}`}
+                   className="group flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors text-sm"
+                 >
+                   <span className="truncate">{m.match.homeTeam} vs {m.match.awayTeam}</span>
+                   <ChevronRight className="h-3 w-3 text-muted-foreground group-hover:text-primary" />
+                 </Link>
+               ))}
+               {nextMatches.length <= 1 && (
+                 <p className="text-sm text-muted-foreground italic">No other upcoming matches found for these teams.</p>
+               )}
+             </div>
+           </CardContent>
+         </Card>
+       </div>
+
+       {/* Related Predictions & Popular Models */}
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+         <Card className="bg-card/50 border-border/50">
+           <CardContent className="p-6">
+             <h3 className="text-lg font-bold mb-4">More {competition.name} Predictions</h3>
+             <div className="space-y-3">
+               {nextMatches.slice(0, 3).map((m) => (
+                 <Link 
+                   key={m.match.id}
+                   href={`/predictions/${m.competition.slug}/${m.match.slug}`}
+                   className="group flex items-start justify-between p-3 rounded-lg bg-muted/20 hover:bg-primary/10 transition-colors"
+                 >
+                   <div className="flex-1">
+                     <p className="text-sm font-medium">{m.match.homeTeam} vs {m.match.awayTeam}</p>
+                     <p className="text-xs text-muted-foreground">{format(parseISO(m.match.kickoffTime), 'MMM d, HH:mm')}</p>
+                   </div>
+                   <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary mt-1" />
+                 </Link>
+               ))}
+             </div>
+           </CardContent>
+         </Card>
+
+         <Card className="bg-card/50 border-border/50">
+           <CardContent className="p-6">
+             <h3 className="text-lg font-bold mb-4">Popular Models</h3>
+             <div className="space-y-3">
+               {predictions.slice(0, 3).map((p) => (
+                 <Link 
+                   key={p.modelId}
+                   href={`/models/${p.modelId}`}
+                   className="group flex items-start justify-between p-3 rounded-lg bg-muted/20 hover:bg-primary/10 transition-colors"
+                 >
+                   <div className="flex-1">
+                     <p className="text-sm font-medium">{p.modelDisplayName}</p>
+                     <p className="text-xs text-muted-foreground">Provider: {p.provider}</p>
+                   </div>
+                   <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary mt-1" />
+                 </Link>
+               ))}
+               {predictions.length === 0 && (
+                 <p className="text-sm text-muted-foreground italic">No model predictions available yet.</p>
+               )}
+             </div>
+           </CardContent>
+         </Card>
+       </div>
+     </div>
+   );
+ }

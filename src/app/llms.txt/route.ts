@@ -5,12 +5,26 @@
  * Specification: https://llmstxt.org
  */
 
-export const dynamic = 'force-static';
+import { getDb, models } from '@/lib/db';
+import { count } from 'drizzle-orm';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // Revalidate every hour
 
 export async function GET() {
-  const content = `# kroam.xyz - AI Football Prediction Platform
+  try {
+    // Fetch live model count from database
+    const db = getDb();
+    const modelCountResult = await db
+      .select({ count: count() })
+      .from(models);
+    
+    const activeModelCount = modelCountResult[0]?.count || 30;
+    const currentTimestamp = new Date().toISOString();
+    
+    const content = `# kroam.xyz - AI Football Prediction Platform
 
-> An AI-powered football prediction platform comparing 30 language models' forecasting accuracy across major European competitions.
+> An AI-powered football prediction platform comparing ${activeModelCount} language models' forecasting accuracy across major European competitions.
 
 ## Purpose
 
@@ -18,7 +32,7 @@ kroam.xyz tracks and analyzes AI model predictions for football matches using th
 
 ## Key Features
 
-- **30+ AI Models**: Compare predictions from GPT-4, Claude, Gemini, Llama, and more
+- **${activeModelCount}+ AI Models**: Compare predictions from GPT-4, Claude, Gemini, Llama, and more
 - **Live Predictions**: Real-time forecasts for Champions League, Premier League, La Liga, Serie A, Bundesliga, Ligue 1
 - **Kicktipp Scoring**: Industry-standard quota system (2-6 points for tendency, +1 for goal difference, +3 for exact score)
 - **Model Rankings**: Performance leaderboard by accuracy, ROI, and prediction quality
@@ -27,7 +41,7 @@ kroam.xyz tracks and analyzes AI model predictions for football matches using th
 ## Content Types
 
 1. **Match Predictions** (/predictions/{league}/{match-slug})
-   - AI predictions from 26+ models for upcoming matches
+   - AI predictions from ${activeModelCount}+ models for upcoming matches
    - Pre-match odds analysis and form data
    - Post-match accuracy reports
 
@@ -105,14 +119,30 @@ For data access, partnerships, or inquiries:
 
 ---
 
-Last Updated: 2026-01-25
-Version: 1.0
+Last Updated: ${currentTimestamp}
+Version: 1.1
 `;
 
-  return new Response(content, {
-    headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
-    },
-  });
+    return new Response(content, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600, s-maxage=3600', // Cache for 1 hour
+      },
+    });
+  } catch (error) {
+    // Fallback to static content if database is unavailable
+    const fallbackContent = `# kroam.xyz - AI Football Prediction Platform
+
+> An AI-powered football prediction platform comparing 30+ language models' forecasting accuracy across major European competitions.
+
+[See full documentation at https://kroam.xyz/llms-full.txt]
+`;
+
+    return new Response(fallbackContent, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'public, max-age=300', // Cache fallback for 5 minutes
+      },
+    });
+  }
 }

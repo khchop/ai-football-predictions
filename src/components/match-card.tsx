@@ -150,7 +150,7 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
                 {match.homeTeamLogo ? (
                   <Image
                     src={match.homeTeamLogo}
-                    alt={match.homeTeam}
+                    alt={`${match.homeTeam} team logo`}
                     width={24}
                     height={24}
                     className="object-contain"
@@ -230,7 +230,7 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
                 {match.awayTeamLogo ? (
                   <Image
                     src={match.awayTeamLogo}
-                    alt={match.awayTeam}
+                    alt={`${match.awayTeam} team logo`}
                     width={24}
                     height={24}
                     className="object-contain"
