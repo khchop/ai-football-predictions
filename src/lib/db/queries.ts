@@ -1406,7 +1406,7 @@ export async function updatePredictionScores(
       .set({
         ...scores,
         status: 'scored',
-        scoredAt: new Date().toISOString(),
+        scoredAt: new Date(),
       })
       .where(eq(predictions.id, predictionId))
       .returning();
