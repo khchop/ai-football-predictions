@@ -74,11 +74,11 @@ export function createBackfillWorker() {
       
        // Helper to add errors with cap
        const addError = (message: string) => {
-         if (results.errors.length < MAX_ERRORS) {
-           results.errors.push(message);
-         } else if (results.errors.length === MAX_ERRORS) {
-           results.errors.push(`... and more errors (truncated at ${MAX_ERRORS})`);
-         }
+        if (results.errors.length < MAX_ERRORS) {
+          results.errors.push(message);
+        } else if (results.errors.length === MAX_ERRORS) {
+          results.errors.push(`... and more errors (truncated at ${MAX_ERRORS})`);
+        }
        };
       
       try {

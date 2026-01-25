@@ -10,7 +10,7 @@ import { Worker, Job } from 'bullmq';
 import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, liveQueue, settlementQueue, getQueue } from '../index';
 import type { MonitorLivePayload } from '../types';
-import { getMatchById, updateMatchResult } from '@/lib/db/queries';
+import { updateMatchResult } from '@/lib/db/queries';
 import { getFixtureById, mapFixtureStatus, formatMatchMinute } from '@/lib/football/api-football';
 import { loggers } from '@/lib/logger/modules';
 import { getMatchWithRetry } from '@/lib/utils/retry-helpers';
@@ -74,23 +74,23 @@ export function createLiveScoreWorker() {
          if (pollCount >= MAX_POLLS) {
            log.info(`Max polls reached (${MAX_POLLS}) for match ${matchId}, stopping`);
            return { stopped: true, reason: 'max_polls_reached', pollCount };
-         }
-        
-          // Get match data
-          const matchData = await getMatchWithRetry(matchId, 3, 2000, log);
-          if (!matchData) {
-            log.info(`Match ${matchId} not found after retries`);
-            return { stopped: true, reason: 'match_not_found' };
           }
-        
-        const { match } = matchData;
-        
+         
+         // Get match data
+         const matchData = await getMatchWithRetry(matchId, 3, 2000, log);
+         if (!matchData) {
+           log.info(`Match ${matchId} not found after retries`);
+           return { stopped: true, reason: 'match_not_found' };
+         }
+         
+         const { match } = matchData;
+         
          // If match already finished, stop polling
          if (match.status === 'finished' || match.status === 'cancelled' || match.status === 'postponed') {
            log.info(`Match ${matchId} is ${match.status}, stopping polls`);
            return { stopped: true, reason: 'match_already_finished', status: match.status };
          }
-        
+         
          // Fetch fixture from API
          const fixtureId = parseInt(externalId, 10);
          const fixture = await getFixtureById(fixtureId);

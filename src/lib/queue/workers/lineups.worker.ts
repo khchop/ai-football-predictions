@@ -20,18 +20,18 @@ export function createLineupsWorker() {
       const { matchId, externalId, homeTeam, awayTeam } = job.data;
       const log = loggers.lineupsWorker.child({ jobId: job.id, jobName: job.name });
       
-      log.info(`Fetching lineups for ${homeTeam} vs ${awayTeam} (match: ${matchId})`);
-      
+       log.info(`Fetching lineups for ${homeTeam} vs ${awayTeam} (match: ${matchId})`);
+       
        try {
-          // Verify match still exists and is scheduled
-          const matchData = await getMatchWithRetry(matchId, 3, 2000, log);
-          if (!matchData) {
-            log.info(`Match ${matchId} not found after retries, skipping`);
-            return { skipped: true, reason: 'match_not_found' };
-          }
-        
-        const { match } = matchData;
-        
+         // Verify match still exists and is scheduled
+         const matchData = await getMatchWithRetry(matchId, 3, 2000, log);
+         if (!matchData) {
+           log.info(`Match ${matchId} not found after retries, skipping`);
+           return { skipped: true, reason: 'match_not_found' };
+         }
+         
+         const { match } = matchData;
+         
          if (match.status !== 'scheduled') {
            log.info(`Match ${matchId} is ${match.status}, skipping`);
            return { skipped: true, reason: 'match_not_scheduled', status: match.status };
