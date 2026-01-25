@@ -1,3 +1,244 @@
+# AGENTS.md - BettingSoccer Development Guide
+
+This guide is for AI coding agents working in the BettingSoccer codebase.
+
+## Project Overview
+
+A Next.js 16 application that tracks football match predictions from multiple LLM models. Uses PostgreSQL with Drizzle ORM, Redis caching, and BullMQ job queues.
+
+**Tech Stack:** Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS 4, Drizzle ORM, PostgreSQL, Redis, BullMQ, Pino logging, Zod validation, shadcn/ui components.
+
+---
+
+## Build/Lint/Test Commands
+
+### Development
+```bash
+npm run dev          # Start dev server (localhost:3000)
+npm run build        # Production build
+npm run start        # Start production server
+npm run lint         # Run ESLint
+```
+
+### Database (Drizzle ORM)
+```bash
+npm run db:push      # Push schema changes to database
+npm run db:migrate   # Run migrations
+npm run db:generate  # Generate new migration
+npm run db:studio    # Open Drizzle Studio GUI
+```
+
+### Scripts
+```bash
+npm run sync-models           # Sync LLM models to database
+npm run clean-predictions     # Clean prediction data
+npm run regenerate-content    # Regenerate post-match content
+npm run migrate:betting       # Run betting system migration
+npm run migrate:predictions   # Run predictions migration
+```
+
+### Testing
+**No test framework is currently configured.** When adding tests:
+- Use Vitest (recommended for Next.js)
+- Place tests in `__tests__/` directories or as `*.test.ts` files
+- Run single test: `npx vitest run path/to/file.test.ts`
+- Run with watch: `npx vitest path/to/file.test.ts`
+
+---
+
+## Project Structure
+
+```
+src/
+  app/                    # Next.js App Router
+    api/                  # API routes (REST endpoints)
+      admin/              # Admin endpoints (queue, rescore, dlq)
+      cron/               # Scheduled cron endpoints
+      health/             # Health check
+    (pages)/              # Page routes (matches, predictions, leaderboard)
+  components/
+    ui/                   # shadcn/ui components (button, card, table)
+    admin/                # Admin-specific components
+    match/                # Match-specific components
+  lib/
+    db/                   # Drizzle ORM (schema.ts, queries.ts, index.ts)
+    cache/                # Redis caching layer
+    football/             # API-Football integration
+    llm/                  # LLM provider abstraction
+    logger/               # Pino structured logging
+    queue/                # BullMQ job queue & workers
+    validation/           # Zod schemas & middleware
+    utils/                # Utility functions
+  types/                  # TypeScript type definitions
+scripts/                  # Migration & maintenance scripts
+drizzle/                  # Database migrations
+```
+
+---
+
+## Code Style Guidelines
+
+### Imports
+Order imports as follows, with blank line between groups:
+```typescript
+// 1. External packages
+import { Suspense } from 'react';
+import { NextResponse } from 'next/server';
+import { eq, and, desc } from 'drizzle-orm';
+
+// 2. Internal imports using @/ alias
+import { getDb, matches, models } from '@/lib/db';
+import { loggers } from '@/lib/logger/modules';
+
+// 3. Type-only imports
+import type { Match, Model } from '@/lib/db/schema';
+```
+
+### Naming Conventions
+| Element | Convention | Example |
+|---------|------------|---------|
+| Files | kebab-case | `match-card.tsx`, `api-football.ts` |
+| Components | PascalCase | `MatchCard`, `StatsBar` |
+| Functions | camelCase | `getUpcomingMatches()` |
+| Constants | UPPER_SNAKE_CASE | `API_BASE_URL`, `CACHE_TTL` |
+| Types/Interfaces | PascalCase | `MatchWithPredictions` |
+| DB tables | camelCase | `matches`, `modelBalances` |
+
+### TypeScript
+- Strict mode is enabled - no implicit `any`
+- Use path alias `@/*` for imports from `src/`
+- Export types from schema using Drizzle's `$inferSelect`/`$inferInsert`:
+```typescript
+export type Match = typeof matches.$inferSelect;
+export type NewMatch = typeof matches.$inferInsert;
+```
+
+### React Components
+- Use Server Components by default (async functions)
+- Use `Suspense` for async data loading
+- Use shadcn/ui patterns with `class-variance-authority` for variants:
+```typescript
+function Button({ className, variant, size, ...props }) {
+  return <button className={cn(buttonVariants({ variant, size, className }))} {...props} />;
+}
+```
+
+### API Routes
+```typescript
+// src/app/api/example/route.ts
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  return NextResponse.json({ status: 'ok', timestamp: new Date().toISOString() });
+}
+
+export async function POST(request: Request) {
+  const body = await request.json();
+  // Validate with Zod, then process
+  return NextResponse.json({ success: true });
+}
+```
+
+### Error Handling
+- Use structured logging with Pino:
+```typescript
+import { loggers } from '@/lib/logger/modules';
+
+try {
+  const data = await fetchData();
+} catch (error) {
+  loggers.db.error({ operation: 'fetchData', error: error.message }, 'Query failed');
+  // Continue gracefully or rethrow
+}
+```
+
+- Wrap database operations with error context:
+```typescript
+function logQueryError(operation: string, error: any, context?: Record<string, any>) {
+  loggers.db.error({
+    operation,
+    message: error.message,
+    code: error.code,
+    ...context,
+  }, 'Database query error');
+}
+```
+
+### Database Patterns
+- Use `getDb()` to get database instance
+- Cache expensive queries with Redis:
+```typescript
+import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
+
+export async function getActiveCompetitions() {
+  return withCache(cacheKeys.activeCompetitions(), CACHE_TTL.COMPETITIONS, async () => {
+    const db = getDb();
+    return db.select().from(competitions).where(eq(competitions.active, true));
+  });
+}
+```
+
+### Validation
+- Use Zod schemas in `src/lib/validation/`
+- Validate API inputs before processing
+
+---
+
+## Environment Variables
+
+Required variables (see `.env.example`):
+- `DATABASE_URL` - PostgreSQL connection string
+- `API_FOOTBALL_KEY` - API-Football API key
+- `TOGETHER_API_KEY` - Together AI API key
+- `CRON_SECRET` - Secret for cron endpoint authentication
+- `REDIS_URL` - Redis connection string (optional, for caching/queues)
+
+---
+
+## Cron Jobs
+
+The application uses scheduled cron tasks (configured in deployment):
+- `/api/cron/update-live-scores` - Every minute (live match updates)
+- `/api/cron/fetch-fixtures` - Every 6 hours (upcoming matches)
+- `/api/cron/fetch-analysis` - Every 10 minutes (match analysis)
+- `/api/cron/generate-predictions` - Every 10 minutes (LLM predictions)
+- `/api/cron/update-results` - Every 10 minutes (final scores)
+
+---
+
+## Common Patterns
+
+### Adding a New API Endpoint
+1. Create file at `src/app/api/{route}/route.ts`
+2. Export `GET`, `POST`, etc. async functions
+3. Use `NextResponse.json()` for responses
+4. Add Zod validation for request bodies
+
+### Adding a New Page
+1. Create folder at `src/app/{route}/`
+2. Add `page.tsx` with default export
+3. Use Server Components with `Suspense` for data loading
+
+### Adding a UI Component
+1. For shadcn/ui: Run `npx shadcn@latest add {component}`
+2. Components go in `src/components/ui/`
+3. Use `cn()` utility for conditional classes
+
+### Database Schema Changes
+1. Modify `src/lib/db/schema.ts`
+2. Run `npm run db:generate` to create migration
+3. Run `npm run db:migrate` to apply
+
+---
+
+## Troubleshooting
+
+- **Redis connection errors:** Check `REDIS_URL` or run without caching
+- **Database errors:** Verify `DATABASE_URL` and run `npm run db:push`
+- **API-Football rate limits:** Check quota, add delays between requests
+- **LLM failures:** Models auto-disable after 3 consecutive failures
+
+
 <!-- CLAVIX:START -->
 # Clavix Instructions for Generic Agents
 

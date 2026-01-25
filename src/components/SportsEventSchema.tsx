@@ -6,11 +6,19 @@ interface SportsEventSchemaProps {
 }
 
 export function SportsEventSchema({ match, competition }: SportsEventSchemaProps) {
-  const schema = {
+  // Map match status to valid Schema.org EventStatus values
+  const eventStatus = match.status === 'finished' 
+    ? 'https://schema.org/EventCompleted'
+    : match.status === 'live'
+    ? 'https://schema.org/EventInProgress'
+    : 'https://schema.org/EventScheduled';
+
+  const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'SportsEvent',
     'name': `${match.homeTeam} vs ${match.awayTeam}`,
     'startDate': match.kickoffTime,
+    'eventStatus': eventStatus,
     'location': {
       '@type': 'Place',
       'name': match.venue || 'Stadium'
@@ -25,32 +33,29 @@ export function SportsEventSchema({ match, competition }: SportsEventSchemaProps
       'name': match.awayTeam,
       'logo': match.awayTeamLogo
     },
-    'eventStatus': match.status === 'finished' 
-      ? 'https://schema.org/EventPostponed' // This is wrong, let's fix it
-      : match.status === 'live'
-      ? 'https://schema.org/EventScheduled' // Simplified
-      : 'https://schema.org/EventScheduled',
+    'sport': 'Football',
+    'competitor': [
+      {
+        '@type': 'SportsTeam',
+        'name': match.homeTeam,
+      },
+      {
+        '@type': 'SportsTeam',
+        'name': match.awayTeam,
+      },
+    ],
   };
 
-  // Correction for eventStatus and adding results if finished
-  const eventStatus = match.status === 'finished' 
-    ? 'https://schema.org/MatchStatusFinished' 
-    : match.status === 'live'
-    ? 'https://schema.org/MatchStatusInPlay'
-    : 'https://schema.org/MatchStatusScheduled';
-
-  const fullSchema = {
-    ...schema,
-    'eventStatus': eventStatus,
-    ...(match.status === 'finished' && match.homeScore !== null && match.awayScore !== null ? {
-      'result': `${match.homeScore}-${match.awayScore}`
-    } : {})
-  };
+  // Add final scores if match is finished
+  if (match.status === 'finished' && match.homeScore !== null && match.awayScore !== null) {
+    schema.homeTeamScore = match.homeScore;
+    schema.awayTeamScore = match.awayScore;
+  }
 
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(fullSchema) }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
   );
 }

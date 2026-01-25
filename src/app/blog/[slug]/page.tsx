@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { getBlogPostBySlug } from '@/lib/db/queries';
+import { generateArticleSchema } from '@/lib/seo/schemas';
 import { format, parseISO } from 'date-fns';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -49,8 +50,23 @@ export default async function BlogPostPage({ params }: PageProps) {
     notFound();
   }
 
+  // Generate Article schema for SEO
+  const articleSchema = generateArticleSchema({
+    title: post.title,
+    description: post.excerpt,
+    author: post.generatedBy || 'kroam.xyz',
+    publishedAt: post.publishedAt || new Date().toISOString(),
+    url: `https://kroam.xyz/blog/${slug}`,
+  });
+
   return (
     <div className="max-w-3xl mx-auto space-y-8">
+      {/* Article Schema for search engines */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+
       {/* Back Link */}
       <Link
         href="/blog"

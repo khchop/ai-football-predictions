@@ -4,6 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { MatchEvents } from '@/components/match-events';
 import { MatchContentSection } from '@/components/match/MatchContent';
+import { MatchFAQSchema } from '@/components/match/MatchFAQSchema';
 import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails, getStandingsForTeams, getNextMatchesForTeams } from '@/lib/db/queries';
 import { getMatchEvents } from '@/lib/football/api-football';
 import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, Target, ChevronRight } from 'lucide-react';
@@ -14,6 +15,8 @@ import type { Metadata } from 'next';
 import { PredictionTable } from '@/components/prediction-table';
 import { SportsEventSchema } from '@/components/SportsEventSchema';
 import { MatchStats } from '@/components/match/MatchStats';
+import { FaqSchema } from '@/components/FaqSchema';
+import type { FAQItem } from '@/lib/seo/schemas';
 
 // Helper to find the lowest odds (favorite)
 function getLowestOdds(home: string, draw: string, away: string): 'home' | 'draw' | 'away' {
@@ -293,33 +296,76 @@ export default async function PredictionPage({ params }: MatchPageProps) {
        {/* Match Content Section */}
        <MatchContentSection matchId={match.id} />
 
-      {/* AI Model Predictions */}
-      <Card className="bg-card/50 border-border/50">
-        <CardContent className="p-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <Target className="h-5 w-5 text-primary" />
-            AI Model Predictions
-          </h2>
-          <PredictionTable
-            predictions={predictions.map(p => ({
-              id: p.predictionId,
-              modelId: p.modelId,
-              modelDisplayName: p.modelDisplayName,
-              provider: p.provider,
-              predictedHomeScore: p.predictedHome,
-              predictedAwayScore: p.predictedAway,
-              points: p.totalPoints,
-              isExact: p.exactScoreBonus !== null && p.exactScoreBonus > 0,
-              isCorrectResult: p.tendencyPoints !== null && p.tendencyPoints > 0,
-            }))}
-            homeTeam={match.homeTeam}
-            awayTeam={match.awayTeam}
-            isFinished={isFinished}
-          />
-        </CardContent>
-      </Card>
+       {/* AI Model Predictions */}
+       <Card className="bg-card/50 border-border/50">
+         <CardContent className="p-6">
+           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+             <Target className="h-5 w-5 text-primary" />
+             AI Model Predictions
+           </h2>
+           <PredictionTable
+             predictions={predictions.map(p => ({
+               id: p.predictionId,
+               modelId: p.modelId,
+               modelDisplayName: p.modelDisplayName,
+               provider: p.provider,
+               predictedHomeScore: p.predictedHome,
+               predictedAwayScore: p.predictedAway,
+               points: p.totalPoints,
+               isExact: p.exactScoreBonus !== null && p.exactScoreBonus > 0,
+               isCorrectResult: p.tendencyPoints !== null && p.tendencyPoints > 0,
+             }))}
+             homeTeam={match.homeTeam}
+             awayTeam={match.awayTeam}
+             isFinished={isFinished}
+           />
+         </CardContent>
+       </Card>
 
-      {/* Internal Linking / Next Matches */}
+       {/* Prediction Insights & FAQs */}
+       <Card className="bg-card/50 border-border/50">
+         <CardContent className="p-6">
+           <h2 className="text-xl font-bold mb-4">Prediction Insights</h2>
+           
+           {/* Calculate average predicted score */}
+           {predictions.length > 0 && (
+             <div className="space-y-4">
+               <p className="text-muted-foreground">
+                 Based on {predictions.length} AI model predictions for this match:
+               </p>
+               
+               <div className="grid grid-cols-2 gap-4 my-4">
+                 <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                   <p className="text-sm text-muted-foreground">Avg Predicted Score</p>
+                   <p className="text-lg font-bold">
+                     {(predictions.reduce((sum, p) => sum + (p.predictedHome ?? 0), 0) / predictions.length).toFixed(1)} - {(predictions.reduce((sum, p) => sum + (p.predictedAway ?? 0), 0) / predictions.length).toFixed(1)}
+                   </p>
+                 </div>
+                 <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                   <p className="text-sm text-muted-foreground">Prediction Count</p>
+                   <p className="text-lg font-bold">{predictions.length} models</p>
+                 </div>
+               </div>
+
+               <div className="border-t border-border/50 pt-4 text-sm text-muted-foreground/70">
+                 <p>
+                   These insights are AI-generated from {predictions.length} model predictions. 
+                   Predictions vary based on each model&apos;s training data and methodology.
+                 </p>
+               </div>
+             </div>
+           )}
+
+           {/* FAQ Schema for search results */}
+           <MatchFAQSchema 
+             match={match}
+             competition={competition}
+             predictionCount={predictions.length}
+           />
+         </CardContent>
+       </Card>
+
+       {/* Internal Linking / Next Matches */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-6">

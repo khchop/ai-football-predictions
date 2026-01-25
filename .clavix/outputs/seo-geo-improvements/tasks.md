@@ -76,8 +76,8 @@
 
 ## Phase 2: Structured Data - Rich Snippets & AI Citation
 
-- [ ] **Create reusable FAQ schema component**
-  Task ID: phase-2-structured-01
+- [x] **Create reusable FAQ schema component**
+   Task ID: phase-2-structured-01
   > **Implementation**: Create `src/components/FaqSchema.tsx`.
   > **Details**:
   > - Accept array of { question: string; answer: string }
@@ -86,8 +86,8 @@
   > - Render as `<script type="application/ld+json">` in component
   > - Usage: `<FaqSchema items={[{question: "...", answer: "..."}]} />`
 
-- [ ] **Add FAQs to match prediction pages**
-  Task ID: phase-2-structured-02
+- [x] **Add FAQs to match prediction pages**
+   Task ID: phase-2-structured-02
   > **Implementation**: Edit `src/app/predictions/[league]/[slug]/page.tsx`.
   > **Details**:
   > - Add FAQ section below AI Model Predictions table
@@ -99,8 +99,8 @@
   > - Use FaqSchema component in page content
   > - Wrap in `<Card>` with heading "Prediction Insights"
 
-- [ ] **Add Article schema to blog posts**
-  Task ID: phase-2-structured-03
+- [x] **Add Article schema to blog posts**
+   Task ID: phase-2-structured-03
   > **Implementation**: Create `src/components/ArticleSchema.tsx` and use in `src/app/blog/[slug]/page.tsx`.
   > **Details**:
   > - Schema type: NewsArticle or BlogPosting (use BlogPosting for analysis)
@@ -110,8 +110,8 @@
   > - inLanguage: "en-US"
   > - Add schema to blog page head
 
-- [ ] **Add BreadcrumbList schema to pages**
-  Task ID: phase-2-structured-04
+- [x] **Add BreadcrumbList schema to pages**
+   Task ID: phase-2-structured-04
   > **Implementation**: Create `src/components/BreadcrumbSchema.tsx`.
   > **Details**:
   > - Accept breadcrumbs: array of { name: string; url: string }
@@ -121,8 +121,8 @@
   >   - Home → Predictions → Premier League → Man City vs Arsenal
   > - Position field auto-increment based on array index
 
-- [ ] **Fix SportsEvent schema in match pages**
-  Task ID: phase-2-structured-05
+- [x] **Fix SportsEvent schema in match pages**
+   Task ID: phase-2-structured-05
   > **Implementation**: Fix `src/components/SportsEventSchema.tsx`.
   > **Details**:
   > - Replace incorrect eventStatus values (currently has 'EventPostponed' and 'EventScheduled' mixed)
