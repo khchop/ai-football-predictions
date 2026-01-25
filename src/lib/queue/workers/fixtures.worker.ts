@@ -58,40 +58,40 @@ export function createFixturesWorker() {
               fixture.fixture.date
             );
             
-            try {
-              const externalId = String(fixture.fixture.id);
-              
-              // Check if match already exists - use existing ID if so
-              const existingMatch = await getMatchByExternalId(externalId);
-              const matchId = existingMatch?.id || uuidv4();
-              const isNewMatch = !existingMatch;
-              
-              // Save match to DB
-              await upsertMatch({
-                id: matchId,
-                externalId,
-                competitionId: competition.id,
-                homeTeam: fixture.teams.home.name,
-                awayTeam: fixture.teams.away.name,
-                homeTeamLogo: fixture.teams.home.logo,
-                awayTeamLogo: fixture.teams.away.logo,
-                kickoffTime: fixture.fixture.date,
-                homeScore: fixture.goals.home,
-                awayScore: fixture.goals.away,
-                status: mapFixtureStatus(fixture.fixture.status.short),
-                round: fixture.league.round,
-                venue: fixture.fixture.venue.name,
-                slug,
-              });
-              
-              savedFixtures++;
-              
-              // Schedule jobs for NEW scheduled matches only
-              if (isNewMatch && mapFixtureStatus(fixture.fixture.status.short) === 'scheduled') {
-                newMatchUrls.push(`https://kroam.xyz/predictions/${competitionSlug}/${slug}`);
-                const scheduled = await scheduleMatchJobs({
-                  match: {
-                    id: matchId,
+             try {
+               const externalId = String(fixture.fixture.id);
+               
+               // Check if match already exists - use existing ID if so
+               const existingMatch = await getMatchByExternalId(externalId);
+               const proposedMatchId = existingMatch?.id || uuidv4();
+               const isNewMatch = !existingMatch;
+               
+               // Save match to DB and get the actual ID (in case of conflict on externalId)
+               const { id: actualMatchId } = await upsertMatch({
+                 id: proposedMatchId,
+                 externalId,
+                 competitionId: competition.id,
+                 homeTeam: fixture.teams.home.name,
+                 awayTeam: fixture.teams.away.name,
+                 homeTeamLogo: fixture.teams.home.logo,
+                 awayTeamLogo: fixture.teams.away.logo,
+                 kickoffTime: fixture.fixture.date,
+                 homeScore: fixture.goals.home,
+                 awayScore: fixture.goals.away,
+                 status: mapFixtureStatus(fixture.fixture.status.short),
+                 round: fixture.league.round,
+                 venue: fixture.fixture.venue.name,
+                 slug,
+               });
+               
+               savedFixtures++;
+               
+               // Schedule jobs for NEW scheduled matches only
+               if (isNewMatch && mapFixtureStatus(fixture.fixture.status.short) === 'scheduled') {
+                 newMatchUrls.push(`https://kroam.xyz/predictions/${competitionSlug}/${slug}`);
+                 const scheduled = await scheduleMatchJobs({
+                   match: {
+                     id: actualMatchId,
                     externalId,
                     competitionId: competition.id,
                     homeTeam: fixture.teams.home.name,
