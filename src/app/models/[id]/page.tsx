@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Suspense } from 'react';
+import { Suspense, cache } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -18,6 +18,10 @@ import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 import { ModelPerformanceChart } from '@/components/model-performance-chart';
 import { ModelCompetitionBreakdown } from '@/components/model-competition-breakdown';
+
+// Memoize queries to avoid duplication between generateMetadata and page component
+const getModelStatsData = cache((modelId: string) => getModelPredictionStats(modelId));
+const getModelRankData = cache((modelId: string) => getModelRank(modelId));
 
 export const dynamic = 'force-dynamic';
 
@@ -39,9 +43,9 @@ export async function generateMetadata({ params }: ModelPageProps): Promise<Meta
   const baseUrl = 'https://kroam.xyz';
   const url = `${baseUrl}/models/${id}`;
 
-  // Get prediction stats for OG image
-  const predictionStats = await getModelPredictionStats(id);
-  const modelRank = await getModelRank(id);
+  // Get prediction stats for OG image (uses memoized queries)
+  const predictionStats = await getModelStatsData(id);
+  const modelRank = await getModelRankData(id);
   
   // Calculate accuracy from stats (exactScores / scoredPredictions * 100)
   const accuracy = predictionStats?.scoredPredictions && predictionStats.scoredPredictions > 0
@@ -121,13 +125,13 @@ export default async function ModelPage({ params }: ModelPageProps) {
     notFound();
   }
 
-  // Fetch all model data
+  // Fetch all model data (reuses memoized queries for prediction stats and rank)
   const [bettingStats, predictionStats, weeklyPerformance, competitionStats, modelRank, resultTypeBreakdown] = await Promise.all([
     getModelBettingStats(id),
-    getModelPredictionStats(id),
+    getModelStatsData(id),
     getModelWeeklyPerformance(id),
     getModelStatsByCompetitionWithRank(id),
-    getModelRank(id),
+    getModelRankData(id),
     getModelResultTypeBreakdown(id),
   ]);
 

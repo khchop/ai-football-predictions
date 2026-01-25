@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { cache } from 'react';
 import { getCompetitionBySlug, getMatchesByCompetitionSlug, getStandingsByCompetitionId } from '@/lib/db/queries';
 import { Trophy, Calendar, Target, List } from 'lucide-react';
 import Link from 'next/link';
@@ -6,6 +7,9 @@ import { MatchCard } from '@/components/match-card';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Metadata } from 'next';
+
+// Memoize matches query to avoid duplicate database calls
+const getMatchesData = cache((league: string) => getMatchesByCompetitionSlug(league, 100));
 
 interface LeaguePageProps {
   params: Promise<{
@@ -26,8 +30,8 @@ export async function generateMetadata({ params }: LeaguePageProps): Promise<Met
   const baseUrl = 'https://kroam.xyz';
   const url = `${baseUrl}/predictions/${league}`;
 
-  // Get match counts for OG image
-  const allMatches = await getMatchesByCompetitionSlug(league, 100);
+  // Get match counts for OG image (uses memoized query to avoid duplication)
+  const allMatches = await getMatchesData(league);
   const upcomingMatches = allMatches.filter(m => m.match.status === 'scheduled');
   const matchCount = allMatches.length;
   const upcomingCount = upcomingMatches.length;
@@ -75,7 +79,8 @@ export default async function LeagueHubPage({ params }: LeaguePageProps) {
     notFound();
   }
 
-  const allMatches = await getMatchesByCompetitionSlug(league, 100);
+  // Uses memoized query to avoid duplication with generateMetadata
+  const allMatches = await getMatchesData(league);
   const standings = await getStandingsByCompetitionId(competition.id);
 
   const upcomingMatches = allMatches.filter(m => m.match.status === 'scheduled');

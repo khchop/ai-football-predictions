@@ -9,6 +9,13 @@ export async function GET(request: Request) {
   const awayTeam = searchParams.get('awayTeam') || 'Away Team';
   const competition = searchParams.get('competition') || 'Match';
 
+  // Helper to truncate long strings
+  const truncate = (str: string, max: number) => 
+    str.length > max ? str.slice(0, max - 1) + '…' : str;
+
+  const displayHomeTeam = truncate(homeTeam, 25);
+  const displayAwayTeam = truncate(awayTeam, 25);
+
   return new ImageResponse(
     (
       <div
@@ -55,13 +62,13 @@ export async function GET(request: Request) {
         >
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '56px', fontWeight: 'bold', marginBottom: '10px' }}>
-              {homeTeam}
+              {displayHomeTeam}
             </div>
           </div>
           <div style={{ fontSize: '36px', fontWeight: 'bold', opacity: 0.8 }}>vs</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '56px', fontWeight: 'bold', marginBottom: '10px' }}>
-              {awayTeam}
+              {displayAwayTeam}
             </div>
           </div>
         </div>
@@ -100,6 +107,9 @@ export async function GET(request: Request) {
     {
       width: 1200,
       height: 630,
+      headers: {
+        'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
+      },
     }
   );
 }
