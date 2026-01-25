@@ -1,8 +1,7 @@
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { getCompetitionBySlug, getMatchesByCompetitionSlug, getStandingsByCompetitionId } from '@/lib/db/queries';
-import { Trophy, Calendar, Target, List } from 'lucide-react';
-import Link from 'next/link';
+import { Trophy, Calendar, Target } from 'lucide-react';
 import { MatchCard } from '@/components/match-card';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

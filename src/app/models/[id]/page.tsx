@@ -12,7 +12,7 @@ import {
   getModelRank,
   getModelResultTypeBreakdown,
 } from '@/lib/db/queries';
-import { getProviderById, type ModelTier } from '@/lib/llm';
+import { getProviderById } from '@/lib/llm';
 import { ArrowLeft, Bot, Sparkles, DollarSign, TrendingUp, BarChart2, Award, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
@@ -87,17 +87,6 @@ export async function generateMetadata({ params }: ModelPageProps): Promise<Meta
       images: [ogImageUrl.toString()],
     },
   };
-}
-
-// Loading skeleton for stats
-function StatsSkeleton() {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      {[...Array(8)].map((_, i) => (
-        <Skeleton key={i} className="h-24 rounded-xl" />
-      ))}
-    </div>
-  );
 }
 
 // Loading skeleton for chart

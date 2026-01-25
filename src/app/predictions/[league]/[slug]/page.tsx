@@ -11,22 +11,11 @@ import { getMatchEvents } from '@/lib/football/api-football';
 import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, Target, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import type { LikelyScore } from '@/types';
 import type { Metadata } from 'next';
 import { PredictionTable } from '@/components/prediction-table';
 import { SportsEventSchema } from '@/components/SportsEventSchema';
 import { MatchStats } from '@/components/match/MatchStats';
 import { WebPageSchema } from '@/components/WebPageSchema';
-
-// Helper to find the lowest odds (favorite)
-function getLowestOdds(home: string, draw: string, away: string): 'home' | 'draw' | 'away' {
-  const h = parseFloat(home);
-  const d = parseFloat(draw);
-  const a = parseFloat(away);
-  if (h <= d && h <= a) return 'home';
-  if (a <= d && a <= h) return 'away';
-  return 'draw';
-}
 
 export const dynamic = 'force-dynamic';
 
@@ -91,16 +80,6 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
   };
 }
 
-// Helper to parse JSON safely
-function parseJson<T>(json: string | null): T | null {
-  if (!json) return null;
-  try {
-    return JSON.parse(json) as T;
-  } catch {
-    return null;
-  }
-}
-
 // Helper to render prediction analysis section
 function renderPredictionAnalysis(predictions: Array<{ predictedHome: number | null; predictedAway: number | null }>) {
   const homeAvg = predictions.reduce((sum, p) => sum + (p.predictedHome ?? 0), 0) / predictions.length;
@@ -129,9 +108,6 @@ export default async function PredictionPage({ params }: MatchPageProps) {
   const isFinished = match.status === 'finished';
   const isLive = match.status === 'live';
 
-  // Parse likely scores
-  const likelyScores = parseJson<LikelyScore[]>(analysis?.likelyScores ?? null) || [];
-
   // Fetch match events for finished/live matches
   const matchEvents = (isFinished || isLive) && match.externalId 
     ? await getMatchEvents(parseInt(match.externalId, 10))
@@ -145,9 +121,9 @@ export default async function PredictionPage({ params }: MatchPageProps) {
   // Fetch next matches
   const nextMatches = await getNextMatchesForTeams([match.homeTeam, match.awayTeam], 4);
 
-   return (
-     <div className="max-w-4xl mx-auto space-y-8">
-       <SportsEventSchema match={match} competition={competition} />
+    return (
+      <div className="max-w-4xl mx-auto space-y-8">
+        <SportsEventSchema match={match} />
        <WebPageSchema 
          name={`${match.homeTeam} vs ${match.awayTeam} Prediction`}
          description={`AI predictions for ${match.homeTeam} vs ${match.awayTeam} (${competition.name}). Compare forecasts from 35+ AI models.`}

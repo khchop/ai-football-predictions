@@ -1,11 +1,10 @@
-import type { Match, Competition } from '@/lib/db/schema';
+import type { Match } from '@/lib/db/schema';
 
 interface SportsEventSchemaProps {
   match: Match;
-  competition: Competition;
 }
 
-export function SportsEventSchema({ match, competition }: SportsEventSchemaProps) {
+export function SportsEventSchema({ match }: SportsEventSchemaProps) {
   // Map match status to valid Schema.org EventStatus values
   const eventStatus = match.status === 'finished' 
     ? 'https://schema.org/EventCompleted'

@@ -129,7 +129,7 @@ Version: 1.1
         'Cache-Control': 'public, max-age=3600, s-maxage=3600', // Cache for 1 hour
       },
     });
-  } catch (error) {
+  } catch {
     // Fallback to static content if database is unavailable
     const fallbackContent = `# kroam.xyz - AI Football Prediction Platform
 
