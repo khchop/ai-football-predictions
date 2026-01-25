@@ -100,6 +100,14 @@ function parseJson<T>(json: string | null): T | null {
   }
 }
 
+// Helper to render prediction analysis section
+function renderPredictionAnalysis(predictions: Array<{ predictedHome: number | null; predictedAway: number | null }>) {
+  const homeAvg = predictions.reduce((sum, p) => sum + (p.predictedHome ?? 0), 0) / predictions.length;
+  const awayAvg = predictions.reduce((sum, p) => sum + (p.predictedAway ?? 0), 0) / predictions.length;
+  
+  return { homeAvg, awayAvg };
+}
+
 export default async function PredictionPage({ params }: MatchPageProps) {
   const { league, slug } = await params;
   const result = await getMatchBySlug(league, slug);
@@ -349,50 +357,48 @@ export default async function PredictionPage({ params }: MatchPageProps) {
               <h2 className="text-xl font-bold">AI Analysis & Insights</h2>
             </div>
             
-            {/* Calculate average predicted score and insights */}
-            {predictions.length > 0 && (() => {
-              // Extract calculations at the top level to avoid duplication
-              const homeAvg = predictions.reduce((sum, p) => sum + (p.predictedHome ?? 0), 0) / predictions.length;
-              const awayAvg = predictions.reduce((sum, p) => sum + (p.predictedAway ?? 0), 0) / predictions.length;
-              
-              return (
-                <div className="space-y-4">
-                  <p className="text-muted-foreground">
-                    Based on {predictions.length} AI model predictions for this match:
-                  </p>
-                  
-                  <div className="grid grid-cols-2 gap-4 my-4">
-                    <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                      <p className="text-sm text-muted-foreground">Avg Predicted Score</p>
-                      <p className="text-lg font-bold">
-                        {homeAvg.toFixed(1)}
-                        {' - '}
-                        {awayAvg.toFixed(1)}
-                      </p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                      <p className="text-sm text-muted-foreground">Prediction Count</p>
-                      <p className="text-lg font-bold">{predictions.length} models</p>
-                    </div>
-                  </div>
+             {/* Calculate average predicted score and insights */}
+             {predictions.length > 0 && (() => {
+               const { homeAvg, awayAvg } = renderPredictionAnalysis(predictions);
+               
+               return (
+                 <div className="space-y-4">
+                   <p className="text-muted-foreground">
+                     Based on {predictions.length} AI model predictions for this match:
+                   </p>
+                   
+                   <div className="grid grid-cols-2 gap-4 my-4">
+                     <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                       <p className="text-sm text-muted-foreground">Avg Predicted Score</p>
+                       <p className="text-lg font-bold">
+                         {homeAvg.toFixed(1)}
+                         {' - '}
+                         {awayAvg.toFixed(1)}
+                       </p>
+                     </div>
+                     <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                       <p className="text-sm text-muted-foreground">Prediction Count</p>
+                       <p className="text-lg font-bold">{predictions.length} models</p>
+                     </div>
+                   </div>
 
-                  {/* AI Analysis - Citable content for GEO */}
-                  <PredictionInsightsBlockquote 
-                    predictions={predictions} 
-                    homeAvg={homeAvg} 
-                    awayAvg={awayAvg} 
-                  />
-                </div>
-              );
-            })()}
+                   {/* AI Analysis - Citable content for GEO */}
+                   <PredictionInsightsBlockquote 
+                     predictions={predictions} 
+                     homeAvg={homeAvg} 
+                     awayAvg={awayAvg} 
+                   />
+                 </div>
+               );
+             })()}
 
-           {/* FAQ Schema for search results */}
-           <MatchFAQSchema 
-             match={match}
-             competition={competition}
-           />
-         </CardContent>
-       </Card>
+             {/* FAQ Schema for search results */}
+             <MatchFAQSchema 
+               match={match}
+               competition={competition}
+             />
+          </CardContent>
+        </Card>
 
        {/* Internal Linking / Next Matches */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

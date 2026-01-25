@@ -1,6 +1,4 @@
-'use client';
-
-interface PredictionWithScore {
+export interface PredictionWithScore {
   modelDisplayName: string;
   predictedHome: number;
   predictedAway: number;
@@ -22,6 +20,11 @@ export function PredictionInsightsBlockquote({
   homeAvg,
   awayAvg,
 }: PredictionInsightsBlockquoteProps) {
+  // Guard against empty predictions
+  if (predictions.length === 0) {
+    return null;
+  }
+
   // Calculate most common outcome
   const homeWins = predictions.filter(p => (p.predictedHome ?? 0) > (p.predictedAway ?? 0)).length;
   const draws = predictions.filter(p => (p.predictedHome ?? 0) === (p.predictedAway ?? 0)).length;
