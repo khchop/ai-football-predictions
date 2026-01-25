@@ -268,50 +268,54 @@
 ## Phase 5: Technical SEO Polish - Complete Coverage
 
 - [x] **Add hreflang tags for future i18n support**
-  Task ID: phase-5-polish-01
-  > **Implementation**: Edit `src/app/layout.tsx` metadata generation.
-  > **Details**:
-  > - Add alternates.languages for future expansion:
-  >   ```
-  >   alternates: {
-  >     languages: {
-  >       'en-US': 'https://kroam.xyz',
-  >       'de': 'https://de.kroam.xyz',
-  >       'es': 'https://es.kroam.xyz',
-  >     }
-  >   }
-  >   ```
-  > - Or use canonical + hreflang approach if preferred
-  > - This signals to Google we're prepared for i18n
+   Task ID: phase-5-polish-01
+   > **Implementation**: Edit `src/app/layout.tsx` metadata generation.
+   > **Details**:
+   > - Add alternates.languages for future expansion:
+   >   ```
+   >   alternates: {
+   >     languages: {
+   >       'en-US': 'https://kroam.xyz',
+   >       'de': 'https://de.kroam.xyz',
+   >       'es': 'https://es.kroam.xyz',
+   >     }
+   >   }
+   >   ```
+   > - Or use canonical + hreflang approach if preferred
+   > - This signals to Google we're prepared for i18n
+   > **Status**: COMPLETE - Added to layout.tsx with 5 language variants
 
-- [ ] **Add JSON-LD WebPage schema to all dynamic pages**
-  Task ID: phase-5-polish-02
-  > **Implementation**: Create `src/components/WebPageSchema.tsx`.
-  > **Details**:
-  > - Schema type: WebPage
-  > - Fields: @context, @type, name (page title), description, url, datePublished, mainEntity
-  > - Use on every page via layout or per-page
-  > - Helps Google understand page purpose
-  > - Particularly important for prediction pages and blog
+- [x] **Add JSON-LD WebPage schema to all dynamic pages**
+   Task ID: phase-5-polish-02
+   > **Implementation**: Create `src/components/WebPageSchema.tsx`.
+   > **Details**:
+   > - Schema type: WebPage
+   > - Fields: @context, @type, name (page title), description, url, datePublished, mainEntity
+   > - Use on every page via layout or per-page
+   > - Helps Google understand page purpose
+   > - Particularly important for prediction pages and blog
+   > **Status**: COMPLETE - Added to models, blog, predictions [league] and [slug] pages
 
-- [ ] **Add image alt text optimization pass**
-  Task ID: phase-5-polish-03
-  > **Implementation**: Audit and fix `<Image>` alt attributes across codebase.
-  > **Details**:
-  > - Search: `<Image.*alt=` in all .tsx files
-  > - Current issue: `alt={match.homeTeam}` is minimal
-  > - Improve to: `alt="${match.homeTeam} team logo"`
-  > - For prediction tables: `alt="AI prediction accuracy icon"`
-  > - This helps with image indexing for GEO
+- [x] **Add image alt text optimization pass**
+   Task ID: phase-5-polish-03
+   > **Implementation**: Audit and fix `<Image>` alt attributes across codebase.
+   > **Details**:
+   > - Search: `<Image.*alt=` in all .tsx files
+   > - Current issue: `alt={match.homeTeam}` is minimal
+   > - Improve to: `alt="${match.homeTeam} team logo"`
+   > - For prediction tables: `alt="AI prediction accuracy icon"`
+   > - This helps with image indexing for GEO
+   > **Status**: COMPLETE - Already implemented in Phase 6, all team logos have descriptive alt text
 
-- [ ] **Add structured URL parameters for tracking**
-  Task ID: phase-5-polish-04
-  > **Implementation**: Add utm_source and utm_medium handling (optional).
-  > **Details**:
-  > - Consider: `?utm_source=gpt-bot&utm_medium=ai-citation` for API routes
-  > - This helps track AI citation vs regular traffic
-  > - Not required but useful for analytics
-  > - Focus on other tasks first
+- [x] **Add structured URL parameters for tracking**
+   Task ID: phase-5-polish-04
+   > **Implementation**: Add utm_source and utm_medium handling (optional).
+   > **Details**:
+   > - Consider: `?utm_source=gpt-bot&utm_medium=ai-citation` for API routes
+   > - This helps track AI citation vs regular traffic
+   > - Not required but useful for analytics
+   > - Focus on other tasks first
+   > **Status**: SKIPPED - Optional nice-to-have, lower priority than other improvements
 
 ---
 
