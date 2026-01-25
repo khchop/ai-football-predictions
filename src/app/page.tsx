@@ -233,10 +233,10 @@ async function FeaturedInsights() {
           <div className="flex-1">
             <h3 className="font-semibold text-sm text-muted-foreground mb-1">Powered by AI prediction analysis</h3>
             <p className="text-sm">
-              Best performing model this week: <span className="font-bold text-foreground">{topModel.displayName}</span>
+              Top performing model: <span className="font-bold text-foreground">{topModel.displayName}</span>
             </p>
             <p className="text-xs text-muted-foreground/70 mt-2">
-              Average prediction accuracy across {topModel.avgPoints ? `${topModel.avgPoints} points` : 'all competitions'}
+              Average score: {topModel.avgPoints ? `${topModel.avgPoints} points` : '0 points'} per prediction
             </p>
           </div>
         </div>
@@ -280,20 +280,20 @@ export default function HomePage() {
         </p>
       </section>
 
-       {/* Stats */}
-       <Suspense fallback={<StatsLoadingSkeleton />}>
-         <StatsBar />
-       </Suspense>
+      {/* Stats */}
+      <Suspense fallback={<StatsLoadingSkeleton />}>
+        <StatsBar />
+      </Suspense>
 
-       {/* Featured Insights */}
-       <Suspense fallback={<FeaturedInsightsLoadingSkeleton />}>
-         <FeaturedInsights />
-       </Suspense>
+      {/* Featured Insights */}
+      <Suspense fallback={<FeaturedInsightsLoadingSkeleton />}>
+        <FeaturedInsights />
+      </Suspense>
 
-       {/* Live Matches - only shows when there are live matches */}
-       <Suspense fallback={null}>
-         <LiveMatches />
-       </Suspense>
+      {/* Live Matches - only shows when there are live matches */}
+      <Suspense fallback={null}>
+        <LiveMatches />
+      </Suspense>
 
       {/* Upcoming Matches */}
       <section>

@@ -178,28 +178,28 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
         <LeaderboardFilters />
       </Suspense>
 
-       {/* Leaderboard Content */}
-       <Suspense fallback={<LoadingSkeleton />}>
-         <LeaderboardContent searchParams={resolvedParams} />
-       </Suspense>
+      {/* Leaderboard Content */}
+      <Suspense fallback={<LoadingSkeleton />}>
+        <LeaderboardContent searchParams={resolvedParams} />
+      </Suspense>
 
-       {/* FAQ Section */}
-       <Card className="bg-card/50 border-border/50">
-         <CardContent className="p-6">
-           <h2 className="text-xl font-bold mb-6">Understanding Model Rankings</h2>
-           <div className="space-y-4">
-             {leaderboardFaqs.map((faq, idx) => (
-               <div key={idx} className="border-b border-border/30 pb-4 last:border-0">
-                 <h3 className="font-semibold text-sm mb-2">{faq.question}</h3>
-                 <p className="text-sm text-muted-foreground leading-relaxed">{faq.answer}</p>
-               </div>
-             ))}
-           </div>
-         </CardContent>
-       </Card>
+      {/* FAQ Section */}
+      <Card className="bg-card/50 border-border/50">
+        <CardContent className="p-6">
+          <h2 className="text-xl font-bold mb-6">Understanding Model Rankings</h2>
+          <div className="space-y-4">
+            {leaderboardFaqs.map((faq, idx) => (
+              <div key={idx} className="border-b border-border/30 pb-4 last:border-0">
+                <h3 className="font-semibold text-sm mb-2">{faq.question}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{faq.answer}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-       {/* FAQ Schema for search engines */}
-       <FaqSchema faqs={leaderboardFaqs} />
+      {/* FAQ Schema for search engines */}
+      <FaqSchema faqs={leaderboardFaqs} />
      </div>
    );
 }

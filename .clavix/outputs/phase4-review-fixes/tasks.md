@@ -1,0 +1,119 @@
+# Implementation Plan
+
+**Project**: phase4-review-fixes
+**Generated**: 2026-01-25T20:20:00Z
+
+## Technical Context & Standards
+*Detected Stack & Patterns*
+- **Architecture**: Next.js App Router (Server Components)
+- **Framework**: Next.js 16.1.4
+- **Styling**: Tailwind CSS + shadcn/ui
+- **State**: Server-side data fetching
+- **API**: Drizzle ORM queries with Redis caching
+- **Conventions**: kebab-case files, async components, Suspense boundaries
+
+---
+
+## Phase 1: Code Quality Fixes (Indentation & Formatting)
+
+- [x] **Fix inconsistent indentation in leaderboard page** (ref: m1)
+  Task ID: `phase-1-formatting-01`
+  > **Implementation**: Edit `src/app/leaderboard/page.tsx` lines 178-205.
+  > **Details**: Normalize indentation to 6 spaces (matching rest of file). The new FAQ section and closing tags use 7 spaces inconsistently. Run Prettier/ESLint or manually fix spacing.
+
+- [x] **Fix inconsistent indentation in homepage** (ref: m2)
+  Task ID: `phase-1-formatting-02`
+  > **Implementation**: Edit `src/app/page.tsx` lines 283-295.
+  > **Details**: Normalize indentation to 6 spaces. The Stats, Featured Insights, and Live Matches sections have inconsistent spacing.
+
+---
+
+## Phase 2: Copy & Label Fixes
+
+- [x] **Fix misleading "this week" label** (ref: m4)
+  Task ID: `phase-2-copy-01`
+  > **Implementation**: Edit `src/app/page.tsx` line 236.
+  > **Details**: Change "Best performing model this week" to "Top performing model" since `getTopPerformingModel()` uses `getLeaderboard()` which returns all-time stats by default (no time filter).
+
+- [x] **Fix confusing accuracy copy** (ref: m3)
+  Task ID: `phase-2-copy-02`
+  > **Implementation**: Edit `src/app/page.tsx` line 239.
+  > **Details**: Change `Average prediction accuracy across {topModel.avgPoints ? \`${topModel.avgPoints} points\` : 'all competitions'}` to `Average score: {topModel.avgPoints} points per prediction` for clarity.
+
+---
+
+## Phase 3: DRY Violation Fix (Match Page)
+
+- [x] **Extract average score calculations to reusable variables** (ref: M1)
+  Task ID: `phase-3-dry-01`
+  > **Implementation**: Edit `src/app/predictions/[league]/[slug]/page.tsx` around line 352.
+  > **Details**: 
+  > 1. Before the first `<div className="grid grid-cols-2">`, add:
+  >    ```typescript
+  >    const homeAvg = predictions.reduce((sum, p) => sum + (p.predictedHome ?? 0), 0) / predictions.length;
+  >    const awayAvg = predictions.reduce((sum, p) => sum + (p.predictedAway ?? 0), 0) / predictions.length;
+  >    ```
+  > 2. Update line 363-366 to use `{homeAvg.toFixed(1)} - {awayAvg.toFixed(1)}`
+  > 3. Update lines 377-378 inside IIFE to remove duplicate calculation (use outer `homeAvg`, `awayAvg`)
+
+---
+
+## Phase 4: Extract IIFE to Component (Architecture)
+
+- [x] **Create PredictionInsightsBlockquote component** (ref: M2)
+  Task ID: `phase-4-refactor-01`
+  > **Implementation**: Create new file `src/components/match/PredictionInsightsBlockquote.tsx`.
+  > **Details**: 
+  > 1. Extract the IIFE logic (lines 376-422) into a proper component
+  > 2. Props interface: `{ predictions: PredictionWithModel[], homeAvg: number, awayAvg: number }`
+  > 3. Move all calculations (homeWins, draws, awayWins, percentages, mostCommon, topModels) into component
+  > 4. Export blockquote JSX with disclaimer
+  > 5. Component should be a regular function (not async - data already fetched)
+
+- [x] **Import and use PredictionInsightsBlockquote** (ref: M2)
+  Task ID: `phase-4-refactor-02`
+  > **Implementation**: Edit `src/app/predictions/[league]/[slug]/page.tsx`.
+  > **Details**:
+  > 1. Add import: `import { PredictionInsightsBlockquote } from '@/components/match/PredictionInsightsBlockquote'`
+  > 2. Replace IIFE (lines 376-422) with: `<PredictionInsightsBlockquote predictions={predictions} homeAvg={homeAvg} awayAvg={awayAvg} />`
+  > 3. Verify type imports match component expectations
+
+---
+
+## Phase 5: Error Handling Improvement
+
+- [x] **Add error handling to getTopPerformingModel** (ref: m5)
+  Task ID: `phase-5-error-01`
+  > **Implementation**: Edit `src/lib/db/queries.ts` lines 1155-1173.
+  > **Details**:
+  > 1. Wrap `getLeaderboard()` call in try/catch
+  > 2. On error: log with `loggers.db.error()` using existing pattern
+  > 3. Return `null` on error (graceful degradation, matches current return type)
+  > 4. Example:
+  >    ```typescript
+  >    try {
+  >      const leaderboard = await getLeaderboard({ limit: 1 });
+  >      // ... existing logic
+  >    } catch (error) {
+  >      logQueryError('getTopPerformingModel', error);
+  >      return null;
+  >    }
+  >    ```
+
+---
+
+## Phase 6: Verification
+
+- [x] **Run build to verify no TypeScript errors**
+  Task ID: `phase-6-verify-01`
+  > **Implementation**: Run `npm run build`.
+  > **Details**: Ensure all changes compile successfully with no type errors.
+
+- [x] **Run linter to verify formatting**
+  Task ID: `phase-6-verify-02`
+  > **Implementation**: Run `npm run lint`.
+  > **Details**: Ensure no ESLint errors from formatting changes.
+
+---
+
+*Generated by Clavix /clavix-plan | Ready for implementation*
