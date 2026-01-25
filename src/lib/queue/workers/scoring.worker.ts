@@ -99,23 +99,47 @@ export function createScoringWorker() {
                
                try {
                  // Calculate points using Kicktipp Quota System
-                 const breakdown = calculateQuotaScores({
-                   predictedHome: prediction.predictedHome,
-                   predictedAway: prediction.predictedAway,
-                   actualHome,
-                   actualAway,
-                   quotaHome: quotas.home,
-                   quotaDraw: quotas.draw,
-                   quotaAway: quotas.away,
-                 });
-                 
-                  // Update prediction with scores within transaction
-                  await updatePredictionScores(prediction.id, {
-                    tendencyPoints: breakdown.tendencyPoints,
-                    goalDiffBonus: breakdown.goalDiffBonus,
-                    exactScoreBonus: breakdown.exactScoreBonus,
-                    totalPoints: breakdown.total,
-                  }, tx);
+                  const breakdown = calculateQuotaScores({
+                    predictedHome: prediction.predictedHome,
+                    predictedAway: prediction.predictedAway,
+                    actualHome,
+                    actualAway,
+                    quotaHome: quotas.home,
+                    quotaDraw: quotas.draw,
+                    quotaAway: quotas.away,
+                  });
+                  
+                  // Diagnostic logging for debugging scoring failures
+                  log.info({
+                    predictionId: prediction.id,
+                    modelId: prediction.modelId,
+                    scores: {
+                      tendencyPoints: breakdown.tendencyPoints,
+                      goalDiffBonus: breakdown.goalDiffBonus,
+                      exactScoreBonus: breakdown.exactScoreBonus,
+                      totalPoints: breakdown.total,
+                    },
+                  }, 'Updating prediction scores');
+
+                  Sentry.addBreadcrumb({
+                    category: 'scoring',
+                    message: `Scoring prediction ${prediction.id}`,
+                    level: 'info',
+                    data: {
+                      predictionId: prediction.id,
+                      modelId: prediction.modelId,
+                      tendencyPoints: breakdown.tendencyPoints,
+                      totalPoints: breakdown.total,
+                    },
+                  });
+                  
+                   // Update prediction with scores within transaction
+                   await updatePredictionScores(prediction.id, {
+                     tendencyPoints: breakdown.tendencyPoints,
+                     goalDiffBonus: breakdown.goalDiffBonus,
+                     exactScoreBonus: breakdown.exactScoreBonus,
+                     totalPoints: breakdown.total,
+                   }, tx);
                  
                   scoredCount++;
                   totalPointsAwarded += breakdown.total;
@@ -137,16 +161,23 @@ export function createScoringWorker() {
                       breakdown 
                     }, 'Scored prediction (zero points - no match)');
                   }
-               } catch (error: any) {
-                 failedCount++;
-                 log.error({ predictionId: prediction.id, modelId: prediction.modelId, error: error.message }, 'Failed to score prediction');
-                 failedPredictions.push({
-                   id: prediction.id,
-                   modelId: prediction.modelId,
-                   error: error.message,
-                 });
-                 // Continue with other predictions - don't fail the whole transaction
-               }
+                } catch (error: any) {
+                  failedCount++;
+                  log.error({ 
+                    predictionId: prediction.id, 
+                    modelId: prediction.modelId, 
+                    error: error.message,
+                    stack: error.stack,
+                    code: error.code,
+                    detail: error.detail,
+                  }, 'Failed to score prediction');
+                  failedPredictions.push({
+                    id: prediction.id,
+                    modelId: prediction.modelId,
+                    error: error.message,
+                  });
+                  // Continue with other predictions - don't fail the whole transaction
+                }
              }
            });
          } catch (error: any) {
@@ -186,10 +217,13 @@ export function createScoringWorker() {
             };
           }
         
-        // Only throw if ALL predictions failed
-        if (failedCount > 0 && scoredCount === 0) {
-          throw new Error(`All ${failedCount} predictions failed to score for match ${matchId}`);
-        }
+         // Only throw if ALL predictions failed
+         if (failedCount > 0 && scoredCount === 0) {
+           const errorSamples = failedPredictions.slice(0, 3)
+             .map(fp => `${fp.modelId}: ${fp.error}`)
+             .join('; ');
+           throw new Error(`All ${failedCount} predictions failed for match ${matchId}. Errors: ${errorSamples}`);
+         }
         
         // This shouldn't happen but return success anyway
         return { 

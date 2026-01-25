@@ -142,6 +142,9 @@ function formatJob(job: any) {
     // Omit potentially sensitive fields like API keys, full payloads
   } : null;
 
+  // Extract failed predictions from return value (for partial failures)
+  const failedPredictions = job.returnvalue?.failedPredictions?.slice(0, 5) ?? null;
+
   return {
     id: job.id,
     name: job.name,
@@ -151,7 +154,8 @@ function formatJob(job: any) {
     finishedOn: job.finishedOn,
     delay: job.delay,
     attemptsMade: job.attemptsMade,
-    // Only show first 200 chars of error to avoid stack trace leakage
-    failedReason: job.failedReason ? job.failedReason.substring(0, 200) : null,
+    // Increased to 300 chars to accommodate error samples from thrown exception
+    failedReason: job.failedReason ? job.failedReason.substring(0, 300) : null,
+    failedPredictions,  // Individual prediction errors when available
   };
 }
