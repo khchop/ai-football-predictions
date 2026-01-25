@@ -814,11 +814,11 @@ export async function createBetsWithBalanceUpdate(
      await tx
        .update(modelBalances)
        .set({
-         currentBalance: sql`${modelBalances.currentBalance} - ${totalStake}`,
-         totalWagered: sql`${modelBalances.totalWagered} + ${totalStake}`,
-         totalBets: sql`${modelBalances.totalBets} + ${betsData.length}`,
-         updatedAt: new Date().toISOString(),
-       })
+          currentBalance: sql`${modelBalances.currentBalance} - ${totalStake}`,
+          totalWagered: sql`${modelBalances.totalWagered} + ${totalStake}`,
+          totalBets: sql`${modelBalances.totalBets} + ${betsData.length}`,
+          updatedAt: new Date(),
+        })
        .where(and(
          eq(modelBalances.modelId, modelId),
          eq(modelBalances.season, season)
@@ -840,7 +840,7 @@ export async function settleBet(
       status,
       payout,
       profit,
-      settledAt: new Date().toISOString(),
+      settledAt: new Date(),
     })
     .where(eq(bets.id, betId));
 }
@@ -859,54 +859,54 @@ export async function settleBetsTransaction(
   const db = getDb();
   
    return db.transaction(async (tx) => {
-     const settledAt = new Date().toISOString();
+      const settledAtDate = new Date();
+      
+      // LOCK ORDER: bets -> modelBalances (per global lock ordering policy)
+      // Batch update all bets using SQL CASE expressions (single query instead of N+1)
+      // This prevents connection pool exhaustion with large bet batches
+     if (betsToSettle.length > 0) {
+       // Build CASE expressions for status, payout, and profit fields
+       const statusCaseWhen = betsToSettle
+         .map(b => `WHEN '${b.betId}' THEN '${b.status}'`)
+         .join(' ');
+       
+       const payoutCaseWhen = betsToSettle
+         .map(b => `WHEN '${b.betId}' THEN ${b.payout}`)
+         .join(' ');
+       
+       const profitCaseWhen = betsToSettle
+         .map(b => `WHEN '${b.betId}' THEN ${b.profit}`)
+         .join(' ');
+       
+       const betIds = betsToSettle.map(b => `'${b.betId}'`).join(',');
+       
+       // Execute batch update with CASE expressions
+       await tx.execute(sql`
+         UPDATE bets 
+         SET 
+           status = CASE id ${sql.raw(statusCaseWhen)} END,
+           payout = CASE id ${sql.raw(payoutCaseWhen)} END,
+           profit = CASE id ${sql.raw(profitCaseWhen)} END,
+           settled_at = ${settledAtDate}
+         WHERE id IN (${sql.raw(betIds)})
+       `);
+     }
      
-     // LOCK ORDER: bets -> modelBalances (per global lock ordering policy)
-     // Batch update all bets using SQL CASE expressions (single query instead of N+1)
-     // This prevents connection pool exhaustion with large bet batches
-    if (betsToSettle.length > 0) {
-      // Build CASE expressions for status, payout, and profit fields
-      const statusCaseWhen = betsToSettle
-        .map(b => `WHEN '${b.betId}' THEN '${b.status}'`)
-        .join(' ');
-      
-      const payoutCaseWhen = betsToSettle
-        .map(b => `WHEN '${b.betId}' THEN ${b.payout}`)
-        .join(' ');
-      
-      const profitCaseWhen = betsToSettle
-        .map(b => `WHEN '${b.betId}' THEN ${b.profit}`)
-        .join(' ');
-      
-      const betIds = betsToSettle.map(b => `'${b.betId}'`).join(',');
-      
-      // Execute batch update with CASE expressions
-      await tx.execute(sql`
-        UPDATE bets 
-        SET 
-          status = CASE id ${sql.raw(statusCaseWhen)} END,
-          payout = CASE id ${sql.raw(payoutCaseWhen)} END,
-          profit = CASE id ${sql.raw(profitCaseWhen)} END,
-          settled_at = ${settledAt}
-        WHERE id IN (${sql.raw(betIds)})
-      `);
-    }
-    
-    // Update all model balances (atomic SQL prevents race conditions)
-    for (const [modelId, update] of balanceUpdates) {
-      await tx
-        .update(modelBalances)
-        .set({
-          currentBalance: sql`COALESCE(${modelBalances.currentBalance}, 0) + ${update.totalPayout}`,
-          totalWon: sql`COALESCE(${modelBalances.totalWon}, 0) + ${update.totalPayout}`,
-          winningBets: sql`COALESCE(${modelBalances.winningBets}, 0) + ${update.winsCount}`,
-          updatedAt: settledAt,
-        })
-        .where(and(
-          eq(modelBalances.modelId, modelId),
-          eq(modelBalances.season, season)
-        ));
-    }
+     // Update all model balances (atomic SQL prevents race conditions)
+     for (const [modelId, update] of balanceUpdates) {
+       await tx
+         .update(modelBalances)
+         .set({
+           currentBalance: sql`COALESCE(${modelBalances.currentBalance}, 0) + ${update.totalPayout}`,
+           totalWon: sql`COALESCE(${modelBalances.totalWon}, 0) + ${update.totalPayout}`,
+           winningBets: sql`COALESCE(${modelBalances.winningBets}, 0) + ${update.winsCount}`,
+           updatedAt: settledAtDate,
+         })
+         .where(and(
+           eq(modelBalances.modelId, modelId),
+           eq(modelBalances.season, season)
+         ));
+     }
   });
 }
 
@@ -923,14 +923,14 @@ export async function updateModelBalanceAfterBets(
   // Use atomic SQL operations to avoid race condition
   return db
     .update(modelBalances)
-    .set({
-      currentBalance: sql`COALESCE(${modelBalances.currentBalance}, 0) + ${amountChange}`,
-      totalWagered: sql`COALESCE(${modelBalances.totalWagered}, 0) + ${amountChange < 0 ? Math.abs(amountChange) : 0}`,
-      totalWon: sql`COALESCE(${modelBalances.totalWon}, 0) + ${amountChange > 0 ? amountChange : 0}`,
-      totalBets: sql`COALESCE(${modelBalances.totalBets}, 0) + ${betsCount}`,
-      winningBets: sql`COALESCE(${modelBalances.winningBets}, 0) + ${winsCount}`,
-      updatedAt: new Date().toISOString(),
-    })
+     .set({
+       currentBalance: sql`COALESCE(${modelBalances.currentBalance}, 0) + ${amountChange}`,
+       totalWagered: sql`COALESCE(${modelBalances.totalWagered}, 0) + ${amountChange < 0 ? Math.abs(amountChange) : 0}`,
+       totalWon: sql`COALESCE(${modelBalances.totalWon}, 0) + ${amountChange > 0 ? amountChange : 0}`,
+       totalBets: sql`COALESCE(${modelBalances.totalBets}, 0) + ${betsCount}`,
+       winningBets: sql`COALESCE(${modelBalances.winningBets}, 0) + ${winsCount}`,
+       updatedAt: new Date(),
+     })
     .where(
       and(
         eq(modelBalances.modelId, modelId),

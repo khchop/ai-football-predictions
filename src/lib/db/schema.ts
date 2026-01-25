@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, doublePrecision, unique, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, doublePrecision, unique, index, timestamp } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Competitions we track (Champions League, Premier League, etc.)
@@ -255,7 +255,7 @@ export const seasons = pgTable('seasons', {
   startDate: text('start_date').notNull(), // ISO date
   endDate: text('end_date'), // ISO date (null if current season)
   isCurrent: boolean('is_current').default(false),
-  createdAt: text('created_at').default(sql`now()`),
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
 export type Season = typeof seasons.$inferSelect;
@@ -274,8 +274,8 @@ export const modelBalances = pgTable('model_balances', {
   totalWon: doublePrecision('total_won').default(0.00),
   totalBets: integer('total_bets').default(0),
   winningBets: integer('winning_bets').default(0),
-  createdAt: text('created_at').default(sql`now()`),
-  updatedAt: text('updated_at').default(sql`now()`),
+  createdAt: timestamp('created_at').default(sql`now()`),
+  updatedAt: timestamp('updated_at').default(sql`now()`),
 }, (table) => [
   unique('model_balances_model_season_unique').on(table.modelId, table.season),
   index('idx_model_balances_season').on(table.season),
@@ -307,8 +307,8 @@ export const bets = pgTable('bets', {
   payout: doublePrecision('payout'), // NULL until settled
   profit: doublePrecision('profit'), // NULL until settled
   
-  createdAt: text('created_at').default(sql`now()`),
-  settledAt: text('settled_at'),
+  createdAt: timestamp('created_at').default(sql`now()`),
+  settledAt: timestamp('settled_at'),
 }, (table) => [
   unique('bets_match_model_type_unique').on(table.matchId, table.modelId, table.betType),
   index('idx_bets_match_id').on(table.matchId),
@@ -345,8 +345,8 @@ export const predictions = pgTable('predictions', {
   status: text('status').default('pending'), // 'pending' | 'scored' | 'void'
   
   // Timestamps
-  createdAt: text('created_at').default(sql`now()`),
-  scoredAt: text('scored_at'),
+  createdAt: timestamp('created_at').default(sql`now()`),
+  scoredAt: timestamp('scored_at'),
 }, (table) => [
   unique('predictions_match_model_unique').on(table.matchId, table.modelId),
   index('idx_predictions_match_id').on(table.matchId),
