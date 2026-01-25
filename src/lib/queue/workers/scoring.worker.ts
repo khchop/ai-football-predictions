@@ -84,106 +84,102 @@ export function createScoringWorker() {
          let totalPointsAwarded = 0;
          const failedPredictions: Array<{ id: string; modelId: string; error: string }> = [];
          
-         try {
-           // Process all predictions within a single transaction
-           // This prevents double-scoring if the job is retried mid-execution
-           const { getDb } = await import('@/lib/db/index');
-           const db = getDb();
-           
-           await db.transaction(async (tx) => {
-             for (const prediction of predictions) {
-               // Skip already scored predictions (idempotency check)
-               if (prediction.status === 'scored') {
-                 continue;
-               }
-               
-               try {
-                 // Calculate points using Kicktipp Quota System
-                  const breakdown = calculateQuotaScores({
-                    predictedHome: prediction.predictedHome,
-                    predictedAway: prediction.predictedAway,
-                    actualHome,
-                    actualAway,
-                    quotaHome: quotas.home,
-                    quotaDraw: quotas.draw,
-                    quotaAway: quotas.away,
-                  });
-                  
-                  // Diagnostic logging for debugging scoring failures
-                  log.info({
+          try {
+            // Process all predictions independently
+            // Each prediction update is its own transaction, ensuring if one fails,
+            // others can still succeed. Idempotency check prevents double-scoring on retries.
+            for (const prediction of predictions) {
+              // Skip already scored predictions (idempotency check)
+              if (prediction.status === 'scored') {
+                continue;
+              }
+              
+              try {
+                // Calculate points using Kicktipp Quota System
+                const breakdown = calculateQuotaScores({
+                  predictedHome: prediction.predictedHome,
+                  predictedAway: prediction.predictedAway,
+                  actualHome,
+                  actualAway,
+                  quotaHome: quotas.home,
+                  quotaDraw: quotas.draw,
+                  quotaAway: quotas.away,
+                });
+                
+                // Diagnostic logging for debugging scoring failures
+                log.info({
+                  predictionId: prediction.id,
+                  modelId: prediction.modelId,
+                  scores: {
+                    tendencyPoints: breakdown.tendencyPoints,
+                    goalDiffBonus: breakdown.goalDiffBonus,
+                    exactScoreBonus: breakdown.exactScoreBonus,
+                    totalPoints: breakdown.total,
+                  },
+                }, 'Updating prediction scores');
+
+                Sentry.addBreadcrumb({
+                  category: 'scoring',
+                  message: `Scoring prediction ${prediction.id}`,
+                  level: 'info',
+                  data: {
                     predictionId: prediction.id,
                     modelId: prediction.modelId,
-                    scores: {
-                      tendencyPoints: breakdown.tendencyPoints,
-                      goalDiffBonus: breakdown.goalDiffBonus,
-                      exactScoreBonus: breakdown.exactScoreBonus,
-                      totalPoints: breakdown.total,
-                    },
-                  }, 'Updating prediction scores');
-
-                  Sentry.addBreadcrumb({
-                    category: 'scoring',
-                    message: `Scoring prediction ${prediction.id}`,
-                    level: 'info',
-                    data: {
-                      predictionId: prediction.id,
-                      modelId: prediction.modelId,
-                      tendencyPoints: breakdown.tendencyPoints,
-                      totalPoints: breakdown.total,
-                    },
-                  });
-                  
-                   // Update prediction with scores within transaction
-                   await updatePredictionScores(prediction.id, {
-                     tendencyPoints: breakdown.tendencyPoints,
-                     goalDiffBonus: breakdown.goalDiffBonus,
-                     exactScoreBonus: breakdown.exactScoreBonus,
-                     totalPoints: breakdown.total,
-                   }, tx);
-                 
-                  scoredCount++;
-                  totalPointsAwarded += breakdown.total;
-                  
-                  // Log all predictions for complete visibility (including zero points)
-                  if (breakdown.total > 0) {
-                    log.info({ 
-                      modelId: prediction.modelId, 
-                      predicted: `${prediction.predictedHome}-${prediction.predictedAway}`, 
-                      points: breakdown.total, 
-                      breakdown 
-                    }, '✓ Scored prediction (points awarded)');
-                  } else {
-                    log.debug({ 
-                      modelId: prediction.modelId, 
-                      predicted: `${prediction.predictedHome}-${prediction.predictedAway}`, 
-                      actual: `${actualHome}-${actualAway}`,
-                      points: 0, 
-                      breakdown 
-                    }, 'Scored prediction (zero points - no match)');
-                  }
-                } catch (error: any) {
-                  failedCount++;
-                  log.error({ 
-                    predictionId: prediction.id, 
+                    tendencyPoints: breakdown.tendencyPoints,
+                    totalPoints: breakdown.total,
+                  },
+                });
+                
+                // Update prediction with scores (each is its own implicit transaction)
+                await updatePredictionScores(prediction.id, {
+                  tendencyPoints: breakdown.tendencyPoints,
+                  goalDiffBonus: breakdown.goalDiffBonus,
+                  exactScoreBonus: breakdown.exactScoreBonus,
+                  totalPoints: breakdown.total,
+                });
+                
+                scoredCount++;
+                totalPointsAwarded += breakdown.total;
+                
+                // Log all predictions for complete visibility (including zero points)
+                if (breakdown.total > 0) {
+                  log.info({ 
                     modelId: prediction.modelId, 
-                    error: error.message,
-                    stack: error.stack,
-                    code: error.code,
-                    detail: error.detail,
-                  }, 'Failed to score prediction');
-                  failedPredictions.push({
-                    id: prediction.id,
-                    modelId: prediction.modelId,
-                    error: error.message,
-                  });
-                  // Continue with other predictions - don't fail the whole transaction
+                    predicted: `${prediction.predictedHome}-${prediction.predictedAway}`, 
+                    points: breakdown.total, 
+                    breakdown 
+                  }, '✓ Scored prediction (points awarded)');
+                } else {
+                  log.debug({ 
+                    modelId: prediction.modelId, 
+                    predicted: `${prediction.predictedHome}-${prediction.predictedAway}`, 
+                    actual: `${actualHome}-${actualAway}`,
+                    points: 0, 
+                    breakdown 
+                  }, 'Scored prediction (zero points - no match)');
                 }
-             }
-           });
-         } catch (error: any) {
-           log.error({ matchId, error: error.message }, 'Transaction error during scoring');
-           throw error;
-         }
+              } catch (error: any) {
+                failedCount++;
+                log.error({ 
+                  predictionId: prediction.id, 
+                  modelId: prediction.modelId, 
+                  error: error.message,
+                  stack: error.stack,
+                  code: error.code,
+                  detail: error.detail,
+                }, 'Failed to score prediction');
+                failedPredictions.push({
+                  id: prediction.id,
+                  modelId: prediction.modelId,
+                  error: error.message,
+                });
+                // Continue with other predictions - don't stop if one fails
+              }
+            }
+          } catch (error: any) {
+            log.error({ matchId, error: error.message }, 'Error during prediction scoring loop');
+            throw error;
+          }
         
          // Log results
          if (failedCount > 0) {
