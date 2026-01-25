@@ -17,7 +17,8 @@ import {
   getMatchById, 
   getPredictionsForMatch, 
   updatePredictionScores, 
-  updateMatchQuotas 
+  updateMatchQuotas,
+  updateModelStreak
 } from '@/lib/db/queries';
 import { calculateQuotas, calculateQuotaScores } from '@/lib/utils/scoring';
 import { invalidateMatchCaches } from '@/lib/cache/redis';
@@ -137,6 +138,19 @@ export function createScoringWorker() {
                   exactScoreBonus: breakdown.exactScoreBonus,
                   totalPoints: breakdown.total,
                 });
+                
+                // Update model streak based on result type
+                let resultType: 'exact' | 'tendency' | 'wrong' = 'wrong';
+                if (breakdown.total > 0) {
+                  // Correct prediction - determine if exact or just tendency
+                  if (breakdown.exactScoreBonus > 0) {
+                    resultType = 'exact';
+                  } else {
+                    resultType = 'tendency';
+                  }
+                }
+                
+                await updateModelStreak(prediction.modelId, resultType);
                 
                 scoredCount++;
                 totalPointsAwarded += breakdown.total;
