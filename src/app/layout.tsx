@@ -116,7 +116,7 @@ export default function RootLayout({
            type="application/ld+json"
            dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
          />
-         {/* Swetrix Analytics */}
+          {/* Umami Analytics */}
         <Analytics />
         {/* Background gradient effect */}
         <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
