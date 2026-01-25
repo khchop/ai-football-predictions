@@ -5,8 +5,29 @@ import { LeaderboardTable } from '@/components/leaderboard-table';
 import { LeaderboardFilters } from '@/components/leaderboard-filters';
 import { getLeaderboard, type TimeRange } from '@/lib/db/queries';
 import { Trophy } from 'lucide-react';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'AI Football Prediction Leaderboard | kroam Rankings',
+  description: 'Compare 29 open-source AI models\' football prediction accuracy. See rankings by competition, ROI, win rate, and prediction streaks using the Kicktipp scoring system.',
+  alternates: {
+    canonical: 'https://kroam.xyz/leaderboard',
+  },
+  openGraph: {
+    title: 'AI Football Prediction Leaderboard',
+    description: 'Compare 29 open-source AI models\' football prediction accuracy across 17 competitions',
+    url: 'https://kroam.xyz/leaderboard',
+    type: 'website',
+    siteName: 'kroam.xyz',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AI Football Prediction Leaderboard',
+    description: 'Compare 29 AI models\' football prediction accuracy',
+  },
+};
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
