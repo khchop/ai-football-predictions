@@ -150,7 +150,18 @@ export function createScoringWorker() {
                   }
                 }
                 
-                await updateModelStreak(prediction.modelId, resultType);
+                // Update streak in separate try/catch to avoid marking prediction as failed if streak update fails
+                try {
+                  await updateModelStreak(prediction.modelId, resultType);
+                } catch (streakError: any) {
+                  log.warn({ 
+                    modelId: prediction.modelId, 
+                    resultType, 
+                    error: streakError.message,
+                    detail: streakError.detail,
+                  }, 'Failed to update model streak (prediction was scored successfully)');
+                  // Don't re-throw - prediction score is valid, streak update is supplementary
+                }
                 
                 scoredCount++;
                 totalPointsAwarded += breakdown.total;
