@@ -1,0 +1,21 @@
+{
+  "version": "7.1.1",
+  "integrations": [
+    "agents-md",
+    "agent-skills-global",
+    "opencode"
+  ],
+  "templates": {
+    "prdQuestions": "default",
+    "fullPrd": "default",
+    "quickPrd": "default"
+  },
+  "outputs": {
+    "path": ".clavix/outputs",
+    "format": "markdown"
+  },
+  "preferences": {
+    "autoOpenOutputs": false,
+    "verboseLogging": false
+  }
+}

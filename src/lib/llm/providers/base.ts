@@ -182,8 +182,9 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
                { role: 'system', content: systemPrompt },
                { role: 'user', content: userPrompt },
              ],
-             // OPTIMIZED: Lower temperature for more reliable JSON output
-             temperature: 0.3,
+              // OPTIMIZED: Moderate temperature for more varied predictions while maintaining coherence
+              // Increased from 0.3 to 0.5 to encourage diversity (Jan 2026 - prompt diversity improvements)
+              temperature: 0.5,
              max_tokens: maxTokens,
              // Force JSON output mode for all models
              response_format: { type: 'json_object' },

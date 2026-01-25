@@ -187,12 +187,18 @@ export function buildEnhancedPrompt(context: PromptContext | EnhancedPromptConte
   // Minimal separator (save tokens - was 60 chars = ~15 tokens)
   lines.push('---');
   
-  // Dynamic content: Match header (compact)
-  lines.push(`${homeTeam} vs ${awayTeam} | ${competition} | ${formattedDate}`);
-  lines.push('');
-  
-  // If we have analysis data, include it
-  if (analysis) {
+   // Dynamic content: Match header (compact)
+   lines.push(`${homeTeam} vs ${awayTeam} | ${competition} | ${formattedDate}`);
+   lines.push('');
+   
+   // If we have analysis data, include it
+   if (analysis) {
+     // Betting odds (market expectations - NEW)
+     if (analysis.oddsHome && analysis.oddsDraw && analysis.oddsAway) {
+       lines.push('BETTING ODDS (1X2):');
+       lines.push(`Home ${analysis.oddsHome} | Draw ${analysis.oddsDraw} | Away ${analysis.oddsAway}`);
+       lines.push('');
+     }
     // League Standings (factual data)
     if (homeStanding || awayStanding) {
       lines.push('LEAGUE STANDINGS:');
@@ -380,11 +386,16 @@ function buildCompactMatchSummary(context: BatchMatchContext, index: number, hom
   lines.push(`[${index + 1}] match_id: "${matchId}"`);
   lines.push(`    ${homeTeam} vs ${awayTeam} | ${competition} | ${formattedTime}`);
   
-  if (analysis) {
-    // League position (NEW - very compact)
-    if (homeStanding && awayStanding) {
-      lines.push(`    Table: ${homeTeam} ${homeStanding.position}${getOrdinalSuffix(homeStanding.position)} (${homeStanding.points}pts, ${homeStanding.goalDiff >= 0 ? '+' : ''}${homeStanding.goalDiff}GD) | ${awayTeam} ${awayStanding.position}${getOrdinalSuffix(awayStanding.position)} (${awayStanding.points}pts, ${awayStanding.goalDiff >= 0 ? '+' : ''}${awayStanding.goalDiff}GD)`);
-    }
+   if (analysis) {
+     // Betting odds (market expectations - NEW, very compact)
+     if (analysis.oddsHome && analysis.oddsDraw && analysis.oddsAway) {
+       lines.push(`    Odds: ${analysis.oddsHome} (Home) | ${analysis.oddsDraw} (Draw) | ${analysis.oddsAway} (Away)`);
+     }
+     
+     // League position (very compact)
+     if (homeStanding && awayStanding) {
+       lines.push(`    Table: ${homeTeam} ${homeStanding.position}${getOrdinalSuffix(homeStanding.position)} (${homeStanding.points}pts, ${homeStanding.goalDiff >= 0 ? '+' : ''}${homeStanding.goalDiff}GD) | ${awayTeam} ${awayStanding.position}${getOrdinalSuffix(awayStanding.position)} (${awayStanding.points}pts, ${awayStanding.goalDiff >= 0 ? '+' : ''}${awayStanding.goalDiff}GD)`);
+     }
     
     // Home/Away records (NEW - compact)
     if (homeStanding && awayStanding && homeStanding.homeWon !== null && awayStanding.awayWon !== null) {
