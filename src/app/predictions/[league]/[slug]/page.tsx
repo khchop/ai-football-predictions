@@ -15,8 +15,6 @@ import type { Metadata } from 'next';
 import { PredictionTable } from '@/components/prediction-table';
 import { SportsEventSchema } from '@/components/SportsEventSchema';
 import { MatchStats } from '@/components/match/MatchStats';
-import { FaqSchema } from '@/components/FaqSchema';
-import type { FAQItem } from '@/lib/seo/schemas';
 
 // Helper to find the lowest odds (favorite)
 function getLowestOdds(home: string, draw: string, away: string): 'home' | 'draw' | 'away' {
@@ -338,7 +336,11 @@ export default async function PredictionPage({ params }: MatchPageProps) {
                  <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
                    <p className="text-sm text-muted-foreground">Avg Predicted Score</p>
                    <p className="text-lg font-bold">
-                     {(predictions.reduce((sum, p) => sum + (p.predictedHome ?? 0), 0) / predictions.length).toFixed(1)} - {(predictions.reduce((sum, p) => sum + (p.predictedAway ?? 0), 0) / predictions.length).toFixed(1)}
+                     {/* Home team average */}
+                     {(predictions.reduce((sum, p) => sum + (p.predictedHome ?? 0), 0) / predictions.length).toFixed(1)}
+                     {' - '}
+                     {/* Away team average */}
+                     {(predictions.reduce((sum, p) => sum + (p.predictedAway ?? 0), 0) / predictions.length).toFixed(1)}
                    </p>
                  </div>
                  <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
@@ -360,7 +362,6 @@ export default async function PredictionPage({ params }: MatchPageProps) {
            <MatchFAQSchema 
              match={match}
              competition={competition}
-             predictionCount={predictions.length}
            />
          </CardContent>
        </Card>

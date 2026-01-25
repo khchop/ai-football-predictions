@@ -5,7 +5,6 @@ import type { FAQItem } from '@/lib/seo/schemas';
 interface MatchFAQSchemaProps {
   match: Match;
   competition: Competition;
-  predictionCount: number;
 }
 
 /**
@@ -15,8 +14,7 @@ interface MatchFAQSchemaProps {
  */
 export function MatchFAQSchema({ 
   match, 
-  competition, 
-  predictionCount 
+  competition
 }: MatchFAQSchemaProps) {
   // Generate dynamic FAQs based on match data
   const faqs: FAQItem[] = [
