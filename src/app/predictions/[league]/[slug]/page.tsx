@@ -54,6 +54,12 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
   const baseUrl = 'https://kroam.xyz';
   const url = `${baseUrl}/predictions/${league}/${slug}`;
 
+  // Create OG image URL with encoded parameters
+  const ogImageUrl = new URL(`${baseUrl}/api/og/match`);
+  ogImageUrl.searchParams.set('homeTeam', match.homeTeam);
+  ogImageUrl.searchParams.set('awayTeam', match.awayTeam);
+  ogImageUrl.searchParams.set('competition', competition.name);
+
   return {
     title: `${match.homeTeam} vs ${match.awayTeam} Prediction (${kickoff}) | ${competition.name} AI Forecasts`,
     description: `AI predictions for ${match.homeTeam} vs ${match.awayTeam} (${competition.name}, ${kickoffFull}). See forecasts from 26 AI models, pre-match odds analysis, and post-match accuracy report.`,
@@ -65,6 +71,20 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
       description: `AI score predictions for ${match.homeTeam} vs ${match.awayTeam} in ${competition.name}`,
       url: url,
       type: 'website',
+      images: [
+        {
+          url: ogImageUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: `${match.homeTeam} vs ${match.awayTeam} prediction`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${match.homeTeam} vs ${match.awayTeam} Prediction`,
+      description: `AI score predictions for ${match.homeTeam} vs ${match.awayTeam} in ${competition.name}`,
+      images: [ogImageUrl.toString()],
     },
   };
 }

@@ -39,11 +39,47 @@ export async function generateMetadata({ params }: ModelPageProps): Promise<Meta
   const baseUrl = 'https://kroam.xyz';
   const url = `${baseUrl}/models/${id}`;
 
+  // Get prediction stats for OG image
+  const predictionStats = await getModelPredictionStats(id);
+  const modelRank = await getModelRank(id);
+  
+  // Calculate accuracy from stats (exactScores / scoredPredictions * 100)
+  const accuracy = predictionStats?.scoredPredictions && predictionStats.scoredPredictions > 0
+    ? Math.round((predictionStats.exactScores / predictionStats.scoredPredictions) * 100)
+    : 0;
+  const rank = modelRank || 999;
+
+  // Create OG image URL with encoded parameters
+  const ogImageUrl = new URL(`${baseUrl}/api/og/model`);
+  ogImageUrl.searchParams.set('modelName', model.displayName);
+  ogImageUrl.searchParams.set('accuracy', accuracy.toString());
+  ogImageUrl.searchParams.set('rank', rank.toString());
+
   return {
     title: `${model.displayName} AI Prediction Accuracy & Stats | Kroam`,
     description: `Track the football prediction performance of ${model.displayName}. View ROI, win rate, recent streak, and league-by-league accuracy analysis.`,
     alternates: {
       canonical: url,
+    },
+    openGraph: {
+      title: `${model.displayName} AI Model`,
+      description: `${accuracy}% accurate football predictions - Rank #${rank}`,
+      url: url,
+      type: 'website',
+      images: [
+        {
+          url: ogImageUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: `${model.displayName} AI football prediction model`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${model.displayName} AI Model`,
+      description: `${accuracy}% accurate football predictions`,
+      images: [ogImageUrl.toString()],
     },
   };
 }

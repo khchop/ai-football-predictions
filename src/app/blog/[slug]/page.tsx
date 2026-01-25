@@ -29,15 +29,62 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
+  const baseUrl = 'https://kroam.xyz';
+  const url = `${baseUrl}/blog/${slug}`;
+
+  // Determine which OG image to use based on content type
+  let ogImageUrl: string;
+  
+  if (post.contentType === 'model_report') {
+    // Use model OG image for model reports
+    const modelOgUrl = new URL(`${baseUrl}/api/og/model`);
+    modelOgUrl.searchParams.set('modelName', post.title);
+    modelOgUrl.searchParams.set('accuracy', '0');
+    modelOgUrl.searchParams.set('rank', '—');
+    ogImageUrl = modelOgUrl.toString();
+  } else if (post.contentType === 'league_roundup') {
+    // Use league OG image for league roundups
+    const leagueOgUrl = new URL(`${baseUrl}/api/og/league`);
+    leagueOgUrl.searchParams.set('leagueName', post.title);
+    leagueOgUrl.searchParams.set('matchCount', '0');
+    leagueOgUrl.searchParams.set('upcomingCount', '0');
+    ogImageUrl = leagueOgUrl.toString();
+  } else {
+    // Generic fallback for analysis posts
+    const genericUrl = new URL(`${baseUrl}/api/og/league`);
+    genericUrl.searchParams.set('leagueName', 'AI Analysis');
+    genericUrl.searchParams.set('matchCount', '0');
+    genericUrl.searchParams.set('upcomingCount', '0');
+    ogImageUrl = genericUrl.toString();
+  }
+
   return {
     title: post.metaTitle || post.title,
     description: post.metaDescription || post.excerpt,
     keywords: post.keywords,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
       title: post.title,
       description: post.excerpt,
       type: 'article',
       publishedTime: post.publishedAt || undefined,
+      url: url,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt,
+      images: [ogImageUrl],
     },
   };
 }

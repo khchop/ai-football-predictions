@@ -26,11 +26,43 @@ export async function generateMetadata({ params }: LeaguePageProps): Promise<Met
   const baseUrl = 'https://kroam.xyz';
   const url = `${baseUrl}/predictions/${league}`;
 
+  // Get match counts for OG image
+  const allMatches = await getMatchesByCompetitionSlug(league, 100);
+  const upcomingMatches = allMatches.filter(m => m.match.status === 'scheduled');
+  const matchCount = allMatches.length;
+  const upcomingCount = upcomingMatches.length;
+
+  // Create OG image URL with encoded parameters
+  const ogImageUrl = new URL(`${baseUrl}/api/og/league`);
+  ogImageUrl.searchParams.set('leagueName', competition.name);
+  ogImageUrl.searchParams.set('matchCount', matchCount.toString());
+  ogImageUrl.searchParams.set('upcomingCount', upcomingCount.toString());
+
   return {
     title: `${competition.name} Predictions & AI Forecasts | Kroam`,
     description: `Expert AI football predictions for ${competition.name}. View upcoming matches, recent results, model accuracy rankings, and detailed match analysis.`,
     alternates: {
       canonical: url,
+    },
+    openGraph: {
+      title: `${competition.name} Predictions`,
+      description: `AI predictions for ${competition.name} matches - ${matchCount} analyzed, ${upcomingCount} upcoming`,
+      url: url,
+      type: 'website',
+      images: [
+        {
+          url: ogImageUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: `${competition.name} AI football predictions`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${competition.name} Predictions`,
+      description: `AI predictions for ${competition.name} matches`,
+      images: [ogImageUrl.toString()],
     },
   };
 }
