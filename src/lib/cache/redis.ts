@@ -310,12 +310,13 @@ export const cacheKeys = {
    injuries: (fixtureId: number) => `api:injuries:${fixtureId}`,
    lineups: (fixtureId: number) => `api:lineups:${fixtureId}`,
    
-   // Database queries
-   activeModels: () => 'db:models:active',
-   activeCompetitions: () => 'db:competitions:active',
-   leaderboard: (filters: string) => `db:leaderboard:${hashForCacheKey(filters)}`,
-   overallStats: () => 'db:stats:overall',
-   matchPredictions: (matchId: string) => `db:predictions:${matchId}`,
+    // Database queries
+    activeModels: () => 'db:models:active',
+    activeCompetitions: () => 'db:competitions:active',
+    leaderboard: (filters: string) => `db:leaderboard:${hashForCacheKey(filters)}`,
+    overallStats: () => 'db:stats:overall',
+    topPerformingModel: () => 'db:models:top-performing',
+    matchPredictions: (matchId: string) => `db:predictions:${matchId}`,
    
    // Team data (for optimization)
    teamStats: (teamId: number, leagueId: number, season: string) => 

@@ -1148,6 +1148,31 @@ export async function getOverallStats() {
   );
 }
 
+/**
+ * Get top performing model (by average points)
+ * Used for homepage featured insights
+ */
+export async function getTopPerformingModel() {
+  return withCache(
+    cacheKeys.topPerformingModel(),
+    CACHE_TTL.STATS,
+    async () => {
+      // Use existing getLeaderboard query but limit to 1
+      const leaderboard = await getLeaderboard({ limit: 1 });
+      
+      if (leaderboard.length === 0) {
+        return null;
+      }
+      
+      const topModel = leaderboard[0];
+      return {
+        displayName: topModel.model.displayName,
+        avgPoints: Number(topModel.avgPoints) || 0,
+      };
+    }
+  );
+}
+
 export async function getModelOverallStats(modelId: string) {
   // Return empty stats - model detail page should use betting stats instead
   return {

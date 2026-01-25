@@ -341,42 +341,87 @@ export default async function PredictionPage({ params }: MatchPageProps) {
        </Card>
 
        {/* Prediction Insights & FAQs */}
-       <Card className="bg-card/50 border-border/50">
-         <CardContent className="p-6">
-           <h2 className="text-xl font-bold mb-4">Prediction Insights</h2>
-           
-           {/* Calculate average predicted score */}
-           {predictions.length > 0 && (
-             <div className="space-y-4">
-               <p className="text-muted-foreground">
-                 Based on {predictions.length} AI model predictions for this match:
-               </p>
-               
-               <div className="grid grid-cols-2 gap-4 my-4">
-                 <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                   <p className="text-sm text-muted-foreground">Avg Predicted Score</p>
-                   <p className="text-lg font-bold">
-                     {/* Home team average */}
-                     {(predictions.reduce((sum, p) => sum + (p.predictedHome ?? 0), 0) / predictions.length).toFixed(1)}
-                     {' - '}
-                     {/* Away team average */}
-                     {(predictions.reduce((sum, p) => sum + (p.predictedAway ?? 0), 0) / predictions.length).toFixed(1)}
-                   </p>
-                 </div>
-                 <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                   <p className="text-sm text-muted-foreground">Prediction Count</p>
-                   <p className="text-lg font-bold">{predictions.length} models</p>
-                 </div>
-               </div>
+        <Card className="bg-card/50 border-border/50">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-bold">AI Analysis & Insights</h2>
+            </div>
+            
+            {/* Calculate average predicted score and insights */}
+            {predictions.length > 0 && (
+              <div className="space-y-4">
+                <p className="text-muted-foreground">
+                  Based on {predictions.length} AI model predictions for this match:
+                </p>
+                
+                <div className="grid grid-cols-2 gap-4 my-4">
+                  <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                    <p className="text-sm text-muted-foreground">Avg Predicted Score</p>
+                    <p className="text-lg font-bold">
+                      {/* Home team average */}
+                      {(predictions.reduce((sum, p) => sum + (p.predictedHome ?? 0), 0) / predictions.length).toFixed(1)}
+                      {' - '}
+                      {/* Away team average */}
+                      {(predictions.reduce((sum, p) => sum + (p.predictedAway ?? 0), 0) / predictions.length).toFixed(1)}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                    <p className="text-sm text-muted-foreground">Prediction Count</p>
+                    <p className="text-lg font-bold">{predictions.length} models</p>
+                  </div>
+                </div>
 
-               <div className="border-t border-border/50 pt-4 text-sm text-muted-foreground/70">
-                 <p>
-                   These insights are AI-generated from {predictions.length} model predictions. 
-                   Predictions vary based on each model&apos;s training data and methodology.
-                 </p>
-               </div>
-             </div>
-           )}
+                {/* AI Analysis - Citable content for GEO */}
+                {(() => {
+                  const homeAvg = predictions.reduce((sum, p) => sum + (p.predictedHome ?? 0), 0) / predictions.length;
+                  const awayAvg = predictions.reduce((sum, p) => sum + (p.predictedAway ?? 0), 0) / predictions.length;
+                  
+                  // Calculate most common outcome
+                  const homeWins = predictions.filter(p => (p.predictedHome ?? 0) > (p.predictedAway ?? 0)).length;
+                  const draws = predictions.filter(p => (p.predictedHome ?? 0) === (p.predictedAway ?? 0)).length;
+                  const awayWins = predictions.filter(p => (p.predictedAway ?? 0) > (p.predictedHome ?? 0)).length;
+                  
+                  const homeWinPct = Math.round((homeWins / predictions.length) * 100);
+                  const drawPct = Math.round((draws / predictions.length) * 100);
+                  const awayWinPct = Math.round((awayWins / predictions.length) * 100);
+                  
+                  let mostCommon = 'home win';
+                  if (drawPct > homeWinPct && drawPct > awayWinPct) {
+                    mostCommon = 'draw';
+                  } else if (awayWinPct > homeWinPct && awayWinPct > drawPct) {
+                    mostCommon = 'away win';
+                  }
+
+                  // Get top 3 models by prediction count (proxy for reliability)
+                  const topModels = predictions
+                    .slice(0, 3)
+                    .map(p => p.modelDisplayName)
+                    .join(', ');
+
+                  return (
+                    <div className="space-y-3 border-t border-border/50 pt-4">
+                      <blockquote className="border-l-4 border-primary pl-4 italic text-sm space-y-2 text-muted-foreground">
+                        <p>
+                          This match has an average predicted score of <span className="font-semibold">{homeAvg.toFixed(1)}-{awayAvg.toFixed(1)}</span> according to {predictions.length} AI models.
+                        </p>
+                        <p>
+                          AI models are most confident in a <span className="font-semibold">{mostCommon}</span> result, with {homeWinPct}% predicting a home win, {drawPct}% predicting a draw, and {awayWinPct}% predicting an away win.
+                        </p>
+                        {topModels && (
+                          <p>
+                            Top contributing models: <span className="font-semibold">{topModels}</span>.
+                          </p>
+                        )}
+                      </blockquote>
+                      <p className="text-xs text-muted-foreground/60">
+                        These insights are AI-generated from {predictions.length} model predictions and are provided for informational purposes. Predictions vary based on each model&apos;s training data and methodology.
+                      </p>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
 
            {/* FAQ Schema for search results */}
            <MatchFAQSchema 

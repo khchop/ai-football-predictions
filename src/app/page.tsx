@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MatchCard } from '@/components/match-card';
-import { getUpcomingMatches, getFinishedMatches, getOverallStats, getLiveMatches } from '@/lib/db/queries';
-import { Trophy, Calendar, Bot, Target, ArrowRight, Sparkles } from 'lucide-react';
+import { getUpcomingMatches, getFinishedMatches, getOverallStats, getLiveMatches, getTopPerformingModel } from '@/lib/db/queries';
+import { Trophy, Calendar, Bot, Target, ArrowRight, Sparkles, Award } from 'lucide-react';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -215,6 +216,52 @@ function StatsLoadingSkeleton() {
   );
 }
 
+async function FeaturedInsights() {
+  const topModel = await getTopPerformingModel();
+  
+  if (!topModel) {
+    return null;
+  }
+  
+  return (
+    <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          <div className="h-12 w-12 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+            <Award className="h-6 w-6 text-primary" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-sm text-muted-foreground mb-1">Powered by AI prediction analysis</h3>
+            <p className="text-sm">
+              Best performing model this week: <span className="font-bold text-foreground">{topModel.displayName}</span>
+            </p>
+            <p className="text-xs text-muted-foreground/70 mt-2">
+              Average prediction accuracy across {topModel.avgPoints ? `${topModel.avgPoints} points` : 'all competitions'}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function FeaturedInsightsLoadingSkeleton() {
+  return (
+    <Card className="bg-card/50 border-border/50">
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          <Skeleton className="h-12 w-12 rounded-lg flex-shrink-0" />
+          <div className="flex-1">
+            <Skeleton className="h-4 w-32 mb-2" />
+            <Skeleton className="h-4 w-64" />
+            <Skeleton className="h-3 w-48 mt-2" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function HomePage() {
   return (
     <div className="space-y-8">
@@ -233,15 +280,20 @@ export default function HomePage() {
         </p>
       </section>
 
-      {/* Stats */}
-      <Suspense fallback={<StatsLoadingSkeleton />}>
-        <StatsBar />
-      </Suspense>
+       {/* Stats */}
+       <Suspense fallback={<StatsLoadingSkeleton />}>
+         <StatsBar />
+       </Suspense>
 
-      {/* Live Matches - only shows when there are live matches */}
-      <Suspense fallback={null}>
-        <LiveMatches />
-      </Suspense>
+       {/* Featured Insights */}
+       <Suspense fallback={<FeaturedInsightsLoadingSkeleton />}>
+         <FeaturedInsights />
+       </Suspense>
+
+       {/* Live Matches - only shows when there are live matches */}
+       <Suspense fallback={null}>
+         <LiveMatches />
+       </Suspense>
 
       {/* Upcoming Matches */}
       <section>
