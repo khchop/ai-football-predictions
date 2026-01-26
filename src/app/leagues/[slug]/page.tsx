@@ -29,12 +29,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `${competition.name} | AI Football Predictions`,
     description: `Browse ${competition.name} matches with AI predictions from 35+ models. Track fixtures, results, and analysis.`,
     alternates: {
-      canonical: `https://kroam.xyz/predictions/${slug}`,
+      canonical: `https://kroam.xyz/leagues/${slug}`,
     },
     openGraph: {
       title: competition.name,
       description: `${competition.name} matches with AI predictions`,
-      url: `https://kroam.xyz/predictions/${slug}`,
+      url: `https://kroam.xyz/leagues/${slug}`,
       type: 'website' as const,
       siteName: 'kroam.xyz',
     },
@@ -83,5 +83,9 @@ export default async function LeaguePage({ params }: PageProps) {
     notFound();
   }
 
-  redirect(`/predictions/${slug}`);
+  return (
+    <Suspense fallback={<LoadingSkeleton />}>
+      <LeagueHubContent competitionId={slug} />
+    </Suspense>
+  );
 }

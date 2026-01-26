@@ -76,7 +76,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
   
   // Redirect to new slug-based URL if slugs exist (permanent redirect for SEO)
   if (match.slug && competition.slug) {
-    redirect(`/predictions/${competition.slug}/${match.slug}`);
+    redirect(`/leagues/${competition.slug}/${match.slug}`);
   }
   
   // Fetch predictions for this match
