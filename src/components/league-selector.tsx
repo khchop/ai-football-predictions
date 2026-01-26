@@ -54,11 +54,9 @@ function CompetitionItem({ competition, isActive }: { competition: CompetitionCo
 export function LeagueSelector() {
   const pathname = usePathname();
   const competitionGroups = groupCompetitionsByCategory(COMPETITIONS);
-  const currentLeagueId = pathname.startsWith('/predictions/')
-    ? pathname.split('/predictions/')[1]?.split('/')[0]
-    : pathname.startsWith('/leagues/')
-      ? pathname.split('/leagues/')[1]
-      : null;
+  const currentLeagueId = pathname.startsWith('/leagues/')
+    ? pathname.split('/leagues/')[1]?.split('/')[0]
+    : null;
   const currentLeague = currentLeagueId ? getCompetitionById(currentLeagueId) : null;
 
   const domesticLeagues = competitionGroups['club-domestic'];

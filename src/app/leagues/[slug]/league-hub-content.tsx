@@ -19,23 +19,8 @@ interface MatchWithCompetition {
   competition: Competition;
 }
 
-async function LeagueMatchesList({ competitionId }: { competitionId: string }) {
-  const matches = await getMatchesByCompetitionSlug(competitionId, 50);
-
-  if (matches.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed border-border/50 bg-card/30 p-12 text-center">
-        <Calendar className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-        <p className="text-muted-foreground">No matches found for this competition.</p>
-      </div>
-    );
-  }
-
-  const upcomingMatches = matches.filter((m: MatchWithCompetition) => m.match.status === 'scheduled');
-  const liveMatches = matches.filter((m: MatchWithCompetition) => m.match.status === 'live');
-  const finishedMatches = matches.filter((m: MatchWithCompetition) => m.match.status === 'finished');
-
-  const MatchGrid = ({ matchList }: { matchList: MatchWithCompetition[] }) => (
+function MatchGrid({ matchList }: { matchList: MatchWithCompetition[] }) {
+  return (
     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
       {matchList.map(({ match, competition }) => (
         <MatchCard
@@ -52,6 +37,23 @@ async function LeagueMatchesList({ competitionId }: { competitionId: string }) {
       ))}
     </div>
   );
+}
+
+async function LeagueMatchesList({ competitionId }: { competitionId: string }) {
+  const matches = await getMatchesByCompetitionSlug(competitionId, 50);
+
+  if (matches.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-border/50 bg-card/30 p-12 text-center">
+        <Calendar className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+        <p className="text-muted-foreground">No matches found for this competition.</p>
+      </div>
+    );
+  }
+
+  const upcomingMatches = matches.filter((m: MatchWithCompetition) => m.match.status === 'scheduled');
+  const liveMatches = matches.filter((m: MatchWithCompetition) => m.match.status === 'live');
+  const finishedMatches = matches.filter((m: MatchWithCompetition) => m.match.status === 'finished');
 
   return (
     <div className="space-y-6">

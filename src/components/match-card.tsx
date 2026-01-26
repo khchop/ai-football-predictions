@@ -85,7 +85,7 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
 
   // Determine URL - prefer slug-based URL if available
   const matchUrl = match.slug && match.competition.slug
-    ? `/predictions/${match.competition.slug}/${match.slug}`
+    ? `/leagues/${match.competition.slug}/${match.slug}`
     : `/matches/${match.id}`;
 
   return (
