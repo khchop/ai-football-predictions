@@ -34,13 +34,36 @@ function groupCompetitionsByCategory(competitions: CompetitionConfig[]) {
   return groups;
 }
 
+function CompetitionItem({ competition, isActive }: { competition: CompetitionConfig; isActive: boolean }) {
+  return (
+    <DropdownMenuItem asChild>
+      <Link
+        href={`/predictions/${competition.id}`}
+        className={cn(
+          'flex items-center gap-2.5 cursor-pointer px-2 py-2 rounded-md -mx-2',
+          isActive && 'bg-primary/10 font-semibold'
+        )}
+        style={isActive && competition.color ? { color: competition.color } : undefined}
+      >
+        <span className="text-base leading-none">{competition.icon || '⚽'}</span>
+        <span className="flex-1">{competition.name}</span>
+      </Link>
+    </DropdownMenuItem>
+  );
+}
+
 export function LeagueSelector() {
   const pathname = usePathname();
   const competitionGroups = groupCompetitionsByCategory(COMPETITIONS);
-  const currentLeagueId = pathname.startsWith('/leagues/')
-    ? pathname.split('/leagues/')[1]
-    : null;
+  const currentLeagueId = pathname.startsWith('/predictions/')
+    ? pathname.split('/predictions/')[1]?.split('/')[0]
+    : pathname.startsWith('/leagues/')
+      ? pathname.split('/leagues/')[1]
+      : null;
   const currentLeague = currentLeagueId ? getCompetitionById(currentLeagueId) : null;
+
+  const domesticLeagues = competitionGroups['club-domestic'];
+  const domesticMidIndex = Math.ceil(domesticLeagues.length / 2);
 
   return (
     <DropdownMenu>
@@ -54,56 +77,57 @@ export function LeagueSelector() {
           aria-label="Select league"
         >
           <span className="hidden sm:inline">
-            {currentLeague ? currentLeague.name : 'Leagues'}
+            {currentLeague ? `${currentLeague.icon || ''} ${currentLeague.name}` : 'Leagues'}
           </span>
           <span className="sm:hidden">Leagues</span>
           <ChevronDown className="h-4 w-4" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>European Competitions</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuLabel className="text-xs uppercase tracking-wider text-muted-foreground/70">
+          European Competitions
+        </DropdownMenuLabel>
         {competitionGroups['club-europe'].map((competition) => (
-          <DropdownMenuItem key={competition.id} asChild>
-            <Link
-              href={`/leagues/${competition.id}`}
-              className={cn(
-                'flex items-center gap-2 cursor-pointer',
-                pathname === `/leagues/${competition.id}` && 'font-semibold text-primary'
-              )}
-            >
-              {competition.name}
-            </Link>
-          </DropdownMenuItem>
+          <CompetitionItem
+            key={competition.id}
+            competition={competition}
+            isActive={pathname === `/predictions/${competition.id}`}
+          />
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuLabel>Domestic Leagues</DropdownMenuLabel>
-        {competitionGroups['club-domestic'].map((competition) => (
-          <DropdownMenuItem key={competition.id} asChild>
-            <Link
-              href={`/leagues/${competition.id}`}
-              className={cn(
-                'flex items-center gap-2 cursor-pointer',
-                pathname === `/leagues/${competition.id}` && 'font-semibold text-primary'
-              )}
-            >
-              {competition.name}
-            </Link>
-          </DropdownMenuItem>
-        ))}
+        <DropdownMenuLabel className="text-xs uppercase tracking-wider text-muted-foreground/70">
+          Domestic Leagues
+        </DropdownMenuLabel>
+        <div className="grid grid-cols-2 gap-0">
+          <div>
+            {domesticLeagues.slice(0, domesticMidIndex).map((competition) => (
+              <CompetitionItem
+                key={competition.id}
+                competition={competition}
+                isActive={pathname === `/predictions/${competition.id}`}
+              />
+            ))}
+          </div>
+          <div>
+            {domesticLeagues.slice(domesticMidIndex).map((competition) => (
+              <CompetitionItem
+                key={competition.id}
+                competition={competition}
+                isActive={pathname === `/predictions/${competition.id}`}
+              />
+            ))}
+          </div>
+        </div>
         <DropdownMenuSeparator />
-        <DropdownMenuLabel>International</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-xs uppercase tracking-wider text-muted-foreground/70">
+          International
+        </DropdownMenuLabel>
         {competitionGroups['international'].map((competition) => (
-          <DropdownMenuItem key={competition.id} asChild>
-            <Link
-              href={`/leagues/${competition.id}`}
-              className={cn(
-                'flex items-center gap-2 cursor-pointer',
-                pathname === `/leagues/${competition.id}` && 'font-semibold text-primary'
-              )}
-            >
-              {competition.name}
-            </Link>
-          </DropdownMenuItem>
+          <CompetitionItem
+            key={competition.id}
+            competition={competition}
+            isActive={pathname === `/predictions/${competition.id}`}
+          />
         ))}
       </DropdownMenuContent>
     </DropdownMenu>

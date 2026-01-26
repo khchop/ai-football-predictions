@@ -51,9 +51,10 @@ export function Footer() {
                 <Link
                   key={comp.id}
                   href={`/predictions/${comp.id}`}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {comp.name}
+                  <span>{comp.icon || '⚽'}</span>
+                  <span>{comp.name}</span>
                 </Link>
               ))}
             </nav>
@@ -67,9 +68,10 @@ export function Footer() {
                 <Link
                   key={comp.id}
                   href={`/predictions/${comp.id}`}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {comp.name}
+                  <span>{comp.icon || '⚽'}</span>
+                  <span>{comp.name}</span>
                 </Link>
               ))}
             </nav>

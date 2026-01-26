@@ -7,6 +7,8 @@ export interface CompetitionConfig {
   apiFootballId: number;
   season: number;
   category: 'club-europe' | 'club-domestic' | 'international';
+  icon?: string;
+  color?: string;
 }
 
 // Current season (auto-calculated: season starts in August)
@@ -25,6 +27,8 @@ export const COMPETITIONS: CompetitionConfig[] = [
     apiFootballId: 2,
     season: CURRENT_SEASON,
     category: 'club-europe',
+    icon: '🏆',
+    color: '#00447F',
   },
   {
     id: 'uel',
@@ -32,6 +36,8 @@ export const COMPETITIONS: CompetitionConfig[] = [
     apiFootballId: 3,
     season: CURRENT_SEASON,
     category: 'club-europe',
+    icon: '🏅',
+    color: '#FF6B00',
   },
   {
     id: 'uecl',
@@ -39,8 +45,10 @@ export const COMPETITIONS: CompetitionConfig[] = [
     apiFootballId: 848,
     season: CURRENT_SEASON,
     category: 'club-europe',
+    icon: '💎',
+    color: '#5C2D91',
   },
-  
+
   // Club - Domestic (Top 5 Leagues)
   {
     id: 'epl',
@@ -48,6 +56,8 @@ export const COMPETITIONS: CompetitionConfig[] = [
     apiFootballId: 39,
     season: CURRENT_SEASON,
     category: 'club-domestic',
+    icon: '🦁',
+    color: '#3D195B',
   },
   {
     id: 'laliga',
@@ -55,6 +65,8 @@ export const COMPETITIONS: CompetitionConfig[] = [
     apiFootballId: 140,
     season: CURRENT_SEASON,
     category: 'club-domestic',
+    icon: '🐂',
+    color: '#A50044',
   },
   {
     id: 'bundesliga',
@@ -62,6 +74,8 @@ export const COMPETITIONS: CompetitionConfig[] = [
     apiFootballId: 78,
     season: CURRENT_SEASON,
     category: 'club-domestic',
+    icon: '⚽',
+    color: '#D20515',
   },
   {
     id: 'seriea',
@@ -69,6 +83,8 @@ export const COMPETITIONS: CompetitionConfig[] = [
     apiFootballId: 135,
     season: CURRENT_SEASON,
     category: 'club-domestic',
+    icon: '⚽',
+    color: '#004080',
   },
   {
     id: 'ligue1',
@@ -76,14 +92,17 @@ export const COMPETITIONS: CompetitionConfig[] = [
     apiFootballId: 61,
     season: CURRENT_SEASON,
     category: 'club-domestic',
+    icon: '🥖',
+    color: '#091C3E',
   },
-  // Club - Domestic (Other)
   {
     id: 'eredivisie',
     name: 'Eredivisie',
     apiFootballId: 88,
     season: CURRENT_SEASON,
     category: 'club-domestic',
+    icon: '🌷',
+    color: '#FF6200',
   },
   {
     id: 'superlig',
@@ -91,22 +110,28 @@ export const COMPETITIONS: CompetitionConfig[] = [
     apiFootballId: 203,
     season: CURRENT_SEASON,
     category: 'club-domestic',
+    icon: '🌙',
+    color: '#E30A17',
   },
-  
+
   // International
   {
     id: 'world-cup',
     name: 'FIFA World Cup',
     apiFootballId: 1,
-    season: 2026, // Next World Cup
+    season: 2026,
     category: 'international',
+    icon: '🌍',
+    color: '#326295',
   },
   {
     id: 'euro',
     name: 'UEFA Euro',
     apiFootballId: 4,
-    season: 2024, // Euro 2024
+    season: 2024,
     category: 'international',
+    icon: '🇪🇺',
+    color: '#0040A0',
   },
   {
     id: 'nations-league',
@@ -114,6 +139,8 @@ export const COMPETITIONS: CompetitionConfig[] = [
     apiFootballId: 5,
     season: CURRENT_SEASON,
     category: 'international',
+    icon: '🌐',
+    color: '#003399',
   },
   {
     id: 'copa-america',
@@ -121,22 +148,26 @@ export const COMPETITIONS: CompetitionConfig[] = [
     apiFootballId: 9,
     season: 2024,
     category: 'international',
+    icon: '🏆',
+    color: '#009B3A',
   },
   {
     id: 'afcon',
     name: 'Africa Cup of Nations',
     apiFootballId: 6,
-    season: 2025, // Next AFCON
+    season: 2025,
     category: 'international',
+    icon: '🦁',
+    color: '#009E60',
   },
-  
-  // World Cup Qualifiers (add specific confederation IDs as needed)
   {
     id: 'wc-qual-europe',
     name: 'World Cup Qualifiers - Europe',
     apiFootballId: 32,
     season: CURRENT_SEASON,
     category: 'international',
+    icon: '🌍',
+    color: '#00447F',
   },
   {
     id: 'wc-qual-southamerica',
@@ -144,6 +175,8 @@ export const COMPETITIONS: CompetitionConfig[] = [
     apiFootballId: 28,
     season: CURRENT_SEASON,
     category: 'international',
+    icon: '🌎',
+    color: '#2E8B57',
   },
 ];
 
