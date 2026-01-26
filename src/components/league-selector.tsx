@@ -38,14 +38,13 @@ function CompetitionItem({ competition, isActive }: { competition: CompetitionCo
   return (
     <DropdownMenuItem asChild>
       <Link
-        href={`/predictions/${competition.id}`}
+        href={`/leagues/${competition.id}`}
         className={cn(
           'flex items-center gap-2.5 cursor-pointer px-2 py-2 rounded-md -mx-2',
           isActive && 'bg-primary/10 font-semibold'
         )}
         style={isActive && competition.color ? { color: competition.color } : undefined}
       >
-        <span className="text-base leading-none">{competition.icon || '⚽'}</span>
         <span className="flex-1">{competition.name}</span>
       </Link>
     </DropdownMenuItem>
@@ -77,7 +76,7 @@ export function LeagueSelector() {
           aria-label="Select league"
         >
           <span className="hidden sm:inline">
-            {currentLeague ? `${currentLeague.icon || ''} ${currentLeague.name}` : 'Leagues'}
+            {currentLeague ? currentLeague.name : 'Leagues'}
           </span>
           <span className="sm:hidden">Leagues</span>
           <ChevronDown className="h-4 w-4" />
@@ -91,7 +90,7 @@ export function LeagueSelector() {
           <CompetitionItem
             key={competition.id}
             competition={competition}
-            isActive={pathname === `/predictions/${competition.id}`}
+            isActive={pathname === `/leagues/${competition.id}`}
           />
         ))}
         <DropdownMenuSeparator />
@@ -104,7 +103,7 @@ export function LeagueSelector() {
               <CompetitionItem
                 key={competition.id}
                 competition={competition}
-                isActive={pathname === `/predictions/${competition.id}`}
+                isActive={pathname === `/leagues/${competition.id}`}
               />
             ))}
           </div>
@@ -113,7 +112,7 @@ export function LeagueSelector() {
               <CompetitionItem
                 key={competition.id}
                 competition={competition}
-                isActive={pathname === `/predictions/${competition.id}`}
+                isActive={pathname === `/leagues/${competition.id}`}
               />
             ))}
           </div>
@@ -126,7 +125,7 @@ export function LeagueSelector() {
           <CompetitionItem
             key={competition.id}
             competition={competition}
-            isActive={pathname === `/predictions/${competition.id}`}
+            isActive={pathname === `/leagues/${competition.id}`}
           />
         ))}
       </DropdownMenuContent>

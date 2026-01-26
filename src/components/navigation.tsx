@@ -9,6 +9,7 @@ import { SearchModal } from './search-modal';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
+  { href: '/matches', label: 'Matches', icon: Calendar },
   { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
   { href: '/blog', label: 'Blog', icon: FileText },
 ];
@@ -30,8 +31,6 @@ export function Navigation() {
 
           {/* Navigation */}
           <nav className="flex items-center gap-1" aria-label="Main navigation">
-            <SearchModal />
-            <LeagueSelector />
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || 
@@ -56,6 +55,8 @@ export function Navigation() {
                 </Link>
               );
             })}
+            <SearchModal />
+            <LeagueSelector />
           </nav>
         </div>
       </div>

@@ -7,7 +7,6 @@ import { getUpcomingMatches, getFinishedMatches, getRecentMatches, getLiveMatche
 import { Calendar, Clock, CheckCircle, List, Radio, Filter } from 'lucide-react';
 import { LiveTabRefresher } from './live-refresher';
 import { CompetitionFilter } from '@/components/competition-filter';
-import { QuickLeagueLinks } from '@/components/quick-league-links';
 
 export const dynamic = 'force-dynamic';
 
@@ -296,9 +295,6 @@ export default function MatchesPage() {
         </div>
       </div>
       <CompetitionFilter />
-
-      {/* Quick League Links */}
-      <QuickLeagueLinks />
 
       {/* Tabs */}
       <Tabs defaultValue="live" className="space-y-6">
