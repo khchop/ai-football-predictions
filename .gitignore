@@ -35,7 +35,7 @@ yarn-error.log*
 !.env.example
 
 # drizzle
-drizzle/*.sql
+# drizzle/*.sql
 
 # typescript
 *.tsbuildinfo
