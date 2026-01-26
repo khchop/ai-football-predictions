@@ -335,7 +335,7 @@ export async function getCompetitionPredictionSummary(competitionId: string) {
     .select({
       resultType: predictions.predictedResult,
       count: sql<number>`COUNT(*)`,
-      avgPoints: sql<number>`ROUND(AVG(${predictions.totalPoints})::numeric, 2)`,
+      avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
     })
     .from(predictions)
     .innerJoin(matches, eq(predictions.matchId, matches.id))
@@ -349,9 +349,9 @@ export async function getCompetitionPredictionSummary(competitionId: string) {
   const accuracyStats = await db
     .select({
       totalPredictions: sql<number>`COUNT(${predictions.id})`,
-      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
+      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)`,
       exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
-      avgPoints: sql<number>`ROUND(AVG(${predictions.totalPoints})::numeric, 2)`,
+      avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
       maxPoints: sql<number>`MAX(${predictions.totalPoints})`,
     })
     .from(predictions)

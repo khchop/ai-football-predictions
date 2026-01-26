@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, doublePrecision, unique, index, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, doublePrecision, unique, index, timestamp, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Competitions we track (Champions League, Premier League, etc.)
@@ -354,6 +354,7 @@ export const predictions = pgTable('predictions', {
   index('idx_predictions_status').on(table.status),
   index('idx_predictions_created_at').on(table.createdAt),
   index('idx_predictions_match_status').on(table.matchId, table.status), // Composite index for queries filtering by match + status
+  check('predictions_tendency_points_check', sql`${table.tendencyPoints} = 0 OR (${table.tendencyPoints} >= 2 AND ${table.tendencyPoints} <= 6)`),
 ]);
 
 export type Prediction = typeof predictions.$inferSelect;
