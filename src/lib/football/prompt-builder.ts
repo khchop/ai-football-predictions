@@ -173,6 +173,7 @@ function getOrdinalSuffix(n: number): string {
 // Structure: CACHEABLE PREFIX + DYNAMIC MATCH DATA
 // REMOVED: favoriteTeamName, homeWinPct/drawPct/awayWinPct, advice, likelyScores (biasing)
 // ADDED: H2H history, standings context
+// NOTE: Betting odds removed to prevent model bias toward market expectations
 export function buildEnhancedPrompt(context: PromptContext | EnhancedPromptContext): string {
   const { homeTeam, awayTeam, competition, kickoffTime, analysis } = context;
   const homeStanding = 'homeStanding' in context ? context.homeStanding : null;
@@ -193,156 +194,150 @@ export function buildEnhancedPrompt(context: PromptContext | EnhancedPromptConte
    
    // If we have analysis data, include it
    if (analysis) {
-     // Betting odds (market expectations - NEW)
-     if (analysis.oddsHome && analysis.oddsDraw && analysis.oddsAway) {
-       lines.push('BETTING ODDS (1X2):');
-       lines.push(`Home ${analysis.oddsHome} | Draw ${analysis.oddsDraw} | Away ${analysis.oddsAway}`);
+     // League Standings (factual data)
+     if (homeStanding || awayStanding) {
+       lines.push('LEAGUE STANDINGS:');
+       if (homeStanding) {
+         lines.push(`${homeTeam}: ${formatStanding(homeStanding, true)}`);
+       }
+       if (awayStanding) {
+         lines.push(`${awayTeam}: ${formatStanding(awayStanding, false)}`);
+       }
        lines.push('');
      }
-    // League Standings (factual data)
-    if (homeStanding || awayStanding) {
-      lines.push('LEAGUE STANDINGS:');
-      if (homeStanding) {
-        lines.push(`${homeTeam}: ${formatStanding(homeStanding, true)}`);
-      }
-      if (awayStanding) {
-        lines.push(`${awayTeam}: ${formatStanding(awayStanding, false)}`);
-      }
-      lines.push('');
-    }
-    
-    // Season Statistics (NEW - enhanced data from team-statistics API)
-    const homeSeasonStats = parseTeamSeasonStats(analysis.homeSeasonStats);
-    const awaySeasonStats = parseTeamSeasonStats(analysis.awaySeasonStats);
-    
-    if (homeSeasonStats && awaySeasonStats) {
-      lines.push('SEASON STATISTICS:');
-      
-      // Overall goals and clean sheets
-      lines.push(`${homeTeam}: ${homeSeasonStats.totalGoalsFor}GF/${homeSeasonStats.totalGoalsAgainst}GA, ${homeSeasonStats.cleanSheetsTotal} clean sheets${homeSeasonStats.winStreak ? `, ${homeSeasonStats.winStreak}W streak` : ''}`);
-      lines.push(`${awayTeam}: ${awaySeasonStats.totalGoalsFor}GF/${awaySeasonStats.totalGoalsAgainst}GA, ${awaySeasonStats.cleanSheetsTotal} clean sheets${awaySeasonStats.winStreak ? `, ${awaySeasonStats.winStreak}W streak` : ''}`);
-      
-      // Home/Away splits
-      if (homeSeasonStats.homeWins !== null && awaySeasonStats.awayWins !== null) {
-        lines.push(`${homeTeam} at home: ${homeSeasonStats.homeWins}W-${homeSeasonStats.homeDraws}D-${homeSeasonStats.homeLosses}L (${homeSeasonStats.homeGoalsFor}GF/${homeSeasonStats.homeGoalsAgainst}GA)`);
-        lines.push(`${awayTeam} away: ${awaySeasonStats.awayWins}W-${awaySeasonStats.awayDraws}D-${awaySeasonStats.awayLosses}L (${awaySeasonStats.awayGoalsFor}GF/${awaySeasonStats.awayGoalsAgainst}GA)`);
-      }
-      
-      // Goal timing patterns (if significant)
-      const homeEarlyGoals = homeSeasonStats.goalsFor0to15;
-      const homeLateGoals = homeSeasonStats.goalsFor76to90;
-      const awayEarlyConceded = awaySeasonStats.goalsAgainst0to15;
-      const awayLateConceded = awaySeasonStats.goalsAgainst76to90;
-      
-      const timingNotes: string[] = [];
-      if (homeLateGoals && homeSeasonStats.totalGoalsFor && homeLateGoals / homeSeasonStats.totalGoalsFor > 0.25) {
-        timingNotes.push(`${homeTeam} scores ${Math.round(homeLateGoals / homeSeasonStats.totalGoalsFor * 100)}% of goals in final 15min`);
-      }
-      if (homeEarlyGoals && homeSeasonStats.totalGoalsFor && homeEarlyGoals / homeSeasonStats.totalGoalsFor > 0.25) {
-        timingNotes.push(`${homeTeam} scores ${Math.round(homeEarlyGoals / homeSeasonStats.totalGoalsFor * 100)}% in first 15min`);
-      }
-      if (awayEarlyConceded && awaySeasonStats.totalGoalsAgainst && awayEarlyConceded / awaySeasonStats.totalGoalsAgainst > 0.25) {
-        timingNotes.push(`${awayTeam} concedes ${Math.round(awayEarlyConceded / awaySeasonStats.totalGoalsAgainst * 100)}% early`);
-      }
-      if (awayLateConceded && awaySeasonStats.totalGoalsAgainst && awayLateConceded / awaySeasonStats.totalGoalsAgainst > 0.25) {
-        timingNotes.push(`${awayTeam} concedes ${Math.round(awayLateConceded / awaySeasonStats.totalGoalsAgainst * 100)}% late`);
-      }
-      
-      if (timingNotes.length > 0) {
-        lines.push(`Goal timing: ${timingNotes.join('; ')}`);
-      }
-      
-      lines.push('');
-    }
-    
-    // Head-to-Head History - Enhanced with detailed H2H
-    const h2hDetailed = parseH2HDetailed(analysis.h2hDetailed);
-    if (h2hDetailed && h2hDetailed.total > 0) {
-      lines.push('HEAD-TO-HEAD:');
-      lines.push(`Record (${h2hDetailed.total} matches): ${homeTeam} ${h2hDetailed.homeWins} wins, ${h2hDetailed.draws} draws, ${awayTeam} ${h2hDetailed.awayWins} wins`);
-      
-      if (h2hDetailed.matches.length > 0) {
-        const last5 = h2hDetailed.matches.slice(0, 5);
-        const resultsStr = last5.map(r => `${r.homeScore}-${r.awayScore}`).join(', ');
-        lines.push(`Last ${last5.length}: ${resultsStr}`);
-      }
-      lines.push('');
-    } else if (analysis.h2hTotal && analysis.h2hTotal > 0) {
-      // Fallback to basic H2H if detailed not available
-      lines.push('HEAD-TO-HEAD:');
-      lines.push(`Record (${analysis.h2hTotal} matches): ${homeTeam} ${analysis.h2hHomeWins} wins, ${analysis.h2hDraws} draws, ${awayTeam} ${analysis.h2hAwayWins} wins`);
-      
-      const h2hResults = parseH2HResults(analysis.h2hResults);
-      if (h2hResults.length > 0) {
-        const resultsStr = h2hResults.map(r => `${r.homeScore}-${r.awayScore}`).join(', ');
-        lines.push(`Last ${h2hResults.length}: ${resultsStr}`);
-      }
-      lines.push('');
-    }
-    
-    // Team comparison (compact format - no team names repeated)
-    if (analysis.formHomePct || analysis.attackHomePct || analysis.defenseHomePct) {
-      lines.push('STATS (Home-Away):');
-      const stats: string[] = [];
-      if (analysis.formHomePct && analysis.formAwayPct) {
-        stats.push(`Form ${buildComparisonBar(analysis.formHomePct, analysis.formAwayPct)}`);
-      }
-      if (analysis.attackHomePct && analysis.attackAwayPct) {
-        stats.push(`Atk ${buildComparisonBar(analysis.attackHomePct, analysis.attackAwayPct)}`);
-      }
-      if (analysis.defenseHomePct && analysis.defenseAwayPct) {
-        stats.push(`Def ${buildComparisonBar(analysis.defenseHomePct, analysis.defenseAwayPct)}`);
-      }
-      lines.push(stats.join(' | '));
-      lines.push('');
-    }
-    
-    // Combined form section (compact)
-    lines.push('FORM (last 5):');
-    if (analysis.homeTeamForm) {
-      const homeGoals = analysis.homeGoalsScored !== null && analysis.homeGoalsConceded !== null
-        ? ` (${analysis.homeGoalsScored}GF/${analysis.homeGoalsConceded}GA)`
-        : '';
-      lines.push(`Home: ${analysis.homeTeamForm}${homeGoals}`);
-    }
-    if (analysis.awayTeamForm) {
-      const awayGoals = analysis.awayGoalsScored !== null && analysis.awayGoalsConceded !== null
-        ? ` (${analysis.awayGoalsScored}GF/${analysis.awayGoalsConceded}GA)`
-        : '';
-      lines.push(`Away: ${analysis.awayTeamForm}${awayGoals}`);
-    }
-    lines.push('');
-    
-    // Lineups - compressed format (formation + notable absences only)
-    if (analysis.lineupsAvailable && analysis.homeFormation && analysis.awayFormation) {
-      lines.push(`LINEUPS: ${analysis.homeFormation} vs ${analysis.awayFormation} (confirmed)`);
-      lines.push('');
-    }
-    
-    // Key absences
-    const totalInjuries = (analysis.homeInjuriesCount || 0) + (analysis.awayInjuriesCount || 0);
-    if (totalInjuries > 0) {
-      const keyInjuries = parseKeyInjuries(analysis.keyInjuries);
-      lines.push('KEY ABSENCES:');
-      if (analysis.homeInjuriesCount && analysis.homeInjuriesCount > 0) {
-        lines.push(`${homeTeam} (${analysis.homeInjuriesCount}): ${formatTeamInjuries(keyInjuries, homeTeam, analysis.homeInjuriesCount)}`);
-      }
-      if (analysis.awayInjuriesCount && analysis.awayInjuriesCount > 0) {
-        lines.push(`${awayTeam} (${analysis.awayInjuriesCount}): ${formatTeamInjuries(keyInjuries, awayTeam, analysis.awayInjuriesCount)}`);
-      }
-      lines.push('');
-    }
-  } else {
-    // No analysis available
-    lines.push('Note: No detailed pre-match analysis available.');
-    lines.push('');
-  }
-  
-  // Final instruction (minimal separator)
-  lines.push('---');
-  lines.push('JSON: {"home_score": X, "away_score": Y}');
-  
-  return lines.join('\n');
+     
+     // Season Statistics (enhanced data from team-statistics API)
+     const homeSeasonStats = parseTeamSeasonStats(analysis.homeSeasonStats);
+     const awaySeasonStats = parseTeamSeasonStats(analysis.awaySeasonStats);
+     
+     if (homeSeasonStats && awaySeasonStats) {
+       lines.push('SEASON STATISTICS:');
+       
+       // Overall goals and clean sheets
+       lines.push(`${homeTeam}: ${homeSeasonStats.totalGoalsFor}GF/${homeSeasonStats.totalGoalsAgainst}GA, ${homeSeasonStats.cleanSheetsTotal} clean sheets${homeSeasonStats.winStreak ? `, ${homeSeasonStats.winStreak}W streak` : ''}`);
+       lines.push(`${awayTeam}: ${awaySeasonStats.totalGoalsFor}GF/${awaySeasonStats.totalGoalsAgainst}GA, ${awaySeasonStats.cleanSheetsTotal} clean sheets${awaySeasonStats.winStreak ? `, ${awaySeasonStats.winStreak}W streak` : ''}`);
+       
+       // Home/Away splits
+       if (homeSeasonStats.homeWins !== null && awaySeasonStats.awayWins !== null) {
+         lines.push(`${homeTeam} at home: ${homeSeasonStats.homeWins}W-${homeSeasonStats.homeDraws}D-${homeSeasonStats.homeLosses}L (${homeSeasonStats.homeGoalsFor}GF/${homeSeasonStats.homeGoalsAgainst}GA)`);
+         lines.push(`${awayTeam} away: ${awaySeasonStats.awayWins}W-${awaySeasonStats.awayDraws}D-${awaySeasonStats.awayLosses}L (${awaySeasonStats.awayGoalsFor}GF/${awaySeasonStats.awayGoalsAgainst}GA)`);
+       }
+       
+       // Goal timing patterns (if significant)
+       const homeEarlyGoals = homeSeasonStats.goalsFor0to15;
+       const homeLateGoals = homeSeasonStats.goalsFor76to90;
+       const awayEarlyConceded = awaySeasonStats.goalsAgainst0to15;
+       const awayLateConceded = awaySeasonStats.goalsAgainst76to90;
+       
+       const timingNotes: string[] = [];
+       if (homeLateGoals && homeSeasonStats.totalGoalsFor && homeLateGoals / homeSeasonStats.totalGoalsFor > 0.25) {
+         timingNotes.push(`${homeTeam} scores ${Math.round(homeLateGoals / homeSeasonStats.totalGoalsFor * 100)}% of goals in final 15min`);
+       }
+       if (homeEarlyGoals && homeSeasonStats.totalGoalsFor && homeEarlyGoals / homeSeasonStats.totalGoalsFor > 0.25) {
+         timingNotes.push(`${homeTeam} scores ${Math.round(homeEarlyGoals / homeSeasonStats.totalGoalsFor * 100)}% in first 15min`);
+       }
+       if (awayEarlyConceded && awaySeasonStats.totalGoalsAgainst && awayEarlyConceded / awaySeasonStats.totalGoalsAgainst > 0.25) {
+         timingNotes.push(`${awayTeam} concedes ${Math.round(awayEarlyConceded / awaySeasonStats.totalGoalsAgainst * 100)}% early`);
+       }
+       if (awayLateConceded && awaySeasonStats.totalGoalsAgainst && awayLateConceded / awaySeasonStats.totalGoalsAgainst > 0.25) {
+         timingNotes.push(`${awayTeam} concedes ${Math.round(awayLateConceded / awaySeasonStats.totalGoalsAgainst * 100)}% late`);
+       }
+       
+       if (timingNotes.length > 0) {
+         lines.push(`Goal timing: ${timingNotes.join('; ')}`);
+       }
+       
+       lines.push('');
+     }
+     
+     // Head-to-Head History - Enhanced with detailed H2H
+     const h2hDetailed = parseH2HDetailed(analysis.h2hDetailed);
+     if (h2hDetailed && h2hDetailed.total > 0) {
+       lines.push('HEAD-TO-HEAD:');
+       lines.push(`Record (${h2hDetailed.total} matches): ${homeTeam} ${h2hDetailed.homeWins} wins, ${h2hDetailed.draws} draws, ${awayTeam} ${h2hDetailed.awayWins} wins`);
+       
+       if (h2hDetailed.matches.length > 0) {
+         const last5 = h2hDetailed.matches.slice(0, 5);
+         const resultsStr = last5.map(r => `${r.homeScore}-${r.awayScore}`).join(', ');
+         lines.push(`Last ${last5.length}: ${resultsStr}`);
+       }
+       lines.push('');
+     } else if (analysis.h2hTotal && analysis.h2hTotal > 0) {
+       // Fallback to basic H2H if detailed not available
+       lines.push('HEAD-TO-HEAD:');
+       lines.push(`Record (${analysis.h2hTotal} matches): ${homeTeam} ${analysis.h2hHomeWins} wins, ${analysis.h2hDraws} draws, ${awayTeam} ${analysis.h2hAwayWins} wins`);
+       
+       const h2hResults = parseH2HResults(analysis.h2hResults);
+       if (h2hResults.length > 0) {
+         const resultsStr = h2hResults.map(r => `${r.homeScore}-${r.awayScore}`).join(', ');
+         lines.push(`Last ${h2hResults.length}: ${resultsStr}`);
+       }
+       lines.push('');
+     }
+     
+     // Team comparison (compact format - no team names repeated)
+     if (analysis.formHomePct || analysis.attackHomePct || analysis.defenseHomePct) {
+       lines.push('STATS (Home-Away):');
+       const stats: string[] = [];
+       if (analysis.formHomePct && analysis.formAwayPct) {
+         stats.push(`Form ${buildComparisonBar(analysis.formHomePct, analysis.formAwayPct)}`);
+       }
+       if (analysis.attackHomePct && analysis.attackAwayPct) {
+         stats.push(`Atk ${buildComparisonBar(analysis.attackHomePct, analysis.attackAwayPct)}`);
+       }
+       if (analysis.defenseHomePct && analysis.defenseAwayPct) {
+         stats.push(`Def ${buildComparisonBar(analysis.defenseHomePct, analysis.defenseAwayPct)}`);
+       }
+       lines.push(stats.join(' | '));
+       lines.push('');
+     }
+     
+     // Combined form section (compact)
+     lines.push('FORM (last 5):');
+     if (analysis.homeTeamForm) {
+       const homeGoals = analysis.homeGoalsScored !== null && analysis.homeGoalsConceded !== null
+         ? ` (${analysis.homeGoalsScored}GF/${analysis.homeGoalsConceded}GA)`
+         : '';
+       lines.push(`Home: ${analysis.homeTeamForm}${homeGoals}`);
+     }
+     if (analysis.awayTeamForm) {
+       const awayGoals = analysis.awayGoalsScored !== null && analysis.awayGoalsConceded !== null
+         ? ` (${analysis.awayGoalsScored}GF/${analysis.awayGoalsConceded}GA)`
+         : '';
+       lines.push(`Away: ${analysis.awayTeamForm}${awayGoals}`);
+     }
+     lines.push('');
+     
+     // Lineups - compressed format (formation + notable absences only)
+     if (analysis.lineupsAvailable && analysis.homeFormation && analysis.awayFormation) {
+       lines.push(`LINEUPS: ${analysis.homeFormation} vs ${analysis.awayFormation} (confirmed)`);
+       lines.push('');
+     }
+     
+     // Key absences
+     const totalInjuries = (analysis.homeInjuriesCount || 0) + (analysis.awayInjuriesCount || 0);
+     if (totalInjuries > 0) {
+       const keyInjuries = parseKeyInjuries(analysis.keyInjuries);
+       lines.push('KEY ABSENCES:');
+       if (analysis.homeInjuriesCount && analysis.homeInjuriesCount > 0) {
+         lines.push(`${homeTeam} (${analysis.homeInjuriesCount}): ${formatTeamInjuries(keyInjuries, homeTeam, analysis.homeInjuriesCount)}`);
+       }
+       if (analysis.awayInjuriesCount && analysis.awayInjuriesCount > 0) {
+         lines.push(`${awayTeam} (${analysis.awayInjuriesCount}): ${formatTeamInjuries(keyInjuries, awayTeam, analysis.awayInjuriesCount)}`);
+       }
+       lines.push('');
+     }
+   } else {
+     // No analysis available
+     lines.push('Note: No detailed pre-match analysis available.');
+     lines.push('');
+   }
+   
+   // Final instruction (minimal separator)
+   lines.push('---');
+   lines.push('JSON: {"home_score": X, "away_score": Y}');
+   
+   return lines.join('\n');
 }
 
 // Simple prompt for when no analysis is available (backward compatible)
@@ -366,9 +361,10 @@ export function buildSimplePrompt(
 // ============================================================================
 
 // Static header for batch prompts - OPTIMIZED for token efficiency
+// NOTE: Removed "Odds (lower=likely)" to prevent model bias toward market expectations
 const BATCH_ANALYSIS_HEADER = `Predict scores for ALL matches. Output JSON array only.
 
-DATA: Odds (lower=likely), H2H, Form, Stats %, Lineups, Absences
+DATA: H2H, Form, Stats %, Lineups, Absences
 
 `;
 
@@ -387,17 +383,12 @@ function buildCompactMatchSummary(context: BatchMatchContext, index: number, hom
   lines.push(`    ${homeTeam} vs ${awayTeam} | ${competition} | ${formattedTime}`);
   
    if (analysis) {
-     // Betting odds (market expectations - NEW, very compact)
-     if (analysis.oddsHome && analysis.oddsDraw && analysis.oddsAway) {
-       lines.push(`    Odds: ${analysis.oddsHome} (Home) | ${analysis.oddsDraw} (Draw) | ${analysis.oddsAway} (Away)`);
-     }
-     
      // League position (very compact)
      if (homeStanding && awayStanding) {
        lines.push(`    Table: ${homeTeam} ${homeStanding.position}${getOrdinalSuffix(homeStanding.position)} (${homeStanding.points}pts, ${homeStanding.goalDiff >= 0 ? '+' : ''}${homeStanding.goalDiff}GD) | ${awayTeam} ${awayStanding.position}${getOrdinalSuffix(awayStanding.position)} (${awayStanding.points}pts, ${awayStanding.goalDiff >= 0 ? '+' : ''}${awayStanding.goalDiff}GD)`);
      }
     
-    // Home/Away records (NEW - compact)
+    // Home/Away records (compact)
     if (homeStanding && awayStanding && homeStanding.homeWon !== null && awayStanding.awayWon !== null) {
       lines.push(`    Home/Away: ${homeTeam} ${homeStanding.homeWon}W-${homeStanding.homeDrawn}D-${homeStanding.homeLost}L (${homeStanding.homeGoalsFor}GF/${homeStanding.homeGoalsAgainst}GA) | ${awayTeam} ${awayStanding.awayWon}W-${awayStanding.awayDrawn}D-${awayStanding.awayLost}L (${awayStanding.awayGoalsFor}GF/${awayStanding.awayGoalsAgainst}GA)`);
     }
@@ -426,7 +417,7 @@ function buildCompactMatchSummary(context: BatchMatchContext, index: number, hom
       : '';
     lines.push(`    Form: H=${homeForm}${homeGoals} | A=${awayForm}${awayGoals}`);
     
-    // Season statistics (NEW - compact)
+    // Season statistics (compact)
     const homeSeasonStats = parseTeamSeasonStats(analysis.homeSeasonStats);
     const awaySeasonStats = parseTeamSeasonStats(analysis.awaySeasonStats);
     
