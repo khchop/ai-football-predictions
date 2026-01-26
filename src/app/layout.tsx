@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "@/components/navigation";
+import { Footer } from "@/components/footer";
 import { Analytics } from "@/components/analytics";
-import Link from "next/link";
-import { Sparkles, Trophy } from "lucide-react";
-import { COMPETITIONS } from "@/lib/football/competitions";
+import { Sparkles } from "lucide-react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -131,82 +130,7 @@ export default function RootLayout({
           {children}
         </main>
         
-        <footer className="border-t border-border/50 mt-auto">
-          <div className="container mx-auto px-4 py-8 max-w-7xl">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-6">
-              <div className="col-span-2 sm:col-span-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="h-6 w-6 rounded gradient-primary flex items-center justify-center">
-                    <Sparkles className="h-3 w-3 text-white" />
-                  </div>
-                  <span className="font-semibold">AI Predictions</span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Compare 29 AI models predicting football matches across 17 competitions.
-                </p>
-              </div>
-              
-              <div>
-                <h4 className="font-medium text-sm mb-3">Leagues</h4>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                  {COMPETITIONS.slice(0, 8).map((comp) => (
-                    <Link 
-                      key={comp.id}
-                      href={`/leagues/${comp.id}`}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {comp.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium text-sm mb-3">More</h4>
-                <div className="space-y-2">
-                  <Link href="/matches" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    All Matches
-                  </Link>
-                  <Link href="/leaderboard" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    Leaderboard
-                  </Link>
-                  <Link href="/blog" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    Blog
-                  </Link>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium text-sm mb-3">About</h4>
-                <div className="space-y-2">
-                  <Link href="/about" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    About
-                  </Link>
-                  <a 
-                    href="https://github.com" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="block text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    GitHub
-                  </a>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-border/30">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">AI Football Predictions</span>
-              </div>
-              
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span>Data from API-Football</span>
-                <span>•</span>
-                <span>For entertainment only</span>
-              </div>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </body>
     </html>
   );
