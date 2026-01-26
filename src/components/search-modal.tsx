@@ -99,7 +99,7 @@ export function SearchModal() {
           <Search className="h-5 w-5 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search leagues, posts..."
+            placeholder="Search leagues..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="flex-1 bg-transparent border-none outline-none text-base placeholder:text-muted-foreground"

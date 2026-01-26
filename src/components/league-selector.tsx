@@ -34,15 +34,6 @@ function groupCompetitionsByCategory(competitions: CompetitionConfig[]) {
   return groups;
 }
 
-function getCategoryLabel(category: string): string {
-  const labels: Record<string, string> = {
-    'club-europe': 'European Competitions',
-    'club-domestic': 'Domestic Leagues',
-    'international': 'International',
-  };
-  return labels[category] || category;
-}
-
 export function LeagueSelector() {
   const pathname = usePathname();
   const competitionGroups = groupCompetitionsByCategory(COMPETITIONS);

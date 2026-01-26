@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Select,
@@ -14,16 +15,26 @@ export function CompetitionFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentCompetition = searchParams.get('competition') || 'all';
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleValueChange = (value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value === 'all') {
-      params.delete('competition');
-    } else {
-      params.set('competition', value);
+  const handleValueChange = useCallback((value: string) => {
+    // Clear any pending navigation
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
-    router.push(`/matches?${params.toString()}`);
-  };
+
+    // Debounce the navigation (300ms delay)
+    timeoutRef.current = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === 'all') {
+        params.delete('competition');
+      } else {
+        params.set('competition', value);
+      }
+      router.push(`/matches?${params.toString()}`);
+      timeoutRef.current = null;
+    }, 300);
+  }, [router, searchParams]);
 
   return (
     <div className="flex items-center gap-2">

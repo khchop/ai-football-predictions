@@ -3,10 +3,9 @@ import { cn } from '@/lib/utils';
 interface CompetitionBadgeProps {
   name: string;
   className?: string;
-  showIcon?: boolean;
 }
 
-export function CompetitionBadge({ name, className, showIcon = false }: CompetitionBadgeProps) {
+export function CompetitionBadge({ name, className }: CompetitionBadgeProps) {
   return (
     <span
       className={cn(
@@ -15,9 +14,6 @@ export function CompetitionBadge({ name, className, showIcon = false }: Competit
         className
       )}
     >
-      {showIcon && (
-        <span className="w-3 h-3 rounded-full bg-primary/20" />
-      )}
       {name}
     </span>
   );

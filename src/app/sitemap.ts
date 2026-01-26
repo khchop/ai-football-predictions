@@ -81,7 +81,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-   // Get all active competitions for league hub pages
+  // Get all active competitions for league hub pages
   const activeCompetitions = await db
     .select({
       slug: competitions.slug,
@@ -89,16 +89,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .from(competitions)
     .where(eq(competitions.active, true));
 
-   const leaguePages: MetadataRoute.Sitemap = activeCompetitions
-     .filter((comp) => comp.slug)
-     .map((comp) => ({
-       url: `${baseUrl}/leagues/${comp.slug}`,
-       lastModified: new Date(),
-       changeFrequency: 'hourly',
-       priority: 0.9,
-     }));
+  const leaguePages: MetadataRoute.Sitemap = activeCompetitions
+    .filter((comp) => comp.slug)
+    .map((comp) => ({
+      url: `${baseUrl}/leagues/${comp.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'hourly',
+      priority: 0.9,
+    }));
 
-   // Get all published blog posts
+  // Get all published blog posts
    const allBlogPosts = await db
      .select({
        slug: blogPosts.slug,
