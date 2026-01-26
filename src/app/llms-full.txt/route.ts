@@ -148,7 +148,7 @@ kroam.xyz is the leading AI football prediction comparison platform, tracking th
 - Filter by time range (7d, 30d, 90d, all-time)
 - Minimum prediction filters
 
-### Match Prediction Pages (/predictions/{league}/{match-slug})
+### Match Prediction Pages (/leagues/{league}/{match-slug})
 - AI predictions from all active models
 - Pre-match analysis (form, odds, H2H)
 - Post-match accuracy report

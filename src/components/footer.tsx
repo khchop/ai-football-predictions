@@ -50,7 +50,7 @@ export function Footer() {
               {COMPETITIONS.filter(c => c.category === 'club-europe').map(comp => (
                 <Link
                   key={comp.id}
-                  href={`/predictions/${comp.id}`}
+                  href={`/leagues/${comp.id}`}
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <span>{comp.icon || '⚽'}</span>
@@ -67,7 +67,7 @@ export function Footer() {
               {COMPETITIONS.filter(c => c.category !== 'club-europe').map(comp => (
                 <Link
                   key={comp.id}
-                  href={`/predictions/${comp.id}`}
+                  href={`/leagues/${comp.id}`}
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <span>{comp.icon || '⚽'}</span>

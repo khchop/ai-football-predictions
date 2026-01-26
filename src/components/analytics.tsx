@@ -7,6 +7,7 @@ export function Analytics() {
     <Script
       src="https://umami.kroam.xyz/script.js"
       data-website-id="2e966abd-99fc-4363-8007-3737d99bc4c1"
+      defer
       strategy="afterInteractive"
     />
   );

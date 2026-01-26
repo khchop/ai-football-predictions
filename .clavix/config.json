@@ -3,7 +3,8 @@
   "integrations": [
     "agents-md",
     "agent-skills-global",
-    "opencode"
+    "opencode",
+    "copilot"
   ],
   "templates": {
     "prdQuestions": "default",

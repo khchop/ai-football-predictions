@@ -79,7 +79,7 @@ export async function recordPredictionCost(
 ): Promise<void> {
   const db = getDb();
   const today = getTodayDate();
-  const now = new Date().toISOString();
+  const now = new Date();
 
   // Atomic upsert: insert or update in a single operation
   await db

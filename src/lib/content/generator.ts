@@ -96,7 +96,7 @@ export async function generateMatchPreview(matchData: {
     target: matchPreviews.matchId,
     set: {
       ...newPreview,
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date(),
     },
   });
 
@@ -177,7 +177,7 @@ export async function generateLeagueRoundup(roundupData: {
     target: blogPosts.slug,
     set: {
       ...newPost,
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date(),
     },
   });
 
@@ -254,7 +254,7 @@ export async function generateModelReport(reportData: {
     target: blogPosts.slug,
     set: {
       ...newPost,
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date(),
     },
   });
 

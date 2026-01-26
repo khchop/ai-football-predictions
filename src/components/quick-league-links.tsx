@@ -17,7 +17,7 @@ export function QuickLeagueLinks() {
       <h3 className="font-semibold text-lg">Quick Access</h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         {COMPETITIONS.map((competition) => (
-          <Link key={competition.id} href={`/predictions/${competition.id}`}>
+          <Link key={competition.id} href={`/leagues/${competition.id}`}>
             <Card className="h-full hover:border-primary/50 transition-colors cursor-pointer group">
               <CardContent className="p-3 flex items-center gap-2">
                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">

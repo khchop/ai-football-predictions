@@ -105,7 +105,7 @@ export async function upsertMatch(data: Omit<NewMatch, 'id'> & { id?: string }):
         homeScore: data.homeScore,
         awayScore: data.awayScore,
         status: data.status,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       },
     })
     .returning({ id: matches.id });
@@ -191,7 +191,7 @@ export async function getMatchById(id: string): Promise<{ match: Match; competit
 
 /**
  * Get match by competition slug and match slug
- * Used for SEO-friendly URLs: /predictions/{league-slug}/{match-slug}
+ * Used for SEO-friendly URLs: /leagues/{league-slug}/{match-slug}
  */
 export async function getMatchBySlug(competitionSlug: string, matchSlug: string): Promise<{ match: Match; competition: Competition } | undefined> {
   const db = getDb();
@@ -354,7 +354,7 @@ export async function updateMatchResult(
       awayScore,
       status,
       matchMinute: matchMinute ?? null,
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date(),
     })
     .where(eq(matches.id, matchId));
 }

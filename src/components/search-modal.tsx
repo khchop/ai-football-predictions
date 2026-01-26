@@ -36,7 +36,7 @@ export function SearchModal() {
         newResults.push({
           type: 'league',
           title: comp.name,
-          url: `/predictions/${comp.id}`,
+          url: `/leagues/${comp.id}`,
           subtitle: comp.category.replace('-', ' '),
         });
       }
@@ -152,7 +152,7 @@ export function SearchModal() {
                 {COMPETITIONS.slice(0, 6).map((comp) => (
                   <Link
                     key={comp.id}
-                    href={`/predictions/${comp.id}`}
+                    href={`/leagues/${comp.id}`}
                     onClick={() => setIsOpen(false)}
                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-sm"
                   >

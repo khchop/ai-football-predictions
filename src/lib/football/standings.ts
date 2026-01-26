@@ -122,7 +122,7 @@ export async function updateLeagueStandings(leagueId: number, season: number): P
         awayLost: entry.away.lose,
         awayGoalsFor: entry.away.goals.for,
         awayGoalsAgainst: entry.away.goals.against,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       };
 
       await db

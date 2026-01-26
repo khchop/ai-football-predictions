@@ -88,7 +88,7 @@ export function createFixturesWorker() {
                
                // Schedule jobs for NEW scheduled matches only
                if (isNewMatch && mapFixtureStatus(fixture.fixture.status.short) === 'scheduled') {
-                 newMatchUrls.push(`https://kroam.xyz/predictions/${competitionSlug}/${slug}`);
+                 newMatchUrls.push(`https://kroam.xyz/leagues/${competitionSlug}/${slug}`);
                  const scheduled = await scheduleMatchJobs({
                    match: {
                      id: actualMatchId,
@@ -110,8 +110,8 @@ export function createFixturesWorker() {
                     quotaHome: null,
                     quotaDraw: null,
                     quotaAway: null,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                   },
                   competition: {
                     id: competition.id,

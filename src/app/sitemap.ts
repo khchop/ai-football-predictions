@@ -61,7 +61,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const matchPages: MetadataRoute.Sitemap = allMatches
     .filter((match) => match.matchSlug && match.competitionSlug) // Extra safety check
     .map((match) => ({
-      url: `${baseUrl}/predictions/${match.competitionSlug}/${match.matchSlug}`,
+      url: `${baseUrl}/leagues/${match.competitionSlug}/${match.matchSlug}`,
       lastModified: match.updatedAt ? new Date(match.updatedAt) : new Date(),
       changeFrequency: match.status === 'finished' ? 'monthly' : 'hourly',
       priority: match.status === 'scheduled' ? 0.8 : 0.6,
@@ -81,7 +81,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  // Get all active competitions for predictions pages (canonical URL)
+  // Get all active competitions for league pages (canonical URL)
   const activeCompetitions = await db
     .select({
       slug: competitions.slug,
@@ -92,7 +92,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const competitionPages: MetadataRoute.Sitemap = activeCompetitions
     .filter((comp) => comp.slug)
     .map((comp) => ({
-      url: `${baseUrl}/predictions/${comp.slug}`,
+      url: `${baseUrl}/leagues/${comp.slug}`,
       lastModified: new Date(),
       changeFrequency: 'hourly',
       priority: 0.9,

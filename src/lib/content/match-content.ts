@@ -93,7 +93,8 @@ Write flowing prose without headers.`;
     // Save to database
     const db2 = getDb();
     const contentId = uuidv4();
-    const now = new Date().toISOString();
+    const now = new Date();
+    const nowISOString = now.toISOString();
 
     await db2
       .insert(matchContent)
@@ -101,7 +102,7 @@ Write flowing prose without headers.`;
         id: contentId,
         matchId,
         preMatchContent: content,
-        preMatchGeneratedAt: now,
+        preMatchGeneratedAt: nowISOString,
         generatedBy: CONTENT_CONFIG.model,
         totalTokens: result.usage.totalTokens,
         totalCost: estimateContentCost(
@@ -115,7 +116,7 @@ Write flowing prose without headers.`;
         target: matchContent.matchId,
         set: {
           preMatchContent: content,
-          preMatchGeneratedAt: now,
+          preMatchGeneratedAt: nowISOString,
           totalTokens: result.usage.totalTokens,
           totalCost: estimateContentCost(
             result.usage.promptTokens,
@@ -256,7 +257,8 @@ Write flowing prose without headers.`;
 
     // Save to database (upsert to handle cases where matchContent record doesn't exist yet)
     const db2 = getDb();
-    const now = new Date().toISOString();
+    const now = new Date();
+    const nowISOString = now.toISOString();
     const contentId = uuidv4();
 
     await db2
@@ -265,7 +267,7 @@ Write flowing prose without headers.`;
         id: contentId,
         matchId,
         bettingContent: content,
-        bettingGeneratedAt: now,
+        bettingGeneratedAt: nowISOString,
         generatedBy: CONTENT_CONFIG.model,
         totalTokens: result.usage.totalTokens,
         totalCost: estimateContentCost(
@@ -279,7 +281,7 @@ Write flowing prose without headers.`;
         target: matchContent.matchId,
         set: {
           bettingContent: content,
-          bettingGeneratedAt: now,
+          bettingGeneratedAt: nowISOString,
           totalTokens: result.usage.totalTokens,
           totalCost: estimateContentCost(
             result.usage.promptTokens,
@@ -425,7 +427,8 @@ Write flowing prose without headers.`;
 
     // Save to database (upsert to handle cases where matchContent record doesn't exist yet)
     const db2 = getDb();
-    const now = new Date().toISOString();
+    const now = new Date();
+    const nowISOString = now.toISOString();
     const contentId = uuidv4();
 
     await db2
@@ -434,7 +437,7 @@ Write flowing prose without headers.`;
         id: contentId,
         matchId,
         postMatchContent: content,
-        postMatchGeneratedAt: now,
+        postMatchGeneratedAt: nowISOString,
         generatedBy: CONTENT_CONFIG.model,
         totalTokens: result.usage.totalTokens,
         totalCost: estimateContentCost(
@@ -448,7 +451,7 @@ Write flowing prose without headers.`;
         target: matchContent.matchId,
         set: {
           postMatchContent: content,
-          postMatchGeneratedAt: now,
+          postMatchGeneratedAt: nowISOString,
           totalTokens: result.usage.totalTokens,
           totalCost: estimateContentCost(
             result.usage.promptTokens,

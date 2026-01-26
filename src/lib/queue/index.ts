@@ -237,104 +237,122 @@ function createQueueOptions(queueName?: string) {
 }
 
 // Separate queues for each job type (robust routing, no job name filtering needed)
-// These are created lazily on first access to avoid build-time initialization
-let _analysisQueue: Queue;
-let _predictionsQueue: Queue;
-let _lineupsQueue: Queue;
-let _oddsQueue: Queue;
-let _liveQueue: Queue;
-let _settlementQueue: Queue;
-let _fixturesQueue: Queue;
-let _backfillQueue: Queue;
-let _contentQueue: Queue;
-let _modelRecoveryQueue: Queue;
-let _standingsQueue: Queue;
-let _matchQueue: Queue;
+// Queue factory - creates queue with options and registers for cleanup
+function createQueue(name: string): Queue {
+  const queue = new Queue(name, createQueueOptions(name));
+  log.info({ queueName: name }, `Queue created: ${name}`);
+  return queue;
+}
 
-export const analysisQueue = new Proxy({} as Queue, {
-  get(target, prop) {
-    if (!_analysisQueue) _analysisQueue = new Queue(QUEUE_NAMES.ANALYSIS, createQueueOptions(QUEUE_NAMES.ANALYSIS));
-    return (_analysisQueue as any)[prop];
-  }
-});
+// Eagerly create all queues for monitoring and health checks
+// Lazy initialization is preserved for workers that don't need all queues
+const _queues: Map<string, Queue> = new Map();
 
-export const predictionsQueue = new Proxy({} as Queue, {
-  get(target, prop) {
-    if (!_predictionsQueue) _predictionsQueue = new Queue(QUEUE_NAMES.PREDICTIONS, createQueueOptions(QUEUE_NAMES.PREDICTIONS));
-    return (_predictionsQueue as any)[prop];
+// Get or create queue by name (lazy initialization)
+export function getOrCreateQueue(queueName: string): Queue {
+  if (!_queues.has(queueName)) {
+    _queues.set(queueName, createQueue(queueName));
   }
-});
+  return _queues.get(queueName)!;
+}
 
-export const lineupsQueue = new Proxy({} as Queue, {
-  get(target, prop) {
-    if (!_lineupsQueue) _lineupsQueue = new Queue(QUEUE_NAMES.LINEUPS, createQueueOptions(QUEUE_NAMES.LINEUPS));
-    return (_lineupsQueue as any)[prop];
-  }
-});
+// Exported queues using factory pattern (lazy initialization)
+let _analysisQueue: Queue | null = null;
+export function getAnalysisQueue(): Queue {
+  if (!_analysisQueue) _analysisQueue = createQueue(QUEUE_NAMES.ANALYSIS);
+  return _analysisQueue;
+}
 
-export const oddsQueue = new Proxy({} as Queue, {
-  get(target, prop) {
-    if (!_oddsQueue) _oddsQueue = new Queue(QUEUE_NAMES.ODDS, createQueueOptions(QUEUE_NAMES.ODDS));
-    return (_oddsQueue as any)[prop];
-  }
-});
+// Use a Proxy to make queue access lazy - connection only happens on first property access
+const createLazyQueueProxy = (getter: () => Queue): Queue => {
+  return new Proxy({} as Queue, {
+    get(_target, prop) {
+      const queue = getter();
+      return (queue as any)[prop];
+    },
+  });
+};
 
-export const liveQueue = new Proxy({} as Queue, {
-  get(target, prop) {
-    if (!_liveQueue) _liveQueue = new Queue(QUEUE_NAMES.LIVE, createQueueOptions(QUEUE_NAMES.LIVE));
-    return (_liveQueue as any)[prop];
-  }
-});
+export const analysisQueue = createLazyQueueProxy(getAnalysisQueue);
 
-export const settlementQueue = new Proxy({} as Queue, {
-  get(target, prop) {
-    if (!_settlementQueue) _settlementQueue = new Queue(QUEUE_NAMES.SETTLEMENT, createQueueOptions(QUEUE_NAMES.SETTLEMENT));
-    return (_settlementQueue as any)[prop];
-  }
-});
+// Remaining queues with factory pattern
+let _predictionsQueue: Queue | null = null;
+export function getPredictionsQueue(): Queue {
+  if (!_predictionsQueue) _predictionsQueue = createQueue(QUEUE_NAMES.PREDICTIONS);
+  return _predictionsQueue;
+}
+export const predictionsQueue = createLazyQueueProxy(getPredictionsQueue);
 
-export const fixturesQueue = new Proxy({} as Queue, {
-  get(target, prop) {
-    if (!_fixturesQueue) _fixturesQueue = new Queue(QUEUE_NAMES.FIXTURES, createQueueOptions(QUEUE_NAMES.FIXTURES));
-    return (_fixturesQueue as any)[prop];
-  }
-});
+let _lineupsQueue: Queue | null = null;
+export function getLineupsQueue(): Queue {
+  if (!_lineupsQueue) _lineupsQueue = createQueue(QUEUE_NAMES.LINEUPS);
+  return _lineupsQueue;
+}
+export const lineupsQueue = createLazyQueueProxy(getLineupsQueue);
 
-export const backfillQueue = new Proxy({} as Queue, {
-  get(target, prop) {
-    if (!_backfillQueue) _backfillQueue = new Queue(QUEUE_NAMES.BACKFILL, createQueueOptions(QUEUE_NAMES.BACKFILL));
-    return (_backfillQueue as any)[prop];
-  }
-});
+let _oddsQueue: Queue | null = null;
+export function getOddsQueue(): Queue {
+  if (!_oddsQueue) _oddsQueue = createQueue(QUEUE_NAMES.ODDS);
+  return _oddsQueue;
+}
+export const oddsQueue = createLazyQueueProxy(getOddsQueue);
 
-export const contentQueue = new Proxy({} as Queue, {
-  get(target, prop) {
-    if (!_contentQueue) _contentQueue = new Queue(QUEUE_NAMES.CONTENT, createQueueOptions(QUEUE_NAMES.CONTENT));
-    return (_contentQueue as any)[prop];
-  }
-});
+let _liveQueue: Queue | null = null;
+export function getLiveQueue(): Queue {
+  if (!_liveQueue) _liveQueue = createQueue(QUEUE_NAMES.LIVE);
+  return _liveQueue;
+}
+export const liveQueue = createLazyQueueProxy(getLiveQueue);
 
-export const modelRecoveryQueue = new Proxy({} as Queue, {
-  get(target, prop) {
-    if (!_modelRecoveryQueue) _modelRecoveryQueue = new Queue(QUEUE_NAMES.MODEL_RECOVERY, createQueueOptions(QUEUE_NAMES.MODEL_RECOVERY));
-    return (_modelRecoveryQueue as any)[prop];
-  }
-});
+let _settlementQueue: Queue | null = null;
+export function getSettlementQueue(): Queue {
+  if (!_settlementQueue) _settlementQueue = createQueue(QUEUE_NAMES.SETTLEMENT);
+  return _settlementQueue;
+}
+export const settlementQueue = createLazyQueueProxy(getSettlementQueue);
 
-export const standingsQueue = new Proxy({} as Queue, {
-  get(target, prop) {
-    if (!_standingsQueue) _standingsQueue = new Queue(QUEUE_NAMES.STANDINGS, createQueueOptions(QUEUE_NAMES.STANDINGS));
-    return (_standingsQueue as any)[prop];
-  }
-});
+let _fixturesQueue: Queue | null = null;
+export function getFixturesQueue(): Queue {
+  if (!_fixturesQueue) _fixturesQueue = createQueue(QUEUE_NAMES.FIXTURES);
+  return _fixturesQueue;
+}
+export const fixturesQueue = createLazyQueueProxy(getFixturesQueue);
 
-// Legacy queue (kept for backward compatibility during migration)
-export const matchQueue = new Proxy({} as Queue, {
-  get(target, prop) {
-    if (!_matchQueue) _matchQueue = new Queue('match-jobs', createQueueOptions());
-    return (_matchQueue as any)[prop];
-  }
-});
+let _backfillQueue: Queue | null = null;
+export function getBackfillQueue(): Queue {
+  if (!_backfillQueue) _backfillQueue = createQueue(QUEUE_NAMES.BACKFILL);
+  return _backfillQueue;
+}
+export const backfillQueue = createLazyQueueProxy(getBackfillQueue);
+
+let _contentQueue: Queue | null = null;
+export function getContentQueue(): Queue {
+  if (!_contentQueue) _contentQueue = createQueue(QUEUE_NAMES.CONTENT);
+  return _contentQueue;
+}
+export const contentQueue = createLazyQueueProxy(getContentQueue);
+
+let _modelRecoveryQueue: Queue | null = null;
+export function getModelRecoveryQueue(): Queue {
+  if (!_modelRecoveryQueue) _modelRecoveryQueue = createQueue(QUEUE_NAMES.MODEL_RECOVERY);
+  return _modelRecoveryQueue;
+}
+export const modelRecoveryQueue = createLazyQueueProxy(getModelRecoveryQueue);
+
+let _standingsQueue: Queue | null = null;
+export function getStandingsQueue(): Queue {
+  if (!_standingsQueue) _standingsQueue = createQueue(QUEUE_NAMES.STANDINGS);
+  return _standingsQueue;
+}
+export const standingsQueue = createLazyQueueProxy(getStandingsQueue);
+
+// Legacy queue (kept for backward compatibility)
+let _matchQueue: Queue | null = null;
+export function getMatchQueue(): Queue {
+  if (!_matchQueue) _matchQueue = createQueue('match-jobs');
+  return _matchQueue;
+}
+export const matchQueue = createLazyQueueProxy(getMatchQueue);
 
 // Helper to get a queue by name
 export function getQueue(queueName: string): Queue {
@@ -368,23 +386,19 @@ export function getQueue(queueName: string): Queue {
 
 // Helper to get all queues (for monitoring/status)
 export function getAllQueues(): Queue[] {
-  // Initialize all queues by accessing them
-  const queues = [
-    analysisQueue,
-    predictionsQueue,
-    lineupsQueue,
-    oddsQueue,
-    liveQueue,
-    settlementQueue,
-    fixturesQueue,
-    backfillQueue,
-    contentQueue,
-    modelRecoveryQueue,
-    standingsQueue,
+  return [
+    getAnalysisQueue(),
+    getPredictionsQueue(),
+    getLineupsQueue(),
+    getOddsQueue(),
+    getLiveQueue(),
+    getSettlementQueue(),
+    getFixturesQueue(),
+    getBackfillQueue(),
+    getContentQueue(),
+    getModelRecoveryQueue(),
+    getStandingsQueue(),
   ];
-  // Access a property to trigger initialization
-  queues.forEach(q => q.name);
-  return queues;
 }
 
 // Export for dashboard

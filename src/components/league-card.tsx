@@ -11,7 +11,7 @@ interface LeagueCardProps {
 
 export function LeagueCard({ id, name, matchCount, category }: LeagueCardProps) {
   return (
-    <Link href={`/predictions/${id}`}>
+    <Link href={`/leagues/${id}`}>
       <Card className="h-full hover:border-primary/50 transition-colors cursor-pointer group">
         <CardContent className="p-4 flex items-center gap-4">
           <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">

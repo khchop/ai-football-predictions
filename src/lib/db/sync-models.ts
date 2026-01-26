@@ -56,7 +56,7 @@ export async function syncModelsToDatabase(): Promise<{
           displayName: provider.displayName,
           isPremium: provider.isPremium,
           active: true,
-          createdAt: new Date().toISOString(),
+          createdAt: new Date(),
         };
         
         if (existing.length === 0) {

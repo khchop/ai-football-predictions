@@ -40,7 +40,7 @@ kroam.xyz tracks and analyzes AI model predictions for football matches using th
 
 ## Content Types
 
-1. **Match Predictions** (/predictions/{league}/{match-slug})
+1. **Match Predictions** (/leagues/{league}/{match-slug})
    - AI predictions from ${activeModelCount}+ models for upcoming matches
    - Pre-match odds analysis and form data
    - Post-match accuracy reports

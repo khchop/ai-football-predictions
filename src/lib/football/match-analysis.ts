@@ -524,7 +524,7 @@ export async function fetchAndStoreAnalysis(
     rawOddsData: null,
     
     analysisUpdatedAt: new Date().toISOString(),
-    createdAt: existing?.createdAt || new Date().toISOString(),
+    createdAt: existing?.createdAt || new Date(),
   };
 
    await upsertMatchAnalysis(analysisData);

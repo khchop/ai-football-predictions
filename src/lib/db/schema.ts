@@ -9,7 +9,7 @@ export const competitions = pgTable('competitions', {
   season: integer('season').notNull(), // e.g., 2024
   active: boolean('active').default(true),
   slug: text('slug').unique(), // SEO-friendly slug, e.g., "champions-league"
-  createdAt: text('created_at').default(sql`now()`),
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
 // Individual matches
@@ -37,8 +37,8 @@ export const matches = pgTable('matches', {
   quotaDraw: integer('quota_draw'), // Points for predicting draw (2-6)
   quotaAway: integer('quota_away'), // Points for predicting away win (2-6)
   slug: text('slug'), // SEO-friendly slug, e.g., "manchester-city-vs-arsenal-2026-01-22" (nullable for backfill)
-  createdAt: text('created_at').default(sql`now()`),
-  updatedAt: text('updated_at').default(sql`now()`),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => [
   index('idx_matches_competition_id').on(table.competitionId),
   index('idx_matches_status').on(table.status),
@@ -56,7 +56,7 @@ export const models = pgTable('models', {
   modelDescription: text('model_description'), // AI-generated description of the model
   isPremium: boolean('is_premium').default(false),
   active: boolean('active').default(true),
-  createdAt: text('created_at').default(sql`now()`),
+  createdAt: timestamp('created_at').defaultNow(),
   // Streak tracking (updated in real-time when matches are scored)
   currentStreak: integer('current_streak').default(0), // Positive = wins, negative = losses
   currentStreakType: text('current_streak_type').default('none'), // 'exact', 'tendency', 'none'
@@ -87,8 +87,8 @@ export const modelUsage = pgTable('model_usage', {
     .references(() => models.id),
   predictionsCount: integer('predictions_count').default(0),
   totalCost: text('total_cost').default('0'), // Stored as string for precision
-  createdAt: text('created_at').default(sql`now()`),
-  updatedAt: text('updated_at').default(sql`now()`),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => [
   unique('model_usage_date_model_unique').on(table.date, table.modelId),
   index('idx_model_usage_date').on(table.date),
@@ -205,7 +205,7 @@ export const matchAnalysis = pgTable('match_analysis', {
   rawH2HData: text('raw_h2h_data'),                   // Raw H2H API response
   
   analysisUpdatedAt: text('analysis_updated_at'),
-  createdAt: text('created_at').default(sql`now()`),
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
 export type MatchAnalysis = typeof matchAnalysis.$inferSelect;
@@ -238,7 +238,7 @@ export const leagueStandings = pgTable('league_standings', {
   awayLost: integer('away_lost'),
   awayGoalsFor: integer('away_goals_for'),
   awayGoalsAgainst: integer('away_goals_against'),
-  updatedAt: text('updated_at').default(sql`now()`),
+  updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => [
   index('idx_league_standings_league_id').on(table.leagueId),
   index('idx_league_standings_team_name').on(table.teamName),
@@ -387,8 +387,8 @@ export const blogPosts = pgTable('blog_posts', {
   promptTokens: integer('prompt_tokens'),
   completionTokens: integer('completion_tokens'),
   
-  createdAt: text('created_at').default(sql`now()`),
-  updatedAt: text('updated_at').default(sql`now()`),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => [
   index('idx_blog_posts_slug').on(table.slug),
   index('idx_blog_posts_status').on(table.status),
@@ -431,8 +431,8 @@ export const matchPreviews = pgTable('match_previews', {
   promptTokens: integer('prompt_tokens'),
   completionTokens: integer('completion_tokens'),
   
-  createdAt: text('created_at').default(sql`now()`),
-  updatedAt: text('updated_at').default(sql`now()`),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => [
   index('idx_match_previews_match_id').on(table.matchId),
   index('idx_match_previews_status').on(table.status),
@@ -471,8 +471,8 @@ export const matchContent = pgTable('match_content', {
   totalTokens: integer('total_tokens').default(0),
   totalCost: text('total_cost').default('0'),
 
-  createdAt: text('created_at').default(sql`now()`),
-  updatedAt: text('updated_at').default(sql`now()`),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => [
   index('idx_match_content_match_id').on(table.matchId),
 ]);
