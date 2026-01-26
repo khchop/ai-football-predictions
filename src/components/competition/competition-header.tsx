@@ -13,18 +13,15 @@ export async function CompetitionHeader({ competitionId, matchCount, nextMatchTi
   // Get competition config for display info
   const config = getCompetitionById(competitionId);
   
-  // Get competition from database for name
+  // Get competition from database for name (optional - config is primary source)
   const { getCompetitionById: dbGetCompetition } = await import('@/lib/db/queries');
   const competition = await dbGetCompetition(competitionId);
   
-  if (!competition) {
-    return null;
-  }
-  
-  const displayName = config?.name || competition.name;
+  // Use config as primary source, DB as fallback
+  const displayName = config?.name || competition?.name || competitionId;
   const icon = config?.icon || '⚽';
   const color = config?.color || '#3D195B';
-  const season = config?.season || competition.season;
+  const season = config?.season || competition?.season || new Date().getFullYear();
   
   return (
     <Card className="mb-6 overflow-hidden">
