@@ -19,7 +19,17 @@ interface CompetitionPredictionSummaryProps {
   summary: PredictionSummaryData;
 }
 
-function ResultBadge({ result, count, percentage }: { result: string; count: number; percentage: number }) {
+function ResultBadge({
+  result,
+  count,
+  percentage,
+  avgPoints,
+}: {
+  result: string;
+  count: number;
+  percentage: number;
+  avgPoints: number;
+}) {
   const colors: Record<string, string> = {
     'H': 'bg-green-600',
     'D': 'bg-yellow-500',
@@ -43,7 +53,7 @@ function ResultBadge({ result, count, percentage }: { result: string; count: num
       </div>
       <div className="text-right">
         <p className="text-sm font-semibold">{percentage.toFixed(1)}%</p>
-        <p className="text-xs text-muted-foreground">avg {percentage > 0 ? (count / percentage * 100).toFixed(1) : 0} pts</p>
+        <p className="text-xs text-muted-foreground">avg {avgPoints.toFixed(2)} pts</p>
       </div>
     </div>
   );
@@ -69,6 +79,9 @@ export async function CompetitionPredictionSummary({ summary }: CompetitionPredi
   }
   
   const total = summary.predictionBreakdown.reduce((sum, p) => sum + p.count, 0) || 1;
+  const consensusBreakdown = summary.predictionBreakdown.find(
+    (p) => p.resultType === summary.mostPredictedResult
+  );
   
   return (
     <Card className="mb-6">
@@ -94,8 +107,9 @@ export async function CompetitionPredictionSummary({ summary }: CompetitionPredi
           <div className="flex items-center gap-3">
             <ResultBadge 
               result={summary.mostPredictedResult} 
-              count={summary.predictionBreakdown.find(p => p.resultType === summary.mostPredictedResult)?.count || 0}
+              count={consensusBreakdown?.count || 0}
               percentage={summary.confidence}
+              avgPoints={consensusBreakdown?.avgPoints || 0}
             />
             <div className="text-center px-3">
               <p className="text-xs text-muted-foreground mb-1">AI Average</p>
@@ -110,12 +124,13 @@ export async function CompetitionPredictionSummary({ summary }: CompetitionPredi
           <p className="text-sm text-muted-foreground mb-3">Prediction Distribution</p>
           <div className="space-y-2">
             {summary.predictionBreakdown.map((p) => (
-              <ResultBadge 
-                key={p.resultType}
-                result={p.resultType}
-                count={p.count}
-                percentage={(p.count / total) * 100}
-              />
+                <ResultBadge 
+                  key={p.resultType}
+                  result={p.resultType}
+                  count={p.count}
+                  percentage={(p.count / total) * 100}
+                  avgPoints={p.avgPoints}
+                />
             ))}
           </div>
         </div>
