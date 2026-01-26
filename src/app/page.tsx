@@ -5,6 +5,7 @@ import { MatchCard } from '@/components/match-card';
 import { getUpcomingMatches, getFinishedMatches, getOverallStats, getLiveMatches, getTopPerformingModel } from '@/lib/db/queries';
 import { Trophy, Calendar, Bot, Target, ArrowRight, Sparkles, Award } from 'lucide-react';
 import Link from 'next/link';
+import { QuickLeagueLinks } from '@/components/quick-league-links';
 
 export const dynamic = 'force-dynamic';
 
@@ -333,6 +334,11 @@ export default function HomePage() {
         <Suspense fallback={<LoadingSkeleton />}>
           <RecentResults />
         </Suspense>
+      </section>
+
+      {/* Quick League Links */}
+      <section>
+        <QuickLeagueLinks />
       </section>
     </div>
   );

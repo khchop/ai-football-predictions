@@ -4,8 +4,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MatchCard } from '@/components/match-card';
 import { getUpcomingMatches, getFinishedMatches, getRecentMatches, getLiveMatches, getLiveMatchCount } from '@/lib/db/queries';
-import { Calendar, Clock, CheckCircle, List, Radio } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, List, Radio, Filter } from 'lucide-react';
 import { LiveTabRefresher } from './live-refresher';
+import { CompetitionFilter } from '@/components/competition-filter';
+import { QuickLeagueLinks } from '@/components/quick-league-links';
 
 export const dynamic = 'force-dynamic';
 
@@ -280,17 +282,23 @@ export default function MatchesPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="h-12 w-12 rounded-xl gradient-primary flex items-center justify-center">
-          <Calendar className="h-6 w-6 text-white" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold">Matches</h1>
-          <p className="text-muted-foreground">
-            Browse fixtures and results
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-xl gradient-primary flex items-center justify-center">
+            <Calendar className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">Matches</h1>
+            <p className="text-muted-foreground">
+              Browse fixtures and results
+            </p>
+          </div>
         </div>
       </div>
+      <CompetitionFilter />
+
+      {/* Quick League Links */}
+      <QuickLeagueLinks />
 
       {/* Tabs */}
       <Tabs defaultValue="live" className="space-y-6">

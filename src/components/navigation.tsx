@@ -3,12 +3,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Trophy, Calendar, Home, Sparkles } from 'lucide-react';
+import { Trophy, Calendar, Home, Sparkles, FileText } from 'lucide-react';
+import { LeagueSelector } from './league-selector';
+import { SearchModal } from './search-modal';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/matches', label: 'Matches', icon: Calendar },
   { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
+  { href: '/blog', label: 'Blog', icon: FileText },
 ];
 
 export function Navigation() {
@@ -28,6 +31,8 @@ export function Navigation() {
 
           {/* Navigation */}
           <nav className="flex items-center gap-1" aria-label="Main navigation">
+            <SearchModal />
+            <LeagueSelector />
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || 
