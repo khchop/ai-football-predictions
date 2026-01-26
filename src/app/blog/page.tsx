@@ -1,6 +1,6 @@
 /**
  * Blog Index Page
- * 
+ *
  * Displays list of published blog posts (league roundups, model reports, etc.)
  */
 
@@ -8,9 +8,10 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { getPublishedBlogPosts } from '@/lib/db/queries';
 import { format, parseISO } from 'date-fns';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Filter } from 'lucide-react';
 import type { Metadata } from 'next';
 import type { BlogPost } from '@/lib/db/schema';
+import { COMPETITIONS } from '@/lib/football/competitions';
 
 export const metadata: Metadata = {
   title: 'AI Football Analysis Blog | kroam.xyz',
@@ -41,18 +42,26 @@ export const metadata: Metadata = {
 const POSTS_PER_PAGE = 12;
 
 interface PageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; competition?: string }>;
 }
 
 export default async function BlogPage({ searchParams }: PageProps) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, competition } = await searchParams;
   const page = Math.max(1, parseInt(pageParam || '1', 10));
   const offset = (page - 1) * POSTS_PER_PAGE;
 
-  // Get posts for current page
-  const posts = await getPublishedBlogPosts(POSTS_PER_PAGE + 1, offset); // +1 to detect if there are more pages
+  const posts = await getPublishedBlogPosts(POSTS_PER_PAGE + 1, offset);
   const hasNextPage = posts.length > POSTS_PER_PAGE;
-  const displayPosts = posts.slice(0, POSTS_PER_PAGE);
+  const displayPosts = competition
+    ? posts.filter((post: BlogPost) => {
+        const competitionFromSlug = post.slug?.split('-vs-')[0];
+        return competitionFromSlug === competition;
+      }).slice(0, POSTS_PER_PAGE)
+    : posts.slice(0, POSTS_PER_PAGE);
+
+  const selectedCompetition = competition
+    ? COMPETITIONS.find(c => c.id === competition)
+    : null;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
@@ -66,52 +75,91 @@ export default async function BlogPage({ searchParams }: PageProps) {
           Back to matches
         </Link>
 
-        <h1 className="text-4xl md:text-5xl font-bold gradient-text">Football Insights</h1>
-        <p className="text-lg text-muted-foreground max-w-2xl">
-          Weekly league roundups, AI model performance reports, and detailed match analysis to enhance your betting
-          strategy.
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold gradient-text">Football Insights</h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mt-2">
+              Weekly league roundups, AI model performance reports, and detailed match analysis.
+            </p>
+          </div>
+
+          {/* Competition Filter */}
+          {competition && (
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+            >
+              <Filter className="h-4 w-4" />
+              {selectedCompetition?.icon} {selectedCompetition?.name}
+              <span className="ml-1 text-xs opacity-60">(Clear)</span>
+            </Link>
+          )}
+        </div>
       </div>
+
+      {/* Competition Pills */}
+      {competition === undefined && (
+        <div className="flex flex-wrap gap-2">
+          {COMPETITIONS.slice(0, 8).map(comp => (
+            <Link
+              key={comp.id}
+              href={`/blog?competition=${comp.id}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 hover:bg-muted transition-colors text-sm"
+            >
+              <span>{comp.icon}</span>
+              <span>{comp.name}</span>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* Posts Grid */}
       {displayPosts.length > 0 ? (
         <>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {displayPosts.map((post: BlogPost) => (
-              <Link key={post.id} href={`/blog/${post.slug}`}>
-                <Card className="h-full hover:border-primary/50 transition-colors cursor-pointer">
-                  <CardContent className="p-6 h-full flex flex-col">
-                    {/* Content Type Badge */}
-                    <div className="mb-3">
-                      <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                        {post.contentType === 'league_roundup'
-                          ? 'League Roundup'
-                          : post.contentType === 'model_report'
-                            ? 'Model Report'
-                            : 'Analysis'}
-                      </span>
-                    </div>
+            {displayPosts.map((post: BlogPost) => {
+              const competitionFromSlug = post.slug?.split('-vs-')[0];
+              const postCompetition = COMPETITIONS.find(c => c.id === competitionFromSlug);
 
-                    {/* Title */}
-                    <h2 className="text-lg font-bold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                      {post.title}
-                    </h2>
+              return (
+                <Link key={post.id} href={`/blog/${post.slug}`}>
+                  <Card className="h-full hover:border-primary/50 transition-colors cursor-pointer">
+                    <CardContent className="p-6 h-full flex flex-col">
+                      {/* Content Type & Competition */}
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                          {post.contentType === 'league_roundup'
+                            ? 'League Roundup'
+                            : post.contentType === 'model_report'
+                              ? 'Model Report'
+                              : 'Analysis'}
+                        </span>
+                        {postCompetition && (
+                          <span className="text-sm">{postCompetition.icon}</span>
+                        )}
+                      </div>
 
-                    {/* Excerpt */}
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-3 flex-grow">
-                      {post.excerpt}
-                    </p>
+                      {/* Title */}
+                      <h2 className="text-lg font-bold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                        {post.title}
+                      </h2>
 
-                    {/* Meta */}
-                    {post.publishedAt && (
-                      <p className="text-xs text-muted-foreground/60">
-                        {format(parseISO(post.publishedAt), 'MMM d, yyyy')}
+                      {/* Excerpt */}
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-3 flex-grow">
+                        {post.excerpt}
                       </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+
+                      {/* Meta */}
+                      {post.publishedAt && (
+                        <p className="text-xs text-muted-foreground/60">
+                          {format(parseISO(post.publishedAt), 'MMM d, yyyy')}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
 
           {/* Pagination */}
@@ -119,7 +167,7 @@ export default async function BlogPage({ searchParams }: PageProps) {
             <div className="flex justify-between items-center pt-8">
               {page > 1 ? (
                 <Link
-                  href={`/blog?page=${page - 1}`}
+                  href={`/blog?page=${page - 1}${competition ? `&competition=${competition}` : ''}`}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm font-medium"
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -133,7 +181,7 @@ export default async function BlogPage({ searchParams }: PageProps) {
 
               {hasNextPage ? (
                 <Link
-                  href={`/blog?page=${page + 1}`}
+                  href={`/blog?page=${page + 1}${competition ? `&competition=${competition}` : ''}`}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm font-medium"
                 >
                   Next
@@ -148,7 +196,12 @@ export default async function BlogPage({ searchParams }: PageProps) {
       ) : (
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-12 text-center">
-            <p className="text-muted-foreground">No blog posts yet. Check back soon for insights and analysis!</p>
+            <p className="text-muted-foreground">No blog posts found for this competition.</p>
+            {competition && (
+              <Link href="/blog" className="inline-flex items-center gap-2 mt-4 text-primary hover:underline">
+                View all posts
+              </Link>
+            )}
           </CardContent>
         </Card>
       )}

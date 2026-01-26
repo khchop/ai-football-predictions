@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getCompetitionById, COMPETITIONS } from '@/lib/football/competitions';
 import { LeagueHubContent } from './league-hub-content';
@@ -29,12 +29,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `${competition.name} | AI Football Predictions`,
     description: `Browse ${competition.name} matches with AI predictions from 35+ models. Track fixtures, results, and analysis.`,
     alternates: {
-      canonical: `https://kroam.xyz/leagues/${slug}`,
+      canonical: `https://kroam.xyz/predictions/${slug}`,
     },
     openGraph: {
       title: competition.name,
       description: `${competition.name} matches with AI predictions`,
-      url: `https://kroam.xyz/leagues/${slug}`,
+      url: `https://kroam.xyz/predictions/${slug}`,
       type: 'website' as const,
       siteName: 'kroam.xyz',
     },
@@ -42,6 +42,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       card: 'summary',
       title: competition.name,
       description: `${competition.name} with AI predictions`,
+    },
+    robots: {
+      index: false,
+      follow: true,
     },
   };
 }
@@ -79,42 +83,5 @@ export default async function LeaguePage({ params }: PageProps) {
     notFound();
   }
 
-  const categoryLabels: Record<string, string> = {
-    'club-europe': 'European Competition',
-    'club-domestic': 'Domestic League',
-    'international': 'International Tournament',
-  };
-
-  return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <a href="/matches" className="hover:text-foreground transition-colors">
-            Matches
-          </a>
-          <span>/</span>
-          <span>{categoryLabels[competition.category] || competition.category}</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-xl gradient-primary flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">
-              {competition.name.charAt(0)}
-            </span>
-          </div>
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold">{competition.name}</h1>
-            <p className="text-muted-foreground">
-              Season {competition.season}-{competition.season + 1}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* League Content */}
-      <Suspense fallback={<LoadingSkeleton />}>
-        <LeagueHubContent competitionId={competition.id} />
-      </Suspense>
-    </div>
-  );
+  redirect(`/predictions/${slug}`);
 }
