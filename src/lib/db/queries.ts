@@ -214,9 +214,10 @@ export async function getMatchBySlug(competitionSlug: string, matchSlug: string)
 }
 
 /**
- * Get matches for a specific competition by its slug
+ * Get matches for a specific competition by its ID
+ * NOTE: Uses competitions.id (e.g., 'epl', 'seriea') not slug
  */
-export async function getMatchesByCompetitionSlug(competitionSlug: string, limit: number = 50) {
+export async function getMatchesByCompetitionId(competitionId: string, limit: number = 50) {
   const db = getDb();
   return db
     .select({
@@ -225,13 +226,13 @@ export async function getMatchesByCompetitionSlug(competitionSlug: string, limit
     })
     .from(matches)
     .innerJoin(competitions, eq(matches.competitionId, competitions.id))
-    .where(eq(competitions.slug, competitionSlug))
+    .where(eq(competitions.id, competitionId))
     .orderBy(desc(matches.kickoffTime))
     .limit(limit);
 }
 
 /**
- * Get competition by slug
+ * Get competition by slug (for SEO URLs like /leagues/champions-league)
  */
 export async function getCompetitionBySlug(slug: string): Promise<Competition | undefined> {
   const db = getDb();
@@ -241,6 +242,184 @@ export async function getCompetitionBySlug(slug: string): Promise<Competition | 
     .where(eq(competitions.slug, slug))
     .limit(1);
   return result[0];
+}
+
+/**
+ * Get competition by ID (e.g., 'epl', 'seriea')
+ */
+export async function getCompetitionById(id: string): Promise<Competition | undefined> {
+  const db = getDb();
+  const result = await db
+    .select()
+    .from(competitions)
+    .where(eq(competitions.id, id))
+    .limit(1);
+  return result[0];
+}
+
+/**
+ * Get top performing models for a specific competition
+ * Returns models ranked by average points in this competition
+ */
+export async function getTopModelsByCompetition(competitionId: string, limit: number = 5) {
+  const db = getDb();
+  
+  return db
+    .select({
+      model: models,
+      totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
+      totalPredictions: sql<number>`COUNT(${predictions.id})`,
+      exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
+      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
+      avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
+      accuracy: sql<number>`COALESCE(ROUND(100.0 * SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END) / NULLIF(COUNT(${predictions.id}), 0)::numeric, 1), 0)`,
+    })
+    .from(models)
+    .leftJoin(predictions, and(
+      eq(predictions.modelId, models.id),
+      eq(predictions.status, 'scored')
+    ))
+    .leftJoin(matches, eq(predictions.matchId, matches.id))
+    .where(and(
+      eq(models.active, true),
+      eq(matches.competitionId, competitionId)
+    ))
+    .groupBy(models.id)
+    .orderBy(desc(sql`COALESCE(AVG(${predictions.totalPoints})::numeric, 0)`))
+    .limit(limit);
+}
+
+/**
+ * Get competition statistics (match results, goals, etc.)
+ */
+export async function getCompetitionStats(competitionId: string) {
+  const db = getDb();
+  
+  const stats = await db
+    .select({
+      totalMatches: sql<number>`COUNT(*)`,
+      finishedMatches: sql<number>`SUM(CASE WHEN ${matches.status} = 'finished' THEN 1 ELSE 0 END)`,
+      scheduledMatches: sql<number>`SUM(CASE WHEN ${matches.status} = 'scheduled' THEN 1 ELSE 0 END)`,
+      liveMatches: sql<number>`SUM(CASE WHEN ${matches.status} = 'live' THEN 1 ELSE 0 END)`,
+      homeWins: sql<number>`SUM(CASE WHEN ${matches.status} = 'finished' AND ${matches.homeScore} > ${matches.awayScore} THEN 1 ELSE 0 END)`,
+      awayWins: sql<number>`SUM(CASE WHEN ${matches.status} = 'finished' AND ${matches.homeScore} < ${matches.awayScore} THEN 1 ELSE 0 END)`,
+      draws: sql<number>`SUM(CASE WHEN ${matches.status} = 'finished' AND ${matches.homeScore} = ${matches.awayScore} THEN 1 ELSE 0 END)`,
+      totalGoals: sql<number>`SUM(CASE WHEN ${matches.status} = 'finished' THEN COALESCE(${matches.homeScore}, 0) + COALESCE(${matches.awayScore}, 0) ELSE 0 END)`,
+      avgGoalsPerMatch: sql<number>`COALESCE(ROUND(AVG(CASE WHEN ${matches.status} = 'finished' THEN COALESCE(${matches.homeScore}, 0) + COALESCE(${matches.awayScore}, 0) END)::numeric, 2), 0)`,
+    })
+    .from(matches)
+    .where(eq(matches.competitionId, competitionId));
+  
+  return stats[0] || {
+    totalMatches: 0,
+    finishedMatches: 0,
+    scheduledMatches: 0,
+    liveMatches: 0,
+    homeWins: 0,
+    awayWins: 0,
+    draws: 0,
+    totalGoals: 0,
+    avgGoalsPerMatch: 0,
+  };
+}
+
+/**
+ * Get prediction summary for a competition
+ * Shows model consensus, accuracy metrics, and prediction patterns
+ */
+export async function getCompetitionPredictionSummary(competitionId: string) {
+  const db = getDb();
+  
+  // Get result type distribution from predictions
+  const predictionBreakdown = await db
+    .select({
+      resultType: predictions.predictedResult,
+      count: sql<number>`COUNT(*)`,
+      avgPoints: sql<number>`ROUND(AVG(${predictions.totalPoints})::numeric, 2)`,
+    })
+    .from(predictions)
+    .innerJoin(matches, eq(predictions.matchId, matches.id))
+    .where(and(
+      eq(predictions.status, 'scored'),
+      eq(matches.competitionId, competitionId)
+    ))
+    .groupBy(predictions.predictedResult);
+  
+  // Calculate overall accuracy for this competition
+  const accuracyStats = await db
+    .select({
+      totalPredictions: sql<number>`COUNT(${predictions.id})`,
+      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
+      exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
+      avgPoints: sql<number>`ROUND(AVG(${predictions.totalPoints})::numeric, 2)`,
+      maxPoints: sql<number>`MAX(${predictions.totalPoints})`,
+    })
+    .from(predictions)
+    .innerJoin(matches, eq(predictions.matchId, matches.id))
+    .where(and(
+      eq(predictions.status, 'scored'),
+      eq(matches.competitionId, competitionId)
+    ));
+  
+  const accuracy = accuracyStats[0];
+  const tendencyAccuracy = accuracy?.totalPredictions 
+    ? (Number(accuracy.correctTendencies) / Number(accuracy.totalPredictions)) * 100 
+    : 0;
+  const exactAccuracy = accuracy?.totalPredictions 
+    ? (Number(accuracy.exactScores) / Number(accuracy.totalPredictions)) * 100 
+    : 0;
+  
+  // Find most predicted result
+  let mostPredictedResult: 'H' | 'D' | 'A' = 'H';
+  let mostPredictedCount = 0;
+  for (const item of predictionBreakdown) {
+    if (item.count && Number(item.count) > mostPredictedCount) {
+      mostPredictedCount = Number(item.count);
+      mostPredictedResult = (item.resultType as 'H' | 'D' | 'A') || 'H';
+    }
+  }
+  
+  const totalPredictions = predictionBreakdown.reduce((sum, item) => sum + (Number(item.count) || 0), 0);
+  const confidence = totalPredictions > 0 ? (mostPredictedCount / totalPredictions) * 100 : 0;
+  
+  return {
+    totalPredictions: Number(accuracy?.totalPredictions) || 0,
+    avgPointsPerPrediction: Number(accuracy?.avgPoints) || 0,
+    tendencyAccuracy: Math.round(tendencyAccuracy * 10) / 10,
+    exactScoreAccuracy: Math.round(exactAccuracy * 10) / 10,
+    mostPredictedResult,
+    confidence: Math.round(confidence * 10) / 10,
+    predictionBreakdown: predictionBreakdown.map(p => ({
+      resultType: p.resultType,
+      count: Number(p.count) || 0,
+      avgPoints: Number(p.avgPoints) || 0,
+    })),
+  };
+}
+
+/**
+ * Get next scheduled match for a competition
+ */
+export async function getNextMatchForCompetition(competitionId: string) {
+  const db = getDb();
+  const now = new Date().toISOString();
+  
+  const result = await db
+    .select({
+      match: matches,
+      competition: competitions,
+    })
+    .from(matches)
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(and(
+      eq(matches.competitionId, competitionId),
+      eq(matches.status, 'scheduled'),
+      gte(matches.kickoffTime, now)
+    ))
+    .orderBy(matches.kickoffTime)
+    .limit(1);
+  
+  return result[0] || null;
 }
 
 /**

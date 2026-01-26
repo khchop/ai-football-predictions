@@ -2,13 +2,25 @@ import { Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MatchCard } from '@/components/match-card';
-import { getMatchesByCompetitionSlug, getPublishedBlogPosts, getStandingsByCompetitionId } from '@/lib/db/queries';
+import { 
+  getMatchesByCompetitionId, 
+  getPublishedBlogPosts, 
+  getStandingsByCompetitionId,
+  getTopModelsByCompetition,
+  getCompetitionStats,
+  getCompetitionPredictionSummary,
+  getNextMatchForCompetition
+} from '@/lib/db/queries';
 import { Calendar, Clock, CheckCircle, List, Trophy } from 'lucide-react';
 import { CompetitionBadge } from '@/components/competition-badge';
 import type { BlogPost } from '@/lib/db/schema';
 import type { Match, Competition } from '@/lib/db/schema';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CompetitionHeader } from '@/components/competition/competition-header';
+import { CompetitionTopModels } from '@/components/competition/competition-top-models';
+import { CompetitionStats } from '@/components/competition/competition-stats';
+import { CompetitionPredictionSummary } from '@/components/competition/competition-prediction-summary';
 
 interface LeagueHubContentProps {
   competitionId: string;
@@ -40,7 +52,7 @@ function MatchGrid({ matchList }: { matchList: MatchWithCompetition[] }) {
 }
 
 async function LeagueMatchesList({ competitionId }: { competitionId: string }) {
-  const matches = await getMatchesByCompetitionSlug(competitionId, 50);
+  const matches = await getMatchesByCompetitionId(competitionId, 50);
 
   if (matches.length === 0) {
     return (
@@ -209,41 +221,106 @@ function StandingsLoadingSkeleton() {
   );
 }
 
+function InsightsLoadingSkeleton() {
+  return (
+    <Card className="mb-6">
+      <CardContent className="p-6">
+        <div className="space-y-4">
+          <Skeleton className="h-6 w-48" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full" />
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+async function LeagueInsights({ competitionId }: { competitionId: string }) {
+  // Fetch all data in parallel
+  const [topModels, stats, predictionSummary, nextMatch, matches] = await Promise.all([
+    getTopModelsByCompetition(competitionId, 5),
+    getCompetitionStats(competitionId),
+    getCompetitionPredictionSummary(competitionId),
+    getNextMatchForCompetition(competitionId),
+    getMatchesByCompetitionId(competitionId, 1),
+  ]);
+
+  const matchCount = matches.length;
+  const nextMatchTime = nextMatch?.match?.kickoffTime;
+
+  return (
+    <div className="space-y-6">
+      <CompetitionHeader 
+        competitionId={competitionId}
+        matchCount={matchCount}
+        nextMatchTime={nextMatchTime}
+      />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left column - Top Models */}
+        <div className="lg:col-span-1">
+          <CompetitionTopModels 
+            models={topModels} 
+            competitionId={competitionId}
+          />
+        </div>
+        
+        {/* Right column - Stats and Predictions */}
+        <div className="lg:col-span-2 space-y-6">
+          <CompetitionStats stats={stats} />
+          <CompetitionPredictionSummary summary={predictionSummary} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export async function LeagueHubContent({ competitionId }: LeagueHubContentProps) {
   return (
-    <Tabs defaultValue="matches" className="space-y-6">
-      <TabsList className="bg-card/50 border border-border/50">
-        <TabsTrigger value="matches" className="gap-2">
-          <Calendar className="h-4 w-4" />
-          Matches
-        </TabsTrigger>
-        <TabsTrigger value="standings" className="gap-2">
-          <Trophy className="h-4 w-4" />
-          Standings
-        </TabsTrigger>
-        <TabsTrigger value="news" className="gap-2">
-          <List className="h-4 w-4" />
-          News
-        </TabsTrigger>
-      </TabsList>
+    <div className="space-y-6">
+      {/* Insights Section (above tabs) */}
+      <Suspense fallback={<InsightsLoadingSkeleton />}>
+        <LeagueInsights competitionId={competitionId} />
+      </Suspense>
 
-      <TabsContent value="matches">
-        <Suspense fallback={<MatchesLoadingSkeleton />}>
-          <LeagueMatchesList competitionId={competitionId} />
-        </Suspense>
-      </TabsContent>
+      {/* Tabs for Matches, Standings, News */}
+      <Tabs defaultValue="matches" className="space-y-6">
+        <TabsList className="bg-card/50 border border-border/50">
+          <TabsTrigger value="matches" className="gap-2">
+            <Calendar className="h-4 w-4" />
+            Matches
+          </TabsTrigger>
+          <TabsTrigger value="standings" className="gap-2">
+            <Trophy className="h-4 w-4" />
+            Standings
+          </TabsTrigger>
+          <TabsTrigger value="news" className="gap-2">
+            <List className="h-4 w-4" />
+            News
+          </TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="standings">
-        <Suspense fallback={<StandingsLoadingSkeleton />}>
-          <LeagueStandingsTable competitionId={competitionId} />
-        </Suspense>
-      </TabsContent>
+        <TabsContent value="matches">
+          <Suspense fallback={<MatchesLoadingSkeleton />}>
+            <LeagueMatchesList competitionId={competitionId} />
+          </Suspense>
+        </TabsContent>
 
-      <TabsContent value="news">
-        <Suspense fallback={<MatchesLoadingSkeleton />}>
-          <LeagueBlogPosts competitionId={competitionId} />
-        </Suspense>
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="standings">
+          <Suspense fallback={<StandingsLoadingSkeleton />}>
+            <LeagueStandingsTable competitionId={competitionId} />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="news">
+          <Suspense fallback={<MatchesLoadingSkeleton />}>
+            <LeagueBlogPosts competitionId={competitionId} />
+          </Suspense>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
