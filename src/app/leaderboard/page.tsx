@@ -5,12 +5,10 @@ import { LeaderboardTable } from '@/components/leaderboard-table';
 import { LeaderboardTableSkeleton } from '@/components/leaderboard/skeleton';
 import { LeaderboardFilters } from '@/components/leaderboard-filters';
 import { FaqSchema } from '@/components/FaqSchema';
-import { getLeaderboard, type TimeRange } from '@/lib/db/queries';
+import type { LeaderboardEntry } from '@/lib/table/columns';
 import { Trophy } from 'lucide-react';
 import type { Metadata } from 'next';
 import type { FAQItem } from '@/lib/seo/schemas';
-
-export const dynamic = 'force-dynamic';
 
 // FAQ data for model ranking questions
 const leaderboardFaqs: FAQItem[] = [
@@ -56,23 +54,74 @@ export const metadata: Metadata = {
   },
 };
 
+// Fetch leaderboard data from the API
+async function fetchLeaderboard(filters: Record<string, string>): Promise<{
+  success: boolean;
+  data?: Array<{
+    rank: number;
+    modelId: string;
+    displayName: string;
+    provider: string;
+    totalPredictions: number;
+    scoredPredictions: number;
+    totalPoints: number;
+    avgPoints: number;
+    accuracy: number;
+    exactScores: number;
+    correctTendencies: number;
+  }>;
+  error?: string;
+}> {
+  const cronSecret = process.env.CRON_SECRET || '';
+
+  const searchParams = new URLSearchParams(filters);
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/stats/leaderboard?${searchParams}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${cronSecret}`,
+      },
+      next: { revalidate: 60 },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch leaderboard: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 async function LeaderboardContent({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
-  // Parse filter parameters
-  const competitionId = typeof searchParams.competition === 'string' && searchParams.competition !== 'all' 
-    ? searchParams.competition 
+  // Parse filter parameters - note: timeRange is not passed to API as it's not supported
+  const competition = typeof searchParams.competition === 'string' && searchParams.competition !== 'all'
+    ? searchParams.competition
     : undefined;
-  const timeRange = (typeof searchParams.timeRange === 'string' ? searchParams.timeRange : 'all') as TimeRange;
-  const minPredictions = typeof searchParams.minPredictions === 'string' 
-    ? parseInt(searchParams.minPredictions, 10) 
+  const season = typeof searchParams.season === 'string' && searchParams.season !== 'all'
+    ? searchParams.season
+    : undefined;
+  const model = typeof searchParams.model === 'string' && searchParams.model !== 'all'
+    ? searchParams.model
+    : undefined;
+  const minPredictions = typeof searchParams.minPredictions === 'string'
+    ? parseInt(searchParams.minPredictions, 10)
     : 0;
-  
-  const leaderboard = await getLeaderboard({ competitionId, timeRange });
-  
-  if (leaderboard.length === 0) {
+
+  // Build filters for API
+  const filters: Record<string, string> = {};
+  if (competition) filters.competition = competition;
+  if (season) filters.season = season;
+  if (model) filters.model = model;
+
+  // Fetch from API
+  const result = await fetchLeaderboard(filters);
+  const leaderboard = result.data || [];
+
+  if (!result.success || leaderboard.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border/50 bg-card/30 p-12 text-center">
         <Trophy className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
@@ -83,21 +132,19 @@ async function LeaderboardContent({ searchParams }: { searchParams: { [key: stri
       </div>
     );
   }
-  
-  // Map the data to match LeaderboardTable's expected format
-  const formattedLeaderboard = leaderboard
-    .map(entry => ({
-      modelId: entry.model.id,
-      displayName: entry.model.displayName,
-      provider: entry.model.provider,
-      totalPredictions: Number(entry.totalPredictions) || 0,
-      totalPoints: Number(entry.totalPoints) || 0,
-      averagePoints: Number(entry.avgPoints) || 0, // Convert to number (DB may return string)
-      exactScores: Number(entry.exactScores) || 0,
-      correctTendencies: Number(entry.correctTendencies) || 0,
-    }))
-    .filter(entry => entry.totalPredictions >= minPredictions);
-  
+
+  // Format data for LeaderboardTable
+  const formattedLeaderboard: LeaderboardEntry[] = leaderboard.map((entry) => ({
+    modelId: entry.modelId,
+    displayName: entry.displayName,
+    provider: entry.provider,
+    totalPredictions: entry.totalPredictions,
+    totalPoints: entry.totalPoints,
+    averagePoints: entry.avgPoints,
+    exactScores: entry.exactScores,
+    correctTendencies: entry.correctTendencies,
+  })).filter((entry) => entry.totalPredictions >= minPredictions);
+
   return (
     <Card className="bg-card/50 border-border/50">
       <CardContent className="p-0">
