@@ -2046,3 +2046,85 @@ export async function getBlogPostBySlug(slug: string) {
 
   return result[0] || null;
 }
+
+// Type for prediction with accuracy data
+export interface PredictionWithAccuracy {
+  modelName: string;
+  predictedHome: number;
+  predictedAway: number;
+  predictedResult: 'H' | 'D' | 'A';
+  actualHome: number;
+  actualAway: number;
+  actualResult: 'H' | 'D' | 'A';
+  correctTendency: boolean;
+  exactScore: boolean;
+  totalPoints: number;
+}
+
+/**
+ * Get predictions for a match with accuracy data
+ * Used for post-match roundup generation
+ */
+export async function getMatchPredictionsWithAccuracy(matchId: string): Promise<PredictionWithAccuracy[]> {
+  const db = getDb();
+  
+  // First get match data for actual results
+  const matchResult = await db
+    .select({
+      homeScore: matches.homeScore,
+      awayScore: matches.awayScore,
+    })
+    .from(matches)
+    .where(eq(matches.id, matchId))
+    .limit(1);
+
+  if (!matchResult[0] || matchResult[0].homeScore === null || matchResult[0].awayScore === null) {
+    // Match not finished yet - return empty
+    return [];
+  }
+
+  const { homeScore, awayScore } = matchResult[0];
+  
+  // Determine actual result
+  const actualResult: 'H' | 'D' | 'A' = 
+    homeScore > awayScore ? 'H' : 
+    homeScore < awayScore ? 'A' : 'D';
+
+  // Get predictions with model details
+  const predictionResults = await db
+    .select({
+      modelName: models.displayName,
+      predictedHome: predictions.predictedHome,
+      predictedAway: predictions.predictedAway,
+      predictedResult: predictions.predictedResult,
+      totalPoints: predictions.totalPoints,
+    })
+    .from(predictions)
+    .innerJoin(models, eq(predictions.modelId, models.id))
+    .where(eq(predictions.matchId, matchId))
+    .orderBy(desc(predictions.totalPoints));
+
+  // Calculate accuracy for each prediction
+  return predictionResults.map((p) => {
+    // Determine predicted result
+    const predictedResult: 'H' | 'D' | 'A' = 
+      p.predictedHome > p.predictedAway ? 'H' : 
+      p.predictedHome < p.predictedAway ? 'A' : 'D';
+
+    return {
+      modelName: p.modelName,
+      predictedHome: p.predictedHome,
+      predictedAway: p.predictedAway,
+      predictedResult,
+      actualHome: homeScore,
+      actualAway: awayScore,
+      actualResult,
+      correctTendency: p.predictedHome === homeScore && p.predictedAway === awayScore ? true : 
+                       p.predictedHome !== p.predictedAway && homeScore !== awayScore ? 
+                         p.predictedResult === actualResult : 
+                         p.predictedResult === actualResult,
+      exactScore: p.predictedHome === homeScore && p.predictedAway === awayScore,
+      totalPoints: p.totalPoints || 0,
+    };
+  });
+}
