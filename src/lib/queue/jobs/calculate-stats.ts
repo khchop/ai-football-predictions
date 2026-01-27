@@ -109,6 +109,7 @@ export async function handleCalculatePoints(matchId: string): Promise<{
     const { getMatchById, getPredictionsForMatch, updatePredictionScores, updateMatchQuotas, updateModelStreak } = await import('@/lib/db/queries');
     const { calculateQuotas, calculateQuotaScores } = await import('@/lib/utils/scoring');
     const { invalidateMatchCaches } = await import('@/lib/cache/redis');
+    const { invalidateStatsCache } = await import('@/lib/api/stats/cache');
     
     const matchData = await getMatchById(matchId);
     if (!matchData) {
@@ -179,9 +180,17 @@ export async function handleCalculatePoints(matchId: string): Promise<{
     }
     
     await invalidateMatchCaches(matchId);
-    
+
+    // Invalidate stats caches for affected match
+    await invalidateStatsCache({
+      id: match.id,
+      competitionId: match.competitionId,
+      homeTeam: match.homeTeam,
+      awayTeam: match.awayTeam,
+    });
+
     log.info({ scoredCount, pointsCalculated }, 'Points calculation complete');
-    
+
     return { success: true, pointsCalculated };
   } catch (error: any) {
     log.error({ error: error.message }, 'Points calculation failed');
