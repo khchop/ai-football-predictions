@@ -1,8 +1,8 @@
 // SEO-related constants
 
-export const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? (() => {
-  throw new Error('NEXT_PUBLIC_BASE_URL environment variable is required');
-})();
+export const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+  ?? process.env.NEXT_PUBLIC_APP_URL
+  ?? '';
 
 export const SITE_NAME = 'BettingSoccer';
 
