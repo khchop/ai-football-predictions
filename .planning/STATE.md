@@ -17,10 +17,11 @@
    - Phase 4: Content Pipeline - IN PROGRESS
      - ✓ 04-01: BullMQ Content Queue for Roundups (tasks 1-2 pre-existing, task 3 implemented)
      - ✓ 04-02: LLM-Powered Post-Match Roundups (4 tasks executed)
+     - ✓ 04-03: Content Storage Schema and Similarity Detection (4 tasks executed)
    - [ ] Phase 5: TBD
-- Status: Phase 4 plan 2 complete, 2/2 plans executed in Phase 4
+- Status: Phase 4 plan 3 complete, 3/3 plans executed in Phase 4
 
-Progress: ████████████░░░░░░░░░░░░░░░░ 82% (4.5/5 phases, 10/11 plans complete)
+Progress: ██████████████░░░░░░░░░░░░░░░░ 91% (4.5/5 phases, 11/12 plans complete)
 
 ## Session History
 
@@ -71,6 +72,13 @@ Progress: ████████████░░░░░░░░░░░�
 - Added buildPostMatchRoundupPrompt template to prompts.ts
 - Implemented generatePostMatchRoundup function in generator.ts
 - Wired roundup handler in content worker to actual generator
+- All 4 tasks completed with atomic commits
+
+### Session 8: Phase 4 Plan 04-03 Content Deduplication (2026-01-27)
+- Added matchRoundups table to database schema (18 columns)
+- Implemented Jaccard similarity deduplication service
+- Integrated deduplication check into roundup generation
+- Created database migration file for matchRoundups
 - All 4 tasks completed with atomic commits
 
 ## User Preferences (from questioning)
@@ -160,10 +168,10 @@ cd /Users/pieterbos/Documents/bettingsoccer
 
 ## Session Continuity
 
-**Last session:** 2026-01-27T13:24:22Z
-**Stopped at:** Completed plan 04-02 (LLM-Powered Post-Match Roundups)
+**Last session:** 2026-01-27T14:29:00Z
+**Stopped at:** Completed plan 04-03 (Content Storage Schema and Similarity Detection)
 **Resume file:** None
-**Status:** Phase 4 complete, 2/2 plans executed
+**Status:** Phase 4 complete, 3/3 plans executed
 
 ---
 
