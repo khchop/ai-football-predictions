@@ -1,11 +1,10 @@
 import { getLeaderboard } from './queries/stats';
 import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalances, seasons, predictions, blogPosts, leagueStandings, matchRoundups } from './index';
 import { eq, and, desc, gte, lte, sql, inArray, ne, or, lt, not, isNull, isNotNull } from 'drizzle-orm';
-import type { NewMatch, NewMatchAnalysis, NewBet, NewModelBalance, NewPrediction } from './schema';
+import type { NewCompetition, NewModel, Match, MatchAnalysis, Model, Competition, Bet, ModelBalance, Prediction, BlogPost, NewMatch, NewMatchAnalysis, NewBet, NewModelBalance, NewPrediction } from './schema';
 import { v4 as uuidv4 } from 'uuid';
 import { loggers } from '@/lib/logger/modules';
 
-import type { NewCompetition, NewModel, Match, MatchAnalysis, Model, Competition, Bet, ModelBalance, Prediction, BlogPost } from './schema';
 import { withCache, cacheKeys, CACHE_TTL, cacheDelete } from '@/lib/cache/redis';
 
 // Legacy betting system constant (unused, kept for model_balances table compatibility)
