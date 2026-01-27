@@ -1,10 +1,18 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  flexRender,
+  SortingState,
+  ColumnDef,
+} from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
-import { Trophy, Medal, Award, ArrowUp, ArrowDown, ArrowUpDown, Flame, Snowflake, Minus } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, Trophy, Medal, Award, Flame, Snowflake, Minus } from 'lucide-react';
 
 export interface LeaderboardEntry {
   modelId: string;
@@ -37,19 +45,27 @@ interface LeaderboardTableProps {
   showBreakdown?: boolean;
 }
 
-type SortColumn = 'displayName' | 'totalPredictions' | 'correctTendencies' | 'exactScores' | 'totalPoints' | 'averagePoints' | 'accuracy';
-type SortOrder = 'asc' | 'desc';
-
 export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = false }: LeaderboardTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // Get sort state from URL or use defaults
-  const sortParam = searchParams.get('sort') as SortColumn | null;
-  const orderParam = searchParams.get('order') as SortOrder | null;
-  
-  const [sortColumn, setSortColumn] = useState<SortColumn>(sortParam || 'averagePoints');
-  const [sortOrder, setSortOrder] = useState<SortOrder>(orderParam || 'desc');
+  const sortParam = searchParams.get('sort') as string | null;
+  const orderParam = searchParams.get('order') as string | null;
+
+  // Initial sorting state from URL
+  const initialSorting: SortingState = [];
+  if (sortParam) {
+    initialSorting.push({
+      id: sortParam,
+      desc: orderParam !== 'asc',
+    });
+  } else {
+    // Default sort by averagePoints descending
+    initialSorting.push({ id: 'averagePoints', desc: true });
+  }
+
+  const [sorting, setSorting] = useState<SortingState>(initialSorting);
 
   // Calculate accuracy percentage (correct tendencies / total predictions)
   const getAccuracy = (entry: LeaderboardEntry) => {
@@ -58,75 +74,27 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
     return Math.round((correct / entry.totalPredictions) * 100);
   };
 
-  // Sort entries
-  const sortedEntries = useMemo(() => {
-    return [...entries].sort((a, b) => {
-      let aVal: number | string;
-      let bVal: number | string;
-      
-      switch (sortColumn) {
-        case 'displayName':
-          aVal = a.displayName.toLowerCase();
-          bVal = b.displayName.toLowerCase();
-          break;
-        case 'totalPredictions':
-          aVal = a.totalPredictions;
-          bVal = b.totalPredictions;
-          break;
-        case 'correctTendencies':
-          aVal = a.correctTendencies ?? a.correctResults ?? 0;
-          bVal = b.correctTendencies ?? b.correctResults ?? 0;
-          break;
-        case 'exactScores':
-          aVal = a.exactScores ?? 0;
-          bVal = b.exactScores ?? 0;
-          break;
-        case 'totalPoints':
-          aVal = a.totalPoints;
-          bVal = b.totalPoints;
-          break;
-        case 'averagePoints':
-          aVal = a.averagePoints;
-          bVal = b.averagePoints;
-          break;
-        case 'accuracy':
-          aVal = getAccuracy(a);
-          bVal = getAccuracy(b);
-          break;
-        default:
-          aVal = a.averagePoints;
-          bVal = b.averagePoints;
-      }
-      
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      }
-      
-      return sortOrder === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
-    });
-  }, [entries, sortColumn, sortOrder]);
-
   // Update URL when sort changes
-  const handleSort = (column: SortColumn) => {
-    const newOrder = sortColumn === column && sortOrder === 'desc' ? 'asc' : 'desc';
-    setSortColumn(column);
-    setSortOrder(newOrder);
-    
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('sort', column);
-    params.set('order', newOrder);
-    router.push(`/leaderboard?${params.toString()}`, { scroll: false });
-  };
+  const onSortingChange = (updater: SortingState | ((old: SortingState) => SortingState)) => {
+    const newSorting = typeof updater === 'function' ? updater(sorting) : updater;
 
-  const getSortIcon = (column: SortColumn) => {
-    if (sortColumn !== column) {
-      return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
+    if (newSorting.length > 0) {
+      const sort = newSorting[0];
+      const column = sort.id;
+      const order = sort.desc ? 'desc' : 'asc';
+
+      setSorting(newSorting);
+
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('sort', column);
+      params.set('order', order);
+      router.push(`/leaderboard?${params.toString()}`, { scroll: false });
+    } else {
+      setSorting(newSorting);
     }
-    return sortOrder === 'asc' 
-      ? <ArrowUp className="h-3 w-3 ml-1 text-primary" />
-      : <ArrowDown className="h-3 w-3 ml-1 text-primary" />;
   };
 
+  // Helper function to get rank icon
   const getRankIcon = (index: number) => {
     switch (index) {
       case 0:
@@ -140,10 +108,10 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
     }
   };
 
-  // Get streak indicator (hot/cold/neutral)
+  // Helper function to get streak indicator
   const getStreakIndicator = (entry: LeaderboardEntry) => {
     const streak = entry.currentStreak || 0;
-    
+
     if (streak >= 3) {
       // Hot streak: 3+ correct in a row
       return (
@@ -182,6 +150,166 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
     }
   };
 
+  // Column definitions for TanStack Table
+  const columns = useMemo<ColumnDef<LeaderboardEntry>[]>(() => [
+    // 1. Rank (display column, not sortable)
+    {
+      id: 'rank',
+      header: 'Rank',
+      cell: ({ row }) => {
+        const index = row.index;
+        return (
+          <div className="flex items-center justify-center w-8 h-8">
+            {getRankIcon(index)}
+          </div>
+        );
+      },
+      size: 60,
+      enableSorting: false,
+    },
+    // 2. Model (accessor: displayName, sortable)
+    {
+      accessorKey: 'displayName',
+      header: 'Model',
+      cell: ({ row }) => (
+        <Link href={`/models/${row.original.modelId}`} className="block group">
+          <p className="font-medium group-hover:text-primary transition-colors">{row.original.displayName}</p>
+          <p className="text-xs text-muted-foreground capitalize">{row.original.provider}</p>
+        </Link>
+      ),
+      size: 180,
+    },
+    // 3. Matches (accessor: totalPredictions, sortable)
+    {
+      accessorKey: 'totalPredictions',
+      header: 'Matches',
+      cell: ({ getValue }) => (
+        <span className="font-mono text-sm">{getValue() as number}</span>
+      ),
+      meta: { align: 'center' as const },
+      size: 80,
+    },
+    // 4. Correct (accessor: correctTendencies, sortable)
+    {
+      id: 'correctTendencies',
+      accessorFn: (row) => row.correctTendencies ?? row.correctResults ?? 0,
+      header: 'Correct',
+      cell: ({ getValue }) => {
+        const value = getValue() as number;
+        return (
+          <span className={cn(
+            "font-semibold",
+            value > 0 ? "text-yellow-400" : "text-muted-foreground"
+          )}>
+            {value}
+          </span>
+        );
+      },
+      meta: { align: 'center' as const },
+      size: 80,
+    },
+    // 5. Exact (accessor: exactScores, sortable)
+    {
+      accessorKey: 'exactScores',
+      header: 'Exact',
+      cell: ({ getValue }) => {
+        const value = (getValue() as number | null | undefined) ?? 0;
+        return (
+          <span className={cn(
+            "font-semibold",
+            value > 0 ? "text-green-400" : "text-muted-foreground"
+          )}>
+            {value}
+          </span>
+        );
+      },
+      meta: { align: 'center' as const },
+      size: 80,
+    },
+    // 6. Points (accessor: totalPoints, sortable)
+    {
+      accessorKey: 'totalPoints',
+      header: 'Points',
+      cell: ({ getValue }) => (
+        <span className="font-bold text-lg">{getValue() as number}</span>
+      ),
+      meta: { align: 'center' as const },
+      size: 90,
+    },
+    // 7. Avg/Match (accessor: averagePoints, sortable, default sort desc)
+    {
+      accessorKey: 'averagePoints',
+      header: 'Avg/Match',
+      cell: ({ getValue }) => {
+        const value = getValue() as number;
+        return (
+          <span className={cn(
+            "px-2 py-1 rounded-md font-mono text-sm font-medium",
+            value >= 4 && "bg-green-500/20 text-green-400",
+            value >= 2 && value < 4 && "bg-yellow-500/20 text-yellow-400",
+            value < 2 && "bg-muted text-muted-foreground"
+          )}>
+            {Number(value).toFixed(2)}
+          </span>
+        );
+      },
+      meta: { align: 'center' as const },
+      size: 100,
+    },
+    // 8. Accuracy (computed, sortable)
+    {
+      id: 'accuracy',
+      accessorFn: (row) => getAccuracy(row),
+      header: 'Accuracy',
+      cell: ({ getValue }) => {
+        const accuracy = getValue() as number;
+        return (
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden min-w-[50px]">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  accuracy >= 50 ? "bg-gradient-to-r from-green-500 to-green-400" :
+                  accuracy >= 30 ? "bg-gradient-to-r from-yellow-500 to-yellow-400" :
+                  "bg-gradient-to-r from-red-500 to-red-400"
+                )}
+                style={{ width: `${accuracy}%` }}
+              />
+            </div>
+            <span className="text-xs text-muted-foreground font-mono w-10 text-right">
+              {accuracy}%
+            </span>
+          </div>
+        );
+      },
+      meta: { align: 'center' as const },
+      size: 120,
+    },
+    // 9. Streak (display column)
+    {
+      id: 'streak',
+      header: 'Streak',
+      cell: ({ row }) => getStreakIndicator(row.original),
+      enableSorting: false,
+      size: 80,
+    },
+  ], []);
+
+  // Initialize TanStack Table
+  const table = useReactTable({
+    data: entries,
+    columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: onSortingChange,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    initialState: {
+      sorting: initialSorting,
+    },
+  });
+
   if (entries.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -195,9 +323,9 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
     const accuracy = getAccuracy(entry);
     const correctCount = entry.correctTendencies ?? entry.correctResults ?? 0;
     const exactCount = entry.exactScores ?? 0;
-    
+
     return (
-      <Link 
+      <Link
         href={`/models/${entry.modelId}`}
         className={cn(
           "block rounded-lg border border-border/50 p-4 space-y-3 transition-colors",
@@ -220,7 +348,7 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
             {getStreakIndicator(entry)}
           </div>
         </div>
-        
+
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-3 text-center">
           <div>
@@ -243,7 +371,7 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
             <p className="text-xs text-muted-foreground">Avg/Match</p>
           </div>
         </div>
-        
+
         {/* Secondary Stats */}
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-4">
@@ -257,11 +385,11 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
             </span>
           </div>
         </div>
-        
+
         {/* Accuracy Bar */}
         <div className="flex items-center gap-2">
           <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-            <div 
+            <div
               className={cn(
                 "h-full rounded-full transition-all",
                 accuracy >= 50 ? "bg-gradient-to-r from-green-500 to-green-400" :
@@ -279,184 +407,93 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
     );
   };
 
+  // Get sort icon for a column
+  const getSortIcon = (columnId: string) => {
+    const sortState = sorting[0];
+    if (sortState?.id !== columnId) {
+      return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
+    }
+    return sortState.desc
+      ? <ArrowDown className="h-3 w-3 ml-1 text-primary" />
+      : <ArrowUp className="h-3 w-3 ml-1 text-primary" />;
+  };
+
   return (
     <>
       {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border/50">
-              <th className="text-left py-4 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Rank
-              </th>
-              <th 
-                className="text-left py-4 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground transition-colors"
-                onClick={() => handleSort('displayName')}
-              >
-                <span className="flex items-center">
-                  Model
-                  {getSortIcon('displayName')}
-                </span>
-              </th>
-              <th 
-                className="text-center py-4 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground transition-colors"
-                onClick={() => handleSort('totalPredictions')}
-              >
-                <span className="flex items-center justify-center">
-                  Matches
-                  {getSortIcon('totalPredictions')}
-                </span>
-              </th>
-              <th 
-                className="text-center py-4 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground transition-colors"
-                onClick={() => handleSort('correctTendencies')}
-                title="Correct Tendency (H/D/A)"
-              >
-                <span className="flex items-center justify-center">
-                  Correct
-                  {getSortIcon('correctTendencies')}
-                </span>
-              </th>
-              <th 
-                className="text-center py-4 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground transition-colors"
-                onClick={() => handleSort('exactScores')}
-                title="Exact Score Predictions"
-              >
-                <span className="flex items-center justify-center">
-                  Exact
-                  {getSortIcon('exactScores')}
-                </span>
-              </th>
-              <th 
-                className="text-center py-4 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground transition-colors"
-                onClick={() => handleSort('totalPoints')}
-              >
-                <span className="flex items-center justify-center">
-                  Points
-                  {getSortIcon('totalPoints')}
-                </span>
-              </th>
-              <th 
-                className="text-center py-4 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground transition-colors"
-                onClick={() => handleSort('averagePoints')}
-                title="Average Points per Match"
-              >
-                <span className="flex items-center justify-center">
-                  Avg/Match
-                  {getSortIcon('averagePoints')}
-                </span>
-              </th>
-              <th 
-                className="text-center py-4 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground transition-colors"
-                onClick={() => handleSort('accuracy')}
-                title="Correct Tendency Rate"
-              >
-                <span className="flex items-center justify-center">
-                  Accuracy
-                  {getSortIcon('accuracy')}
-                </span>
-              </th>
-              <th 
-                className="text-center py-4 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider"
-                title="Current Prediction Streak"
-              >
-                Streak
-              </th>
-            </tr>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id} className="border-b border-border/50">
+                {headerGroup.headers.map(header => {
+                  const meta = header.column.columnDef.meta as { align?: 'center' | 'left' | 'right' } | undefined;
+                  const alignClass = meta?.align === 'center' ? 'justify-center' :
+                                    meta?.align === 'right' ? 'justify-end' : 'justify-start';
+
+                  return (
+                    <th
+                      key={header.id}
+                      className={cn(
+                        "py-4 text-xs font-medium text-muted-foreground uppercase tracking-wider",
+                        header.column.getCanSort() && "cursor-pointer hover:text-foreground transition-colors",
+                        meta?.align === 'center' ? "px-3" : "px-4"
+                      )}
+                      onClick={header.column.getToggleSortingHandler()}
+                      style={{ width: header.getSize() }}
+                    >
+                      <div className={cn("flex items-center", alignClass)}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                        {header.column.getCanSort() && getSortIcon(header.column.id)}
+                      </div>
+                    </th>
+                  );
+                })}
+              </tr>
+            ))}
           </thead>
           <tbody>
-            {sortedEntries.map((entry, index) => {
-              const accuracy = getAccuracy(entry);
-              const correctCount = entry.correctTendencies ?? entry.correctResults ?? 0;
-              const exactCount = entry.exactScores ?? 0;
-              
-              return (
-                <tr 
-                  key={entry.modelId}
-                  className={cn(
-                    "border-b border-border/30 transition-colors hover:bg-muted/30",
-                    index === 0 && "bg-yellow-500/5",
-                    index === 1 && "bg-gray-500/5",
-                    index === 2 && "bg-orange-500/5"
-                  )}
-                >
-                  <td className="py-4 px-4">
-                    <div className="flex items-center justify-center w-8 h-8">
-                      {getRankIcon(index)}
-                    </div>
+            {table.getRowModel().rows.map((row, index) => (
+              <tr
+                key={row.id}
+                className={cn(
+                  "border-b border-border/30 transition-colors hover:bg-muted/30",
+                  index === 0 && "bg-yellow-500/5",
+                  index === 1 && "bg-gray-500/5",
+                  index === 2 && "bg-orange-500/5"
+                )}
+              >
+                {row.getVisibleCells().map(cell => (
+                  <td
+                    key={cell.id}
+                    className={cn(
+                      "py-4",
+                      (cell.column.columnDef.meta as { align?: 'center' | 'left' | 'right' })?.align === 'center' ? "px-3 text-center" : "px-4"
+                    )}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
-                  <td className="py-4 px-4">
-                    <Link href={`/models/${entry.modelId}`} className="block group">
-                      <p className="font-medium group-hover:text-primary transition-colors">{entry.displayName}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{entry.provider}</p>
-                    </Link>
-                  </td>
-                  <td className="py-4 px-3 text-center font-mono text-sm">
-                    {entry.totalPredictions}
-                  </td>
-                  <td className="py-4 px-3 text-center">
-                    <span className={cn(
-                      "font-semibold",
-                      correctCount > 0 ? "text-yellow-400" : "text-muted-foreground"
-                    )}>
-                      {correctCount}
-                    </span>
-                  </td>
-                  <td className="py-4 px-3 text-center">
-                    <span className={cn(
-                      "font-semibold",
-                      exactCount > 0 ? "text-green-400" : "text-muted-foreground"
-                    )}>
-                      {exactCount}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <span className="font-bold text-lg">{entry.totalPoints}</span>
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <span className={cn(
-                      "px-2 py-1 rounded-md font-mono text-sm font-medium",
-                      entry.averagePoints >= 4 && "bg-green-500/20 text-green-400",
-                      entry.averagePoints >= 2 && entry.averagePoints < 4 && "bg-yellow-500/20 text-yellow-400",
-                      entry.averagePoints < 2 && "bg-muted text-muted-foreground"
-                    )}>
-                      {Number(entry.averagePoints).toFixed(2)}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden min-w-[50px]">
-                        <div 
-                          className={cn(
-                            "h-full rounded-full transition-all",
-                            accuracy >= 50 ? "bg-gradient-to-r from-green-500 to-green-400" :
-                            accuracy >= 30 ? "bg-gradient-to-r from-yellow-500 to-yellow-400" :
-                            "bg-gradient-to-r from-red-500 to-red-400"
-                          )}
-                          style={{ width: `${accuracy}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-muted-foreground font-mono w-10 text-right">
-                        {accuracy}%
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-3 text-center">
-                    {getStreakIndicator(entry)}
-                  </td>
-                </tr>
-              );
-            })}
+                ))}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
       {/* Mobile Card View */}
       <div className="md:hidden space-y-3 p-4">
-        {sortedEntries.map((entry, index) => (
-          <MobileCard key={entry.modelId} entry={entry} index={index} />
+        {table.getRowModel().rows.map((row, index) => (
+          <MobileCard key={row.original.modelId} entry={row.original} index={index} />
         ))}
       </div>
     </>
   );
 }
+
+// Add useMemo import
+import { useMemo } from 'react';
