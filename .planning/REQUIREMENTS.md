@@ -26,10 +26,10 @@
 - [ ] **CONT-03**: Top performer models for match
 - [ ] **CONT-04**: LLM-generated narrative analysis
 - [ ] **CONT-05**: Trigger on match completion
-- [ ] **SEO-01**: Dynamic meta titles/descriptions
-- [ ] **SEO-02**: Open Graph tags and images
-- [ ] **SEO-03**: JSON-LD structured data (SportsEvent)
-- [ ] **SEO-04**: ISR page generation with 60s revalidate
+- [x] **SEO-01**: Dynamic meta titles/descriptions
+- [x] **SEO-02**: Open Graph tags and images
+- [x] **SEO-03**: JSON-LD structured data (SportsEvent)
+- [x] **SEO-04**: ISR page generation with 60s revalidate
 
 ### v2 Requirements
 
@@ -54,7 +54,7 @@
 | STATS-06 through STATS-13 | 2 | Complete |
 | STATS-14 | 3 | Pending |
 | CONT-01 through CONT-05 | 4 | Pending |
-| SEO-01 through SEO-04 | 5 | Pending |
+| SEO-01 through SEO-04 | 5 | Complete |
 
 ---
-*Last updated: 2026-01-27 after Phase 2 completion*
+*Last updated: 2026-01-27 after Phase 5 completion*

@@ -8,9 +8,9 @@
 | 2 | ~~Stats API + Caching~~ ✅ | Multi-granularity query API with Redis caching | STATS-06 through STATS-14 | 4 criteria |
 | 3 | ~~Stats UI~~ ✅ | Leaderboard pages with filtering and sorting | STATS-01 through STATS-14 | 4 criteria |
 | 4 | ~~Content Pipeline~~ ✅ | LLM-powered match roundups on completion | CONT-01 through CONT-05 | 4 criteria |
-| 5 | SEO + Publication | ✅ Context Complete | Dynamic metadata, OG images, ISR pages | SEO-01 through SEO-04 | 4 criteria |
+| 5 | ~~SEO + Publication~~ ✅ | VERIFIED | Dynamic metadata, OG images, ISR pages | SEO-01 through SEO-04 | 4 criteria |
 
-**Total: 5 phases | 23 requirements | All requirements mapped | Phase 5 context complete**
+**Total: 5 phases | 23 requirements | All requirements mapped | Phase 5 VERIFIED**
 
 ---
 
@@ -143,10 +143,10 @@
 3. JSON-LD validates (use schema.org validator)
 4. Pages indexed by search engines
 
-**Plans:**
-- [ ] 05-01-PLAN.md — TBD (research → plan)
-- [ ] 05-02-PLAN.md — TBD
-- [ ] 05-03-PLAN.md — TBD
+**Plans:** 3 plans
+- [x] 05-01-PLAN.md — SEO utilities (constants, types, metadata builders, schema builders, OG templates)
+- [x] 05-02-PLAN.md — Match page SEO (metadata, OG image, JSON-LD)
+- [x] 05-03-PLAN.md — Stats page SEO + sitemap + robots.txt
 
 ---
 
