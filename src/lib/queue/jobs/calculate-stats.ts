@@ -189,6 +189,16 @@ export async function handleCalculatePoints(matchId: string): Promise<{
       awayTeam: match.awayTeam,
     });
 
+    // Trigger roundup after stats calculation completes
+    // This ensures roundups have access to complete model performance data
+    try {
+      const { schedulePostMatchRoundup } = await import('@/lib/queue/workers/scoring.worker');
+      await schedulePostMatchRoundup(matchId, 30000); // 30s delay for stats to settle
+    } catch (error) {
+      // Log error but don't fail stats calculation
+      log.error({ error }, 'Failed to schedule post-match roundup');
+    }
+
     log.info({ scoredCount, pointsCalculated }, 'Points calculation complete');
 
     return { success: true, pointsCalculated };
