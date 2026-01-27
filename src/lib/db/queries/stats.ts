@@ -1,4 +1,4 @@
-import { desc, eq, and, gte, sql, asc } from 'drizzle-orm';
+import { desc, eq, and, gte, lte, sql, asc, or } from 'drizzle-orm';
 import { getDb, predictions, matches, models, competitions } from '@/lib/db';
 import type { Match, Prediction, Model } from '@/lib/db/schema';
 
@@ -248,44 +248,127 @@ export async function getModelClubStats(
   };
 }
 
+export interface LeaderboardFilters {
+  competitionId?: string;
+  clubId?: string;
+  isHome?: boolean;
+  season?: number;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
 export type LeaderboardMetric = 'avgPoints' | 'totalPoints' | 'exactScores' | 'accuracy';
 
 export async function getLeaderboard(
   limit: number = 30,
-  metric: LeaderboardMetric = 'avgPoints'
+  metric: LeaderboardMetric = 'avgPoints',
+  filters?: LeaderboardFilters
 ): Promise<LeaderboardEntry[]> {
   const db = getDb();
-  
-  const orderByColumn = metric === 'avgPoints' 
+
+  const orderByColumn = metric === 'avgPoints'
     ? desc(sql`COALESCE(AVG(${predictions.totalPoints})::numeric, 0)`)
     : metric === 'totalPoints'
     ? desc(sql`COALESCE(SUM(${predictions.totalPoints}), 0)`)
     : metric === 'exactScores'
     ? desc(sql`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`)
     : desc(sql`ROUND(100.0 * SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN ${predictions.status} = 'scored' THEN 1 ELSE 0 END), 0)::numeric, 1)`);
-  
-  const results = await db
-    .select({
-      modelId: models.id,
-      displayName: models.displayName,
-      provider: models.provider,
-      totalPredictions: sql<number>`COUNT(${predictions.id})`,
-      totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
-      avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
-      exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
-      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)`,
-      accuracy: sql<number>`COALESCE(ROUND(100.0 * SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN ${predictions.status} = 'scored' THEN 1 ELSE 0 END), 0)::numeric, 1), 0)`,
-    })
-    .from(models)
-    .leftJoin(predictions, and(
-      eq(predictions.modelId, models.id),
-      eq(predictions.status, 'scored')
-    ))
-    .where(eq(models.active, true))
-    .groupBy(models.id)
-    .orderBy(orderByColumn)
-    .limit(limit);
-  
+
+  // Build WHERE conditions for filters
+  const whereConditions: any[] = [eq(models.active, true)];
+
+  if (filters?.competitionId) {
+    whereConditions.push(eq(matches.competitionId, filters.competitionId));
+  }
+
+  if (filters?.clubId) {
+    if (filters.isHome === true) {
+      whereConditions.push(eq(matches.homeTeam, filters.clubId));
+    } else if (filters.isHome === false) {
+      whereConditions.push(eq(matches.awayTeam, filters.clubId));
+    } else {
+      const clubCondition = or(
+        eq(matches.homeTeam, filters.clubId),
+        eq(matches.awayTeam, filters.clubId)
+      );
+      if (clubCondition) {
+        whereConditions.push(clubCondition);
+      }
+    }
+  }
+
+  if (filters?.season) {
+    whereConditions.push(eq(competitions.season, filters.season));
+  }
+
+  if (filters?.dateFrom) {
+    whereConditions.push(gte(matches.kickoffTime, filters.dateFrom));
+  }
+
+  if (filters?.dateTo) {
+    whereConditions.push(lte(matches.kickoffTime, filters.dateTo));
+  }
+
+  // If filters are provided, use innerJoin to matches table for filtering
+  const hasFilters = filters && (
+    filters.competitionId ||
+    filters.clubId ||
+    filters.season !== undefined ||
+    filters.dateFrom ||
+    filters.dateTo
+  );
+
+  // Select common fields
+  const selectFields = {
+    modelId: models.id,
+    displayName: models.displayName,
+    provider: models.provider,
+    totalPredictions: sql<number>`COUNT(${predictions.id})`,
+    totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
+    avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
+    exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
+    correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)`,
+    accuracy: sql<number>`COALESCE(ROUND(100.0 * SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN ${predictions.status} = 'scored' THEN 1 ELSE 0 END), 0)::numeric, 1), 0)`,
+  };
+
+  let results;
+
+  if (hasFilters) {
+    // When filtering, use innerJoin to matches and competitions
+    let filteredQuery = db
+      .select(selectFields)
+      .from(models)
+      .innerJoin(predictions, and(
+        eq(predictions.modelId, models.id),
+        eq(predictions.status, 'scored')
+      ))
+      .innerJoin(matches, eq(predictions.matchId, matches.id));
+
+    // Join competitions if season filter is used
+    if (filters?.season) {
+      filteredQuery = filteredQuery.innerJoin(competitions, eq(matches.competitionId, competitions.id)) as any;
+    }
+
+    results = await filteredQuery
+      .where(and(...whereConditions))
+      .groupBy(models.id)
+      .orderBy(orderByColumn)
+      .limit(limit);
+  } else {
+    // When no filters, use leftJoin as before (overall leaderboard)
+    results = await db
+      .select(selectFields)
+      .from(models)
+      .leftJoin(predictions, and(
+        eq(predictions.modelId, models.id),
+        eq(predictions.status, 'scored')
+      ))
+      .where(eq(models.active, true))
+      .groupBy(models.id)
+      .orderBy(orderByColumn)
+      .limit(limit);
+  }
+
   return results.map((r, index) => ({
     rank: index + 1,
     modelId: r.modelId,
