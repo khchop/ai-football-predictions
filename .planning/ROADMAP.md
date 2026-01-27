@@ -88,6 +88,11 @@
 3. Mobile-responsive design
 4. Page load time <2s with cached data
 
+**Plans:** 3 plans
+- [ ] 03-01-PLAN.md — TanStack Table integration and column definitions
+- [ ] 03-02-PLAN.md — Competition and club leaderboard pages
+- [ ] 03-03-PLAN.md — Comparison modal and skeleton loading states
+
 ---
 
 ### Phase 4: Content Pipeline
