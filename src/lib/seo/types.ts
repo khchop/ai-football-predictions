@@ -31,6 +31,7 @@ export interface MatchSeoData {
   
   // Additional match info
   round: string | null;
+  matchMinute?: string | null;
   
   // SEO-specific derived data
   predictionsCount?: number;
