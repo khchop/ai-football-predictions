@@ -11,6 +11,9 @@ import { cn } from '@/lib/utils';
 import type { LikelyScore } from '@/types';
 import type { Metadata } from 'next';
 import { PredictionTable } from '@/components/prediction-table';
+import { buildMatchMetadata } from '@/lib/seo/metadata';
+import { buildMatchGraphSchema, sanitizeJsonLd } from '@/lib/seo/schema/graph';
+import { mapMatchToSeoData } from '@/lib/seo/types';
 
 // Helper to find the lowest odds (favorite)
 function getLowestOdds(home: string, draw: string, away: string): 'home' | 'draw' | 'away' {
@@ -41,17 +44,12 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
   }
   
   const { match, competition } = result;
-  const kickoff = format(parseISO(match.kickoffTime), 'MMM d, yyyy HH:mm');
   
-  return {
-    title: `${match.homeTeam} vs ${match.awayTeam} - AI Score Predictions`,
-    description: `AI score predictions for ${match.homeTeam} vs ${match.awayTeam} in ${competition.name}. Kickoff: ${kickoff}. See model predictions and Kicktipp scoring.`,
-    openGraph: {
-      title: `${match.homeTeam} vs ${match.awayTeam}`,
-      description: `AI score predictions for ${competition.name} match`,
-      type: 'website',
-    },
-  };
+  // Map match to SEO data format
+  const seoData = mapMatchToSeoData(match);
+  
+  // Use the SEO utility builder for dynamic metadata based on match state
+  return buildMatchMetadata(seoData);
 }
 
 // Helper to parse JSON safely
@@ -98,9 +96,19 @@ export default async function MatchPage({ params }: MatchPageProps) {
     analysis.oddsHome || analysis.homeWinPct || analysis.advice
   );
 
+  // Build JSON-LD structured data for the match
+  const jsonLd = buildMatchGraphSchema(mapMatchToSeoData(match));
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Back Link */}
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: sanitizeJsonLd(jsonLd),
+        }}
+      />
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* Back Link */}
       <Link 
         href="/matches" 
         className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -517,6 +525,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
           />
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }
