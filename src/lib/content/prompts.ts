@@ -379,3 +379,256 @@ export interface ArticleResponse {
   metaDescription: string;
   keywords: string[];
 }
+
+// Interface for post-match roundup data
+export interface PostMatchRoundupData {
+  homeTeam: string;
+  awayTeam: string;
+  competition: string;
+  venue?: string;
+  kickoffTime: string;
+  finalScore: {
+    home: number;
+    away: number;
+  };
+  events: Array<{
+    minute: number;
+    type: 'goal' | 'card' | 'substitution' | 'penalty' | 'var' | 'other';
+    description: string;
+  }>;
+  stats: {
+    possession?: { home: number; away: number };
+    shotsTotal?: { home: number; away: number };
+    shotsOnTarget?: { home: number; away: number };
+    corners?: { home: number; away: number };
+    xG?: { home: number; away: number };
+    fouls?: { home: number; away: number };
+    offsides?: { home: number; away: number };
+    yellowCards?: { home: number; away: number };
+    redCards?: { home: number; away: number };
+  };
+  modelPredictions: Array<{
+    modelName: string;
+    predictedScore: string;
+    predictedResult: 'H' | 'D' | 'A';
+    actualResult: 'H' | 'D' | 'A';
+    correctTendency: boolean;
+    exactScore: boolean;
+    points: number;
+  }>;
+  topPerformers: Array<{
+    modelName: string;
+    prediction: string;
+    points: number;
+  }>;
+  narrativeAngles?: {
+    isDerby: boolean;
+    isComeback: boolean;
+    isUpset: boolean;
+    isMilestone: boolean;
+  };
+}
+
+// Type definition for AI response
+export interface PostMatchRoundupResponse {
+  title: string;
+  scoreboard: {
+    homeTeam: string;
+    awayTeam: string;
+    homeScore: number;
+    awayScore: number;
+    competition: string;
+  };
+  events: Array<{
+    minute: number;
+    type: string;
+    description: string;
+  }>;
+  stats: {
+    possession?: string;
+    shots?: string;
+    shotsOnTarget?: string;
+    corners?: string;
+    xG?: string;
+    fouls?: string;
+    offsides?: string;
+    cards?: string;
+  };
+  modelPredictions: string; // HTML table
+  topPerformers: Array<{
+    modelName: string;
+    prediction: string;
+    points: number;
+  }>;
+  narrative: string; // Full HTML content (1000+ words)
+  keywords: string[];
+}
+
+export function buildPostMatchRoundupPrompt(data: PostMatchRoundupData): string {
+  const {
+    homeTeam,
+    awayTeam,
+    competition,
+    venue,
+    kickoffTime,
+    finalScore,
+    events,
+    stats,
+    modelPredictions,
+    topPerformers,
+    narrativeAngles,
+  } = data;
+
+  // Format events timeline
+  const eventsTimeline = events
+    .sort((a, b) => a.minute - b.minute)
+    .map((e) => `  - ${formatMinute(e.minute)} ${e.description}`)
+    .join('\n');
+
+  // Format match stats
+  const formattedStats = [];
+  if (stats.possession) {
+    formattedStats.push(`  • Possession: ${stats.possession.home}% - ${stats.possession.away}%`);
+  }
+  if (stats.shotsTotal) {
+    formattedStats.push(`  • Shots: ${stats.shotsTotal.home} - ${stats.shotsTotal.away}`);
+  }
+  if (stats.shotsOnTarget) {
+    formattedStats.push(`  • Shots on Target: ${stats.shotsOnTarget.home} - ${stats.shotsOnTarget.away}`);
+  }
+  if (stats.corners) {
+    formattedStats.push(`  • Corners: ${stats.corners.home} - ${stats.corners.away}`);
+  }
+  if (stats.xG) {
+    formattedStats.push(`  • xG: ${stats.xG.home.toFixed(2)} - ${stats.xG.away.toFixed(2)}`);
+  }
+  if (stats.fouls) {
+    formattedStats.push(`  • Fouls: ${stats.fouls.home} - ${stats.fouls.away}`);
+  }
+  if (stats.offsides) {
+    formattedStats.push(`  • Offsides: ${stats.offsides.home} - ${stats.offsides.away}`);
+  }
+  if (stats.yellowCards || stats.redCards) {
+    const yc = stats.yellowCards ? `${stats.yellowCards.home}/${stats.yellowCards.away}` : '0/0';
+    const rc = stats.redCards ? `${stats.redCards.home}/${stats.redCards.away}` : '0/0';
+    formattedStats.push(`  • Cards: 🟨 ${yc} 🟥 ${rc}`);
+  }
+
+  // Build model predictions HTML table
+  const predictionsTable = `
+<table class="predictions-table">
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Predicted</th>
+      <th>Result</th>
+      <th>Tendency</th>
+      <th>Score</th>
+      <th>Points</th>
+    </tr>
+  </thead>
+  <tbody>
+${modelPredictions
+  .map(
+    (p) => `    <tr>
+      <td>${p.modelName}</td>
+      <td>${p.predictedScore}</td>
+      <td>${p.predictedResult}</td>
+      <td>${p.correctTendency ? '✓' : '✗'}</td>
+      <td>${p.exactScore ? '✓' : '✗'}</td>
+      <td>${p.points}</td>
+    </tr>`
+  )
+  .join('\n')}
+  </tbody>
+</table>`;
+
+  // Detect narrative angles
+  const angles = [];
+  if (narrativeAngles?.isDerby) angles.push('local derby');
+  if (narrativeAngles?.isComeback) angles.push('comeback victory');
+  if (narrativeAngles?.isUpset) angles.push('upset');
+  if (narrativeAngles?.isMilestone) angles.push('milestone performance');
+  const anglesText = angles.length > 0 ? angles.join(', ') : 'standard match analysis';
+
+  return `MATCH: ${homeTeam} vs ${awayTeam}
+COMPETITION: ${competition}
+VENUE: ${venue || 'TBD'}
+KICKOFF: ${kickoffTime}
+FINAL SCORE: ${finalScore.home} - ${finalScore.away}
+
+## MATCH EVENTS (TIMELINE)
+${eventsTimeline || '  No major events recorded'}
+
+## EXTENDED STATS
+${formattedStats.join('\n') || '  Stats unavailable'}
+
+## MODEL PREDICTIONS PERFORMANCE
+${predictionsTable}
+
+## TOP 3 PERFORMERS (BY POINTS)
+${topPerformers.map((m, i) => `${i + 1}. ${m.modelName}: ${m.prediction} (${m.points} pts)`).join('\n')}
+
+## NARRATIVE ANGLES
+${anglesText}
+
+## INSTRUCTIONS
+
+Write a comprehensive post-match roundup (1000+ words) in the following structure:
+
+1. **Score Header** - Match title with final score and competition
+2. **Match Overview** - Opening paragraph setting the scene (context, importance)
+3. **Key Events Timeline** - Major moments in chronological order
+4. **Extended Statistics** - Possession, shots, xG analysis with bullet points
+5. **Model Predictions Analysis** - How AI models performed, highlight top/bottom performers
+6. **Narrative Analysis** - Deep dive into the match, tactical insights, key moments
+7. **Narrative Angles** - Highlight if this was a derby, comeback, upset, or milestone
+
+## WRITING GUIDELINES
+
+- Use a balanced tone: mix storytelling with key statistics
+- Reference specific model names (no generic "Model 1")
+- Use facts ONLY from the provided data (no hallucinations)
+- Highlight unique angles: comebacks, upsets, derbies, milestones
+- Rich formatting: bullet points for stats, occasional emoji for emphasis
+- HTML format with <h2>, <p>, <ul>, <table> tags
+- Focus on the narrative: what made this match interesting?
+
+## OUTPUT FORMAT
+
+Return JSON only:
+{
+  "title": "SEO-optimized match title with final score",
+  "scoreboard": {
+    "homeTeam": "${homeTeam}",
+    "awayTeam": "${awayTeam}",
+    "homeScore": ${finalScore.home},
+    "awayScore": ${finalScore.away},
+    "competition": "${competition}"
+  },
+  "events": [
+    {"minute": 12, "type": "goal", "description": "Player Name scored"}
+  ],
+  "stats": {
+    "possession": "${stats.possession?.home || '?'}-${stats.possession?.away || '?'}",
+    "shots": "${stats.shotsTotal?.home || '?'}-${stats.shotsTotal?.away || '?'}",
+    "xG": "${stats.xG?.home.toFixed(2) || '?'}-${stats.xG?.away.toFixed(2) || '?'}"
+  },
+  "modelPredictions": "<table>...</table>",
+  "topPerformers": [
+    {"modelName": "Llama 3.3 70B", "prediction": "2-1", "points": 12}
+  ],
+  "narrative": "<h2>...</h2><p>...</p>...",
+  "keywords": ["football", "${competition.toLowerCase()}", "${homeTeam.toLowerCase()}", "${awayTeam.toLowerCase()}", "match analysis"]
+}
+
+Return ONLY the JSON object.`;
+}
+
+// Helper function to format minute display
+function formatMinute(minute: number): string {
+  if (minute === 45) return '45\'  HT';
+  if (minute === 90) return '90\'  FT';
+  if (minute > 90) return `90'+${minute - 90}'`;
+  return `${minute}'`;
+}
