@@ -213,30 +213,39 @@ export function createScoringWorker() {
            log.info(`✓ Scored ${scoredCount} predictions (${totalPointsAwarded} total points awarded)`);
          }
         
-          // Return partial success if some predictions scored
-          if (scoredCount > 0) {
-            // Invalidate caches after successful scoring to ensure fresh data
-            await invalidateMatchCaches(matchId);
-            log.info(`✓ Invalidated caches for match ${matchId}`);
-            
-            // Generate post-match content (non-blocking)
-            try {
-              await generatePostMatchContent(matchId);
-              log.info({ matchId }, 'Post-match content generation triggered');
-            } catch (err) {
-              log.warn({ matchId, err }, 'Post-match content generation failed (non-blocking)');
-            }
-            
-            return { 
-              success: true, 
-              scoredCount,
-              failedCount,
-              failedPredictions: failedCount > 0 ? failedPredictions : undefined,
-              totalPointsAwarded,
-              quotas,
-              finalScore: `${actualHome}-${actualAway}`,
-            };
-          }
+           // Return partial success if some predictions scored
+           if (scoredCount > 0) {
+             // Invalidate caches after successful scoring to ensure fresh data
+             await invalidateMatchCaches(matchId);
+             log.info(`✓ Invalidated caches for match ${matchId}`);
+             
+             // Generate post-match content (non-blocking)
+             try {
+               await generatePostMatchContent(matchId);
+               log.info({ matchId }, 'Post-match content generation triggered');
+             } catch (err) {
+               log.warn({ matchId, err }, 'Post-match content generation failed (non-blocking)');
+             }
+             
+             // Trigger stats calculation and view refresh (non-blocking)
+             try {
+               const { enqueuePointsCalculation } = await import('@/lib/queue/jobs/calculate-stats');
+               await enqueuePointsCalculation(matchId, { priority: 'high', delay: 1000 });
+               log.info({ matchId }, 'Stats calculation triggered');
+             } catch (err) {
+               log.warn({ matchId, err }, 'Stats calculation trigger failed (non-blocking)');
+             }
+             
+             return { 
+               success: true, 
+               scoredCount,
+               failedCount,
+               failedPredictions: failedCount > 0 ? failedPredictions : undefined,
+               totalPointsAwarded,
+               quotas,
+               finalScore: `${actualHome}-${actualAway}`,
+             };
+           }
         
          // Only throw if ALL predictions failed
          if (failedCount > 0 && scoredCount === 0) {
