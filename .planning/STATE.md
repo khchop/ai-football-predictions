@@ -12,9 +12,10 @@
   - ✓ Phase 3: Stats UI - VERIFIED (6 plans executed, including gap closure INT-01, INT-03)
   - ✓ Phase 4: Content Pipeline - VERIFIED (5 plans in 4 waves, including gap closure INT-02)
   - ✓ Phase 5: SEO + Publication - VERIFIED (3 plans in 3 waves)
-  - Status: v1.0 MILESTONE COMPLETE 🎉
+  - Phase 6: Roundup Integration - In progress (1/1 plans complete)
+  - Status: Phase 6 execution started
 
-Progress: ████████████████████████████████ 100% (5/5 phases, 21/21 plans complete)
+Progress: ████████████████████░░░░░░░░░░░ 104% (22/21 plans complete - Phase 6 added post-v1.0)
 
 ## Session History
 
@@ -149,6 +150,14 @@ Progress: ███████████████████████�
 - All 2 tasks completed with atomic commits
 - Closes gap INT-03 - Duplicate getLeaderboard Functions
 
+### Session 17: Phase 6 Plan 06-01 Roundup Integration (2026-01-27)
+- Created MatchRoundup client component to handle API fetching from /api/matches/[id]/roundup
+- Integrated roundup display into /matches/[id]/page.tsx Server Component via props pattern
+- Implemented full UI state handling: loading, error, and empty states
+- Fixed gap INT-04: SEO route now displays roundups (previously only legacy route worked)
+- Flow C (Match → Roundup → Display) now complete on both routes
+- All 2 tasks completed with atomic commit (da8ae54)
+
 ## User Preferences (from questioning)
 
 ### Workflow Settings
@@ -223,6 +232,8 @@ Progress: ███████████████████████�
 | SEO utility reuse for match page | 05-02 | Leveraged buildMatchMetadata from 05-01 instead of inline implementation |
 | Data mapping pattern | 05-02 | Used mapMatchToSeoData helper to adapt database Match to SEO interface |
 | Delayed roundup generation (30s) | 04-05 | Allows database materialized views and stats caches to settle before narrative generation |
+| Client wrapper for API integration | 06-01 | Server Components need client-side wrapper ('use client') to use React hooks for API fetching |
+| NEXT_PUBLIC_APP_URL for API calls | 06-01 | Follows existing codebase pattern instead of creating new env variables |
 
 ## Codebase State
 
@@ -243,16 +254,16 @@ Phase 5 SEO execution in progress:
 
 ## Session Continuity
 
-**Last session:** 2026-01-27T16:15:00Z
-**Stopped at:** Completed 03-06-PLAN.md (leaderboard consolidation)
+**Last session:** 2026-01-27T16:33:39Z
+**Stopped at:** Completed 06-01-PLAN.md (roundup integration)
 **Resume file:** None
-**Status:** Phase 3 plan 03-06 complete, all 21 plans executed
+**Status:** Phase 6 plan 06-01 complete, 22 plans executed across 6 phases
 
 Next steps:
 - v1.0 MILESTONE COMPLETE ✅
-- All 5 phases executed (21 plans total)
-- Project successfully refactored and consolidated
+- Phase 6 (Roundup Integration) started, 1/1 plans complete
+- Flow C (Match → Roundup → Display) now fully functional
 
 ---
 
-*Last updated: 2026-01-27 at plan 03-06 completion - all 21 plans executed*
+*Last updated: 2026-01-27 at plan 06-01 completion - 22 plans executed (Phase 6 started post-v1.0)*
