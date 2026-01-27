@@ -289,4 +289,4 @@ Milestone v1.1 audit findings resolved:
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 001 | Add a new column to the matches table called 'matchday' of type integer | 2026-01-27 | dd53e8e | [001-add-a-new-column-to-the-matches-table-ca](./quick/001-add-a-new-column-to-the-matches-table-ca/) |
-| 002 | Fix deployment failure - missing matchday property in fixtures.worker.ts | 2026-01-27 | $(git rev-parse --short HEAD) | [002-fix-deployment-matchday-error](./quick/002-fix-deployment-matchday-error/) |
+| 002 | Fix deployment failure - missing matchday property in fixtures.worker.ts | 2026-01-27 | 1ed7555 | [002-fix-deployment-matchday-error](./quick/002-fix-deployment-matchday-error/) |
