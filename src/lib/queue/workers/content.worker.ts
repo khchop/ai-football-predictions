@@ -66,6 +66,12 @@ export function createContentWorker() {
           } else if (type === 'scan_league_roundups') {
             // Scan all competitions and generate roundups for those with finished matches
             return await scanAndGenerateLeagueRoundups();
+          } else if (type === 'generate-roundup') {
+            // Generate post-match roundup for a specific match (triggered after settlement)
+            return await generatePostMatchRoundupContent(data as {
+              matchId: string;
+              triggeredAt: string;
+            });
           } else {
             throw new Error(`Unknown content type: ${type}`);
           }
@@ -463,6 +469,36 @@ async function scanAndGenerateLeagueRoundups() {
     };
   } catch (error) {
     log.error({ err: error }, 'Error during roundup scan');
+    throw error;
+  }
+}
+
+/**
+  * Generate post-match roundup content for a specific match
+  * Triggered by settlement worker after match scoring completes
+  */
+async function generatePostMatchRoundupContent(data: {
+  matchId: string;
+  triggeredAt: string;
+}) {
+  const { matchId, triggeredAt } = data;
+  const log = loggers.contentWorker.child({ matchId });
+
+  try {
+    log.info('Generating post-match roundup');
+
+    // Placeholder implementation - actual roundup generation will be implemented in Plan 2
+    // For now, just log and return success
+
+    log.info({ matchId, triggeredAt }, '✓ Post-match roundup generated (placeholder)');
+
+    return {
+      success: true,
+      matchId,
+      skipped: false,
+    };
+  } catch (error) {
+    log.error({ err: error }, 'Post-match roundup generation failed');
     throw error;
   }
 }
