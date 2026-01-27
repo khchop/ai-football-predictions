@@ -26,6 +26,7 @@ function getLowestOdds(home: string, draw: string, away: string): 'home' | 'draw
 }
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 interface MatchPageProps {
   params: Promise<{ id: string }>;
