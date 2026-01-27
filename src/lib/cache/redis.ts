@@ -195,8 +195,12 @@ export const CACHE_TTL = {
    // Team data caches (for optimization)
    TEAM_STATS: 21600,           // 6 hours - team statistics don't change during match day
    H2H: 604800,                 // 7 days - historical H2H data is static
-   ODDS_BATCH: 600,             // 10 minutes - pre-match odds for betting
-} as const;
+    ODDS_BATCH: 600,             // 10 minutes - pre-match odds for betting
+    ALL_MODEL_HEALTH: 300,       // 5 minutes - model health status
+    
+    // Roundup content (static once generated)
+    ROUNDUP: 86400,              // 24 hours - static roundup content
+  } as const;
 
 /**
  * Generic cache get with type safety
@@ -324,8 +328,12 @@ export const cacheKeys = {
    h2h: (teamId1: number, teamId2: number) => 
      `api:h2h:${Math.min(teamId1, teamId2)}:${Math.max(teamId1, teamId2)}`,
    oddsBatch: (fixtureId: number) => `api:odds:batch:${fixtureId}`,
-   allModelHealth: () => 'db:models:health:all',
-} as const;
+    allModelHealth: () => 'db:models:health:all',
+    
+    // Roundup content
+    roundup: (matchId: string) => `roundup:${matchId}`,
+    roundupBySlug: (slug: string) => `roundup:slug:${slug}`,
+  } as const;
 
 /**
  * Invalidate caches when match finishes
