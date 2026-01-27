@@ -2,7 +2,7 @@
 
 ## Current Position
 
-**Stage:** GSD ► Phase 5 CONTEXT COMPLETE ✓
+**Stage:** GSD ► Phase 5 SEO EXECUTION IN PROGRESS ✓
 - ✓ Project initialization complete
 - ✓ Research complete (5 files)
 - ✓ Requirements defined (23 requirements)
@@ -21,9 +21,12 @@
     - ✓ JSON-LD schema (4 decisions)
     - ✓ Sitemap strategy (4 decisions)
     - ✓ 05-CONTEXT.md created and committed
-  - Status: Ready for research → planning
+  - ◐ Phase 5: SEO Utility Layer EXECUTING
+    - ✓ 05-01: SEO constants, types, metadata builders, schema builders, OG templates
+    - □ 05-02: Match page SEO integration (next)
+  - Status: Plan 05-01 complete, 05-02 ready
 
-Progress: ████████████████████░░░░░░ 100% (4/5 phases complete, 1/5 context done)
+Progress: ████████████████████░░░░░░ 100% (4/5 phases complete, 1/5 first plan complete)
 
 ## Session History
 
@@ -101,6 +104,17 @@ Progress: ████████████████████░░░�
 - Updated ROADMAP.md and STATE.md
 - Ready for research phase
 
+### Session 11: Phase 5 Plan 05-01 SEO Utility Layer (2026-01-27)
+- Created SEO constants (BASE_URL, MatchStatus, OG_IMAGE_SIZE)
+- Implemented MatchSeoData interface mapping from database Match type
+- Built metadata builders for dynamic titles/descriptions (state-specific)
+- Created SportsEvent JSON-LD schema with @id linking pattern
+- Built NewsArticle schema for match pages
+- Combined all schemas in @graph structure
+- Implemented OG template configuration for 3 match states
+- Added schema-dts dependency for type-safe JSON-LD
+- All 4 tasks completed with atomic commits
+
 ## User Preferences (from questioning)
 
 ### Workflow Settings
@@ -168,6 +182,9 @@ Progress: ████████████████████░░░�
 | Map correctTendencies to wins temporarily | 02-04 | LeaderboardEntry lacks wins/draws/losses breakdown - provides approximate data |
 | Reuse LeaderboardTable and LeaderboardFilters | 03-02 | Consistent UI across all leaderboard pages |
 | CRON_SECRET Bearer token auth for UI pages | 03-02 | Matches Phase 2 API authentication pattern |
+| schema-dts for type-safe JSON-LD | 05-01 | Enables compile-time validation of schema.org types |
+| State-specific metadata content | 05-01 | Provides contextually relevant SEO for upcoming/live/finished |
+| @id linking for schema references | 05-01 | Allows Google to connect SportsEvent to referenced teams |
 
 ## Codebase State
 
@@ -189,11 +206,15 @@ cd /Users/pieterbos/Documents/bettingsoccer
 
 ## Session Continuity
 
-**Last session:** 2026-01-27T15:15:00Z
-**Stopped at:** Completed Phase 5 context gathering (all gray areas addressed)
+**Last session:** 2026-01-27T14:57:50Z
+**Stopped at:** Completed 05-01-PLAN.md (all 4 tasks executed and committed)
 **Resume file:** None
-**Status:** Phase 5 context complete, ready for research → planning
+**Status:** Phase 5 plan 05-01 complete, ready for 05-02
+
+Next steps:
+- Execute 05-02-PLAN.md (match page SEO integration)
+- Update match pages with metadata and JSON-LD injection
 
 ---
 
-*Last updated: 2026-01-27 at phase 5 context completion*
+*Last updated: 2026-01-27 at plan 05-01 completion*
