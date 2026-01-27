@@ -103,6 +103,7 @@ export function createFixturesWorker() {
                     awayScore: fixture.goals.away,
                     status: mapFixtureStatus(fixture.fixture.status.short),
                     round: fixture.league.round,
+                    matchday: null, // Will be populated when matchday info is available
                     venue: fixture.fixture.venue.name,
                     slug,
                     matchMinute: null,
