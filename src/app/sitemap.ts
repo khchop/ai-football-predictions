@@ -1,14 +1,22 @@
 import { MetadataRoute } from 'next';
 import { getDb, matches, models, competitions, blogPosts } from '@/lib/db';
 import { desc, eq, isNotNull, and } from 'drizzle-orm';
+import { BASE_URL } from '@/lib/seo/constants';
 
 // Force dynamic rendering (don't pre-render at build time)
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600; // Revalidate every hour
 
+// Generate sitemap IDs for chunking (up to 50,000 URLs per sitemap)
+export async function generateSitemaps() {
+  // Chunk size of 50,000 as per Next.js sitemap limits
+  // For now, return single sitemap as current dataset is below limit
+  return [{ id: '0' }];
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const db = getDb();
-  const baseUrl = 'https://kroam.xyz';
+  const baseUrl = BASE_URL;
 
   // Static pages
    const staticPages: MetadataRoute.Sitemap = [
