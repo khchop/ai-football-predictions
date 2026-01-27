@@ -8,8 +8,8 @@
 - ✓ Requirements defined (23 requirements)
 - ✓ Roadmap created (5 phases)
 - ✓ Phase 1: Stats Foundation executed (3 plans, 3 waves)
-- ✓ Phase 2: Stats API & Caching - COMPLETE (3 plans in 3 waves)
-- Status: Phase 2 complete, ready for next phase
+- ✓ Phase 2: Stats API & Caching - COMPLETE (4 plans in 4 waves)
+- Status: Phase 2 complete (including gap closure), ready for next phase
 
 Progress: ████░░░░░░░░░░░░░░░░ 20% (2/10 phases estimated)
 
@@ -92,6 +92,8 @@ Progress: ████░░░░░░░░░░░░░░░░ 20% (2/10
 | Cursor-based pagination | 02-01 | Better performance than offset for large datasets |
 | Fail-open rate limiting for stats API | 02-02 | Public endpoints should allow traffic if Redis unavailable |
 | 60s Cache-Control TTL for all stats | 02-02 | Balances data freshness with CDN/browser caching benefits |
+| Conditional JOIN strategy for filtering | 02-04 | leftJoin for overall (includes zero predictions), innerJoin for filtered (correct scope) |
+| Map correctTendencies to wins temporarily | 02-04 | LeaderboardEntry lacks wins/draws/losses breakdown - provides approximate data |
 
 ## Codebase State
 
@@ -115,10 +117,10 @@ cd /Users/pieterbos/Documents/bettingsoccer
 
 ## Session Continuity
 
-**Last session:** 2026-01-27T11:10:32Z
-**Stopped at:** Completed 02-03-PLAN.md
+**Last session:** 2026-01-27T11:26:58Z
+**Stopped at:** Completed 02-04-PLAN.md (gap closure)
 **Resume file:** None
-**Status:** Phase 2 complete (all 3 waves), ready for next phase
+**Status:** Phase 2 complete (all 4 waves including gap closure), ready for next phase
 
 ---
-*Last updated: 2026-01-27 at phase 2 wave 3 execution complete*
+*Last updated: 2026-01-27 at phase 2 wave 4 execution complete*
