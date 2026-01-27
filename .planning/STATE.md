@@ -2,7 +2,7 @@
 
 ## Current Position
 
-**Stage:** GSD ► Phase 3 COMPLETE ✓
+**Stage:** GSD ► v1.0 MILESTONE COMPLETE ✅
 - ✓ Project initialization complete
 - ✓ Research complete (5 files)
 - ✓ Requirements defined (23 requirements)
@@ -10,14 +10,11 @@
   - ✓ Phase 1: Stats Foundation executed (3 plans, 3 waves)
   - ✓ Phase 2: Stats API & Caching - VERIFIED (4 plans in 4 waves, including gap closure)
   - ✓ Phase 3: Stats UI - VERIFIED (5 plans executed, including gap closure INT-01)
-  - ✓ Phase 4: Content Pipeline - VERIFIED (4 plans in 3 waves)
+  - ✓ Phase 4: Content Pipeline - VERIFIED (5 plans in 4 waves, including gap closure INT-02)
   - ✓ Phase 5: SEO + Publication - VERIFIED (3 plans in 3 waves)
-    - ✓ 05-01: SEO utilities (constants, types, metadata builders, schema builders, OG templates)
-    - ✓ 05-02: Match page SEO (metadata, OG image, JSON-LD)
-    - ✓ 05-03: Stats page SEO + sitemap + robots.txt
   - Status: v1.0 MILESTONE COMPLETE 🎉
 
-Progress: ████████████████████████████████ 100% (5/5 phases, 16/16 plans complete)
+Progress: ████████████████████████████████ 100% (5/5 phases, 17/17 plans complete)
 
 ## Session History
 
@@ -137,6 +134,13 @@ Progress: ███████████████████████�
 - All 1 task completed with atomic commit
 - Closes gap INT-01 - Main Leaderboard Bypasses API
 
+### Session 15: Phase 4 Plan 04-05 Roundup Trigger Optimization (2026-01-27)
+- Moved roundup trigger from scoring worker to stats worker
+- Added 30s delay to allow stats calculation to fully settle
+- Prevents race conditions where roundups were generated without fresh model accuracy data
+- All 2 tasks completed with atomic commits
+- Closes gap INT-02 - Roundup Trigger Timing
+
 ## User Preferences (from questioning)
 
 ### Workflow Settings
@@ -210,6 +214,7 @@ Progress: ███████████████████████�
 | @id linking for schema references | 05-01 | Allows Google to connect SportsEvent to referenced teams |
 | SEO utility reuse for match page | 05-02 | Leveraged buildMatchMetadata from 05-01 instead of inline implementation |
 | Data mapping pattern | 05-02 | Used mapMatchToSeoData helper to adapt database Match to SEO interface |
+| Delayed roundup generation (30s) | 04-05 | Allows database materialized views and stats caches to settle before narrative generation |
 
 ## Codebase State
 
@@ -230,16 +235,16 @@ Phase 5 SEO execution in progress:
 
 ## Session Continuity
 
-**Last session:** 2026-01-27T15:47:42Z
-**Stopped at:** Completed 03-05-PLAN.md (main leaderboard API integration)
+**Last session:** 2026-01-27T15:57:05Z
+**Stopped at:** Completed 04-05-PLAN.md (roundup trigger optimization)
 **Resume file:** None
-**Status:** Phase 3 plan 03-05 complete, all 16 plans executed
+**Status:** Phase 4 plan 04-05 complete, all 17 plans executed
 
 Next steps:
 - v1.0 MILESTONE COMPLETE ✅
-- All 5 phases executed (16 plans total)
+- All 5 phases executed (17 plans total)
 - Ready for Phase 6: Future enhancements or v1.1 planning
 
 ---
 
-*Last updated: 2026-01-27 at plan 03-05 completion - all 16 plans executed*
+*Last updated: 2026-01-27 at plan 04-05 completion - all 17 plans executed*

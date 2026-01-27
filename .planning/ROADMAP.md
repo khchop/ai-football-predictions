@@ -117,11 +117,12 @@
 3. LLM narrative is factual (no hallucinations)
 4. Content includes unique elements (not duplicate)
 
-**Plans:** 4 plans
+**Plans:** 5 plans
 - [x] 04-01-PLAN.md — BullMQ content queue setup + trigger integration
 - [x] 04-02-PLAN.md — LLM content generation service with prompt engineering
 - [x] 04-03-PLAN.md — Content storage + similarity detection
 - [x] 04-04-PLAN.md — Match page integration with HTML rendering
+- [x] 04-05-PLAN.md — Gap closure: Trigger roundup after stats calculation (INT-02)
 
 ---
 
