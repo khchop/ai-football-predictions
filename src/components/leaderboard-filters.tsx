@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
-import { Calendar, Filter, Home, Trophy } from 'lucide-react';
+import { Calendar, Cpu, Filter, Home, Trophy } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -32,6 +32,28 @@ const TIME_RANGE_OPTIONS = [
   { value: '90d', label: 'Last 90 Days' },
   { value: '30d', label: 'Last 30 Days' },
   { value: '7d', label: 'Last 7 Days' },
+];
+
+// Season options for filtering by football season
+const SEASON_OPTIONS = [
+  { value: 'all', label: 'All Seasons' },
+  { value: '2024-2025', label: '2024/25' },
+  { value: '2023-2024', label: '2023/24' },
+  { value: '2022-2023', label: '2022/23' },
+  { value: '2021-2022', label: '2021/22' },
+];
+
+// Model options for filtering by LLM model
+const MODEL_OPTIONS = [
+  { value: 'all', label: 'All Models' },
+  { value: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', label: 'Llama 3.1 70B' },
+  { value: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo', label: 'Llama 3.1 8B' },
+  { value: 'anthropic/claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
+  { value: 'anthropic/claude-3-haiku-20240307', label: 'Claude 3 Haiku' },
+  { value: 'openai/gpt-4o-2024-08-06', label: 'GPT-4o' },
+  { value: 'openai/gpt-4o-mini-2024-07-18', label: 'GPT-4o Mini' },
+  { value: 'google/gemini-1.5-flash-002', label: 'Gemini 1.5 Flash' },
+  { value: 'deepseek/deepseek-chat', label: 'DeepSeek Chat' },
 ];
 
 // Club options - common club names for filtering (ID lookup happens in API)
@@ -71,6 +93,8 @@ export function LeaderboardFilters({ className, disabledFilters = [] }: Leaderbo
   const currentMinPredictions = searchParams.get('minPredictions') || '0';
   const currentCompetition = searchParams.get('competition') || 'all';
   const currentClub = searchParams.get('club') || 'all';
+  const currentSeason = searchParams.get('season') || 'all';
+  const currentModel = searchParams.get('model') || 'all';
 
   const updateParams = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -136,6 +160,27 @@ export function LeaderboardFilters({ className, disabledFilters = [] }: Leaderbo
         </Select>
       </div>
 
+      {/* Season Filter */}
+      <div className="flex items-center gap-2">
+        <Calendar className="h-4 w-4 text-muted-foreground" />
+        <Select
+          value={currentSeason}
+          onValueChange={(value: string) => updateParams('season', value)}
+          disabled={disabledFilters.includes('season')}
+        >
+          <SelectTrigger className="w-[140px] bg-card/50 border-border/50">
+            <SelectValue placeholder="Season" />
+          </SelectTrigger>
+          <SelectContent>
+            {SEASON_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Time Period Filter */}
       <div className="flex items-center gap-2">
         <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -171,6 +216,27 @@ export function LeaderboardFilters({ className, disabledFilters = [] }: Leaderbo
             <SelectItem value="3">3+ predictions</SelectItem>
             <SelectItem value="5">5+ predictions</SelectItem>
             <SelectItem value="10">10+ predictions</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Model Filter */}
+      <div className="flex items-center gap-2">
+        <Cpu className="h-4 w-4 text-muted-foreground" />
+        <Select
+          value={currentModel}
+          onValueChange={(value: string) => updateParams('model', value)}
+          disabled={disabledFilters.includes('model')}
+        >
+          <SelectTrigger className="w-[180px] bg-card/50 border-border/50">
+            <SelectValue placeholder="Model" />
+          </SelectTrigger>
+          <SelectContent>
+            {MODEL_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
