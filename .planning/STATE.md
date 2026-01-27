@@ -21,12 +21,13 @@
     - ✓ JSON-LD schema (4 decisions)
     - ✓ Sitemap strategy (4 decisions)
     - ✓ 05-CONTEXT.md created and committed
-  - ◐ Phase 5: SEO Utility Layer EXECUTING
+  - ✓ Phase 5 Plan 01: SEO Utility Layer complete
     - ✓ 05-01: SEO constants, types, metadata builders, schema builders, OG templates
-    - □ 05-02: Match page SEO integration (next)
-  - Status: Plan 05-01 complete, 05-02 ready
+  - ✓ Phase 5 Plan 02: Match page SEO integration complete
+    - ✓ 05-02: Dynamic metadata, OG image, JSON-LD injection
+  - Status: 05-02 complete, 05-03 ready
 
-Progress: ████████████████████░░░░░░ 100% (4/5 phases complete, 1/5 first plan complete)
+Progress: █████████████████████░░░░░ 100% (4/5 phases complete, 2/5 plans complete in Phase 5)
 
 ## Session History
 
@@ -115,6 +116,17 @@ Progress: ████████████████████░░░�
 - Added schema-dts dependency for type-safe JSON-LD
 - All 4 tasks completed with atomic commits
 
+### Session 12: Phase 5 Plan 05-02 Match Page SEO Integration (2026-01-27)
+- Updated match page to import and use buildMatchMetadata from SEO utilities
+- Added buildMatchGraphSchema and sanitizeJsonLd for JSON-LD structured data
+- Added mapMatchToSeoData to adapt database Match to SEO format
+- Updated generateMetadata to use buildMatchMetadata for state-specific content
+- Added JSON-LD script injection with SportsEvent + Article schemas
+- Created opengraph-image.tsx with dynamic OG image generation
+- OG image shows team logos, competition name, status badge, score
+- 3 templates: upcoming (green), live (purple), finished (blue)
+- All 2 tasks completed with atomic commits
+
 ## User Preferences (from questioning)
 
 ### Workflow Settings
@@ -185,6 +197,8 @@ Progress: ████████████████████░░░�
 | schema-dts for type-safe JSON-LD | 05-01 | Enables compile-time validation of schema.org types |
 | State-specific metadata content | 05-01 | Provides contextually relevant SEO for upcoming/live/finished |
 | @id linking for schema references | 05-01 | Allows Google to connect SportsEvent to referenced teams |
+| SEO utility reuse for match page | 05-02 | Leveraged buildMatchMetadata from 05-01 instead of inline implementation |
+| Data mapping pattern | 05-02 | Used mapMatchToSeoData helper to adapt database Match to SEO interface |
 
 ## Codebase State
 
@@ -197,24 +211,25 @@ Progress: ████████████████████░░░�
 
 ## Next Resumption Point
 
-Ready for Phase 5 research:
+Ready to execute next plan in Phase 5:
 ```
 cd /Users/pieterbos/Documents/bettingsoccer
-/gsd-research-phase 5  # Technical implementation patterns
-/gsd-plan-phase 5      # Task breakdown and execution plans
+/gsd-execute-phase 05-03  # Leaderboard SEO integration
 ```
 
 ## Session Continuity
 
-**Last session:** 2026-01-27T14:57:50Z
-**Stopped at:** Completed 05-01-PLAN.md (all 4 tasks executed and committed)
+**Last session:** 2026-01-27T14:41:50Z
+**Stopped at:** Completed 05-02-PLAN.md (match page SEO integration)
 **Resume file:** None
-**Status:** Phase 5 plan 05-01 complete, ready for 05-02
+**Status:** Phase 5 plan 05-02 complete, ready for 05-03
 
 Next steps:
-- Execute 05-02-PLAN.md (match page SEO integration)
-- Update match pages with metadata and JSON-LD injection
+- Execute 05-03-PLAN.md (leaderboard SEO integration)
+- Add dynamic metadata to leaderboard pages
+- Create OG image for leaderboard pages
+- Add JSON-LD for Organization schema
 
 ---
 
-*Last updated: 2026-01-27 at plan 05-01 completion*
+*Last updated: 2026-01-27 at plan 05-02 completion*
