@@ -88,12 +88,13 @@
 3. Mobile-responsive design
 4. Page load time <2s with cached data
 
-**Plans:** 5 plans
+**Plans:** 6 plans
 - [x] 03-01-PLAN.md — TanStack Table integration and column definitions
 - [x] 03-02-PLAN.md — Competition and club leaderboard pages
 - [x] 03-03-PLAN.md — Comparison modal and skeleton loading states
 - [x] 03-04-PLAN.md — Gap closure: Add season and model selectors
 - [x] 03-05-PLAN.md — Gap closure: Fix main leaderboard API bypass (INT-01)
+- [ ] 03-06-PLAN.md — Gap closure: Refactor duplicate getLeaderboard functions (INT-03)
 
 ---
 
