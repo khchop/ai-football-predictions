@@ -6,7 +6,7 @@
 |---|-------|------|--------------|------------------|
 | 1 | ~~Stats Foundation~~ ✅ | Database schema, views, and calculation service | STATS-01 through STATS-05 | 4 criteria |
 | 2 | ~~Stats API + Caching~~ ✅ | Multi-granularity query API with Redis caching | STATS-06 through STATS-14 | 4 criteria |
-| 3 | Stats UI | Leaderboard pages with filtering and sorting | STATS-01 through STATS-14 | 4 criteria |
+| 3 | ~~Stats UI~~ ✅ | Leaderboard pages with filtering and sorting | STATS-01 through STATS-14 | 4 criteria |
 | 4 | Content Pipeline | LLM-powered match roundups on completion | CONT-01 through CONT-05 | 4 criteria |
 | 5 | SEO + Publication | Dynamic metadata, OG images, ISR pages | SEO-01 through SEO-04 | 4 criteria |
 
@@ -92,7 +92,7 @@
 - [x] 03-01-PLAN.md — TanStack Table integration and column definitions
 - [x] 03-02-PLAN.md — Competition and club leaderboard pages
 - [x] 03-03-PLAN.md — Comparison modal and skeleton loading states
-- [ ] 03-04-PLAN.md — Gap closure: Add season and model selectors
+- [x] 03-04-PLAN.md — Gap closure: Add season and model selectors
 
 ---
 
