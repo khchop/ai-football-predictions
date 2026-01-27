@@ -100,7 +100,7 @@ export default async function BlogPage({ searchParams }: PageProps) {
       {/* Competition Pills */}
       {competition === undefined && (
         <div className="flex flex-wrap gap-2">
-          {COMPETITIONS.slice(0, 8).map(comp => (
+          {COMPETITIONS.filter(c => c.category === 'club-domestic' || c.category === 'club-europe').map(comp => (
             <Link
               key={comp.id}
               href={`/blog?competition=${comp.id}`}
