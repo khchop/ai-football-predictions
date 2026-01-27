@@ -4,7 +4,7 @@
 
 | # | Phase | Goal | Requirements | Success Criteria |
 |---|-------|------|--------------|------------------|
-| 1 | ~~Stats Foundation~~ ✅ | Database schema, views, and calculation service | STATS-01 through STATS-05 | 4 criteria |
+| 1 | ~~Stats Foundation~~ | Database schema, views, and calculation service | STATS-01 through STATS-05 | 4 criteria |
 | 2 | Stats API + Caching | Multi-granularity query API with Redis caching | STATS-06 through STATS-14 | 4 criteria |
 | 3 | Stats UI | Leaderboard pages with filtering and sorting | STATS-01 through STATS-14 | 4 criteria |
 | 4 | Content Pipeline | LLM-powered match roundups on completion | CONT-01 through CONT-05 | 4 criteria |
@@ -56,8 +56,14 @@
 **Success Criteria:**
 1. API returns consistent structure across all granularity levels
 2. Redis cache reduces database load by 80%+
-3. Cache invalidation works correctly (overall → competition → club)
+3. Cache invalidation works correctly (overall -> competition -> club)
 4. All filter combinations work (season, competition, club, model, date range)
+
+**Plans:**
+- [x] 02-01-PLAN.md — Shared utilities (types, cache, response, auth)
+- [x] 02-02-PLAN.md — API route handlers (5 endpoints)
+- [x] 02-03-PLAN.md — Cache invalidation integration
+- [ ] 02-04-PLAN.md — Gap closure: wire competition/club filters to getLeaderboard
 
 ---
 
@@ -130,13 +136,13 @@
 ## Phase Dependencies
 
 ```
-Phase 1 (Foundation) ──────▶ Phase 2 (API) ──────▶ Phase 3 (UI)
-        │                         │
-        │                         ▼
-        │                 Phase 4 (Content Pipeline)
-        │                         │
-        ▼                         ▼
-Phase 5 (SEO + Publication) ◀─────┘
+Phase 1 (Foundation) -------> Phase 2 (API) -------> Phase 3 (UI)
+        |                         |
+        |                         v
+        |                 Phase 4 (Content Pipeline)
+        |                         |
+        v                         v
+Phase 5 (SEO + Publication) <-----'
 ```
 
 **Parallelization opportunity:** Phase 2 (API) and Phase 4 (Content) can run in parallel after Phase 1.
