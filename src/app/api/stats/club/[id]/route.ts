@@ -5,7 +5,7 @@ import { checkRateLimit, getRateLimitKey, RATE_LIMIT_PRESETS } from '@/lib/utils
 import { buildCacheKey, getStatsCache, setStatsCache } from '@/lib/api/stats/cache';
 import { getDb, matches } from '@/lib/db';
 import { eq, or } from 'drizzle-orm';
-import { getLeaderboard } from '@/lib/db/queries/stats';
+import { getLeaderboard, type LeaderboardFilters } from '@/lib/db/queries/stats';
 import type { StatsResponse, ClubStats } from '@/lib/api/stats/types';
 import { loggers } from '@/lib/logger/modules';
 
@@ -63,8 +63,15 @@ export async function GET(
       });
     }
 
-    // Get leaderboard for models that predicted this club's matches
-    const leaderboard = await getLeaderboard(query.limit);
+    // Build filters from query params and route param
+    const leaderboardFilters: LeaderboardFilters = {
+      clubId,
+      isHome: query.isHome,
+      season: query.season ? parseInt(query.season, 10) : undefined,
+    };
+
+    // Get leaderboard filtered by club
+    const leaderboard = await getLeaderboard(query.limit, 'avgPoints', leaderboardFilters);
 
     const response: StatsResponse<ClubStats> = {
       data: {
@@ -80,8 +87,8 @@ export async function GET(
           totalPoints: entry.totalPoints,
           avgPoints: entry.avgPoints,
           accuracy: entry.accuracy,
-          wins: Math.floor(entry.correctTendencies * 0.5),
-          draws: Math.floor(entry.correctTendencies * 0.2),
+          wins: entry.correctTendencies,
+          draws: 0,
           losses: entry.totalPredictions - entry.correctTendencies,
         })),
       },

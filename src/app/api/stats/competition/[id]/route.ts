@@ -5,7 +5,7 @@ import { checkRateLimit, getRateLimitKey, RATE_LIMIT_PRESETS } from '@/lib/utils
 import { buildCacheKey, getStatsCache, setStatsCache } from '@/lib/api/stats/cache';
 import { getDb, competitions } from '@/lib/db';
 import { eq } from 'drizzle-orm';
-import { getLeaderboard } from '@/lib/db/queries/stats';
+import { getLeaderboard, type LeaderboardFilters } from '@/lib/db/queries/stats';
 import type { StatsResponse, CompetitionStats } from '@/lib/api/stats/types';
 import { loggers } from '@/lib/logger/modules';
 
@@ -62,8 +62,14 @@ export async function GET(
       });
     }
 
+    // Build filters from query params and route param
+    const leaderboardFilters: LeaderboardFilters = {
+      competitionId,
+      season: query.season ? parseInt(query.season, 10) : undefined,
+    };
+
     // Get leaderboard filtered by competition
-    const leaderboard = await getLeaderboard(query.limit);
+    const leaderboard = await getLeaderboard(query.limit, 'avgPoints', leaderboardFilters);
 
     const response: StatsResponse<CompetitionStats> = {
       data: {
