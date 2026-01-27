@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LeaderboardTable } from '@/components/leaderboard-table';
+import { LeaderboardTableSkeleton } from '@/components/leaderboard/skeleton';
 import { LeaderboardFilters } from '@/components/leaderboard-filters';
 import { FaqSchema } from '@/components/FaqSchema';
 import { getLeaderboard, type TimeRange } from '@/lib/db/queries';
@@ -179,7 +180,7 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
       </Suspense>
 
       {/* Leaderboard Content */}
-      <Suspense fallback={<LoadingSkeleton />}>
+      <Suspense fallback={<LeaderboardTableSkeleton />}>
         <LeaderboardContent searchParams={resolvedParams} />
       </Suspense>
 

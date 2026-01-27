@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LeaderboardTable } from '@/components/leaderboard-table';
+import { LeaderboardTableSkeleton } from '@/components/leaderboard/skeleton';
 import type { LeaderboardEntry } from '@/lib/table/columns';
 import { LeaderboardFilters } from '@/components/leaderboard-filters';
 import { Trophy } from 'lucide-react';
@@ -226,7 +227,7 @@ export default async function ClubLeaderboardPage({ params, searchParams }: Page
       </Suspense>
 
       {/* Leaderboard Content */}
-      <Suspense fallback={<LoadingSkeleton />}>
+      <Suspense fallback={<LeaderboardTableSkeleton />}>
         <LeaderboardContent clubId={clubId} searchParams={resolvedParams} />
       </Suspense>
     </div>

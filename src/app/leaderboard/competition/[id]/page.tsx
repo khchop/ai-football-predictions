@@ -2,7 +2,9 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { LeaderboardTable, type LeaderboardEntry } from '@/components/leaderboard-table';
+import { LeaderboardTable } from '@/components/leaderboard-table';
+import { LeaderboardTableSkeleton } from '@/components/leaderboard/skeleton';
+import type { LeaderboardEntry } from '@/lib/table/columns';
 import { LeaderboardFilters } from '@/components/leaderboard-filters';
 import { Trophy } from 'lucide-react';
 import type { Metadata } from 'next';
@@ -224,7 +226,7 @@ export default async function CompetitionLeaderboardPage({ params, searchParams 
       </Suspense>
 
       {/* Leaderboard Content */}
-      <Suspense fallback={<LoadingSkeleton />}>
+      <Suspense fallback={<LeaderboardTableSkeleton />}>
         <LeaderboardContent competitionId={competitionId} searchParams={resolvedParams} />
       </Suspense>
     </div>
