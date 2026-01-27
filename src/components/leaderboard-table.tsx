@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -10,9 +10,13 @@ import {
   flexRender,
   SortingState,
   ColumnDef,
+  RowSelectionState,
 } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
-import { ArrowUp, ArrowDown, ArrowUpDown, Trophy, Medal, Award, Flame, Snowflake, Minus } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, Trophy, Medal, Award, Flame, Snowflake, Minus, Check } from 'lucide-react';
+import { CompareModal } from '@/components/leaderboard/compare-modal';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export interface LeaderboardEntry {
   modelId: string;
@@ -48,6 +52,13 @@ interface LeaderboardTableProps {
 export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = false }: LeaderboardTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Row selection state for comparison
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [compareOpen, setCompareOpen] = useState(false);
+
+  // Get selected models for comparison
+  const selectedModels = entries.filter(entry => rowSelection[entry.modelId]);
 
   // Get sort state from URL or use defaults
   const sortParam = searchParams.get('sort') as string | null;
@@ -152,6 +163,30 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
 
   // Column definitions for TanStack Table
   const columns = useMemo<ColumnDef<LeaderboardEntry>[]>(() => [
+    // 0. Selection Checkbox (display column, not sortable)
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <input
+          type="checkbox"
+          checked={table.getIsAllRowsSelected()}
+          onChange={table.getToggleAllRowsSelectedHandler()}
+          className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+          aria-label="Select all rows"
+        />
+      ),
+      cell: ({ row }) => (
+        <input
+          type="checkbox"
+          checked={row.getIsSelected()}
+          onChange={row.getToggleSelectedHandler()}
+          className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+          aria-label={`Select ${row.original.displayName}`}
+        />
+      ),
+      size: 40,
+      enableSorting: false,
+    },
     // 1. Rank (display column, not sortable)
     {
       id: 'rank',
@@ -301,10 +336,14 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
     columns,
     state: {
       sorting,
+      rowSelection,
     },
     onSortingChange: onSortingChange,
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getRowId: (row) => row.modelId,
+    enableRowSelection: true,
     initialState: {
       sorting: initialSorting,
     },
@@ -325,24 +364,42 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
     const exactCount = entry.exactScores ?? 0;
 
     return (
-      <Link
-        href={`/models/${entry.modelId}`}
+      <div
         className={cn(
-          "block rounded-lg border border-border/50 p-4 space-y-3 transition-colors",
-          index === 0 && "bg-yellow-500/5 border-yellow-500/30 hover:bg-yellow-500/10",
-          index === 1 && "bg-gray-500/5 border-gray-400/30 hover:bg-gray-500/10",
-          index === 2 && "bg-orange-500/5 border-orange-500/30 hover:bg-orange-500/10",
-          index > 2 && "hover:bg-muted/30"
+          "rounded-lg border border-border/50 p-4 space-y-3 transition-colors",
+          index === 0 && "bg-yellow-500/5 border-yellow-500/30",
+          index === 1 && "bg-gray-500/5 border-gray-400/30",
+          index === 2 && "bg-orange-500/5 border-orange-500/30",
+          rowSelection[entry.modelId] && "ring-2 ring-primary/50"
         )}
       >
-        {/* Header: Rank + Model Name + Streak */}
+        {/* Header: Checkbox + Rank + Model Name + Streak */}
         <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={!!rowSelection[entry.modelId]}
+            onChange={(e) => {
+              e.stopPropagation();
+              const newSelection = { ...rowSelection };
+              if (e.target.checked) {
+                newSelection[entry.modelId] = true;
+              } else {
+                delete newSelection[entry.modelId];
+              }
+              setRowSelection(newSelection);
+            }}
+            className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Select ${entry.displayName}`}
+          />
           <div className="flex items-center justify-center w-8 h-8">
             {getRankIcon(index)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-medium truncate">{entry.displayName}</p>
-            <p className="text-xs text-muted-foreground capitalize">{entry.provider}</p>
+            <Link href={`/models/${entry.modelId}`} className="block group">
+              <p className="font-medium group-hover:text-primary transition-colors">{entry.displayName}</p>
+              <p className="text-xs text-muted-foreground capitalize">{entry.provider}</p>
+            </Link>
           </div>
           <div className="flex items-center">
             {getStreakIndicator(entry)}
@@ -403,7 +460,7 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
             {accuracy}%
           </span>
         </div>
-      </Link>
+      </div>
     );
   };
 
@@ -420,6 +477,32 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
 
   return (
     <>
+      {/* Compare Modal */}
+      <CompareModal
+        open={compareOpen}
+        onOpenChange={setCompareOpen}
+        models={selectedModels}
+      />
+
+      {/* Compare Button - Shows when rows are selected */}
+      {Object.keys(rowSelection).length > 0 && (
+        <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border/50">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{Object.keys(rowSelection).length}</span> models selected
+            </p>
+            <Button
+              onClick={() => setCompareOpen(true)}
+              size="sm"
+              className="gap-2"
+            >
+              <Check className="h-4 w-4" />
+              Compare Selected
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
@@ -494,6 +577,3 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
     </>
   );
 }
-
-// Add useMemo import
-import { useMemo } from 'react';
