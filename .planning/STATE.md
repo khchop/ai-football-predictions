@@ -9,12 +9,12 @@
 - ✓ Roadmap created (5 phases)
   - ✓ Phase 1: Stats Foundation executed (3 plans, 3 waves)
   - ✓ Phase 2: Stats API & Caching - VERIFIED (4 plans in 4 waves, including gap closure)
-  - ✓ Phase 3: Stats UI - VERIFIED (5 plans executed, including gap closure INT-01)
+  - ✓ Phase 3: Stats UI - VERIFIED (6 plans executed, including gap closure INT-01, INT-03)
   - ✓ Phase 4: Content Pipeline - VERIFIED (5 plans in 4 waves, including gap closure INT-02)
   - ✓ Phase 5: SEO + Publication - VERIFIED (3 plans in 3 waves)
   - Status: v1.0 MILESTONE COMPLETE 🎉
 
-Progress: ████████████████████████████████ 100% (5/5 phases, 17/17 plans complete)
+Progress: ████████████████████████████████ 100% (5/5 phases, 21/21 plans complete)
 
 ## Session History
 
@@ -141,6 +141,14 @@ Progress: ███████████████████████�
 - All 2 tasks completed with atomic commits
 - Closes gap INT-02 - Roundup Trigger Timing
 
+### Session 16: Phase 3 Plan 03-06 Leaderboard Consolidation (2026-01-27)
+- Migrated legacy /api/leaderboard to canonical getLeaderboard query
+- Refactored getTopPerformingModel in queries.ts to use canonical version
+- Removed redundant getLeaderboard, LeaderboardFilters, and getDateCutoff from queries.ts
+- Preserved API compatibility via explicit mapping in route handler
+- All 2 tasks completed with atomic commits
+- Closes gap INT-03 - Duplicate getLeaderboard Functions
+
 ## User Preferences (from questioning)
 
 ### Workflow Settings
@@ -235,16 +243,16 @@ Phase 5 SEO execution in progress:
 
 ## Session Continuity
 
-**Last session:** 2026-01-27T15:57:05Z
-**Stopped at:** Completed 04-05-PLAN.md (roundup trigger optimization)
+**Last session:** 2026-01-27T16:15:00Z
+**Stopped at:** Completed 03-06-PLAN.md (leaderboard consolidation)
 **Resume file:** None
-**Status:** Phase 4 plan 04-05 complete, all 17 plans executed
+**Status:** Phase 3 plan 03-06 complete, all 21 plans executed
 
 Next steps:
 - v1.0 MILESTONE COMPLETE ✅
-- All 5 phases executed (17 plans total)
-- Ready for Phase 6: Future enhancements or v1.1 planning
+- All 5 phases executed (21 plans total)
+- Project successfully refactored and consolidated
 
 ---
 
-*Last updated: 2026-01-27 at plan 04-05 completion - all 17 plans executed*
+*Last updated: 2026-01-27 at plan 03-06 completion - all 21 plans executed*

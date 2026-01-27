@@ -94,7 +94,7 @@
 - [x] 03-03-PLAN.md — Comparison modal and skeleton loading states
 - [x] 03-04-PLAN.md — Gap closure: Add season and model selectors
 - [x] 03-05-PLAN.md — Gap closure: Fix main leaderboard API bypass (INT-01)
-- [ ] 03-06-PLAN.md — Gap closure: Refactor duplicate getLeaderboard functions (INT-03)
+- [x] 03-06-PLAN.md — Gap closure: Refactor duplicate getLeaderboard functions (INT-03)
 
 ---
 
