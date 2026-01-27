@@ -11,8 +11,8 @@
 
 import { Worker, Job } from 'bullmq';
 import * as Sentry from '@sentry/nextjs';
-import { getQueueConnection, QUEUE_NAMES } from '../index';
-import type { SettleMatchPayload } from '../types';
+import { getQueueConnection, QUEUE_NAMES, getContentQueue } from '../index';
+import type { SettleMatchPayload, GenerateRoundupPayload } from '../types';
 import { 
   getMatchById, 
   getPredictionsForMatch, 
@@ -219,15 +219,23 @@ export function createScoringWorker() {
              await invalidateMatchCaches(matchId);
              log.info(`✓ Invalidated caches for match ${matchId}`);
              
-             // Generate post-match content (non-blocking)
-             try {
-               await generatePostMatchContent(matchId);
-               log.info({ matchId }, 'Post-match content generation triggered');
-             } catch (err) {
-               log.warn({ matchId, err }, 'Post-match content generation failed (non-blocking)');
-             }
-             
-             // Trigger stats calculation and view refresh (non-blocking)
+              // Generate post-match content (non-blocking)
+              try {
+                await generatePostMatchContent(matchId);
+                log.info({ matchId }, 'Post-match content generation triggered');
+              } catch (err) {
+                log.warn({ matchId, err }, 'Post-match content generation failed (non-blocking)');
+              }
+
+              // Schedule post-match roundup generation (non-blocking, with 60s delay)
+              try {
+                await schedulePostMatchRoundup(matchId);
+                log.info({ matchId }, 'Post-match roundup scheduled');
+              } catch (err) {
+                log.warn({ matchId, err }, 'Post-match roundup scheduling failed (non-blocking)');
+              }
+
+              // Trigger stats calculation and view refresh (non-blocking)
              try {
                const { enqueuePointsCalculation } = await import('@/lib/queue/jobs/calculate-stats');
                await enqueuePointsCalculation(matchId, { priority: 'high', delay: 1000 });
@@ -289,4 +297,40 @@ export function createScoringWorker() {
       concurrency: 3, // Can score multiple matches in parallel
     }
   );
+}
+
+/**
+ * Schedule post-match roundup generation after settlement
+ * Uses 60-second delay to allow settlement to complete fully
+ */
+export async function schedulePostMatchRoundup(matchId: string, delayMs: number = 60000): Promise<void> {
+  const log = loggers.scoringWorker.child({ matchId, delayMs });
+
+  log.info('Scheduling post-match roundup generation');
+
+  const contentQueue = getContentQueue();
+
+  await contentQueue.add(
+    'generate-roundup',
+    {
+      type: 'generate-roundup',
+      data: {
+        matchId,
+        triggeredAt: new Date().toISOString(),
+      },
+    } as GenerateRoundupPayload,
+    {
+      jobId: `roundup-${matchId}`, // Prevent duplicates
+      removeOnComplete: {
+        age: 86400, // Keep for 24 hours
+        count: 100,
+      },
+      removeOnFail: {
+        age: 604800, // Keep failed jobs for 7 days
+      },
+      delay: delayMs, // Delay before job becomes available
+    }
+  );
+
+  log.info({ matchId, delayMs }, 'Scheduled post-match roundup generation');
 }
