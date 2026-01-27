@@ -9,14 +9,14 @@
 - [x] **STATS-03**: Win rate percentage (correct tendency)
 - [x] **STATS-04**: Average points per match
 - [x] **STATS-05**: Recent form (last 10 matches)
-- [ ] **STATS-06**: Competition-scoped leaderboards (same metrics as overall)
-- [ ] **STATS-07**: Competition vs overall performance comparison
-- [ ] **STATS-08**: Filter by season/competition
-- [ ] **STATS-09**: Performance against specific clubs
-- [ ] **STATS-10**: Home vs away performance per club
-- [ ] **STATS-11**: Filter by club
-- [ ] **STATS-12**: Date range filtering
-- [ ] **STATS-13**: Model filtering
+- [x] **STATS-06**: Competition-scoped leaderboards (same metrics as overall)
+- [x] **STATS-07**: Competition vs overall performance comparison
+- [x] **STATS-08**: Filter by season/competition
+- [x] **STATS-09**: Performance against specific clubs
+- [x] **STATS-10**: Home vs away performance per club
+- [x] **STATS-11**: Filter by club
+- [x] **STATS-12**: Date range filtering
+- [x] **STATS-13**: Model filtering
 - [ ] **STATS-14**: Sortable table UI
 
 ### Match Roundups
@@ -51,9 +51,10 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | STATS-01 through STATS-05 | 1 | Complete |
-| STATS-06 through STATS-14 | 2-3 | Pending |
+| STATS-06 through STATS-13 | 2 | Complete |
+| STATS-14 | 3 | Pending |
 | CONT-01 through CONT-05 | 4 | Pending |
 | SEO-01 through SEO-04 | 5 | Pending |
 
 ---
-*Last updated: 2026-01-27 after Phase 1 completion*
+*Last updated: 2026-01-27 after Phase 2 completion*

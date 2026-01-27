@@ -4,8 +4,8 @@
 
 | # | Phase | Goal | Requirements | Success Criteria |
 |---|-------|------|--------------|------------------|
-| 1 | ~~Stats Foundation~~ | Database schema, views, and calculation service | STATS-01 through STATS-05 | 4 criteria |
-| 2 | Stats API + Caching | Multi-granularity query API with Redis caching | STATS-06 through STATS-14 | 4 criteria |
+| 1 | ~~Stats Foundation~~ ✅ | Database schema, views, and calculation service | STATS-01 through STATS-05 | 4 criteria |
+| 2 | ~~Stats API + Caching~~ ✅ | Multi-granularity query API with Redis caching | STATS-06 through STATS-14 | 4 criteria |
 | 3 | Stats UI | Leaderboard pages with filtering and sorting | STATS-01 through STATS-14 | 4 criteria |
 | 4 | Content Pipeline | LLM-powered match roundups on completion | CONT-01 through CONT-05 | 4 criteria |
 | 5 | SEO + Publication | Dynamic metadata, OG images, ISR pages | SEO-01 through SEO-04 | 4 criteria |
@@ -63,7 +63,7 @@
 - [x] 02-01-PLAN.md — Shared utilities (types, cache, response, auth)
 - [x] 02-02-PLAN.md — API route handlers (5 endpoints)
 - [x] 02-03-PLAN.md — Cache invalidation integration
-- [ ] 02-04-PLAN.md — Gap closure: wire competition/club filters to getLeaderboard
+- [x] 02-04-PLAN.md — Gap closure: wire competition/club filters to getLeaderboard
 
 ---
 
