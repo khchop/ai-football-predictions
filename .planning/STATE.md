@@ -2,20 +2,21 @@
 
 ## Current Position
 
-**Stage:** GSD ► Phase 3 IN PROGRESS
+**Stage:** GSD ► Phase 3 COMPLETE
 - ✓ Project initialization complete
 - ✓ Research complete (5 files)
 - ✓ Requirements defined (23 requirements)
 - ✓ Roadmap created (5 phases)
   - ✓ Phase 1: Stats Foundation executed (3 plans, 3 waves)
   - ✓ Phase 2: Stats API & Caching - VERIFIED (4 plans in 4 waves, including gap closure)
-  - Phase 3: Stats UI - In Progress
-    - ✓ 03-01: TanStack Table Integration (completed in previous session)
-    - ✓ 03-02: LeaderboardTable Component (completed in previous session)
-    - ✓ 03-03: Comparison Modal and Skeleton Loading (just completed)
-  - Status: Plan 03-03 complete, Phase 3 wave 2 complete
+  - ✓ Phase 3: Stats UI - COMPLETE (4 plans executed)
+    - ✓ 03-01: TanStack Table Integration
+    - ✓ 03-02: LeaderboardTable Component
+    - ✓ 03-03: Comparison Modal and Skeleton Loading
+    - ✓ 03-04: Season and Model Selectors
+  - Status: Phase 3 complete, ready for Phase 4
 
-Progress: ████████░░░░░░░░░░░░░░░ 60% (3/5 phases complete)
+Progress: █████████░░░░░░░░░░░░░░░░░ 80% (4/5 phases complete)
 
 ## Session History
 
@@ -37,6 +38,22 @@ Progress: ████████░░░░░░░░░░░░░░░ 
 - Installed @tanstack/react-table@8.21.3
 - Created src/lib/table/columns.tsx with 9 column definitions
 - Refactored leaderboard-table.tsx to use useReactTable hook
+- All 3 tasks completed successfully
+
+### Session 4: Phase 3 Plan 03-03 Comparison Modal and Skeleton Loading (2026-01-27)
+- Installed react-loading-skeleton
+- Created LeaderboardTableSkeleton component
+- Created CompareModal component with side-by-side stats
+- Added row selection and comparison trigger to LeaderboardTable
+- Added skeleton fallbacks to all leaderboard pages
+- All 4 tasks completed successfully
+
+### Session 5: Phase 3 Plan 03-04 Season and Model Selectors (2026-01-27)
+- Added SEASON_OPTIONS constant with 5 season choices
+- Added MODEL_OPTIONS constant with 8 LLM model choices
+- Added season selector between Club and Time Range filters
+- Added model selector after Min Predictions filter
+- Both sync to URL via existing updateParams callback
 - All 3 tasks completed successfully
 
 ## User Preferences (from questioning)
@@ -118,26 +135,18 @@ Progress: ████████░░░░░░░░░░░░░░░ 
 
 ## Next Resumption Point
 
-Continue with Phase 3 plan 03-03 or proceed to next plan in Phase 3:
+Proceed to Phase 4: Analytics Dashboard or identify additional Phase 3 work:
 ```
 cd /Users/pieterbos/Documents/bettingsoccer
-# Continue with Phase 3 execution
+# Continue with next phase
 ```
-
-### Session 4: Phase 3 Plan 03-03 Comparison Modal and Skeleton Loading (2026-01-27)
-- Installed react-loading-skeleton
-- Created LeaderboardTableSkeleton component
-- Created CompareModal component with side-by-side stats
-- Added row selection and comparison trigger to LeaderboardTable
-- Added skeleton fallbacks to all leaderboard pages
-- All 4 tasks completed successfully
 
 ## Session Continuity
 
-**Last session:** 2026-01-27T12:25:05Z
-**Stopped at:** Completed plan 03-03 (Comparison Modal and Skeleton Loading)
+**Last session:** 2026-01-27T12:45:00Z
+**Stopped at:** Completed plan 03-04 (Season and Model Selectors)
 **Resume file:** None
-**Status:** Phase 3 plan 03 complete, wave 2 complete, ready for next plan (03-04)
+**Status:** Phase 3 complete, ready for Phase 4
 
 ---
-*Last updated: 2026-01-27 at phase 3 plan 03 execution complete*
+*Last updated: 2026-01-27 at phase 3 plan 04 execution complete*
