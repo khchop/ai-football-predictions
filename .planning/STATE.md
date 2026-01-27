@@ -2,16 +2,16 @@
 
 ## Current Position
 
-**Stage:** GSD ► Phase 2 IN PROGRESS
+**Stage:** GSD ► Phase 2 COMPLETE
 - ✓ Project initialization complete
 - ✓ Research complete (5 files)
 - ✓ Requirements defined (23 requirements)
 - ✓ Roadmap created (5 phases)
 - ✓ Phase 1: Stats Foundation executed (3 plans, 3 waves)
-- ✓ Phase 2: Stats API & Caching - Plan 01 complete (1 of 1)
+- ✓ Phase 2: Stats API & Caching - COMPLETE (2 plans in 2 waves)
 - Status: Phase 2 complete, ready for next phase
 
-Progress: ██░░░░░░░░░░░░░░░░░░ 10% (2/20 phases estimated)
+Progress: ████░░░░░░░░░░░░░░░░ 20% (2/10 phases estimated)
 
 ## Session History
 
@@ -90,6 +90,8 @@ Progress: ██░░░░░░░░░░░░░░░░░░ 10% (2/20
 | Reuse CRON_SECRET for stats API | 02-01 | Consistent with existing cron endpoints, avoids additional env vars |
 | Adaptive TTL (60s/300s) | 02-01 | Current season data changes frequently, historical is stable |
 | Cursor-based pagination | 02-01 | Better performance than offset for large datasets |
+| Fail-open rate limiting for stats API | 02-02 | Public endpoints should allow traffic if Redis unavailable |
+| 60s Cache-Control TTL for all stats | 02-02 | Balances data freshness with CDN/browser caching benefits |
 
 ## Codebase State
 
@@ -113,10 +115,10 @@ cd /Users/pieterbos/Documents/bettingsoccer
 
 ## Session Continuity
 
-**Last session:** 2026-01-27T11:01:27Z
-**Stopped at:** Completed 02-01-PLAN.md
+**Last session:** 2026-01-27T11:07:00Z
+**Stopped at:** Completed 02-02-PLAN.md
 **Resume file:** None
 **Status:** Phase 2 complete, ready for next phase
 
 ---
-*Last updated: 2026-01-27 at phase 2 execution complete*
+*Last updated: 2026-01-27 at phase 2 wave 2 execution complete*
