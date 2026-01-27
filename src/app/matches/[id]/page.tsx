@@ -7,6 +7,7 @@ import { getMatchWithAnalysis, getPredictionsForMatchWithDetails } from '@/lib/d
 import { getMatchEvents } from '@/lib/football/api-football';
 import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, Target } from 'lucide-react';
 import Link from 'next/link';
+import { MatchRoundup } from '@/components/match/MatchRoundup';
 import { cn } from '@/lib/utils';
 import type { LikelyScore } from '@/types';
 import type { Metadata } from 'next';
@@ -526,6 +527,9 @@ export default async function MatchPage({ params }: MatchPageProps) {
           />
         </CardContent>
       </Card>
+
+      {/* Match Roundup (for finished matches) */}
+      <MatchRoundup matchId={match.id} isFinished={isFinished} />
       </div>
     </>
   );
