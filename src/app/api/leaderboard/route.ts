@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLeaderboard, getActiveModels } from '@/lib/db/queries';
+import { getActiveModels } from '@/lib/db/queries';
+import { getLeaderboard } from '@/lib/db/queries/stats';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 import { validateQuery } from '@/lib/validation/middleware';
 import { getLeaderboardQuerySchema } from '@/lib/validation/schemas';
@@ -36,12 +37,36 @@ export async function GET(request: NextRequest) {
     
     const { activeOnly, competitionId, timeRange, limit } = validatedQuery;
 
+    // Calculate date cutoff for time range filter if needed
+    let dateFrom: string | undefined;
+    if (timeRange && timeRange !== 'all') {
+      const now = new Date();
+      const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
+      now.setDate(now.getDate() - days);
+      dateFrom = now.toISOString();
+    }
+
     // Get leaderboard with filters (by average points, Kicktipp Quota Scoring)
-    let leaderboard = await getLeaderboard({
+    const canonicalLeaderboard = await getLeaderboard(limit, 'avgPoints', { 
       competitionId,
-      timeRange,
-      limit,
+      dateFrom
     });
+
+    // Map the results back to the legacy shape
+    let leaderboard = canonicalLeaderboard.map(entry => ({
+      model: {
+        id: entry.modelId,
+        displayName: entry.displayName,
+        provider: entry.provider,
+        active: true // The query already filters for active: true
+      },
+      totalPoints: entry.totalPoints,
+      totalPredictions: entry.totalPredictions,
+      exactScores: entry.exactScores,
+      correctTendencies: entry.correctTendencies,
+      avgPoints: entry.avgPoints,
+      accuracy: entry.accuracy
+    }));
 
     // Filter to active models only if requested (redundant since query already filters, but kept for API compatibility)
     if (activeOnly) {
