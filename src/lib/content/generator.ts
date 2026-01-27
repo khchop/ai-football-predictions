@@ -6,9 +6,9 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { getDb, matchPreviews, blogPosts, models, matchContent } from '@/lib/db';
+import { getDb, matchPreviews, blogPosts, models, matchContent, matchRoundups } from '@/lib/db';
 import { loggers } from '@/lib/logger/modules';
-import type { NewMatchPreview, NewBlogPost } from '@/lib/db/schema';
+import type { NewMatchPreview, NewBlogPost, NewMatchRoundup } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateWithTogetherAI } from './together-client';
 import {
@@ -24,6 +24,11 @@ import {
 import { CONTENT_CONFIG } from './config';
 import { slugify } from '@/lib/utils/slugify';
 import { getMatchPredictionsWithAccuracy, getMatchById, getMatchAnalysisByMatchId } from '@/lib/db/queries';
+import {
+  checkForDuplicates,
+  computeContentHash,
+  DEDUPLICATION_CONFIG,
+} from './deduplication';
 
 function normalizePhrase(value: string) {
   return value
@@ -726,9 +731,176 @@ export async function generatePostMatchRoundup(matchId: string): Promise<string>
     throw new Error('Generated roundup narrative is too short');
   }
 
-  // 12. Store in database
-  const db = getDb();
+  // 12. Deduplication check
+  const deduplicationCheck = await checkForDuplicates(result.content.narrative, matchId);
 
+  if (deduplicationCheck.action === 'skip') {
+    // Exact duplicate found - return existing matchId
+    loggers.content.info(
+      { matchId, reason: deduplicationCheck.reason },
+      'Skipping duplicate roundup generation'
+    );
+    return matchId;
+  }
+
+  // Track if we need to regenerate due to similarity
+  let needsRegeneration = deduplicationCheck.action === 'regenerate';
+  let regenerationAttempts = 0;
+  const maxRegenerationAttempts = 2;
+  let finalNarrative = result.content.narrative;
+  let finalCost = result.cost;
+  let finalUsage = result.usage;
+
+  // Regeneration loop for similar content
+  while (needsRegeneration && regenerationAttempts < maxRegenerationAttempts) {
+    regenerationAttempts++;
+
+    loggers.content.info(
+      {
+        matchId,
+        attempt: regenerationAttempts,
+        maxSimilarity: deduplicationCheck.details.maxSimilarity,
+      },
+      'Regenerating roundup due to high similarity'
+    );
+
+    // Build regeneration prompt with different narrative angle
+    const angleInstructions = [
+      'Take a tactical analysis approach, focusing on formation changes and key moments.',
+      'Focus on individual player performances and standout contributions.',
+      'Emphasize historical context and season implications.',
+      'Provide a statistical deep-dive with comparative analysis.',
+    ];
+
+    const angleIndex = (regenerationAttempts - 1) % angleInstructions.length;
+    const angleInstruction = angleInstructions[angleIndex];
+
+    // Create modified prompt with different angle
+    const regenerationUserPrompt = `${userPrompt}
+
+${angleInstruction}
+
+IMPORTANT: Write this roundup from a completely different angle than typical match reports. Avoid phrases and structures used in standard football journalism.`;
+
+    // Regenerate with LLM
+    const regenResult = await generateWithTogetherAI<PostMatchRoundupResponse>(
+      systemPrompt,
+      regenerationUserPrompt,
+      0.5, // Slightly higher temperature for variation
+      4000
+    );
+
+    // Validate regenerated content
+    if (!regenResult.content.narrative || regenResult.content.narrative.length < 500) {
+      loggers.content.warn(
+        { matchId, attempt: regenerationAttempts },
+        'Regenerated content too short, using original'
+      );
+      break;
+    }
+
+    // Check regenerated content for duplicates
+    const regenCheck = await checkForDuplicates(regenResult.content.narrative, matchId);
+
+    if (regenCheck.action === 'allow') {
+      // Regeneration successful
+      finalNarrative = regenResult.content.narrative;
+      finalCost = finalCost + regenResult.cost;
+      finalUsage = {
+        promptTokens: finalUsage.promptTokens + regenResult.usage.promptTokens,
+        completionTokens: finalUsage.completionTokens + regenResult.usage.completionTokens,
+        totalTokens: finalUsage.totalTokens + regenResult.usage.totalTokens,
+      };
+
+      loggers.content.info(
+        {
+          matchId,
+          attempt: regenerationAttempts,
+          newSimilarity: regenCheck.details.maxSimilarity,
+        },
+        'Regeneration successful - content now unique'
+      );
+
+      needsRegeneration = false;
+    } else if (regenCheck.action === 'skip') {
+      // Found exact duplicate in regenerated content
+      loggers.content.warn(
+        { matchId, attempt: regenerationAttempts },
+        'Regenerated content is duplicate - using original'
+      );
+      needsRegeneration = false;
+    } else {
+      // Still too similar
+      loggers.content.warn(
+        {
+          matchId,
+          attempt: regenerationAttempts,
+          maxSimilarity: regenCheck.details.maxSimilarity,
+        },
+        'Regenerated content still too similar'
+      );
+
+      // Update check for next iteration
+      deduplicationCheck.details.maxSimilarity = regenCheck.details.maxSimilarity;
+
+      // If max attempts reached, log warning and use original
+      if (regenerationAttempts >= maxRegenerationAttempts) {
+        loggers.content.warn(
+          { matchId, maxSimilarity: regenCheck.details.maxSimilarity },
+          'Max regeneration attempts reached - storing with warning flag'
+        );
+        needsRegeneration = false;
+      }
+    }
+  }
+
+  // 13. Store in matchRoundups table with deduplication data
+  const db = getDb();
+  const similarityHash = computeContentHash(finalNarrative);
+
+  const newRoundup: NewMatchRoundup = {
+    id: uuidv4(),
+    matchId,
+    title: result.content.title,
+    scoreboard: JSON.stringify(result.content.scoreboard),
+    events: JSON.stringify(events),
+    stats: JSON.stringify(stats),
+    modelPredictions: result.content.modelPredictions,
+    topPerformers: JSON.stringify(result.content.topPerformers),
+    narrative: finalNarrative,
+    keywords: result.content.keywords.join(', '),
+    similarityHash,
+    generationCost: finalCost,
+    promptTokens: finalUsage.promptTokens,
+    completionTokens: finalUsage.completionTokens,
+    generatedBy: CONTENT_CONFIG.model,
+    status: 'published',
+    publishedAt: new Date(),
+  };
+
+  await db.insert(matchRoundups).values(newRoundup).onConflictDoUpdate({
+    target: matchRoundups.matchId,
+    set: {
+      title: newRoundup.title,
+      scoreboard: newRoundup.scoreboard,
+      events: newRoundup.events,
+      stats: newRoundup.stats,
+      modelPredictions: newRoundup.modelPredictions,
+      topPerformers: newRoundup.topPerformers,
+      narrative: newRoundup.narrative,
+      keywords: newRoundup.keywords,
+      similarityHash: newRoundup.similarityHash,
+      generationCost: newRoundup.generationCost,
+      promptTokens: newRoundup.promptTokens,
+      completionTokens: newRoundup.completionTokens,
+      generatedBy: newRoundup.generatedBy,
+      status: newRoundup.status,
+      publishedAt: newRoundup.publishedAt,
+      updatedAt: new Date(),
+    },
+  });
+
+  // Also update the existing matchContent table for backward compatibility
   const roundupHtml = `
 <h1>${result.content.title}</h1>
 
@@ -769,7 +941,7 @@ export async function generatePostMatchRoundup(matchId: string): Promise<string>
 
 <div class="narrative">
   <h2>Match Analysis</h2>
-  ${result.content.narrative}
+  ${finalNarrative}
 </div>
 
 <div class="keywords">
@@ -785,8 +957,8 @@ export async function generatePostMatchRoundup(matchId: string): Promise<string>
       postMatchContent: roundupHtml,
       postMatchGeneratedAt: new Date().toISOString(),
       generatedBy: CONTENT_CONFIG.model,
-      totalTokens: result.usage.totalTokens,
-      totalCost: result.cost.toFixed(4),
+      totalTokens: finalUsage.totalTokens,
+      totalCost: finalCost.toFixed(4),
     })
     .onConflictDoUpdate({
       target: matchContent.matchId,
@@ -794,8 +966,8 @@ export async function generatePostMatchRoundup(matchId: string): Promise<string>
         postMatchContent: roundupHtml,
         postMatchGeneratedAt: new Date().toISOString(),
         generatedBy: CONTENT_CONFIG.model,
-        totalTokens: result.usage.totalTokens,
-        totalCost: result.cost.toFixed(4),
+        totalTokens: finalUsage.totalTokens,
+        totalCost: finalCost.toFixed(4),
         updatedAt: new Date(),
       },
     });
@@ -805,8 +977,15 @@ export async function generatePostMatchRoundup(matchId: string): Promise<string>
     homeTeam,
     awayTeam,
     score: `${homeScore}-${awayScore}`,
-    cost: result.cost,
-    tokens: result.usage.totalTokens,
+    cost: finalCost,
+    tokens: finalUsage.totalTokens,
+    deduplication: {
+      action: deduplicationCheck.action,
+      reason: deduplicationCheck.reason,
+      similarCount: deduplicationCheck.details.similarCount,
+      maxSimilarity: deduplicationCheck.details.maxSimilarity,
+      regenerationAttempts,
+    },
   }, 'Post-match roundup generated');
 
   return matchId;
