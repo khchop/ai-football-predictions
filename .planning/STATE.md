@@ -291,3 +291,4 @@ Milestone v1.1 audit findings resolved:
 | 001 | Add a new column to the matches table called 'matchday' of type integer | 2026-01-27 | dd53e8e | [001-add-a-new-column-to-the-matches-table-ca](./quick/001-add-a-new-column-to-the-matches-table-ca/) |
 | 002 | Fix deployment failure - missing matchday property in fixtures.worker.ts | 2026-01-27 | 1ed7555 | [002-fix-deployment-matchday-error](./quick/002-fix-deployment-matchday-error/) |
 | 003 | Fix deployment failure - move schema-dts to dependencies | 2026-01-27 | 343a758 | [003-fix-schema-dts-missing-dependency](./quick/003-fix-schema-dts-missing-dependency/) |
+| 004 | Fix deployment failure - remove generateStaticParams to avoid build-time DB queries | 2026-01-27 | c85ec96 | [004-remove-static-params-build-time](./quick/004-remove-static-params-build-time/) |
