@@ -9,6 +9,27 @@ import { getModelOverallStats, getModelCompetitionStats, getModelClubStats } fro
 import type { StatsResponse, ModelStats } from '@/lib/api/stats/types';
 import { loggers } from '@/lib/logger/modules';
 
+/**
+ * GET /api/stats/models/[id] - Model-specific statistics endpoint
+ *
+ * Returns detailed performance statistics for a specific AI model, including:
+ * - Overall stats (points, accuracy, streaks)
+ * - Competition-scoped stats (if competition filter provided)
+ * - Club-scoped stats (if club filter provided)
+ *
+ * @deprecated - No UI consumer currently uses this endpoint
+ * @reserved - Endpoint is reserved for future model detail pages or analytical views
+ *
+ * Note: This endpoint is fully functional and follows the same authentication,
+ * caching, and rate limiting patterns as other stats API routes. It was created
+ * as part of Phase 2 Stats API work but has not yet been connected to any UI.
+ *
+ * Future use cases may include:
+ * - Model detail pages showing comprehensive performance history
+ * - Model comparison tools
+ * - Analytical dashboards for model researchers
+ */
+
 const querySchema = z.object({
   season: z.string().optional(),
   competition: z.string().optional(),
