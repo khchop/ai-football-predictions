@@ -28,6 +28,7 @@ export const loggers = {
   contentWorker: createLogger('worker:content'),
   modelRecoveryWorker: createLogger('worker:model-recovery'),
   standingsWorker: createLogger('worker:standings'),
+  statsWorker: createLogger('worker:stats'),
   
   // Football data
   apiFootball: createLogger('api-football'),
@@ -41,6 +42,7 @@ export const loggers = {
   db: createLogger('db'),
   cache: createLogger('cache'),
   api: createLogger('api'),
+  cron: createLogger('cron'),
   circuitBreaker: createLogger('circuit-breaker'),
   rateLimiter: createLogger('rate-limiter'),
   
