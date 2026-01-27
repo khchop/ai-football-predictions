@@ -24,6 +24,7 @@ export const JOB_TYPES = {
   PREDICT_MATCH: 'predict-match',
   MONITOR_LIVE: 'monitor-live',
   SETTLE_MATCH: 'settle-match',
+  GENERATE_ROUNDUP: 'generate-roundup',
   
   // Utility
   CATCH_UP: 'catch-up',

@@ -67,8 +67,17 @@ export interface BackfillMissingPayload {
 
 // Generate AI content (match previews, league roundups, model reports)
 export interface GenerateContentPayload {
-  type: 'match_preview' | 'league_roundup' | 'model_report' | 'scan_matches' | 'scan_match_content' | 'scan_league_roundups';
+  type: 'match_preview' | 'league_roundup' | 'model_report' | 'scan_matches' | 'scan_match_content' | 'scan_league_roundups' | 'generate-roundup';
   data: Record<string, unknown>;
+}
+
+// Generate post-match roundup content (triggered after settlement)
+export interface GenerateRoundupPayload {
+  type: 'generate-roundup';
+  data: {
+    matchId: string;
+    triggeredAt: string; // ISO timestamp when settlement completed
+  };
 }
 
 // Update standings (repeatable, daily)
@@ -88,4 +97,5 @@ export type JobPayload =
   | SettleMatchPayload
   | CatchUpPayload
   | GenerateContentPayload
+  | GenerateRoundupPayload
   | UpdateStandingsPayload;
