@@ -117,11 +117,53 @@ interface LeagueRoundupData {
   competition: string;
   competitionSlug: string;
   week: string;
-  matches: Array<{
+  allowedTeams?: string[];
+  summary?: {
+    totalMatches: number;
+    totalPredictions: number;
+    avgTendencyAccuracyPct: number;
+    avgExactHitPct: number;
+  };
+  topModelsByAvgPoints?: Array<{
+    modelName: string;
+    matchesCovered: number;
+    totalPoints: number;
+    avgPointsPerMatch: number;
+    tendencyAccuracyPct: number;
+    exactHitPct: number;
+  }>;
+  biggestConsensusMisses?: Array<{
+    matchId: string;
     homeTeam: string;
     awayTeam: string;
-    result?: string;
-    prediction?: string;
+    finalScore: string | null;
+    consensusOutcome: 'H' | 'D' | 'A';
+    consensusSharePct: number;
+    predictedResultCounts: { H: number; D: number; A: number };
+  }>;
+  matches: Array<{
+    matchId?: string;
+    kickoffTime?: string;
+    round?: string | null;
+    homeTeam: string;
+    awayTeam: string;
+    finalScore?: string | null;
+    totalModels?: number;
+    correctTendencyCount?: number;
+    correctTendencyPct?: number;
+    exactScoreCount?: number;
+    exactScorePct?: number;
+    predictedResultCounts?: { H: number; D: number; A: number };
+    consensusOutcome?: 'H' | 'D' | 'A';
+    consensusOutcomeSharePct?: number;
+    consensusCorrect?: boolean | null;
+    topScorelines?: Array<{ scoreline: string; count: number }>;
+    topModels?: Array<{
+      modelName: string;
+      predictedScore: string;
+      predictedResult: string;
+      points: number;
+    }>;
     wasUpset?: boolean;
   }>;
   standingsTop5?: Array<{
@@ -130,68 +172,107 @@ interface LeagueRoundupData {
     points: number;
     played: number;
   }>;
-  topScorers?: Array<{
-    player: string;
-    team: string;
-    goals: number;
-  }>;
 }
 
 export function buildLeagueRoundupPrompt(data: LeagueRoundupData): string {
-  const { competition, week, matches, standingsTop5 } = data;
-  
-  return `Week: ${week}
+  const {
+    competition,
+    week,
+    allowedTeams,
+    summary,
+    topModelsByAvgPoints,
+    biggestConsensusMisses,
+    matches,
+  } = data;
 
-Matches Covered:
-${matches.map(m => {
-  let line = `- ${m.homeTeam} vs ${m.awayTeam}`;
-  if (m.result) line += ` (${m.result})`;
-  if (m.wasUpset) line += ' [UPSET]';
-  if (m.prediction) line += ` | Predicted: ${m.prediction}`;
-  return line;
-}).join('\n')}
+  const factsOnlyRules = [
+    'Use ONLY the facts and numbers provided under DATA. Do not infer missing facts.',
+    'Mention ONLY teams that appear in ALLOWED_TEAMS. If a team is not in the list, do not mention it.',
+    'Do NOT mention player names (no scorers, assists, injuries, managers).',
+    'Do NOT mention league table positions, points, title/relegation races unless explicitly provided under DATA.',
+    'If something is not provided, write "Data unavailable" (do not guess).',
+    'No quotes, no rumors, no opinions. This is a statistical audit of AI model performance.',
+  ].join('\n- ');
 
-${standingsTop5 && standingsTop5.length > 0 ? `
-Current Standings (Top 5):
-${standingsTop5.map(t => `${t.position}. ${t.team} - ${t.points} pts (${t.played} played)`).join('\n')}
-` : ''}
+  const topModelsTable =
+    topModelsByAvgPoints && topModelsByAvgPoints.length > 0
+      ? [
+          '| # | Model | Matches | Total Points | Avg Pts/Match | Tendency % | Exact % |',
+          '|---:|---|---:|---:|---:|---:|---:|',
+          ...topModelsByAvgPoints.map(
+            (m, i) =>
+              `| ${i + 1} | ${m.modelName} | ${m.matchesCovered} | ${m.totalPoints} | ${m.avgPointsPerMatch.toFixed(2)} | ${m.tendencyAccuracyPct.toFixed(1)}% | ${m.exactHitPct.toFixed(1)}% |`
+          ),
+        ].join('\n')
+      : 'Data unavailable';
 
-Write a comprehensive league roundup article with:
+  return `LEAGUE: ${competition}
+WEEK/ROUND: ${week}
 
-1. Compelling headline (60 characters max, SEO-optimized)
-2. Engaging introduction (2-3 paragraphs, 200-250 words)
-3. Match-by-match analysis (300-400 words)
-   - Highlight key results and upsets
-   - Analyze surprising outcomes
-   - Note standout performances
-4. League table implications (200-250 words)
-   - Title race updates
-   - Relegation battle changes
-   - European qualification race
-5. Looking ahead (150-200 words)
-   - Preview next week's key fixtures
-   - What to watch for
-6. Conclusion (100-150 words)
+## RULES (STRICT)
+- ${factsOnlyRules}
 
-Return as JSON:
+## DATA (AUTHORITATIVE)
+
+ALLOWED_TEAMS:
+${allowedTeams && allowedTeams.length > 0 ? allowedTeams.map((t) => `- ${t}`).join('\n') : 'Data unavailable'}
+
+SUMMARY:
+${summary ? `- Matches: ${summary.totalMatches}
+- Total model predictions: ${summary.totalPredictions}
+- Avg correct tendency (match-level average): ${summary.avgTendencyAccuracyPct.toFixed(2)}%
+- Avg exact score hit rate (match-level average): ${summary.avgExactHitPct.toFixed(2)}%` : 'Data unavailable'}
+
+TOP 10 MODELS (RANKED BY AVERAGE POINTS PER MATCH; MIN 3 MATCHES):
+${topModelsTable}
+
+BIGGEST CONSENSUS MISSES (WHEN CONSENSUS WAS WRONG):
+${biggestConsensusMisses && biggestConsensusMisses.length > 0 ? biggestConsensusMisses.map((m) => (
+`- ${m.homeTeam} vs ${m.awayTeam} (${m.finalScore ?? 'Data unavailable'}) | Consensus: ${m.consensusOutcome} (${m.consensusSharePct.toFixed(1)}%) | Counts H/D/A: ${m.predictedResultCounts.H}/${m.predictedResultCounts.D}/${m.predictedResultCounts.A}`
+)).join('\n') : 'Data unavailable'}
+
+MATCHES (MATCH-BY-MATCH NUMBERS):
+${matches.map((m) => {
+  const resultLine = m.finalScore ? `${m.finalScore}` : 'Data unavailable';
+  const modelsLine = m.totalModels !== undefined ? `${m.totalModels}` : 'Data unavailable';
+  const tendencyLine = m.correctTendencyPct !== undefined ? `${m.correctTendencyPct.toFixed(1)}% (${m.correctTendencyCount ?? 0}/${m.totalModels ?? 0})` : 'Data unavailable';
+  const exactLine = m.exactScorePct !== undefined ? `${m.exactScorePct.toFixed(1)}% (${m.exactScoreCount ?? 0}/${m.totalModels ?? 0})` : 'Data unavailable';
+  const counts = m.predictedResultCounts
+    ? `${m.predictedResultCounts.H}/${m.predictedResultCounts.D}/${m.predictedResultCounts.A}`
+    : 'Data unavailable';
+  const consensus = m.consensusOutcome
+    ? `${m.consensusOutcome} (${(m.consensusOutcomeSharePct ?? 0).toFixed(1)}%) | correct: ${m.consensusCorrect === null ? 'Data unavailable' : m.consensusCorrect ? 'yes' : 'no'}`
+    : 'Data unavailable';
+  const topScorelinesText = m.topScorelines && m.topScorelines.length > 0
+    ? m.topScorelines.map((s) => `${s.scoreline} (${s.count})`).join(', ')
+    : 'Data unavailable';
+  const topModelsText = m.topModels && m.topModels.length > 0
+    ? m.topModels.map((tm) => `${tm.modelName}: ${tm.predictedScore} (${tm.points} pts)`).join(' | ')
+    : 'Data unavailable';
+
+  return [
+    `- Match: ${m.homeTeam} vs ${m.awayTeam}`, 
+    `  - Result: ${resultLine}`,
+    `  - Total models: ${modelsLine}`,
+    `  - Correct tendency: ${tendencyLine}`,
+    `  - Exact score hits: ${exactLine}`,
+    `  - Predicted outcomes (H/D/A): ${counts}`,
+    `  - Consensus: ${consensus}`,
+    `  - Top predicted scorelines: ${topScorelinesText}`,
+    `  - Top models (by points for this match): ${topModelsText}`,
+  ].join('\n');
+}).join('\n\n')}
+
+## OUTPUT REQUIREMENTS
+Return JSON only:
 {
-  "title": "Article headline (60 chars max)",
-  "excerpt": "Brief summary (150-160 characters for meta)",
-  "content": "Full article in markdown format (1200-1500 words total)",
-  "metaTitle": "SEO title (60 chars)",
-  "metaDescription": "Meta description (150-160 chars)",
-  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
+  "title": "SEO title (<= 60 chars)",
+  "excerpt": "150-160 char summary (factual-only)",
+  "content": "Markdown. Must be stats-heavy. Use tables where appropriate. Include headings: ## Summary, ## Top 10 Models (Avg Points/Match), ## Match-by-Match Model Audit, ## Biggest Consensus Misses, ## Methodology.",
+  "metaTitle": "SEO meta title (<= 60 chars)",
+  "metaDescription": "150-160 chars (factual-only)",
+  "keywords": ["...5-8 SEO keywords including league name + week/round + AI model accuracy + average points per match + kroam.xyz"]
 }
-
-Writing Guidelines:
-- Professional sports journalism tone
-- Use storytelling to engage readers
-- Reference specific moments and statistics
-- Connect results to broader narratives
-- Balance analysis with entertainment
-- Optimize for SEO and AI search engines
-- Include relevant quotes or manager perspectives when appropriate
-- Use markdown formatting (## headers, **bold**, bullet points)
 
 Return ONLY the JSON object.`;
 }

@@ -4,7 +4,7 @@
 
 import { getDb, matches, competitions, matchAnalysis, matchPreviews, bets, models, matchContent, predictions } from '@/lib/db';
 import { loggers } from '@/lib/logger/modules';
-import { eq, and, gte, lte, isNull, isNotNull, desc, or, sql } from 'drizzle-orm';
+import { eq, and, gte, lte, inArray, isNull, isNotNull, desc, or, sql } from 'drizzle-orm';
 import { CONTENT_CONFIG } from './config';
 
 /**
@@ -455,38 +455,105 @@ export async function getLeagueRoundupData(competitionId: string) {
     return null;
   }
 
-  // Transform matches and get predictions for upset analysis
-  const matchesWithPredictions = await Promise.all(
-    finishedMatches.map(async (item) => {
+  // Prefer using the latest round as the "week". If present, only include matches from that round
+  // to avoid mixing multiple rounds in a single roundup.
+  const latestRound = finishedMatches[0]?.match.round || null;
+  const roundupMatches = latestRound
+    ? finishedMatches.filter((m) => m.match.round === latestRound)
+    : finishedMatches;
+
+  const toOutcome = (home: number, away: number) => (home > away ? 'H' : home < away ? 'A' : 'D');
+  const OUTCOMES = ['H', 'D', 'A'] as const;
+
+  // Build detailed per-match stats from scored predictions
+  const matchesWithStats = await Promise.all(
+    roundupMatches.map(async (item) => {
       const { match, analysis } = item;
-      
-      // Get predictions for this match to see if consensus was correct
+
       const matchPredictions = await db
         .select({
+          modelId: models.id,
           modelName: models.displayName,
-          correct: predictions.tendencyPoints,
-          points: predictions.totalPoints,
+          predictedHome: predictions.predictedHome,
+          predictedAway: predictions.predictedAway,
+          predictedResult: predictions.predictedResult,
+          tendencyPoints: predictions.tendencyPoints,
+          exactScoreBonus: predictions.exactScoreBonus,
+          totalPoints: predictions.totalPoints,
         })
         .from(predictions)
         .innerJoin(models, eq(predictions.modelId, models.id))
-        .where(
-          and(
-            eq(predictions.matchId, match.id),
-            eq(predictions.status, 'scored')
-          )
-        );
+        .where(and(eq(predictions.matchId, match.id), eq(predictions.status, 'scored')));
 
-      const correctPredictions = matchPredictions.filter((p) => p.correct !== null).length;
-      const totalPredictions = matchPredictions.length;
+      const totalModels = matchPredictions.length;
+      const correctTendencyCount = matchPredictions.filter(
+        (p) => p.tendencyPoints !== null && p.tendencyPoints > 0
+      ).length;
+      const exactScoreCount = matchPredictions.filter(
+        (p) => p.exactScoreBonus !== null && p.exactScoreBonus > 0
+      ).length;
+
+       const predictedResultCounts = matchPredictions.reduce((acc, p) => {
+         const outcome = p.predictedResult as (typeof OUTCOMES)[number];
+         acc[outcome] = (acc[outcome] || 0) + 1;
+         return acc;
+       }, {} as Record<(typeof OUTCOMES)[number], number>);
+
+      const scorelineCounts = matchPredictions.reduce((acc, p) => {
+        const key = `${p.predictedHome}-${p.predictedAway}`;
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const topScorelines = Object.entries(scorelineCounts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5)
+        .map(([scoreline, count]) => ({ scoreline, count }));
+
+      const topModels = [...matchPredictions]
+        .sort((a, b) => (b.totalPoints ?? 0) - (a.totalPoints ?? 0))
+        .slice(0, 10)
+        .map((p) => ({
+          modelName: p.modelName,
+          predictedScore: `${p.predictedHome}-${p.predictedAway}`,
+          predictedResult: p.predictedResult,
+          points: p.totalPoints ?? 0,
+        }));
+
+      const actualOutcome =
+        match.homeScore === null || match.awayScore === null
+          ? null
+          : toOutcome(match.homeScore, match.awayScore);
+
+       const consensusOutcome = OUTCOMES
+         .map((k) => ({ outcome: k, count: predictedResultCounts[k] || 0 }))
+         .sort((a, b) => b.count - a.count)[0];
+
+      const consensusOutcomeSharePct =
+        totalModels > 0 ? (consensusOutcome.count / totalModels) * 100 : 0;
 
       return {
+        matchId: match.id,
+        kickoffTime: match.kickoffTime,
+        round: match.round,
         homeTeam: match.homeTeam,
         awayTeam: match.awayTeam,
-        result: `${match.homeScore}-${match.awayScore}`,
-        prediction:
-          totalPredictions > 0
-            ? `${correctPredictions}/${totalPredictions} models correct`
-            : 'No predictions',
+        finalScore:
+          match.homeScore !== null && match.awayScore !== null
+            ? `${match.homeScore}-${match.awayScore}`
+            : null,
+        totalModels,
+        correctTendencyCount,
+        correctTendencyPct: totalModels > 0 ? (correctTendencyCount / totalModels) * 100 : 0,
+        exactScoreCount,
+        exactScorePct: totalModels > 0 ? (exactScoreCount / totalModels) * 100 : 0,
+        predictedResultCounts: {
+          H: predictedResultCounts.H || 0,
+          D: predictedResultCounts.D || 0,
+          A: predictedResultCounts.A || 0,
+        },
+        topScorelines,
+        topModels,
         wasUpset: isUpset(
           match.homeScore,
           match.awayScore,
@@ -494,20 +561,131 @@ export async function getLeagueRoundupData(competitionId: string) {
           analysis?.oddsDraw || null,
           analysis?.oddsAway || null
         ),
+        actualOutcome,
+        consensusOutcome: consensusOutcome.outcome,
+        consensusOutcomeSharePct,
+        consensusCorrect: actualOutcome ? consensusOutcome.outcome === actualOutcome : null,
       };
     })
   );
 
-  // Format week identifier from most recent match's round
-  const mostRecentMatch = finishedMatches[0];
-  const week = mostRecentMatch.match.round || 'Week of ' + new Date(mostRecentMatch.match.kickoffTime).toLocaleDateString();
+  // League-week Top 10 models by average points per match (min 3 matches)
+  const predictionsInWindow = await db
+    .select({
+      modelId: models.id,
+      modelName: models.displayName,
+      matchId: predictions.matchId,
+      totalPoints: predictions.totalPoints,
+      tendencyPoints: predictions.tendencyPoints,
+      exactScoreBonus: predictions.exactScoreBonus,
+    })
+    .from(predictions)
+    .innerJoin(models, eq(predictions.modelId, models.id))
+    .where(
+      and(
+        eq(predictions.status, 'scored'),
+        inArray(
+          predictions.matchId,
+          matchesWithStats.map((m) => m.matchId)
+        )
+      )
+    );
+
+  const byModel = predictionsInWindow.reduce((acc, p) => {
+    const current = acc.get(p.modelId) || {
+      modelId: p.modelId,
+      modelName: p.modelName,
+      matchIds: new Set<string>(),
+      totalPoints: 0,
+      correctTendencyCount: 0,
+      exactScoreCount: 0,
+    };
+
+    current.matchIds.add(p.matchId);
+    current.totalPoints += p.totalPoints ?? 0;
+    if (p.tendencyPoints !== null && p.tendencyPoints > 0) current.correctTendencyCount += 1;
+    if (p.exactScoreBonus !== null && p.exactScoreBonus > 0) current.exactScoreCount += 1;
+
+    acc.set(p.modelId, current);
+    return acc;
+  }, new Map<
+    string,
+    {
+      modelId: string;
+      modelName: string;
+      matchIds: Set<string>;
+      totalPoints: number;
+      correctTendencyCount: number;
+      exactScoreCount: number;
+    }
+  >());
+
+  const topModelsByAvgPoints = [...byModel.values()]
+    .map((m) => {
+      const matchesCovered = m.matchIds.size;
+      const avgPointsPerMatch = matchesCovered > 0 ? m.totalPoints / matchesCovered : 0;
+      const totalPredictions = predictionsInWindow.filter((p) => p.modelId === m.modelId).length;
+      const tendencyAccuracyPct = totalPredictions > 0 ? (m.correctTendencyCount / totalPredictions) * 100 : 0;
+      const exactHitPct = totalPredictions > 0 ? (m.exactScoreCount / totalPredictions) * 100 : 0;
+      return {
+        modelName: m.modelName,
+        matchesCovered,
+        totalPoints: m.totalPoints,
+        avgPointsPerMatch,
+        tendencyAccuracyPct,
+        exactHitPct,
+      };
+    })
+    .filter((m) => m.matchesCovered >= 3)
+    .sort((a, b) => b.avgPointsPerMatch - a.avgPointsPerMatch)
+    .slice(0, 10);
+
+  const biggestConsensusMisses = [...matchesWithStats]
+    .filter((m) => m.actualOutcome !== null && m.consensusCorrect === false)
+    .sort((a, b) => b.consensusOutcomeSharePct - a.consensusOutcomeSharePct)
+    .slice(0, 5)
+    .map((m) => ({
+      matchId: m.matchId,
+      homeTeam: m.homeTeam,
+      awayTeam: m.awayTeam,
+      finalScore: m.finalScore,
+      consensusOutcome: m.consensusOutcome,
+      consensusSharePct: m.consensusOutcomeSharePct,
+      predictedResultCounts: m.predictedResultCounts,
+    }));
+
+  const allowedTeams = Array.from(
+    new Set(matchesWithStats.flatMap((m) => [m.homeTeam, m.awayTeam]))
+  ).sort();
+
+  const totalMatches = matchesWithStats.length;
+  const totalPredictions = matchesWithStats.reduce((sum, m) => sum + m.totalModels, 0);
+  const avgTendencyAccuracyPct =
+    totalMatches > 0
+      ? matchesWithStats.reduce((sum, m) => sum + m.correctTendencyPct, 0) / totalMatches
+      : 0;
+  const avgExactHitPct =
+    totalMatches > 0
+      ? matchesWithStats.reduce((sum, m) => sum + m.exactScorePct, 0) / totalMatches
+      : 0;
+
+  const week = latestRound || 'Week of ' + new Date(roundupMatches[0].match.kickoffTime).toLocaleDateString();
 
   return {
-    competition: finishedMatches[0].competition.name,
-    competitionSlug: finishedMatches[0].competition.slug || finishedMatches[0].competition.id,
+    competition: roundupMatches[0].competition.name,
+    competitionSlug: roundupMatches[0].competition.slug || roundupMatches[0].competition.id,
     competitionId,
     week,
-    matches: matchesWithPredictions,
-    standings: undefined, // Could be enhanced with league table data
+    allowedTeams,
+    summary: {
+      totalMatches,
+      totalPredictions,
+      avgTendencyAccuracyPct,
+      avgExactHitPct,
+    },
+    topModelsByAvgPoints,
+    biggestConsensusMisses,
+    matches: matchesWithStats,
+    standings: undefined,
   };
 }

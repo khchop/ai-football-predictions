@@ -20,6 +20,88 @@ import {
 import { CONTENT_CONFIG } from './config';
 import { slugify } from '@/lib/utils/slugify';
 
+function normalizePhrase(value: string) {
+  return value
+    .replace(/\s+/g, ' ')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .trim()
+    .toLowerCase();
+}
+
+function getProperNounPhrases(text: string) {
+  // 2-5 word capitalized phrases, e.g. "Manchester City", "Erling Haaland".
+  const regex = /\b([A-Z][A-Za-z0-9&'.-]*(?:\s+[A-Z][A-Za-z0-9&'.-]*){1,4})\b/g;
+  const found: string[] = [];
+  for (const match of text.matchAll(regex)) {
+    if (match[1]) found.push(match[1]);
+  }
+  return found;
+}
+
+function validateLeagueRoundupOutput(input: {
+  competition: string;
+  week: string;
+  allowedTeams?: string[];
+  allowedModelNames?: string[];
+  title: string;
+  excerpt: string;
+  content: string;
+  metaTitle: string;
+  metaDescription: string;
+}) {
+  const text = [input.title, input.excerpt, input.metaTitle, input.metaDescription, input.content].join('\n');
+
+  const allowedTeams = new Set((input.allowedTeams || []).map(normalizePhrase));
+  const allowedModelNames = new Set((input.allowedModelNames || []).map(normalizePhrase));
+
+  const allowlistPhrases = new Set(
+    [
+      input.competition,
+      input.week,
+      'kroam.xyz',
+      'ai',
+      'seo',
+      'geo',
+      'summary',
+      'methodology',
+      'top 10 models',
+      'avg points/match',
+      'average points per match',
+      'match-by-match model audit',
+      'biggest consensus misses',
+      'data unavailable',
+      'h',
+      'd',
+      'a',
+    ].map(normalizePhrase)
+  );
+
+  const candidates = getProperNounPhrases(text);
+  const suspicious = Array.from(
+    new Set(
+      candidates.filter((p) => {
+        const norm = normalizePhrase(p);
+        if (allowedTeams.has(norm)) return false;
+        if (allowedModelNames.has(norm)) return false;
+        if (allowlistPhrases.has(norm)) return false;
+        return true;
+      })
+    )
+  );
+
+  if (suspicious.length > 0) {
+    return {
+      ok: false,
+      error:
+        `League roundup validation failed: found disallowed proper-noun phrases ` +
+        `(possible hallucinated teams/people). First 15: ${suspicious.slice(0, 15).join(', ')}`,
+    };
+  }
+
+  return { ok: true as const };
+}
+
 /**
  * Generate a match preview using AI
  */
@@ -118,11 +200,53 @@ export async function generateLeagueRoundup(roundupData: {
   competitionId: string;
   week: string;
   matches: Array<{
+    matchId?: string;
+    kickoffTime?: string;
+    round?: string | null;
     homeTeam: string;
     awayTeam: string;
-    result?: string;
-    prediction?: string;
+    finalScore?: string | null;
+    totalModels?: number;
+    correctTendencyCount?: number;
+    correctTendencyPct?: number;
+    exactScoreCount?: number;
+    exactScorePct?: number;
+    predictedResultCounts?: { H: number; D: number; A: number };
+    consensusOutcome?: 'H' | 'D' | 'A';
+    consensusOutcomeSharePct?: number;
+    consensusCorrect?: boolean | null;
+    topScorelines?: Array<{ scoreline: string; count: number }>;
+    topModels?: Array<{
+      modelName: string;
+      predictedScore: string;
+      predictedResult: string;
+      points: number;
+    }>;
     wasUpset?: boolean;
+  }>;
+  allowedTeams?: string[];
+  summary?: {
+    totalMatches: number;
+    totalPredictions: number;
+    avgTendencyAccuracyPct: number;
+    avgExactHitPct: number;
+  };
+  topModelsByAvgPoints?: Array<{
+    modelName: string;
+    matchesCovered: number;
+    totalPoints: number;
+    avgPointsPerMatch: number;
+    tendencyAccuracyPct: number;
+    exactHitPct: number;
+  }>;
+  biggestConsensusMisses?: Array<{
+    matchId: string;
+    homeTeam: string;
+    awayTeam: string;
+    finalScore: string | null;
+    consensusOutcome: 'H' | 'D' | 'A';
+    consensusSharePct: number;
+    predictedResultCounts: { H: number; D: number; A: number };
   }>;
   standings?: Array<{
     position: number;
@@ -136,16 +260,53 @@ export async function generateLeagueRoundup(roundupData: {
      week: roundupData.week,
    }, 'Generating league roundup');
   
-  const systemPrompt = `You are a professional football journalist writing a weekly league roundup for ${roundupData.competition}.`;
+  const systemPrompt = `You are a data analyst writing a factual, stats-heavy weekly audit of AI model predictions for ${roundupData.competition}. Use only the provided data and do not add outside facts.`;
   const userPrompt = buildLeagueRoundupPrompt({
     competition: roundupData.competition,
     competitionSlug: roundupData.competitionSlug,
     week: roundupData.week,
     matches: roundupData.matches,
+    allowedTeams: roundupData.allowedTeams,
+    summary: roundupData.summary,
+    topModelsByAvgPoints: roundupData.topModelsByAvgPoints,
+    biggestConsensusMisses: roundupData.biggestConsensusMisses,
     standingsTop5: roundupData.standings?.slice(0, 5),
   });
 
   const result = await generateWithTogetherAI<ArticleResponse>(systemPrompt, userPrompt);
+
+  const allowedModelNames = Array.from(
+    new Set(
+      [
+        ...(roundupData.topModelsByAvgPoints || []).map((m) => m.modelName),
+        ...(roundupData.matches || []).flatMap((m) => (m.topModels || []).map((tm: { modelName: string }) => tm.modelName)),
+      ].filter(Boolean)
+    )
+  );
+
+  const validation = validateLeagueRoundupOutput({
+    competition: roundupData.competition,
+    week: roundupData.week,
+    allowedTeams: roundupData.allowedTeams,
+    allowedModelNames,
+    title: result.content.title,
+    excerpt: result.content.excerpt,
+    content: result.content.content,
+    metaTitle: result.content.metaTitle,
+    metaDescription: result.content.metaDescription,
+  });
+
+  if (!validation.ok) {
+    loggers.content.error(
+      {
+        competition: roundupData.competition,
+        week: roundupData.week,
+        error: validation.error,
+      },
+      'Generated league roundup failed validation'
+    );
+    throw new Error(validation.error);
+  }
   
   // Save to database
   const db = getDb();
