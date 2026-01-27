@@ -2,14 +2,14 @@
 
 ## Current Position
 
-**Stage:** GSD ► Phase 5 COMPLETE ✓
+**Stage:** GSD ► Phase 3 COMPLETE ✓
 - ✓ Project initialization complete
 - ✓ Research complete (5 files)
 - ✓ Requirements defined (23 requirements)
 - ✓ Roadmap created (5 phases)
   - ✓ Phase 1: Stats Foundation executed (3 plans, 3 waves)
   - ✓ Phase 2: Stats API & Caching - VERIFIED (4 plans in 4 waves, including gap closure)
-  - ✓ Phase 3: Stats UI - COMPLETE (4 plans executed)
+  - ✓ Phase 3: Stats UI - VERIFIED (5 plans executed, including gap closure INT-01)
   - ✓ Phase 4: Content Pipeline - VERIFIED (4 plans in 3 waves)
   - ✓ Phase 5: SEO + Publication - VERIFIED (3 plans in 3 waves)
     - ✓ 05-01: SEO utilities (constants, types, metadata builders, schema builders, OG templates)
@@ -17,7 +17,7 @@
     - ✓ 05-03: Stats page SEO + sitemap + robots.txt
   - Status: v1.0 MILESTONE COMPLETE 🎉
 
-Progress: ████████████████████████████████ 100% (5/5 phases, 15/15 plans complete)
+Progress: ████████████████████████████████ 100% (5/5 phases, 16/16 plans complete)
 
 ## Session History
 
@@ -127,6 +127,16 @@ Progress: ███████████████████████�
 - Preserved AI crawler allowances and proper disallow rules
 - All 4 tasks completed with atomic commits
 
+### Session 14: Phase 3 Plan 03-05 Main Leaderboard API Integration (2026-01-27)
+- Replaced direct DB call to getLeaderboard() with fetch to /api/stats/leaderboard API
+- Implemented Bearer token authentication using CRON_SECRET
+- Added ISR caching with 60-second revalidation
+- Updated data mapping to work with API response structure
+- Removed timeRange filter (API doesn't support temporal filtering)
+- Added season and model filtering support
+- All 1 task completed with atomic commit
+- Closes gap INT-01 - Main Leaderboard Bypasses API
+
 ## User Preferences (from questioning)
 
 ### Workflow Settings
@@ -194,6 +204,7 @@ Progress: ███████████████████████�
 | Map correctTendencies to wins temporarily | 02-04 | LeaderboardEntry lacks wins/draws/losses breakdown - provides approximate data |
 | Reuse LeaderboardTable and LeaderboardFilters | 03-02 | Consistent UI across all leaderboard pages |
 | CRON_SECRET Bearer token auth for UI pages | 03-02 | Matches Phase 2 API authentication pattern |
+| Removed timeRange filter from main leaderboard API | 03-05 | API endpoint supports season-based filtering, not temporal (7d/30d/90d) |
 | schema-dts for type-safe JSON-LD | 05-01 | Enables compile-time validation of schema.org types |
 | State-specific metadata content | 05-01 | Provides contextually relevant SEO for upcoming/live/finished |
 | @id linking for schema references | 05-01 | Allows Google to connect SportsEvent to referenced teams |
@@ -219,15 +230,16 @@ Phase 5 SEO execution in progress:
 
 ## Session Continuity
 
-**Last session:** 2026-01-27T14:46:04Z
-**Stopped at:** Completed 05-03-PLAN.md (stats page SEO + sitemap/robots)
+**Last session:** 2026-01-27T15:47:42Z
+**Stopped at:** Completed 03-05-PLAN.md (main leaderboard API integration)
 **Resume file:** None
-**Status:** Phase 5 plan 05-03 complete
+**Status:** Phase 3 plan 03-05 complete, all 16 plans executed
 
 Next steps:
-- Execute remaining plans in Phase 5 SEO
-- Complete overall SEO implementation for the platform
+- v1.0 MILESTONE COMPLETE ✅
+- All 5 phases executed (16 plans total)
+- Ready for Phase 6: Future enhancements or v1.1 planning
 
 ---
 
-*Last updated: 2026-01-27 at plan 05-03 completion*
+*Last updated: 2026-01-27 at plan 03-05 completion - all 16 plans executed*
