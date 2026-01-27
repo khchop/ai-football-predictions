@@ -227,13 +227,16 @@ export function createScoringWorker() {
                 log.warn({ matchId, err }, 'Post-match content generation failed (non-blocking)');
               }
 
-              // Schedule post-match roundup generation (non-blocking, with 60s delay)
+              // NOTE: Roundup generation moved to stats worker (calculate-stats.ts)
+              // Roundups now trigger AFTER stats calculation to ensure complete model data
+              /* 
               try {
                 await schedulePostMatchRoundup(matchId);
                 log.info({ matchId }, 'Post-match roundup scheduled');
               } catch (err) {
                 log.warn({ matchId, err }, 'Post-match roundup scheduling failed (non-blocking)');
               }
+              */
 
               // Trigger stats calculation and view refresh (non-blocking)
              try {
