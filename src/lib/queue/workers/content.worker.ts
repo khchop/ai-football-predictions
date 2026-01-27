@@ -9,7 +9,7 @@ import { Worker, Job } from 'bullmq';
 import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES, getQueue } from '../index';
 import type { GenerateContentPayload } from '../types';
-import { generateMatchPreview, generateLeagueRoundup, generateModelReport } from '@/lib/content/generator';
+import { generateMatchPreview, generateLeagueRoundup, generateModelReport, generatePostMatchRoundup } from '@/lib/content/generator';
 import { 
    getMatchesNeedingPreviews, 
    getMatchBetsForPreview, 
@@ -477,31 +477,32 @@ async function scanAndGenerateLeagueRoundups() {
   * Generate post-match roundup content for a specific match
   * Triggered by settlement worker after match scoring completes
   */
-async function generatePostMatchRoundupContent(data: {
-  matchId: string;
-  triggeredAt: string;
-}) {
-  const { matchId, triggeredAt } = data;
-  const log = loggers.contentWorker.child({ matchId });
+ async function generatePostMatchRoundupContent(data: {
+   matchId: string;
+   triggeredAt: string;
+ }) {
+   const { matchId, triggeredAt } = data;
+   const log = loggers.contentWorker.child({ matchId });
 
-  try {
-    log.info('Generating post-match roundup');
+   try {
+     log.info('Generating post-match roundup');
 
-    // Placeholder implementation - actual roundup generation will be implemented in Plan 2
-    // For now, just log and return success
+     // Generate the roundup using the new generator function
+     const roundupId = await generatePostMatchRoundup(matchId);
 
-    log.info({ matchId, triggeredAt }, '✓ Post-match roundup generated (placeholder)');
+     log.info({ matchId, roundupId, triggeredAt }, '✓ Post-match roundup generated');
 
-    return {
-      success: true,
-      matchId,
-      skipped: false,
-    };
-  } catch (error) {
-    log.error({ err: error }, 'Post-match roundup generation failed');
-    throw error;
-  }
-}
+     return {
+       success: true,
+       roundupId,
+       matchId,
+       skipped: false,
+     };
+   } catch (error) {
+     log.error({ err: error }, 'Post-match roundup generation failed');
+     throw error;
+   }
+ }
 
 // Worker event handlers
 export function setupContentWorkerEvents(worker: Worker) {
