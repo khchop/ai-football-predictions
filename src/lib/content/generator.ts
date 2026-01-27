@@ -6,9 +6,10 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { getDb, matchPreviews, blogPosts } from '@/lib/db';
+import { getDb, matchPreviews, blogPosts, models } from '@/lib/db';
 import { loggers } from '@/lib/logger/modules';
 import type { NewMatchPreview, NewBlogPost } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 import { generateWithTogetherAI } from './together-client';
 import {
   buildMatchPreviewPrompt,
@@ -22,16 +23,22 @@ import { slugify } from '@/lib/utils/slugify';
 
 function normalizePhrase(value: string) {
   return value
-    .replace(/\s+/g, ' ')
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201C\u201D]/g, '"')
-    .trim()
-    .toLowerCase();
+    .normalize('NFKD')
+    // Remove diacritics (e.g. ü -> u)
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    // Keep only word-ish chars and spaces
+    .replace(/[^a-z0-9&'\s-]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function getProperNounPhrases(text: string) {
   // 2-5 word capitalized phrases, e.g. "Manchester City", "Erling Haaland".
-  const regex = /\b([A-Z][A-Za-z0-9&'.-]*(?:\s+[A-Z][A-Za-z0-9&'.-]*){1,4})\b/g;
+  // NOTE: Use [ \t]+ instead of \s+ to avoid matching across newlines.
+  const regex = /\b([A-Z][A-Za-z0-9&'.-]*(?:[ \t]+[A-Z][A-Za-z0-9&'.-]*){1,4})\b/g;
   const found: string[] = [];
   for (const match of text.matchAll(regex)) {
     if (match[1]) found.push(match[1]);
@@ -52,7 +59,8 @@ function validateLeagueRoundupOutput(input: {
 }) {
   const text = [input.title, input.excerpt, input.metaTitle, input.metaDescription, input.content].join('\n');
 
-  const allowedTeams = new Set((input.allowedTeams || []).map(normalizePhrase));
+  const allowedTeamsNormalized = (input.allowedTeams || []).map(normalizePhrase);
+  const allowedTeams = new Set(allowedTeamsNormalized);
   const allowedModelNames = new Set((input.allowedModelNames || []).map(normalizePhrase));
 
   const allowlistPhrases = new Set(
@@ -60,10 +68,19 @@ function validateLeagueRoundupOutput(input: {
       input.competition,
       input.week,
       'kroam.xyz',
+      // Common structural headings / phrases
       'ai',
+      'ai model',
+      'ai model audit',
+      'ai model predictions',
+      'ai model predictions audit',
+      'ai model accuracy audit',
+      'ai model performance',
+      'predictions',
       'seo',
       'geo',
       'summary',
+      'analysis',
       'methodology',
       'top 10 models',
       'avg points/match',
@@ -71,18 +88,36 @@ function validateLeagueRoundupOutput(input: {
       'match-by-match model audit',
       'biggest consensus misses',
       'data unavailable',
+      // Common table headers / metrics
+      'avg points',
+      'avg pts',
+      'total points',
+      'total models',
+      'correct tendency',
+      'exact score hits',
+      'consensus',
+      'consensus outcome',
       'h',
       'd',
       'a',
     ].map(normalizePhrase)
   );
 
+  const isAllowedTeamPhrase = (phrase: string) => {
+    const norm = normalizePhrase(phrase);
+    if (!norm) return false;
+    if (allowedTeams.has(norm)) return true;
+    // Allow partial matches to reduce false positives (e.g. "Stade Brestois" vs "Stade Brestois 29")
+    if (norm.length < 5) return false;
+    return allowedTeamsNormalized.some((t) => t.includes(norm) || norm.includes(t));
+  };
+
   const candidates = getProperNounPhrases(text);
   const suspicious = Array.from(
     new Set(
       candidates.filter((p) => {
         const norm = normalizePhrase(p);
-        if (allowedTeams.has(norm)) return false;
+        if (isAllowedTeamPhrase(p)) return false;
         if (allowedModelNames.has(norm)) return false;
         if (allowlistPhrases.has(norm)) return false;
         return true;
@@ -275,11 +310,19 @@ export async function generateLeagueRoundup(roundupData: {
 
   const result = await generateWithTogetherAI<ArticleResponse>(systemPrompt, userPrompt);
 
+  const activeModelRows = await getDb()
+    .select({ modelName: models.displayName })
+    .from(models)
+    .where(eq(models.active, true));
+
   const allowedModelNames = Array.from(
     new Set(
       [
+        ...activeModelRows.map((m) => m.modelName),
         ...(roundupData.topModelsByAvgPoints || []).map((m) => m.modelName),
-        ...(roundupData.matches || []).flatMap((m) => (m.topModels || []).map((tm: { modelName: string }) => tm.modelName)),
+        ...(roundupData.matches || []).flatMap((m) =>
+          (m.topModels || []).map((tm: { modelName: string }) => tm.modelName)
+        ),
       ].filter(Boolean)
     )
   );
