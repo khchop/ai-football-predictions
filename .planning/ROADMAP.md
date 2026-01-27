@@ -9,8 +9,10 @@
 | 3 | ~~Stats UI~~ ✅ | VERIFIED | Leaderboard pages with filtering and sorting | STATS-01 through STATS-14 | 4 criteria |
 | 4 | ~~Content Pipeline~~ ✅ | LLM-powered match roundups on completion | CONT-01 through CONT-05 | 4 criteria |
 | 5 | ~~SEO + Publication~~ ✅ | VERIFIED | Dynamic metadata, OG images, ISR pages | SEO-01 through SEO-04 | 4 criteria |
+| 6 | ~~Roundup Integration~~ ✅ | GAP CLOSURE | INT-04, FLOW-04 | Closes gaps |
+| 7 | ~~Documentation & Cleanup~~ ✅ | GAP CLOSURE | INT-05 | Closes gaps |
 
-**Total: 5 phases | 23 requirements | All requirements mapped | Phase 5 VERIFIED**
+**Total: 7 phases | 23 requirements + 3 integration/flow gaps | All requirements mapped | Phase 7 GAP CLOSURE**
 
 ---
 
@@ -153,6 +155,57 @@
 
 ---
 
+### Phase 6: Roundup Integration (Gap Closure)
+
+**Goal:** Integrate Phase 4 roundups into Phase 5 SEO match pages to complete Flow C.
+
+**Gaps Closed:**
+- **INT-04**: Roundup API route unused by intended match pages (MEDIUM)
+- **FLOW-04**: Roundup display works on legacy route but not on new SEO route
+- Orphaned API route `/api/matches/[id]/roundup` (from Phase 4)
+- `/matches/[id]/page.tsx` missing Phase 4 roundup integration
+
+**Task Breakdown:**
+- Add `RoundupViewer` component to `/matches/[id]/page.tsx`
+- Fetch roundups from `/api/matches/[id]/roundup` API with error handling
+- Display roundups conditionally (after match completion only)
+- Handle loading and error states for roundup data
+
+**Success Criteria:**
+1. Roundups appear on `/matches/{id}` pages after match completion
+2. Roundups load from API (not direct DB query)
+3. Flow C (Match → Roundup → Display) works end-to-end
+
+**Plans:**
+- [ ] 06-01-PLAN.md — Wire roundup API to SEO match pages
+
+---
+
+### Phase 7: Documentation & Cleanup (Gap Closure)
+
+**Goal:** Update verification docs and address low-priority tech debt.
+
+**Gaps Closed:**
+- **INT-05**: Orphaned API routes without UI consumers (LOW)
+- Phase 3 verification state mismatch (documentation)
+- Phase 3 ISR pattern inconsistency (document architectural choice)
+
+**Task Breakdown:**
+- Re-run Phase 3 verification to update VERIFICATION.md with closed gaps
+- Add documentation comment explaining ISR pattern (fetch-level vs page-level)
+- Add JSDoc comment to `/api/stats/models/[id]` noting future use
+- Update STATE.md with completed gap closure tasks
+
+**Success Criteria:**
+1. Phase 3 VERIFICATION.md shows correct status (passed)
+2. ISR pattern documented in code comments
+3. Orphaned routes clearly marked as "future use"
+
+**Plans:**
+- [ ] 07-01-PLAN.md — Update verification docs and add code comments
+
+---
+
 ## Phase Dependencies
 
 ```
@@ -163,6 +216,9 @@ Phase 1 (Foundation) -------> Phase 2 (API) -------> Phase 3 (UI)
         |                         |
         v                         v
 Phase 5 (SEO + Publication) <-----'
+        |
+        v
+Phases 6-7 (Gap Closure: Final Integration & Cleanup)
 ```
 
 **Parallelization opportunity:** Phase 2 (API) and Phase 4 (Content) can run in parallel after Phase 1.
@@ -171,13 +227,16 @@ Phase 5 (SEO + Publication) <-----'
 
 ## Requirement Mapping
 
-| Phase | Requirements |
-|-------|--------------|
-| 1 | STATS-01, STATS-02, STATS-03, STATS-04, STATS-05 + DB views/indexes |
-| 2 | STATS-06, STATS-07, STATS-08, STATS-09, STATS-10, STATS-11, STATS-12, STATS-13 + API + Caching |
-| 3 | STATS-14 + Pages + Filters (all STATS requirements complete) |
-| 4 | CONT-01, CONT-02, CONT-03, CONT-04, CONT-05 |
-| 5 | SEO-01, SEO-02, SEO-03, SEO-04 |
+| Phase | Requirements | Gaps |
+|-------|--------------|------|
+| 1 | STATS-01, STATS-02, STATS-03, STATS-04, STATS-05 + DB views/indexes | - |
+| 2 | STATS-06, STATS-07, STATS-08, STATS-09, STATS-10, STATS-11, STATS-12, STATS-13 + API + Caching | - |
+| 3 | STATS-14 + Pages + Filters (all STATS requirements complete) | - |
+| 4 | CONT-01, CONT-02, CONT-03, CONT-04, CONT-05 | INT-02 (closed in 04-05) |
+| 5 | SEO-01, SEO-02, SEO-03, SEO-04 | SEO-04 (closed post-verification) |
+| 6 | Gap Closure: INT-04, FLOW-04 | Medium integration gap |
+| 7 | Gap Closure: INT-05 | Low priority tech debt |
 
 ---
-*Created: 2026-01-27 | Phase 5 context: 2026-01-27*
+
+*Created: 2026-01-27 | Updated: 2026-01-27 with gap closure phases*
