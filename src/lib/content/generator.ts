@@ -6,7 +6,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { getDb, matchPreviews, blogPosts, models } from '@/lib/db';
+import { getDb, matchPreviews, blogPosts, models, matchContent } from '@/lib/db';
 import { loggers } from '@/lib/logger/modules';
 import type { NewMatchPreview, NewBlogPost } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
@@ -15,11 +15,15 @@ import {
   buildMatchPreviewPrompt,
   buildLeagueRoundupPrompt,
   buildModelReportPrompt,
+  buildPostMatchRoundupPrompt,
   type MatchPreviewResponse,
   type ArticleResponse,
+  type PostMatchRoundupResponse,
+  type PostMatchRoundupData,
 } from './prompts';
 import { CONTENT_CONFIG } from './config';
 import { slugify } from '@/lib/utils/slugify';
+import { getMatchPredictionsWithAccuracy, getMatchById, getMatchAnalysisByMatchId } from '@/lib/db/queries';
 
 function normalizePhrase(value: string) {
   return value
@@ -469,5 +473,341 @@ export async function generateModelReport(reportData: {
      tokens: result.usage.totalTokens,
    }, 'Model report generated');
 
-  return postId;
+   return postId;
+}
+
+/**
+ * Generate a post-match roundup for a completed match
+ */
+export async function generatePostMatchRoundup(matchId: string): Promise<string> {
+  loggers.content.info({ matchId }, 'Generating post-match roundup');
+
+  // 1. Fetch match data with competition
+  const matchResult = await getMatchById(matchId);
+  if (!matchResult) {
+    throw new Error(`Match not found: ${matchId}`);
+  }
+
+  const { match, competition } = matchResult;
+
+  // Verify match is finished
+  if (match.status !== 'finished' || match.homeScore === null || match.awayScore === null) {
+    throw new Error(`Match not finished: ${matchId} (status: ${match.status})`);
+  }
+
+  // 2. Fetch predictions with accuracy data
+  const predictions = await getMatchPredictionsWithAccuracy(matchId);
+
+  // 3. Fetch match analysis for events and stats
+  const analysis = await getMatchAnalysisByMatchId(matchId);
+
+  // 4. Parse events from analysis
+  const events: PostMatchRoundupData['events'] = [];
+  
+  if (analysis) {
+    // Parse events from raw data if available
+    const rawEvents = analysis as any;
+    
+    // Extract goals from score events if available
+    if (rawEvents.scoreEvents) {
+      try {
+        const scoreEvents = typeof rawEvents.scoreEvents === 'string' 
+          ? JSON.parse(rawEvents.scoreEvents) 
+          : rawEvents.scoreEvents;
+        
+        scoreEvents.forEach((event: any) => {
+          events.push({
+            minute: event.time || event.minute || 0,
+            type: 'goal',
+            description: `${event.scorer || event.homeScorer || event.awayScorer || 'Unknown'} (${event.homeScore}-${event.awayScore})`,
+          });
+        });
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+
+    // Extract cards if available
+    if (rawEvents.cards) {
+      try {
+        const cards = typeof rawEvents.cards === 'string'
+          ? JSON.parse(rawEvents.cards)
+          : rawEvents.cards;
+
+        cards.forEach((card: any) => {
+          events.push({
+            minute: card.time || card.minute || 0,
+            type: card.type === 'yellow' ? 'card' : 'card',
+            description: `${card.player || card.name} ${card.type === 'yellow' ? '🟨' : '🟥'}`,
+          });
+        });
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+  }
+
+  // 5. Build extended stats
+  const stats: PostMatchRoundupData['stats'] = {};
+  
+  if (analysis) {
+    const rawStats = analysis as any;
+    
+    // Possession
+    if (rawStats.possessionHome || rawStats.possessionAway) {
+      stats.possession = {
+        home: rawStats.possessionHome || 50,
+        away: rawStats.possessionAway || 50,
+      };
+    }
+    
+    // Shots
+    if (rawStats.shotsHome || rawStats.shotsAway) {
+      stats.shotsTotal = {
+        home: rawStats.shotsHome || 0,
+        away: rawStats.shotsAway || 0,
+      };
+    }
+    
+    // Shots on target
+    if (rawStats.shotsOnTargetHome || rawStats.shotsOnTargetAway) {
+      stats.shotsOnTarget = {
+        home: rawStats.shotsOnTargetHome || 0,
+        away: rawStats.shotsOnTargetAway || 0,
+      };
+    }
+    
+    // Corners
+    if (rawStats.cornersHome || rawStats.cornersAway) {
+      stats.corners = {
+        home: rawStats.cornersHome || 0,
+        away: rawStats.cornersAway || 0,
+      };
+    }
+    
+    // xG
+    if (rawStats.xgHome || rawStats.xgAway) {
+      stats.xG = {
+        home: parseFloat(rawStats.xgHome) || 0,
+        away: parseFloat(rawStats.xgAway) || 0,
+      };
+    }
+    
+    // Fouls
+    if (rawStats.foulsHome || rawStats.foulsAway) {
+      stats.fouls = {
+        home: rawStats.foulsHome || 0,
+        away: rawStats.foulsAway || 0,
+      };
+    }
+    
+    // Offsides
+    if (rawStats.offsidesHome || rawStats.offsidesAway) {
+      stats.offsides = {
+        home: rawStats.offsidesHome || 0,
+        away: rawStats.offsidesAway || 0,
+      };
+    }
+    
+    // Yellow cards
+    if (rawStats.yellowCardsHome || rawStats.yellowCardsAway) {
+      stats.yellowCards = {
+        home: rawStats.yellowCardsHome || 0,
+        away: rawStats.yellowCardsAway || 0,
+      };
+    }
+    
+    // Red cards
+    if (rawStats.redCardsHome || rawStats.redCardsAway) {
+      stats.redCards = {
+        home: rawStats.redCardsHome || 0,
+        away: rawStats.redCardsAway || 0,
+      };
+    }
+  }
+
+  // 6. Build model predictions table data
+  const modelPredictions: PostMatchRoundupData['modelPredictions'] = predictions.map((p) => ({
+    modelName: p.modelName,
+    predictedScore: `${p.predictedHome}-${p.predictedAway}`,
+    predictedResult: p.predictedResult,
+    actualResult: p.actualResult,
+    correctTendency: p.correctTendency,
+    exactScore: p.exactScore,
+    points: p.totalPoints,
+  }));
+
+  // 7. Identify top 3 performers
+  const topPerformers: PostMatchRoundupData['topPerformers'] = predictions
+    .filter((p) => p.totalPoints > 0)
+    .slice(0, 3)
+    .map((p) => ({
+      modelName: p.modelName,
+      prediction: `${p.predictedHome}-${p.predictedAway}`,
+      points: p.totalPoints,
+    }));
+
+  // 8. Detect narrative angles
+  const homeTeam = match.homeTeam;
+  const awayTeam = match.awayTeam;
+  const homeScore = match.homeScore!;
+  const awayScore = match.awayScore!;
+
+  // Derby detection (simple heuristic - teams from same city)
+  const derbyCities: Record<string, string[]> = {
+    milan: ['AC Milan', 'Inter Milan'],
+    london: ['Arsenal', 'Chelsea', 'Tottenham', 'West Ham', 'Crystal Palace', 'Fulham', 'Brentford'],
+    manchester: ['Manchester City', 'Manchester United'],
+    liverpool: ['Liverpool', 'Everton'],
+    madrid: ['Real Madrid', 'Atlético Madrid'],
+    barcelona: ['Barcelona', 'Espanyol'],
+    glasgow: ['Rangers', 'Celtic'],
+    berlin: ['Hertha Berlin', 'Union Berlin'],
+    paris: ['Paris Saint-Germain', 'Paris FC'],
+  };
+
+  const isDerby = Object.values(derbyCities).some((teams) => {
+    const matchTeams = [homeTeam, awayTeam];
+    return teams.some((t) => matchTeams.includes(t)) && teams.filter((t) => matchTeams.includes(t)).length >= 2;
+  });
+
+  // Comeback detection (trailed then won)
+  const isComeback = (() => {
+    // If we had halftime data, we could check properly
+    // For now, use high-scoring comebacks as proxy
+    return homeScore >= 2 && awayScore >= 1 && Math.abs(homeScore - awayScore) <= 2;
+  })();
+
+  // Upset detection (lower seed/worse team won)
+  // Simplified: away win against popular teams, or any draw with underdog
+  const popularTeams = ['Manchester City', 'Real Madrid', 'Barcelona', 'Bayern Munich', 'Liverpool', 'PSG'];
+  const isUpset = awayScore > homeScore && popularTeams.includes(homeTeam);
+
+  // Milestone detection (high scoring games, records)
+  const isMilestone = homeScore + awayScore >= 6;
+
+  // 9. Build the prompt
+  const roundupData: PostMatchRoundupData = {
+    homeTeam,
+    awayTeam,
+    competition: competition.name,
+    venue: match.venue || undefined,
+    kickoffTime: match.kickoffTime,
+    finalScore: {
+      home: homeScore,
+      away: awayScore,
+    },
+    events,
+    stats,
+    modelPredictions,
+    topPerformers,
+    narrativeAngles: {
+      isDerby,
+      isComeback,
+      isUpset,
+      isMilestone,
+    },
+  };
+
+  const userPrompt = buildPostMatchRoundupPrompt(roundupData);
+
+  const systemPrompt = 'You are a professional football analyst writing post-match roundups for AI model prediction competitions. Generate factual, stats-heavy content with narrative analysis.';
+
+  // 10. Generate with LLM (temperature 0.3-0.5 for factual content)
+  const result = await generateWithTogetherAI<PostMatchRoundupResponse>(
+    systemPrompt,
+    userPrompt,
+    0.4, // Temperature 0.3-0.5 for factual content
+    4000 // Max tokens for 1000+ word output
+  );
+
+  // 11. Validate output
+  if (!result.content.narrative || result.content.narrative.length < 500) {
+    throw new Error('Generated roundup narrative is too short');
+  }
+
+  // 12. Store in database
+  const db = getDb();
+
+  const roundupHtml = `
+<h1>${result.content.title}</h1>
+
+<div class="scoreboard">
+  <div class="scoreboard-header">
+    <span class="competition">${result.content.scoreboard.competition}</span>
+    <span class="venue">${match.venue || ''}</span>
+  </div>
+  <div class="teams-score">
+    <span class="home-team">${result.content.scoreboard.homeTeam}</span>
+    <span class="score">${result.content.scoreboard.homeScore} - ${result.content.scoreboard.awayScore}</span>
+    <span class="away-team">${result.content.scoreboard.awayTeam}</span>
+  </div>
+</div>
+
+<div class="match-stats">
+  <h2>Match Statistics</h2>
+  <ul>
+    <li><strong>Possession:</strong> ${result.content.stats.possession || 'N/A'}</li>
+    <li><strong>Shots:</strong> ${result.content.stats.shots || 'N/A'}</li>
+    <li><strong>Shots on Target:</strong> ${result.content.stats.shotsOnTarget || 'N/A'}</li>
+    <li><strong>xG:</strong> ${result.content.stats.xG || 'N/A'}</li>
+    <li><strong>Corners:</strong> ${result.content.stats.corners || 'N/A'}</li>
+  </ul>
+</div>
+
+<div class="model-predictions">
+  <h2>AI Model Predictions</h2>
+  ${result.content.modelPredictions}
+</div>
+
+<div class="top-performers">
+  <h2>Top Performing Models</h2>
+  <ul>
+    ${result.content.topPerformers.map((m, i) => `<li>${i + 1}. ${m.modelName}: ${m.prediction} (${m.points} pts)</li>`).join('\n')}
+  </ul>
+</div>
+
+<div class="narrative">
+  <h2>Match Analysis</h2>
+  ${result.content.narrative}
+</div>
+
+<div class="keywords">
+  <p><em>Keywords: ${result.content.keywords.join(', ')}</em></p>
+</div>
+`;
+
+  await db
+    .insert(matchContent)
+    .values({
+      id: uuidv4(),
+      matchId,
+      postMatchContent: roundupHtml,
+      postMatchGeneratedAt: new Date().toISOString(),
+      generatedBy: CONTENT_CONFIG.model,
+      totalTokens: result.usage.totalTokens,
+      totalCost: result.cost.toFixed(4),
+    })
+    .onConflictDoUpdate({
+      target: matchContent.matchId,
+      set: {
+        postMatchContent: roundupHtml,
+        postMatchGeneratedAt: new Date().toISOString(),
+        generatedBy: CONTENT_CONFIG.model,
+        totalTokens: result.usage.totalTokens,
+        totalCost: result.cost.toFixed(4),
+        updatedAt: new Date(),
+      },
+    });
+
+  loggers.content.info({
+    matchId,
+    homeTeam,
+    awayTeam,
+    score: `${homeScore}-${awayScore}`,
+    cost: result.cost,
+    tokens: result.usage.totalTokens,
+  }, 'Post-match roundup generated');
+
+  return matchId;
 }
