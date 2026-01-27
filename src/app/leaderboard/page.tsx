@@ -54,7 +54,19 @@ export const metadata: Metadata = {
   },
 };
 
-// Fetch leaderboard data from the API
+/**
+ * Fetch leaderboard data from the API with ISR caching.
+ *
+ * ISR Pattern: Uses fetch-level `revalidate: 60` option (Phase 3 pattern)
+ *
+ * Note: Next.js supports two valid ISR patterns:
+ * 1. Fetch-level: next: { revalidate: 60 } in fetch options (used here)
+ * 2. Page-level: export const revalidate = 60 at module scope (Phase 5 pattern)
+ *
+ * The fetch-level approach allows more granular control when pages make multiple
+ * fetch calls with different revalidation needs. Leaderboard pages were built
+ * using this pattern in Phase 3 and remain consistent with the original design.
+ */
 async function fetchLeaderboard(filters: Record<string, string>): Promise<{
   success: boolean;
   data?: Array<{
