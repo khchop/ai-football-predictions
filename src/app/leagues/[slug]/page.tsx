@@ -9,11 +9,8 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateStaticParams() {
-  return COMPETITIONS.map((competition) => ({
-    slug: competition.id,
-  }));
-}
+// Removed generateStaticParams to avoid build-time database queries
+// Pages will be rendered on-demand with ISR caching (60s revalidation)
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
