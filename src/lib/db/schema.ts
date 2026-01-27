@@ -480,3 +480,61 @@ export const matchContent = pgTable('match_content', {
 
 export type MatchContent = typeof matchContent.$inferSelect;
 export type NewMatchContent = typeof matchContent.$inferInsert;
+
+// AI-generated post-match roundups with full narrative content
+export const matchRoundups = pgTable('match_roundups', {
+  id: text('id').primaryKey(), // UUID
+  matchId: text('match_id')
+    .notNull()
+    .unique()
+    .references(() => matches.id, { onDelete: 'cascade' }),
+
+  // Title and SEO
+  title: text('title').notNull(), // SEO title
+
+  // Scoreboard data
+  scoreboard: text('scoreboard').notNull(), // JSON: { homeTeam, awayTeam, homeScore, awayScore, competition, venue, kickoff }
+
+  // Match events
+  events: text('events'), // JSON: Array of { minute, type, description }
+
+  // Match statistics
+  stats: text('stats').notNull(), // JSON: { possession, shots, shotsOnTarget, corners, xG, fouls, offsides, ... }
+
+  // Model predictions table (HTML)
+  modelPredictions: text('model_predictions').notNull(), // HTML table string
+
+  // Top performers
+  topPerformers: text('top_performers').notNull(), // JSON: Array of { modelName, prediction, points }
+
+  // Full narrative content (1000+ words)
+  narrative: text('narrative').notNull(), // Full HTML content
+
+  // Keywords for SEO
+  keywords: text('keywords'), // Comma-separated keywords
+
+  // Content hash for deduplication
+  similarityHash: text('similarity_hash'), // Hash for exact-match detection
+
+  // AI generation metadata
+  generationCost: doublePrecision('generation_cost'),
+  promptTokens: integer('prompt_tokens'),
+  completionTokens: integer('completion_tokens'),
+  generatedBy: text('generated_by'), // Model name
+
+  // Publishing status
+  status: text('status').default('pending'), // 'pending' | 'published' | 'failed'
+  publishedAt: timestamp('published_at'),
+
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => [
+  index('idx_match_roundups_match_id').on(table.matchId),
+  index('idx_match_roundups_status').on(table.status),
+  index('idx_match_roundups_published_at').on(table.publishedAt),
+  index('idx_match_roundups_similarity_hash').on(table.similarityHash),
+]);
+
+export type MatchRoundup = typeof matchRoundups.$inferSelect;
+export type NewMatchRoundup = typeof matchRoundups.$inferInsert;
