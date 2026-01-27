@@ -6,7 +6,7 @@ import { MatchEvents } from '@/components/match-events';
 import { MatchContentSection } from '@/components/match/MatchContent';
 import { MatchFAQSchema } from '@/components/match/MatchFAQSchema';
 import { PredictionInsightsBlockquote } from '@/components/match/PredictionInsightsBlockquote';
-import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails, getStandingsForTeams, getNextMatchesForTeams } from '@/lib/db/queries';
+import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails, getStandingsForTeams, getNextMatchesForTeams, getMatchRoundup } from '@/lib/db/queries';
 import { getMatchEvents } from '@/lib/football/api-football';
 import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, Target, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -16,6 +16,7 @@ import { PredictionTable } from '@/components/prediction-table';
 import { SportsEventSchema } from '@/components/SportsEventSchema';
 import { MatchStats } from '@/components/match/MatchStats';
 import { WebPageSchema } from '@/components/WebPageSchema';
+import { RoundupViewer } from '@/components/match/roundup-viewer';
 
 export const dynamic = 'force-dynamic';
 
@@ -112,6 +113,9 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const awayStanding = teamStandings.find(s => s.teamName === matchData.awayTeam) || null;
 
   const nextMatches = await getNextMatchesForTeams([matchData.homeTeam, matchData.awayTeam], 4);
+  
+  // Fetch roundup data (only for finished matches)
+  const roundup = isFinished ? await getMatchRoundup(matchData.id) : null;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -291,6 +295,23 @@ export default async function MatchPage({ params }: MatchPageProps) {
       />
       
       <MatchContentSection matchId={matchData.id} />
+      
+      {/* Match Roundup (for finished matches with roundup available) */}
+      {roundup && (
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Match Roundup</h2>
+          <RoundupViewer
+            title={roundup.title}
+            scoreboard={JSON.parse(roundup.scoreboard)}
+            events={roundup.events ? JSON.parse(roundup.events) : []}
+            stats={JSON.parse(roundup.stats)}
+            modelPredictions={roundup.modelPredictions}
+            topPerformers={JSON.parse(roundup.topPerformers)}
+            narrative={roundup.narrative}
+            keywords={roundup.keywords ? roundup.keywords.split(',').map(k => k.trim()) : []}
+          />
+        </section>
+      )}
       
       <Card className="bg-card/50 border-border/50">
         <CardContent className="p-6">

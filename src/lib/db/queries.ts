@@ -1,4 +1,4 @@
-import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalances, seasons, predictions, blogPosts, leagueStandings } from './index';
+import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalances, seasons, predictions, blogPosts, leagueStandings, matchRoundups } from './index';
 import { eq, and, desc, gte, lte, sql, inArray, ne, or, lt, not, isNull, isNotNull } from 'drizzle-orm';
 import type { NewMatch, NewMatchAnalysis, NewBet, NewModelBalance, NewPrediction } from './schema';
 import { v4 as uuidv4 } from 'uuid';
@@ -2123,8 +2123,81 @@ export async function getMatchPredictionsWithAccuracy(matchId: string): Promise<
                        p.predictedHome !== p.predictedAway && homeScore !== awayScore ? 
                          p.predictedResult === actualResult : 
                          p.predictedResult === actualResult,
-      exactScore: p.predictedHome === homeScore && p.predictedAway === awayScore,
-      totalPoints: p.totalPoints || 0,
-    };
-  });
+       exactScore: p.predictedHome === homeScore && p.predictedAway === awayScore,
+       totalPoints: p.totalPoints || 0,
+     };
+   });
+ }
+
+// ============= MATCH ROUNDUPS =============
+
+export interface MatchRoundupData {
+  id: string;
+  matchId: string;
+  title: string;
+  scoreboard: string;
+  events: string | null;
+  stats: string;
+  modelPredictions: string;
+  topPerformers: string;
+  narrative: string;
+  keywords: string | null;
+  similarityHash: string | null;
+  generationCost: number | null;
+  promptTokens: number | null;
+  completionTokens: number | null;
+  generatedBy: string | null;
+  status: string | null;
+  publishedAt: Date | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+}
+
+/**
+ * Get roundup for a match by match ID
+ * Returns null if no roundup exists
+ */
+export async function getMatchRoundup(matchId: string): Promise<MatchRoundupData | null> {
+  const db = getDb();
+  
+  const result = await db
+    .select()
+    .from(matchRoundups)
+    .where(eq(matchRoundups.matchId, matchId))
+    .limit(1);
+  
+  if (!result || result.length === 0) {
+    return null;
+  }
+  
+  return result[0];
+}
+
+/**
+ * Get roundup for a match by slug
+ * Joins matches table to query by slug
+ */
+export async function getMatchRoundupBySlug(competitionSlug: string, matchSlug: string): Promise<MatchRoundupData | null> {
+  const db = getDb();
+  
+  const result = await db
+    .select({
+      roundup: matchRoundups,
+    })
+    .from(matchRoundups)
+    .innerJoin(matches, eq(matchRoundups.matchId, matches.id))
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(
+      and(
+        eq(competitions.slug, competitionSlug),
+        eq(matches.slug, matchSlug)
+      )
+    )
+    .limit(1);
+  
+  if (!result || result.length === 0) {
+    return null;
+  }
+  
+  return result[0].roundup;
 }
