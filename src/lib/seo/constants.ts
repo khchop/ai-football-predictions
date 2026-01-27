@@ -1,0 +1,39 @@
+// SEO-related constants
+
+export const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? (() => {
+  throw new Error('NEXT_PUBLIC_BASE_URL environment variable is required');
+})();
+
+export const SITE_NAME = 'BettingSoccer';
+
+export const DEFAULT_OG_TEMPLATE = 'upcoming' as const;
+
+export const OG_IMAGE_SIZE = {
+  width: 1200,
+  height: 630,
+} as const;
+
+export const MatchStatus = {
+  upcoming: 'upcoming',
+  live: 'live',
+  finished: 'finished',
+} as const;
+
+export type MatchStatus = typeof MatchStatus[keyof typeof MatchStatus];
+
+export const SEO_DEFAULTS = {
+  title: SITE_NAME,
+  description: 'AI-powered football match predictions and analysis',
+  siteName: SITE_NAME,
+  twitterHandle: '@bettingsoccer',
+  locale: 'en_US',
+} as const;
+
+export const ROBOTS_DEFAULTS = {
+  index: true,
+  follow: true,
+  googleBot: {
+    index: true,
+    follow: true,
+  },
+} as const;
