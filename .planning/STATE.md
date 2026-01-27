@@ -14,14 +14,15 @@
     - ✓ 03-02: LeaderboardTable Component
     - ✓ 03-03: Comparison Modal and Skeleton Loading
     - ✓ 03-04: Season and Model Selectors
-   - Phase 4: Content Pipeline - IN PROGRESS
-     - ✓ 04-01: BullMQ Content Queue for Roundups (tasks 1-2 pre-existing, task 3 implemented)
-     - ✓ 04-02: LLM-Powered Post-Match Roundups (4 tasks executed)
-     - ✓ 04-03: Content Storage Schema and Similarity Detection (4 tasks executed)
-   - [ ] Phase 5: TBD
-- Status: Phase 4 plan 3 complete, 3/3 plans executed in Phase 4
+    - Phase 4: Content Pipeline - IN PROGRESS
+      - ✓ 04-01: BullMQ Content Queue for Roundups (tasks 1-2 pre-existing, task 3 implemented)
+      - ✓ 04-02: LLM-Powered Post-Match Roundups (4 tasks executed)
+      - ✓ 04-03: Content Storage Schema and Similarity Detection (4 tasks executed)
+      - ✓ 04-04: Roundup Content Display Integration (5 tasks executed)
+    - [ ] Phase 5: TBD
+- Status: Phase 4 complete, 4/4 plans executed in Phase 4
 
-Progress: ██████████████░░░░░░░░░░░░░░░░ 91% (4.5/5 phases, 11/12 plans complete)
+Progress: ████████████████████████████░░░░ 96% (4.8/5 phases, 12/12 plans complete)
 
 ## Session History
 
@@ -80,6 +81,14 @@ Progress: ██████████████░░░░░░░░░�
 - Integrated deduplication check into roundup generation
 - Created database migration file for matchRoundups
 - All 4 tasks completed with atomic commits
+
+### Session 9: Phase 4 Plan 04-04 Roundup Display Integration (2026-01-27)
+- Added roundup caching constants (CACHE_TTL.ROUNDUP = 86400s, cacheKeys)
+- Created GET /api/matches/{matchId}/roundup endpoint with caching
+- Built RoundupViewer component with scoreboard, events, stats, predictions, top performers, narrative
+- Integrated roundup into slug-based match page (src/app/leagues/[slug]/[match]/page.tsx)
+- Added getMatchRoundup() and getMatchRoundupBySlug() database queries
+- All 5 tasks completed with atomic commits
 
 ## User Preferences (from questioning)
 
@@ -168,11 +177,11 @@ cd /Users/pieterbos/Documents/bettingsoccer
 
 ## Session Continuity
 
-**Last session:** 2026-01-27T14:29:00Z
-**Stopped at:** Completed plan 04-03 (Content Storage Schema and Similarity Detection)
+**Last session:** 2026-01-27T14:34:00Z
+**Stopped at:** Completed plan 04-04 (Roundup Content Display Integration)
 **Resume file:** None
-**Status:** Phase 4 complete, 3/3 plans executed
+**Status:** Phase 4 complete, 4/4 plans executed
 
 ---
 
-*Last updated: 2026-01-27 at phase 4 plan 02 execution complete*
+*Last updated: 2026-01-27 at phase 4 plan 04 execution complete*
