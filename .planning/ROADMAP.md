@@ -9,10 +9,10 @@
 | 3 | ~~Stats UI~~ ✅ | VERIFIED | Leaderboard pages with filtering and sorting | STATS-01 through STATS-14 | 4 criteria |
 | 4 | ~~Content Pipeline~~ ✅ | LLM-powered match roundups on completion | CONT-01 through CONT-05 | 4 criteria |
 | 5 | ~~SEO + Publication~~ ✅ | VERIFIED | Dynamic metadata, OG images, ISR pages | SEO-01 through SEO-04 | 4 criteria |
-| 6 | ~~Roundup Integration~~ ✅ | GAP CLOSURE | INT-04, FLOW-04 | Closes gaps |
-| 7 | ~~Documentation & Cleanup~~ ✅ | GAP CLOSURE | INT-05 | Closes gaps |
+| 6 | ~~Roundup Integration~~ ✅ | EXECUTED | INT-04, FLOW-04 | Closes gaps |
+| 7 | Documentation & Cleanup | GAP CLOSURE | INT-05 | Pending |
 
-**Total: 7 phases | 23 requirements + 3 integration/flow gaps | All requirements mapped | Phase 7 GAP CLOSURE**
+**Total: 7 phases | 23 requirements + 3 integration/flow gaps | All requirements mapped | Phase 6 complete**
 
 ---
 
@@ -177,7 +177,9 @@
 3. Flow C (Match → Roundup → Display) works end-to-end
 
 **Plans:**
-- [ ] 06-01-PLAN.md — Wire roundup API to SEO match pages
+- [x] 06-01-PLAN.md — Wire roundup API to SEO match pages
+- **Status:** EXECUTED
+- **Verification:** PASSED (3/3 must-haves)
 
 ---
 
