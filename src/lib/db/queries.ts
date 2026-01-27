@@ -1,3 +1,4 @@
+import { getLeaderboard } from './queries/stats';
 import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalances, seasons, predictions, blogPosts, leagueStandings, matchRoundups } from './index';
 import { eq, and, desc, gte, lte, sql, inArray, ne, or, lt, not, isNull, isNotNull } from 'drizzle-orm';
 import type { NewMatch, NewMatchAnalysis, NewBet, NewModelBalance, NewPrediction } from './schema';
@@ -5,7 +6,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { loggers } from '@/lib/logger/modules';
 
 import type { NewCompetition, NewModel, Match, MatchAnalysis, Model, Competition, Bet, ModelBalance, Prediction, BlogPost } from './schema';
-import type { ScoringBreakdown, EnhancedLeaderboardEntry } from '@/types';
 import { withCache, cacheKeys, CACHE_TTL, cacheDelete } from '@/lib/cache/redis';
 
 // Legacy betting system constant (unused, kept for model_balances table compatibility)
@@ -1338,7 +1338,7 @@ export async function getTopPerformingModel() {
     async () => {
       try {
         // Use existing getLeaderboard query but limit to 1
-        const leaderboard = await getLeaderboard({ limit: 1 });
+        const leaderboard = await getLeaderboard(1);
         
         if (leaderboard.length === 0) {
           return null;
@@ -1346,7 +1346,7 @@ export async function getTopPerformingModel() {
         
         const topModel = leaderboard[0];
         return {
-          displayName: topModel.model.displayName,
+          displayName: topModel.displayName,
           avgPoints: Number(topModel.avgPoints) || 0,
         };
       } catch (error) {
@@ -1673,114 +1673,6 @@ export async function updateMatchQuotas(
 }
 
 // Time range options for leaderboard filtering
-export type TimeRange = '7d' | '30d' | '90d' | 'all';
-
-export interface LeaderboardFilters {
-  competitionId?: string;  // Filter by competition (e.g., 'ucl', 'epl')
-  timeRange?: TimeRange;   // Filter by time range
-  limit?: number;
-}
-
-// Calculate date cutoff for time range filter
-function getDateCutoff(timeRange: TimeRange): string | null {
-  if (timeRange === 'all') return null;
-  
-  const now = new Date();
-  const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
-  now.setDate(now.getDate() - days);
-  return now.toISOString();
-}
-
-// Get leaderboard with optional filters (competition and time range)
-export async function getLeaderboard(filters: LeaderboardFilters = {}) {
-  const db = getDb();
-  const { competitionId, timeRange = 'all', limit = 30 } = filters;
-  
-  // Build join conditions
-  const joinConditions = [
-    eq(predictions.modelId, models.id),
-    eq(predictions.status, 'scored')
-  ];
-  
-  // Add competition filter if specified (join through matches)
-  if (competitionId) {
-    // Need to join with matches to filter by competition
-    const result = await db
-      .select({
-        model: models,
-        totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
-        totalPredictions: sql<number>`COUNT(${predictions.id})`,
-        exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
-        correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
-        avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
-      })
-      .from(models)
-      .leftJoin(predictions, and(
-        eq(predictions.modelId, models.id),
-        eq(predictions.status, 'scored')
-      ))
-      .leftJoin(matches, eq(predictions.matchId, matches.id))
-      .where(and(
-        eq(models.active, true),
-        eq(matches.competitionId, competitionId),
-        timeRange !== 'all' ? gte(matches.kickoffTime, getDateCutoff(timeRange)!) : undefined
-      ))
-      .groupBy(models.id)
-      .orderBy(desc(sql`COALESCE(AVG(${predictions.totalPoints})::numeric, 0)`))
-      .limit(limit);
-    
-    return result;
-  }
-  
-  // No competition filter - simpler query
-  const dateCutoff = getDateCutoff(timeRange);
-  
-  if (dateCutoff) {
-    // With time filter, need to join matches for kickoffTime
-    return db
-      .select({
-        model: models,
-        totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
-        totalPredictions: sql<number>`COUNT(${predictions.id})`,
-        exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
-        correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
-        avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
-      })
-      .from(models)
-      .leftJoin(predictions, and(
-        eq(predictions.modelId, models.id),
-        eq(predictions.status, 'scored')
-      ))
-      .leftJoin(matches, eq(predictions.matchId, matches.id))
-      .where(and(
-        eq(models.active, true),
-        gte(matches.kickoffTime, dateCutoff)
-      ))
-      .groupBy(models.id)
-      .orderBy(desc(sql`COALESCE(AVG(${predictions.totalPoints})::numeric, 0)`))
-      .limit(limit);
-  }
-  
-  // All-time, no competition filter - original simple query
-  return db
-    .select({
-      model: models,
-      totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
-      totalPredictions: sql<number>`COUNT(${predictions.id})`,
-      exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
-      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
-      avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
-    })
-    .from(models)
-    .leftJoin(predictions, and(
-      eq(predictions.modelId, models.id),
-      eq(predictions.status, 'scored')
-    ))
-    .where(eq(models.active, true))
-    .groupBy(models.id)
-    .orderBy(desc(sql`COALESCE(AVG(${predictions.totalPoints})::numeric, 0)`))
-    .limit(limit);
-}
 
 // Get model stats for detail page
 export async function getModelPredictionStats(modelId: string) {
