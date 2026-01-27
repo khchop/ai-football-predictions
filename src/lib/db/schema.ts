@@ -29,6 +29,7 @@ export const matches = pgTable('matches', {
   status: text('status').default('scheduled'), // scheduled, live, finished, postponed, cancelled
   matchMinute: text('match_minute'), // Live match time: "45'", "HT", "67'", "90'+3"
   round: text('round'), // e.g., "Group A - Matchday 1", "Quarter-finals"
+  matchday: integer('matchday'), // The matchday number within a competition round
   venue: text('venue'),
   isUpset: boolean('is_upset').default(false), // Whether the underdog won
   // Kicktipp quota scoring: points for correct tendency (2-6 range)
