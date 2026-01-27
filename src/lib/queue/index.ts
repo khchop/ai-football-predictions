@@ -182,6 +182,7 @@ export const QUEUE_NAMES = {
   BACKFILL: 'backfill-queue',
   MODEL_RECOVERY: 'model-recovery-queue',
   STANDINGS: 'standings-queue',
+  STATS: 'stats-queue',
 } as const;
 
 // Queue-specific timeout configurations
@@ -190,6 +191,7 @@ const QUEUE_TIMEOUTS = {
   [QUEUE_NAMES.ANALYSIS]: 5 * 60 * 1000,     // 5 minutes - multiple API calls
   [QUEUE_NAMES.BACKFILL]: 5 * 60 * 1000,     // 5 minutes - many database operations
   [QUEUE_NAMES.SETTLEMENT]: 3 * 60 * 1000,   // 3 minutes - scoring many predictions
+  [QUEUE_NAMES.STATS]: 2 * 60 * 1000,        // 2 minutes - stats calculation
   default: 2 * 60 * 1000,                     // 2 minutes - default for fast operations
 } as const;
 
@@ -199,6 +201,7 @@ const WORKER_LOCK_DURATIONS = {
   [QUEUE_NAMES.ANALYSIS]: 5 * 60 * 1000,     // 5 minutes
   [QUEUE_NAMES.BACKFILL]: 5 * 60 * 1000,     // 5 minutes
   [QUEUE_NAMES.SETTLEMENT]: 3 * 60 * 1000,   // 3 minutes
+  [QUEUE_NAMES.STATS]: 2 * 60 * 1000,        // 2 minutes
   default: 30 * 1000,                        // 30 seconds - prevents stalled marking
 } as const;
 
@@ -346,6 +349,13 @@ export function getStandingsQueue(): Queue {
 }
 export const standingsQueue = createLazyQueueProxy(getStandingsQueue);
 
+let _statsQueue: Queue | null = null;
+export function getStatsQueue(): Queue {
+  if (!_statsQueue) _statsQueue = createQueue(QUEUE_NAMES.STATS);
+  return _statsQueue;
+}
+export const statsQueue = createLazyQueueProxy(getStatsQueue);
+
 // Legacy queue (kept for backward compatibility)
 let _matchQueue: Queue | null = null;
 export function getMatchQueue(): Queue {
@@ -379,6 +389,8 @@ export function getQueue(queueName: string): Queue {
       return modelRecoveryQueue;
     case QUEUE_NAMES.STANDINGS:
       return standingsQueue;
+    case QUEUE_NAMES.STATS:
+      return statsQueue;
     default:
       throw new Error(`Unknown queue name: ${queueName}`);
   }
@@ -398,6 +410,7 @@ export function getAllQueues(): Queue[] {
     getContentQueue(),
     getModelRecoveryQueue(),
     getStandingsQueue(),
+    getStatsQueue(),
   ];
 }
 
