@@ -4,11 +4,11 @@
 
 ### Stats Engine
 
-- [ ] **STATS-01**: Model ranking by total points
-- [ ] **STATS-02**: Total matches predicted per model
-- [ ] **STATS-03**: Win rate percentage (correct tendency)
-- [ ] **STATS-04**: Average points per match
-- [ ] **STATS-05**: Recent form (last 10 matches)
+- [x] **STATS-01**: Model ranking by total points
+- [x] **STATS-02**: Total matches predicted per model
+- [x] **STATS-03**: Win rate percentage (correct tendency)
+- [x] **STATS-04**: Average points per match
+- [x] **STATS-05**: Recent form (last 10 matches)
 - [ ] **STATS-06**: Competition-scoped leaderboards (same metrics as overall)
 - [ ] **STATS-07**: Competition vs overall performance comparison
 - [ ] **STATS-08**: Filter by season/competition
@@ -50,9 +50,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STATS-01 through STATS-14 | — | Pending |
-| CONT-01 through CONT-05 | — | Pending |
-| SEO-01 through SEO-04 | — | Pending |
+| STATS-01 through STATS-05 | 1 | Complete |
+| STATS-06 through STATS-14 | 2-3 | Pending |
+| CONT-01 through CONT-05 | 4 | Pending |
+| SEO-01 through SEO-04 | 5 | Pending |
 
 ---
-*Last updated: 2026-01-27 after requirements definition*
+*Last updated: 2026-01-27 after Phase 1 completion*

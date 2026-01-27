@@ -4,7 +4,7 @@
 
 | # | Phase | Goal | Requirements | Success Criteria |
 |---|-------|------|--------------|------------------|
-| 1 | Stats Foundation | Database schema, views, and calculation service | STATS-01 through STATS-05 | 4 criteria |
+| 1 | ~~Stats Foundation~~ ✅ | Database schema, views, and calculation service | STATS-01 through STATS-05 | 4 criteria |
 | 2 | Stats API + Caching | Multi-granularity query API with Redis caching | STATS-06 through STATS-14 | 4 criteria |
 | 3 | Stats UI | Leaderboard pages with filtering and sorting | STATS-01 through STATS-14 | 4 criteria |
 | 4 | Content Pipeline | LLM-powered match roundups on completion | CONT-01 through CONT-05 | 4 criteria |
