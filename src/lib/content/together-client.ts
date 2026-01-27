@@ -83,27 +83,27 @@ function calculateCost(inputTokens: number, outputTokens: number): number {
 function cleanJSONString(jsonString: string): string {
   // Remove markdown code block markers if present
   let cleaned = jsonString
-    .replace(/^```json\s*/, '')
+    .replace(/^```json\s*/g, '')
     .replace(/\s*```$/g, '')
-    .replace(/^```\s*/, '')
+    .replace(/^```\s*/g, '')
     .replace(/\s*```$/g, '');
 
-  // Remove control characters (except \n \r \t which are valid in JSON strings)
-  // This fixes "Bad control character in string literal" errors
-  cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-
-  // Fix unescaped literal newlines within string values
-  // Match text between quotes that contains literal newlines not preceded by backslash
-  cleaned = cleaned.replace(/"([^"]*)\n([^"]*)"/g, (match, before, after) => {
-    return `"${before}\\n${after}"`;
+  // Replace literal newlines within string values with escaped newlines
+  // This is the most common AI issue - unescaped newlines in JSON strings
+  // Match quotes that contain literal newlines
+  cleaned = cleaned.replace(/"([^"]*)\n([^"]*)"/g, (match, part1, part2) => {
+    return `"${part1}\\n${part2}"`;
   });
 
+  // Remove control characters except for valid whitespace
+  cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
   // Fix unescaped quotes within string values
-  cleaned = cleaned.replace(/(?<!\\)"([^"]*?)"([^"]*?)"/g, '\\"$1\\"$2\\"');
+  cleaned = cleaned.replace(/(?<!\\)"(?=[^"]*")/g, '\\"');
 
   // Fix common JSON formatting issues
-  cleaned = cleaned.replace(/,\s*}/g, '}');  // Trailing commas before }
-  cleaned = cleaned.replace(/,\s*]/g, ']');  // Trailing commas before ]
+  cleaned = cleaned.replace(/,\s*}/g, '}');
+  cleaned = cleaned.replace(/,\s*]/g, ']');
 
   return cleaned;
 }
@@ -185,27 +185,45 @@ export async function generateWithTogetherAI<T = unknown>(
     let parsedContent: T;
     try {
       // Extract JSON from markdown code blocks if present
-      const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || content.match(/```\n?([\s\S]*?)\n?```/);
-      let jsonString = jsonMatch ? jsonMatch[1] : content;
+      let jsonString = content;
 
-      // Clean up the JSON string - remove control characters and fix common AI JSON issues
-      jsonString = cleanJSONString(jsonString);
+      // Check if wrapped in markdown code blocks
+      const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
+      const codeMatch = content.match(/```\n([\s\S]*?)\n```/);
 
-      parsedContent = JSON.parse(jsonString.trim()) as T;
-    } catch (parseError) {
-      // If JSON parsing fails, try to clean and retry with more aggressive cleaning
-      let cleanedContent = content
-        .replace(/^[^{]*/, '')    // Remove leading non-JSON text
-        .replace(/[^}]*$/, '');   // Remove trailing non-JSON text
-
-      cleanedContent = cleanJSONString(cleanedContent);
-
-      try {
-        parsedContent = JSON.parse(cleanedContent) as T;
-      } catch {
-        loggers.togetherClient.error({ content }, 'Failed to parse response as JSON');
-        throw new Error(`Failed to parse AI response as JSON: ${parseError}`);
+      if (jsonMatch) {
+        jsonString = jsonMatch[1];
+      } else if (codeMatch) {
+        jsonString = codeMatch[1];
       }
+
+      // Remove any BOM or invisible characters at the start
+      jsonString = jsonString.replace(/^\uFEFF/, '').replace(/^\u200B/, '').trim();
+
+      // Remove control characters
+      jsonString = jsonString.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
+      // Fix unescaped newlines within strings by using a more careful approach
+      // Split by quotes and rejoin, escaping newlines where needed
+      const parts = jsonString.split('"');
+      for (let i = 1; i < parts.length; i += 2) {
+        // Odd indices are content between quotes
+        parts[i] = parts[i].replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+      }
+      jsonString = parts.join('"');
+
+      // Fix trailing commas
+      jsonString = jsonString.replace(/,\s*([}\]])/g, '$1');
+
+      parsedContent = JSON.parse(jsonString) as T;
+    } catch (parseError) {
+      // If JSON parsing fails, log and throw with more context
+      loggers.togetherClient.error({
+        content: content.substring(0, 500), // First 500 chars for debugging
+        error: parseError instanceof Error ? parseError.message : 'Unknown parse error'
+      }, 'Failed to parse response as JSON');
+
+      throw new Error(`Failed to parse AI response as JSON: ${parseError instanceof Error ? parseError.message : parseError}`);
     }
 
     return {
