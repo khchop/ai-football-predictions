@@ -283,3 +283,9 @@ Milestone v1.1 audit findings resolved:
 ---
 
 *Last updated: 2026-01-27 at plan 06-01 completion - 22 plans executed (Phase 6 started post-v1.0)*
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 001 | Add a new column to the matches table called 'matchday' of type integer | 2026-01-27 | dd53e8e | [001-add-a-new-column-to-the-matches-table-ca](./quick/001-add-a-new-column-to-the-matches-table-ca/) |
