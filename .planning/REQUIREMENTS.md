@@ -1,33 +1,106 @@
-# Requirements
+# Requirements: AI Football Predictions Platform
+
+**Defined:** 2026-01-31
+**Core Value:** Prediction pipeline reliably generates scores from 35 LLMs before kickoff and accurately calculates Kicktipp quota points when matches complete
 
 ## v1 Requirements
 
-### Stats Engine
+Bug fix stabilization milestone. All requirements are fixes to existing functionality.
 
-- [x] **STATS-01**: Model ranking by total points
-- [x] **STATS-02**: Total matches predicted per model
-- [x] **STATS-03**: Win rate percentage (correct tendency)
-- [x] **STATS-04**: Average points per match
-- [x] **STATS-05**: Recent form (last 10 matches)
-- [x] **STATS-06**: Competition-scoped leaderboards (same metrics as overall)
-- [x] **STATS-07**: Competition vs overall performance comparison
-- [x] **STATS-08**: Filter by season/competition
-- [x] **STATS-09**: Performance against specific clubs
-- [x] **STATS-10**: Home vs away performance per club
-- [x] **STATS-11**: Filter by club
-- [x] **STATS-12**: Date range filtering
-- [x] **STATS-13**: Model filtering
-- [x] **STATS-14**: Sortable table UI
-...
-- [x] **CONT-01**: Match summary with score and key events
-- [x] **CONT-02**: Model prediction accuracy per match
-- [x] **CONT-03**: Top performer models for match
-- [x] **CONT-04**: LLM-generated narrative analysis
-- [x] **CONT-05**: Trigger on match completion
-...
-| STATS-14 | 3 | Complete |
-| CONT-01 through CONT-05 | 4 | Complete |
-| SEO-01 through SEO-04 | 5 | Complete |
+### Critical Bugs (CRIT)
+
+- [ ] **CRIT-01**: JSON parse failures handled with multi-strategy extraction (direct → markdown → regex → score pattern)
+- [ ] **CRIT-02**: API timeouts recovered gracefully with error-type-aware backoff (rate limit → 60s, timeout → linear)
+- [ ] **CRIT-03**: Model auto-disable uses proper threshold (5 failures) and time-based recovery (1h cooldown)
+- [ ] **CRIT-04**: Queue workers handle null/malformed API data without crashing (defensive error handling)
+- [ ] **CRIT-05**: Database connection pool sized appropriately (20+ connections) with health monitoring
+
+### Data Accuracy (DATA)
+
+- [ ] **DATA-01**: Settlement uses database transaction with row lock to prevent race conditions
+- [ ] **DATA-02**: Leaderboard totals calculated correctly (cache invalidation after all predictions scored)
+- [ ] **DATA-03**: Streak tracking handles voided matches, draws, and cancelled matches correctly
+- [ ] **DATA-04**: Cache invalidation timing ensures no stale data visible after settlement
+- [ ] **DATA-05**: Quota point calculation matches Kicktipp standard formula
+
+### UI/UX (UIUX)
+
+- [ ] **UIUX-01**: Match detail pages load within acceptable time (streaming predictions, lazy load)
+- [ ] **UIUX-02**: Leaderboard updates visible without manual refresh (polling or cache-busting)
+- [ ] **UIUX-03**: Mobile responsiveness for prediction cards (no horizontal scroll required)
+- [ ] **UIUX-04**: Error boundaries catch all React rendering failures (no white screens)
+
+### Infrastructure (INFR)
+
+- [ ] **INFR-01**: Circuit breaker state persists through Redis restarts (prevent API flood on recovery)
+- [ ] **INFR-02**: Cache pattern deletion uses SCAN instead of KEYS (non-blocking Redis operations)
+- [ ] **INFR-03**: API rate limits enforced at budget level (prevent free tier exhaustion)
+- [ ] **INFR-04**: Redis unavailability handled gracefully (system continues without cache)
+
+## v2 Requirements
+
+Deferred to future milestone. Tracked but not in current roadmap.
+
+### Performance
+
+- **PERF-01**: Real-time leaderboard updates via WebSocket (currently using polling)
+- **PERF-02**: Prediction generation parallelization (currently sequential per model)
+
+### Observability
+
+- **OBSV-01**: Distributed tracing for prediction pipeline
+- **OBSV-02**: Custom metrics dashboards for queue health
+- **OBSV-03**: Alerting for model failure patterns
+
+### Content
+
+- **CONT-01**: Improved post-match roundup quality
+- **CONT-02**: Pre-match preview content generation
+
+## Out of Scope
+
+Explicitly excluded. Documented to prevent scope creep.
+
+| Feature | Reason |
+|---------|--------|
+| User prediction submission | View-only platform by design |
+| Betting integration | No gambling features |
+| Additional LLM providers | Sticking with Together AI (35 models sufficient) |
+| New leagues | Maintain existing 17 leagues |
+| New prediction types | Stay with exact scores only |
+| Mobile native apps | Web-only for now |
+| Model fine-tuning | Using off-the-shelf models |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| CRIT-01 | TBD | Pending |
+| CRIT-02 | TBD | Pending |
+| CRIT-03 | TBD | Pending |
+| CRIT-04 | TBD | Pending |
+| CRIT-05 | TBD | Pending |
+| DATA-01 | TBD | Pending |
+| DATA-02 | TBD | Pending |
+| DATA-03 | TBD | Pending |
+| DATA-04 | TBD | Pending |
+| DATA-05 | TBD | Pending |
+| UIUX-01 | TBD | Pending |
+| UIUX-02 | TBD | Pending |
+| UIUX-03 | TBD | Pending |
+| UIUX-04 | TBD | Pending |
+| INFR-01 | TBD | Pending |
+| INFR-02 | TBD | Pending |
+| INFR-03 | TBD | Pending |
+| INFR-04 | TBD | Pending |
+
+**Coverage:**
+- v1 requirements: 18 total
+- Mapped to phases: 0
+- Unmapped: 18 ⚠️
 
 ---
-*Last updated: 2026-01-27 after Phase 5 completion*
+*Requirements defined: 2026-01-31*
+*Last updated: 2026-01-31 after initial definition*
