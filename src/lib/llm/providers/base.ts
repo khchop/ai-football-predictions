@@ -1,12 +1,15 @@
 import { LLMPredictionResult, LLMProvider } from '@/types';
-import { 
-  SYSTEM_PROMPT, 
+import {
+  SYSTEM_PROMPT,
   BATCH_SYSTEM_PROMPT,
-  createUserPrompt, 
+  createUserPrompt,
   parsePredictionResponse,
   parseBatchPredictionResponse,
+  parseBatchPredictionEnhanced,
+  EnhancedParseResult,
   BatchParsedResult,
 } from '../prompt';
+import { logger } from '../logger';
 import { fetchWithRetry, APIError, RateLimitError } from '@/lib/utils/api-client';
 import { TOGETHER_PREDICTION_RETRY, TOGETHER_PREDICTION_TIMEOUT_MS, TOGETHER_PREDICTION_BATCH_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
 
@@ -83,7 +86,48 @@ export abstract class BaseLLMProvider implements LLMProvider {
     }
   }
 
+  // Simplified getPredictions method - uses enhanced multi-strategy parser
+  // This is the main method for batch predictions with robust parsing
+  async getPredictions(matchIds: string[]): Promise<Array<{ matchId: string; homeScore: number; awayScore: number }>> {
+    try {
+      // Build the batch prompt with matchIds
+      const batchPrompt = `Provide predictions for ${matchIds.length} match(es).
+Match IDs: ${matchIds.join(', ')}
+Respond with JSON array containing match_id, home_score, away_score for each match.`;
+
+      const rawResponse = await this.callAPI(BATCH_SYSTEM_PROMPT, batchPrompt);
+
+      // Use the enhanced multi-strategy parser
+      const parsed: EnhancedParseResult = parseBatchPredictionEnhanced(rawResponse, matchIds);
+
+      if (!parsed.success) {
+        logger.warn({
+          providerId: this.id,
+          error: parsed.error,
+        }, 'Failed to parse predictions with enhanced parser, trying original parser');
+
+        // Fallback to original parser if enhanced fails
+        const originalParsed: BatchParsedResult = parseBatchPredictionResponse(rawResponse, matchIds);
+        if (originalParsed.success && originalParsed.predictions.length > 0) {
+          return originalParsed.predictions;
+        }
+
+        return [];
+      }
+
+      return parsed.predictions || [];
+
+    } catch (error) {
+      logger.error({
+        providerId: this.id,
+        error: error instanceof Error ? error.message : String(error),
+      }, 'API call failed in getPredictions');
+      throw error;
+    }
+  }
+
   // Batch prediction method - predict multiple matches in one API call
+  // This is an alternative method that returns more detailed results
   async predictBatch(
     batchPrompt: string,
     expectedMatchIds: string[]
