@@ -29,13 +29,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. LLM responses with markdown, extra text, or malformed JSON still produce valid predictions
   4. API timeouts trigger appropriate backoff (60s for rate limits, linear for timeouts) without immediate model disable
   5. Models auto-disable only after 5 consecutive failures and auto-recover after 1h cooldown
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 01-01: Database pool sizing and health monitoring
-- [ ] 01-02: Worker error handling and defensive null checks
-- [ ] 01-03: JSON parse recovery with multi-strategy extraction
-- [ ] 01-04: Timeout handling and model failure classification
+- [ ] 01-01-PLAN.md — Database pool sizing and health monitoring
+- [ ] 01-02-PLAN.md — Worker error handling and defensive null checks
+- [ ] 01-03-PLAN.md — JSON parse recovery with multi-strategy extraction
+- [ ] 01-04-PLAN.md — Timeout handling and model failure classification
 
 ### Phase 2: Data Accuracy
 **Goal**: Leaderboard totals and points are calculated correctly with no race conditions
