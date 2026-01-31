@@ -1,245 +1,105 @@
-# Roadmap
+# Roadmap: AI Football Predictions Bug Fix Stabilization
 
 ## Overview
 
-| # | Phase | Goal | Requirements | Success Criteria |
-|---|-------|------|--------------|------------------|
-| 1 | ~~Stats Foundation~~ ✅ | Database schema, views, and calculation service | STATS-01 through STATS-05 | 4 criteria |
-| 2 | ~~Stats API + Caching~~ ✅ | Multi-granularity query API with Redis caching | STATS-06 through STATS-14 | 4 criteria |
-| 3 | ~~Stats UI~~ ✅ | VERIFIED | Leaderboard pages with filtering and sorting | STATS-01 through STATS-14 | 4 criteria |
-| 4 | ~~Content Pipeline~~ ✅ | LLM-powered match roundups on completion | CONT-01 through CONT-05 | 4 criteria |
-| 5 | ~~SEO + Publication~~ ✅ | VERIFIED | Dynamic metadata, OG images, ISR pages | SEO-01 through SEO-04 | 4 criteria |
-| 6 | ~~Roundup Integration~~ ✅ | EXECUTED | INT-04, FLOW-04 | Closes gaps |
-| 7 | ~~Documentation & Cleanup~~ ✅ | EXECUTED | INT-05 | Closes gaps |
-
-**Total: 7 phases | 23 requirements + 3 integration/flow gaps | All requirements mapped | All phases complete**
-
----
+This milestone fixes 18 critical bugs across the AI Football Predictions Platform to achieve production stability. The fix order follows dependency analysis: stability first (database/workers), then data accuracy (scoring/cache), then performance (Redis/SSR), and finally UX polish (mobile/real-time). Each phase unblocks the next - pool size enables workers, workers enable accurate scoring, accurate scoring enables meaningful UX improvements.
 
 ## Phases
 
-### Phase 1: Stats Foundation
+**Phase Numbering:**
+- Integer phases (1, 2, 3, 4): Planned milestone work
+- Decimal phases (1.1, 2.1): Urgent insertions (marked with INSERTED)
 
-**Goal:** Database schema extensions, materialized views, and points calculation service for model performance tracking.
+Decimal phases appear between their surrounding integers in numeric order.
 
-**Requirements:**
-- Database: Create materialized views for aggregated stats (overall, competition, club)
-- Database: Add composite indexes for performance (competition_id, season, model_id)
-- **STATS-01**: Model ranking by total points (database query ready)
-- **STATS-02**: Total matches predicted per model
-- **STATS-03**: Win rate percentage (correct tendency)
-- **STATS-04**: Average points per match
-- **STATS-05**: Recent form (last 10 matches)
+- [ ] **Phase 1: Critical Stability** - Stop production crashes, ensure predictions complete
+- [ ] **Phase 2: Data Accuracy** - Ensure leaderboard points are correct and timely
+- [ ] **Phase 3: Infrastructure Performance** - Reduce load on Redis and improve page performance
+- [ ] **Phase 4: UX Polish** - Improve user experience on frontend
 
-**Success Criteria:**
-1. Materialized views refresh automatically when matches complete
-2. Database queries return correct stats for any model
-3. Points calculation follows Kicktipp system (2-6 tendency, +1 diff, +3 exact)
-4. Performance: queries complete in <100ms for all granularity levels
+## Phase Details
 
----
+### Phase 1: Critical Stability
+**Goal**: Prediction pipeline runs without crashes and handles failures gracefully
+**Depends on**: Nothing (first phase)
+**Requirements**: CRIT-01, CRIT-02, CRIT-03, CRIT-04, CRIT-05
+**Success Criteria** (what must be TRUE):
+  1. Database queries complete without "connection pool exhausted" errors under 12+ concurrent workers
+  2. Queue workers continue processing when API returns null/malformed data (no unhandled exceptions)
+  3. LLM responses with markdown, extra text, or malformed JSON still produce valid predictions
+  4. API timeouts trigger appropriate backoff (60s for rate limits, linear for timeouts) without immediate model disable
+  5. Models auto-disable only after 5 consecutive failures and auto-recover after 1h cooldown
+**Plans**: TBD
 
-### Phase 2: Stats API + Caching
+Plans:
+- [ ] 01-01: Database pool sizing and health monitoring
+- [ ] 01-02: Worker error handling and defensive null checks
+- [ ] 01-03: JSON parse recovery with multi-strategy extraction
+- [ ] 01-04: Timeout handling and model failure classification
 
-**Goal:** REST API endpoints for multi-granularity stats with Redis caching layer.
+### Phase 2: Data Accuracy
+**Goal**: Leaderboard totals and points are calculated correctly with no race conditions
+**Depends on**: Phase 1 (stable workers required)
+**Requirements**: DATA-01, DATA-02, DATA-03, DATA-04, DATA-05
+**Success Criteria** (what must be TRUE):
+  1. All 35 predictions for a match are scored exactly once, even under concurrent settlement jobs
+  2. Leaderboard totals match sum of individual prediction points (no cache-induced discrepancies)
+  3. Model streaks correctly reset on wrong predictions and ignore voided/cancelled matches
+  4. Cache shows updated data within 5 seconds of settlement completion
+  5. Quota points match Kicktipp standard formula (2-6 points based on prediction rarity)
+**Plans**: TBD
 
-**Requirements:**
-- **STATS-06**: Competition-scoped leaderboards
-- **STATS-07**: Competition vs overall performance comparison
-- **STATS-08**: Filter by season/competition
-- **STATS-09**: Performance against specific clubs
-- **STATS-10**: Home vs away performance per club
-- **STATS-11**: Filter by club
-- **STATS-12**: Date range filtering
-- **STATS-13**: Model filtering
-- API: Redis caching with tiered keys (stats:{level}:{id}:{season})
-- API: Cache invalidation on match completion
+Plans:
+- [ ] 02-01: Settlement transaction with row locking
+- [ ] 02-02: Cache invalidation timing (after all predictions scored)
+- [ ] 02-03: Quota calculation formula correction
+- [ ] 02-04: Streak tracking edge case handling
 
-**Success Criteria:**
-1. API returns consistent structure across all granularity levels
-2. Redis cache reduces database load by 80%+
-3. Cache invalidation works correctly (overall -> competition -> club)
-4. All filter combinations work (season, competition, club, model, date range)
+### Phase 3: Infrastructure Performance
+**Goal**: Redis operations are non-blocking and pages load quickly
+**Depends on**: Phase 2 (correct data required before optimizing delivery)
+**Requirements**: INFR-01, INFR-02, INFR-03, INFR-04, UIUX-01
+**Success Criteria** (what must be TRUE):
+  1. Cache pattern deletion uses SCAN (cursor-based), not KEYS (blocking)
+  2. Match detail pages with 35+ predictions load in under 2 seconds (streamed)
+  3. Circuit breaker state survives Redis restarts (persisted to database fallback)
+  4. API-Football requests are tracked against daily budget (100/day free tier)
+  5. System continues functioning when Redis is unavailable (degraded mode, no crashes)
+**Plans**: TBD
 
-**Plans:**
-- [x] 02-01-PLAN.md — Shared utilities (types, cache, response, auth)
-- [x] 02-02-PLAN.md — API route handlers (5 endpoints)
-- [x] 02-03-PLAN.md — Cache invalidation integration
-- [x] 02-04-PLAN.md — Gap closure: wire competition/club filters to getLeaderboard
+Plans:
+- [ ] 03-01: KEYS to SCAN migration for cache invalidation
+- [ ] 03-02: Match page SSR optimization with streaming
+- [ ] 03-03: Circuit breaker state persistence
+- [ ] 03-04: API budget enforcement and Redis graceful degradation
 
----
+### Phase 4: UX Polish
+**Goal**: Frontend is responsive, real-time, and handles errors gracefully
+**Depends on**: Phase 3 (performance must be stable before polish)
+**Requirements**: UIUX-02, UIUX-03, UIUX-04
+**Success Criteria** (what must be TRUE):
+  1. Prediction cards display correctly on mobile without horizontal scrolling
+  2. Leaderboard updates visible within 30 seconds of settlement (polling or cache-busting)
+  3. React rendering failures show error UI, not white screens (error boundaries catch all async failures)
+**Plans**: TBD
 
-### Phase 3: Stats UI
+Plans:
+- [ ] 04-01: Mobile responsiveness for prediction components
+- [ ] 04-02: Leaderboard polling/auto-refresh
+- [ ] 04-03: Error boundary coverage expansion
 
-**Goal:** Leaderboard pages with sortable tables, filtering UI, and responsive design.
+## Progress
 
-**Requirements:**
-- **STATS-14**: Sortable table UI (using tanstack-table or similar)
-- Page: Overall leaderboard with all metrics
-- Page: Competition-specific leaderboards
-- Page: Club-specific model performance
-- Filter component: Season selector
-- Filter component: Competition selector
-- Filter component: Club selector
-- Filter component: Model selector
-- Filter component: Date range picker
+**Execution Order:**
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
-**Success Criteria:**
-1. All stats visible in clean, sortable tables
-2. Filters update results without page reload
-3. Mobile-responsive design
-4. Page load time <2s with cached data
-
-**Plans:** 6 plans
-- [x] 03-01-PLAN.md — TanStack Table integration and column definitions
-- [x] 03-02-PLAN.md — Competition and club leaderboard pages
-- [x] 03-03-PLAN.md — Comparison modal and skeleton loading states
-- [x] 03-04-PLAN.md — Gap closure: Add season and model selectors
-- [x] 03-05-PLAN.md — Gap closure: Fix main leaderboard API bypass (INT-01)
-- [x] 03-06-PLAN.md — Gap closure: Refactor duplicate getLeaderboard functions (INT-03)
-
----
-
-### Phase 4: Content Pipeline
-
-**Goal:** Automated match roundup generation triggered on match completion.
-
-**Requirements:**
-- **CONT-01**: Match summary with score and key events
-- **CONT-02**: Model prediction accuracy per match
-- **CONT-03**: Top performer models for match
-- **CONT-04**: LLM-generated narrative analysis
-- **CONT-05**: Trigger on match completion (BullMQ job)
-- Data gathering: Fetch match data + all predictions
-- Template: Match roundup markdown template
-- LLM: Prompt engineering for structured output
-
-**Success Criteria:**
-1. Roundup generated within 60 seconds of match completion
-2. All model predictions accurately displayed
-3. LLM narrative is factual (no hallucinations)
-4. Content includes unique elements (not duplicate)
-
-**Plans:** 5 plans
-- [x] 04-01-PLAN.md — BullMQ content queue setup + trigger integration
-- [x] 04-02-PLAN.md — LLM content generation service with prompt engineering
-- [x] 04-03-PLAN.md — Content storage + similarity detection
-- [x] 04-04-PLAN.md — Match page integration with HTML rendering
-- [x] 04-05-PLAN.md — Gap closure: Trigger roundup after stats calculation (INT-02)
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Critical Stability | 0/4 | Not started | - |
+| 2. Data Accuracy | 0/4 | Not started | - |
+| 3. Infrastructure Performance | 0/4 | Not started | - |
+| 4. UX Polish | 0/3 | Not started | - |
 
 ---
-
-### Phase 5: SEO + Publication
-
-**Goal:** Dynamic SEO metadata, Open Graph images, and ISR pages for discoverability.
-
-**Requirements:**
-- **SEO-01**: Dynamic meta titles/descriptions
-- **SEO-02**: Open Graph tags and images
-- **SEO-03**: JSON-LD structured data (SportsEvent schema)
-- **SEO-04**: ISR page generation with 60s revalidate
-- Page: /matches/{id} with full roundup
-- Page: /matches/{id}/stats with detailed breakdown
-- Sitemap: Auto-generate for all match pages
-
-**Success Criteria:**
-1. Each match page has unique meta title/description
-2. Open Graph images display score + top model
-3. JSON-LD validates (use schema.org validator)
-4. Pages indexed by search engines
-
-**Plans:** 3 plans
-- [x] 05-01-PLAN.md — SEO utilities (constants, types, metadata builders, schema builders, OG templates)
-- [x] 05-02-PLAN.md — Match page SEO (metadata, OG image, JSON-LD)
-- [x] 05-03-PLAN.md — Stats page SEO + sitemap + robots.txt
-
----
-
-### Phase 6: Roundup Integration (Gap Closure)
-
-**Goal:** Integrate Phase 4 roundups into Phase 5 SEO match pages to complete Flow C.
-
-**Gaps Closed:**
-- **INT-04**: Roundup API route unused by intended match pages (MEDIUM)
-- **FLOW-04**: Roundup display works on legacy route but not on new SEO route
-- Orphaned API route `/api/matches/[id]/roundup` (from Phase 4)
-- `/matches/[id]/page.tsx` missing Phase 4 roundup integration
-
-**Task Breakdown:**
-- Add `RoundupViewer` component to `/matches/[id]/page.tsx`
-- Fetch roundups from `/api/matches/[id]/roundup` API with error handling
-- Display roundups conditionally (after match completion only)
-- Handle loading and error states for roundup data
-
-**Success Criteria:**
-1. Roundups appear on `/matches/{id}` pages after match completion
-2. Roundups load from API (not direct DB query)
-3. Flow C (Match → Roundup → Display) works end-to-end
-
-**Plans:**
-- [x] 06-01-PLAN.md — Wire roundup API to SEO match pages
-- **Status:** EXECUTED
-- **Verification:** PASSED (3/3 must-haves)
-
----
-
-### Phase 7: Documentation & Cleanup (Gap Closure)
-
-**Goal:** Update verification docs and address low-priority tech debt.
-
-**Gaps Closed:**
-- **INT-05**: Orphaned API routes without UI consumers (LOW)
-- Phase 3 verification state mismatch (documentation)
-- Phase 3 ISR pattern inconsistency (document architectural choice)
-
-**Task Breakdown:**
-- Remove outdated 03-VERIFICATION.md (gaps already closed in Phase 3 plans 03-04 and 03-06)
-- Add documentation comment explaining ISR pattern (fetch-level vs page-level)
-- Add JSDoc comment to `/api/stats/models/[id]` noting future use
-
-**Success Criteria:**
-1. Phase 3 verification documentation accurately reflects current state
-2. ISR pattern documented in code comments
-3. Orphaned routes clearly marked as "future use"
-
-**Plans:** 1 plan in 1 wave
-- [x] 07-01-PLAN.md — Update verification docs and add code comments
-- **Status:** EXECUTED
-- **Verification:** PASSED (3/3 must-haves)
-
----
-
-## Phase Dependencies
-
-```
-Phase 1 (Foundation) -------> Phase 2 (API) -------> Phase 3 (UI)
-        |                         |
-        |                         v
-        |                 Phase 4 (Content Pipeline)
-        |                         |
-        v                         v
-Phase 5 (SEO + Publication) <-----'
-        |
-        v
-Phases 6-7 (Gap Closure: Final Integration & Cleanup)
-```
-
-**Parallelization opportunity:** Phase 2 (API) and Phase 4 (Content) can run in parallel after Phase 1.
-
----
-
-## Requirement Mapping
-
-| Phase | Requirements | Gaps |
-|-------|--------------|------|
-| 1 | STATS-01, STATS-02, STATS-03, STATS-04, STATS-05 + DB views/indexes | - |
-| 2 | STATS-06, STATS-07, STATS-08, STATS-09, STATS-10, STATS-11, STATS-12, STATS-13 + API + Caching | - |
-| 3 | STATS-14 + Pages + Filters (all STATS requirements complete) | - |
-| 4 | CONT-01, CONT-02, CONT-03, CONT-04, CONT-05 | INT-02 (closed in 04-05) |
-| 5 | SEO-01, SEO-02, SEO-03, SEO-04 | SEO-04 (closed post-verification) |
-| 6 | Gap Closure: INT-04, FLOW-04 | Medium integration gap |
-| 7 | Gap Closure: INT-05 | Low priority tech debt |
-
----
-
-*Created: 2026-01-27 | Updated: 2026-01-27 with gap closure phases*
+*Roadmap created: 2026-01-31*
+*Total requirements: 18 (all v1 requirements mapped)*

@@ -9,8 +9,8 @@ Bug fix stabilization milestone. All requirements are fixes to existing function
 
 ### Critical Bugs (CRIT)
 
-- [ ] **CRIT-01**: JSON parse failures handled with multi-strategy extraction (direct → markdown → regex → score pattern)
-- [ ] **CRIT-02**: API timeouts recovered gracefully with error-type-aware backoff (rate limit → 60s, timeout → linear)
+- [ ] **CRIT-01**: JSON parse failures handled with multi-strategy extraction (direct -> markdown -> regex -> score pattern)
+- [ ] **CRIT-02**: API timeouts recovered gracefully with error-type-aware backoff (rate limit -> 60s, timeout -> linear)
 - [ ] **CRIT-03**: Model auto-disable uses proper threshold (5 failures) and time-based recovery (1h cooldown)
 - [ ] **CRIT-04**: Queue workers handle null/malformed API data without crashing (defensive error handling)
 - [ ] **CRIT-05**: Database connection pool sized appropriately (20+ connections) with health monitoring
@@ -77,30 +77,30 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CRIT-01 | TBD | Pending |
-| CRIT-02 | TBD | Pending |
-| CRIT-03 | TBD | Pending |
-| CRIT-04 | TBD | Pending |
-| CRIT-05 | TBD | Pending |
-| DATA-01 | TBD | Pending |
-| DATA-02 | TBD | Pending |
-| DATA-03 | TBD | Pending |
-| DATA-04 | TBD | Pending |
-| DATA-05 | TBD | Pending |
-| UIUX-01 | TBD | Pending |
-| UIUX-02 | TBD | Pending |
-| UIUX-03 | TBD | Pending |
-| UIUX-04 | TBD | Pending |
-| INFR-01 | TBD | Pending |
-| INFR-02 | TBD | Pending |
-| INFR-03 | TBD | Pending |
-| INFR-04 | TBD | Pending |
+| CRIT-01 | Phase 1 | Pending |
+| CRIT-02 | Phase 1 | Pending |
+| CRIT-03 | Phase 1 | Pending |
+| CRIT-04 | Phase 1 | Pending |
+| CRIT-05 | Phase 1 | Pending |
+| DATA-01 | Phase 2 | Pending |
+| DATA-02 | Phase 2 | Pending |
+| DATA-03 | Phase 2 | Pending |
+| DATA-04 | Phase 2 | Pending |
+| DATA-05 | Phase 2 | Pending |
+| UIUX-01 | Phase 3 | Pending |
+| UIUX-02 | Phase 4 | Pending |
+| UIUX-03 | Phase 4 | Pending |
+| UIUX-04 | Phase 4 | Pending |
+| INFR-01 | Phase 3 | Pending |
+| INFR-02 | Phase 3 | Pending |
+| INFR-03 | Phase 3 | Pending |
+| INFR-04 | Phase 3 | Pending |
 
 **Coverage:**
 - v1 requirements: 18 total
-- Mapped to phases: 0
-- Unmapped: 18 ⚠️
+- Mapped to phases: 18
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-31*
-*Last updated: 2026-01-31 after initial definition*
+*Last updated: 2026-01-31 after roadmap creation*
