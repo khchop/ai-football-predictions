@@ -1,6 +1,8 @@
 // Prompt templates for LLM score predictions
 // Updated: January 2026 - Kicktipp Quota Scoring System
 
+import { logger } from '../logger';
+
 // ============================================================================
 // SYSTEM PROMPT: Kicktipp Quota Scoring - Value-Based Strategy
 // ============================================================================
@@ -427,3 +429,223 @@ export function parseBatchPredictionResponse(
     };
   }
 }
+
+// ============================================================================
+// ENHANCED MULTI-STRATEGY JSON EXTRACTION (Phase 01-03)
+// ============================================================================
+
+import { isValidScorePair } from '../utils/validation';
+
+/**
+ * Result interface for enhanced multi-strategy parser
+ */
+export interface EnhancedParseResult {
+  success: boolean;
+  predictions?: Array<{ matchId: string; homeScore: number; awayScore: number }>;
+  error?: string;
+}
+
+/**
+ * Validate single score (0-20, integer, not NaN)
+ */
+function isValidScore(score: unknown): score is number {
+  return (
+    typeof score === 'number' &&
+    !isNaN(score) &&
+    score >= 0 &&
+    score <= 20 &&
+    Number.isInteger(score)
+  );
+}
+
+/**
+ * Strategy 1: Direct JSON parse (cleanest inputs)
+ * Handles both array and object responses
+ */
+function parseDirectJSON(response: string): Array<{ matchId: string; homeScore: number; awayScore: number }> | null {
+  try {
+    const trimmed = response.trim();
+    // Handle array response
+    if (trimmed.startsWith('[')) {
+      const parsed = JSON.parse(trimmed) as Array<{ matchId: string; home_score: number; away_score: number }>;
+      return parsed.map(p => ({
+        matchId: p.matchId,
+        homeScore: p.home_score,
+        awayScore: p.away_score,
+      }));
+    }
+    // Handle object response
+    else if (trimmed.startsWith('{')) {
+      const parsed = JSON.parse(trimmed) as { predictions?: Array<{ matchId: string; home_score: number; away_score: number }> };
+      return parsed.predictions?.map(p => ({
+        matchId: p.matchId,
+        homeScore: p.home_score,
+        awayScore: p.away_score,
+      })) || [];
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Strategy 2: Extract from markdown code blocks
+ * Handles ```json``` and ``` ``` blocks
+ */
+function extractFromMarkdownCodeBlock(response: string): string | null {
+  // Try ```json``` blocks
+  const jsonBlockMatch = response.match(/```json\n?([\s\S]*?)\n?```/i);
+  if (jsonBlockMatch) {
+    return jsonBlockMatch[1].trim();
+  }
+
+  // Try generic ``` blocks
+  const codeBlockMatch = response.match(/```\n?([\s\S]*?)\n?```/);
+  if (codeBlockMatch) {
+    return codeBlockMatch[1].trim();
+  }
+
+  return null;
+}
+
+/**
+ * Strategy 3: Regex extraction for structured JSON objects
+ * Extracts patterns like {"matchId": "...", "home_score": 1, "away_score": 2}
+ */
+function extractScorePatterns(response: string): Array<{ matchId: string; homeScore: number; awayScore: number }> | null {
+  const predictions: Array<{ matchId: string; homeScore: number; awayScore: number }> = [];
+
+  // Pattern: {"matchId": "...", "home_score": 1, "away_score": 2}
+  const jsonPattern = /\{\s*"matchId"\s*:\s*"([^"]+)"\s*,\s*"home_score"\s*:\s*(\d+)\s*,\s*"away_score"\s*:\s*(\d+)\s*\}/gi;
+
+  const matches = [...response.matchAll(jsonPattern)];
+  for (const match of matches) {
+    const homeScore = parseInt(match[2], 10);
+    const awayScore = parseInt(match[3], 10);
+
+    if (isValidScore(homeScore) && isValidScore(awayScore)) {
+      predictions.push({
+        matchId: match[1],
+        homeScore,
+        awayScore,
+      });
+    }
+  }
+
+  if (predictions.length > 0) {
+    return predictions;
+  }
+
+  return null;
+}
+
+/**
+ * Strategy 4: Flexible pattern matching (any score-like numbers)
+ * Handles patterns like: matchId: "xxx", home: 1, away: 2
+ */
+function extractFlexibleScores(response: string): Array<{ matchId: string; homeScore: number; awayScore: number }> | null {
+  // Look for patterns like: matchId: "xxx", home: 1, away: 2
+  const flexiblePattern = /matchId["']?\s*[:=]\s*"([^"]+)".*?(?:home|home_score|homeScore)["']?\s*[:=]\s*(\d+).*?(?:away|away_score|awayScore)["']?\s*[:=]\s*(\d+)/gis;
+
+  const predictions: Array<{ matchId: string; homeScore: number; awayScore: number }> = [];
+  const matches = [...response.matchAll(flexiblePattern)];
+
+  for (const match of matches) {
+    const homeScore = parseInt(match[2], 10);
+    const awayScore = parseInt(match[3], 10);
+
+    if (isValidScore(homeScore) && isValidScore(awayScore)) {
+      predictions.push({
+        matchId: match[1],
+        homeScore,
+        awayScore,
+      });
+    }
+  }
+
+  if (predictions.length > 0) {
+    return predictions;
+  }
+
+  return null;
+}
+
+/**
+ * Multi-strategy parser with fallbacks
+ * Tries 4 strategies in order: direct JSON → markdown code block → score pattern regex → flexible pattern
+ * @param response - Raw LLM response
+ * @param matchIds - Expected match IDs for validation
+ * @returns Parsed predictions or error
+ */
+export function parseBatchPredictionEnhanced(
+  response: string,
+  matchIds: string[]
+): EnhancedParseResult {
+  if (!response || typeof response !== 'string') {
+    return {
+      success: false,
+      error: 'Empty or invalid response',
+    };
+  }
+
+  const strategies = [
+    { name: 'Direct JSON', fn: () => parseDirectJSON(response) },
+    { name: 'Markdown code block', fn: () => {
+      const extracted = extractFromMarkdownCodeBlock(response);
+      return extracted ? parseDirectJSON(extracted) : null;
+    }},
+    { name: 'Score pattern regex', fn: () => extractScorePatterns(response) },
+    { name: 'Flexible pattern', fn: () => extractFlexibleScores(response) },
+  ];
+
+  // Try each strategy in order
+  for (let i = 0; i < strategies.length; i++) {
+    try {
+      const result = strategies[i].fn();
+
+      if (result && result.length > 0) {
+        // Validate predictions
+        const validPredictions = result.filter(p => {
+          if (!p.matchId || !isValidScorePair({ home_score: p.homeScore, away_score: p.awayScore })) {
+            return false;
+          }
+          // Ensure matchId is in expected set
+          return matchIds.includes(p.matchId);
+        });
+
+        if (validPredictions.length > 0) {
+          logger.info({
+            strategy: strategies[i].name,
+            totalFound: result.length,
+            validPredictions: validPredictions.length,
+          }, 'Successfully parsed predictions');
+
+          return {
+            success: true,
+            predictions: validPredictions,
+          };
+        }
+      }
+    } catch (error) {
+      // Continue to next strategy
+      logger.debug({
+        strategy: strategies[i].name,
+        error: error instanceof Error ? error.message : String(error),
+      }, 'Strategy failed');
+    }
+  }
+
+  // All strategies failed - log error with preview
+  logger.error({
+    responsePreview: response.slice(0, 500),
+    responseLength: response.length,
+    strategiesAttempted: strategies.length,
+  }, 'All JSON parse strategies failed');
+
+  return {
+    success: false,
+    error: 'Could not extract valid predictions from response',
+  };
+}
+
