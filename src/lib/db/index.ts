@@ -15,10 +15,12 @@ function getPool(): Pool {
     }
     pool = new Pool({
       connectionString,
-      max: parseInt(process.env.DB_POOL_MAX || '10', 10),
+      max: parseInt(process.env.DB_POOL_MAX || '20', 10),
       min: parseInt(process.env.DB_POOL_MIN || '2', 10),
       idleTimeoutMillis: 30000, // Close idle connections after 30s
       connectionTimeoutMillis: 5000, // Timeout after 5s if can't connect
+      keepAlive: true, // Enable TCP keep-alive to prevent connection drops
+      keepAliveInitialDelayMillis: 10000, // Start keep-alive after 10s
     });
     
      // Handle pool errors
