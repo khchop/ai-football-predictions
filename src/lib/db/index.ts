@@ -3,6 +3,9 @@ import { Pool } from 'pg';
 import { loggers } from '@/lib/logger/modules';
 import * as schema from './schema';
 
+// Child logger for database-pool context (adds module-specific metadata)
+const dbLogger = loggers.db.child({ module: 'database-pool' });
+
 // Health monitoring interface
 interface PoolHealth {
   totalCount: number;
@@ -35,7 +38,7 @@ function getPool(): Pool {
 
      // Handle pool errors
      pool.on('error', (err) => {
-       loggers.db.error({ error: err instanceof Error ? err.message : String(err) }, 'Unexpected pool error');
+       dbLogger.error({ error: err instanceof Error ? err.message : String(err) }, 'Unexpected pool error');
      });
 
      // Start health monitoring on first pool initialization
@@ -56,17 +59,17 @@ function monitorPoolHealth(poolInstance: Pool): void {
     ),
   };
 
-  loggers.db.debug(health, 'Pool health check');
+  dbLogger.debug(health, 'Pool health check');
 
   // Alert on concerning conditions
   if (health.waitingCount > 5) {
-    loggers.db.warn(health, 'High connection wait queue detected');
+    dbLogger.warn(health, 'High connection wait queue detected');
   }
   if (health.utilizationPercent > 90) {
-    loggers.db.warn(health, 'Pool utilization exceeds 90%');
+    dbLogger.warn(health, 'Pool utilization exceeds 90%');
   }
   if (health.totalCount === health.maxConnections && health.idleCount === 0) {
-    loggers.db.error(health, 'Pool exhausted - all connections in use');
+    dbLogger.error(health, 'Pool exhausted - all connections in use');
   }
 }
 
@@ -75,7 +78,7 @@ function startMonitoring(): void {
     const poolInstance = pool; // Capture pool to avoid null check issues in closure
     setInterval(() => monitorPoolHealth(poolInstance), 30000);
     monitoringStarted = true;
-    loggers.db.info('Pool health monitoring started - checking every 30s');
+    dbLogger.info('Pool health monitoring started - checking every 30s');
   }
 }
 
@@ -94,7 +97,7 @@ export async function closePool(): Promise<void> {
      pool = null;
      dbInstance = null;
      monitoringStarted = false;
-     loggers.db.info('Pool closed');
+     dbLogger.info('Pool closed');
    }
  }
 
