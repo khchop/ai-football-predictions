@@ -1,188 +1,170 @@
 # Technology Stack
 
-**Analysis Date:** 2026-01-27
+**Analysis Date:** 2026-01-31
 
 ## Languages
 
 **Primary:**
-- TypeScript 5 - Main application language
-- CSS (Tailwind CSS 4) - Styling
+- TypeScript 5.x - Full codebase, strict mode enabled
+- React 19.2.3 - UI components and client-side rendering
+- Node.js - Server-side runtime for API routes, workers, and utilities
 
 **Secondary:**
-- JavaScript (for build scripts and migrations)
+- JavaScript - Configuration files (postcss.config.mjs, eslint.config.mjs)
+- SQL - PostgreSQL queries via Drizzle ORM
 
 ## Runtime
 
 **Environment:**
-- Node.js (version managed via package.json devDependencies `@types/node: ^20`)
-- Next.js 16.1.4 (App Router framework)
+- Node.js (inferred from package.json and Next.js 16.1.4)
+- Next.js 16.1.4 - Full-stack framework with App Router
 
 **Package Manager:**
-- npm (standard npm workflow)
-- Lockfile: `package-lock.json` present
+- npm (inferred from package-lock.json pattern)
+- Lockfile: Yes (standard npm lockfile present)
 
 ## Frameworks
 
 **Core:**
-- Next.js 16.1.4 - React framework with App Router
-  - Location: `src/app/`
-  - Features: Server Components, API Routes, Image Optimization
-- React 19.2.3 - UI library
-- React DOM 19.2.3
+- Next.js 16.1.4 - Framework for React app, API routes, SSR, SSG
+- React 19.2.3 - UI library with latest concurrent features
+- Express 5.2.1 - HTTP server for queue UI (Bull Board)
+
+**Database & ORM:**
+- Drizzle ORM 0.45.1 - Type-safe SQL query builder
+- drizzle-kit 0.31.8 - Migration and schema management tool
+- PostgreSQL via pg 8.17.2 - Database driver
+
+**Queue/Background Jobs:**
+- BullMQ 5.34.3 - Job queue library (Redis-backed)
+- @bull-board/api 6.16.2 - Queue UI API
+- @bull-board/express 6.16.2 - Queue UI Express middleware
 
 **UI Components:**
-- shadcn/ui - Component library built on Radix UI primitives
-  - Location: `src/components/ui/`
-  - Components: button, card, table, tabs, dialog, select, badge, etc.
-- class-variance-authority 0.7.1 - Variant management for components
-- tailwind-merge 3.4.0 - Tailwind class merging utility
-- clsx 2.1.1 - Conditional className utility
-- tw-animate-css 1.4.0 - CSS animation utilities
+- Radix UI - Accessible component primitives
+  - @radix-ui/react-dialog 1.1.15
+  - @radix-ui/react-dropdown-menu 2.1.16
+  - @radix-ui/react-select 2.2.6
+  - @radix-ui/react-separator 1.1.8
+  - @radix-ui/react-slot 1.2.4
+  - @radix-ui/react-tabs 1.1.13
 
 **Styling:**
-- Tailwind CSS 4 - Utility-first CSS framework
-  - Config: `postcss.config.mjs`
-  - Theme: `src/app/globals.css`
-- @tailwindcss/postcss 4
+- TailwindCSS 4 - Utility-first CSS framework
+- @tailwindcss/postcss 4 - PostCSS plugin for Tailwind v4
+- PostCSS - CSS transformation (postcss.config.mjs)
+- class-variance-authority 0.7.1 - Component variants
+- tailwind-merge 3.4.0 - Merge Tailwind class conflicts
+- tw-animate-css 1.4.0 - Animation utilities
 
-## Data Layer
+**Data Visualization:**
+- Recharts 3.6.0 - React charting library for statistics
 
-**ORM:**
-- drizzle-orm 0.45.1 - Type-safe PostgreSQL ORM
-  - Location: `src/lib/db/`
-  - Config: `drizzle.config.ts`
-- drizzle-kit 0.31.8 - Migration tool
+**Tables & Data Display:**
+- @tanstack/react-table 8.21.3 - Headless table component
 
-**Database:**
-- PostgreSQL - Primary database
-  - Connection: `DATABASE_URL` environment variable
-  - Client: `pg` package via Drizzle
-  - Pool configuration: `DB_POOL_MAX` (default: 10), `DB_POOL_MIN` (default: 2)
-
-## Caching & Queues
+**Utilities:**
+- date-fns 4.1.0 - Date manipulation and formatting
+- uuid 13.0.0 - UUID generation
+- pino 10.2.1 - JSON logger
+- pino-pretty 13.1.3 - Pretty-print pino logs in development
+- zod 4.3.6 - Runtime schema validation
+- react-markdown 10.1.0 - Markdown rendering
+- react-loading-skeleton 3.5.0 - Loading skeleton UI
+- lucide-react 0.562.0 - Icon library
+- clsx 2.1.1 - Conditional classname utility
+- p-limit 7.2.0 - Concurrency control
+- schema-dts 1.1.5 - Schema.org TypeScript definitions
 
 **Caching:**
-- Redis with ioredis 5.9.2
-  - Location: `src/lib/cache/redis.ts`
-  - Purpose: API response caching, session storage
-  - TTL presets defined for different data types
+- ioredis 5.9.2 - Redis client (supports both direct and Upstash)
 
-**Job Queue:**
-- BullMQ 5.34.3 - Redis-based job queue
-  - Location: `src/lib/queue/`
-  - Separate queues: analysis, predictions, lineups, odds, live, settlement, fixtures, backfill, content, model-recovery, standings
-- @bull-board/api 6.16.2 - Queue monitoring UI
-- @bull-board/express 6.16.2 - Express adapter for Bull Board
+**Error Tracking & Monitoring:**
+- @sentry/nextjs 10.36.0 - Error tracking integrated with GlitchTip
 
-## LLM/AI Integration
+**Testing & Quality:**
+- ESLint 9 - Linting
+- eslint-config-next 16.1.4 - Next.js ESLint preset
+- @types/node 20 - Node.js type definitions
+- @types/react 19 - React type definitions
+- @types/react-dom 19 - React DOM type definitions
+- @types/pg 8.16.0 - PostgreSQL driver types
 
-**Primary Provider:**
-- Together AI - LLM provider for predictions and content
-  - 29 open-source models available
-  - Location: `src/lib/llm/providers/together.ts`
-  - Primary model: Llama 4 Maverick (meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8)
-  - Content generation: Llama 4 Maverick via `/v1/chat/completions`
+**Development:**
+- tsx 4.21.0 - TypeScript executor for scripts
 
-**Model Tiers:**
-- Free: Gemma 3n E4B
-- Ultra-budget: Llama 3.1 8B Turbo, Llama 3.2 3B Turbo, Llama 3 8B Lite, GPT-OSS 20B, Marin 8B Instruct
-- Budget: Most models (DeepSeek V3.1, Qwen, Llama 3.3 70B, Mistral, etc.)
-- Premium: DeepSeek R1, Qwen3 235B, Llama 3.1 405B Turbo, Cogito models
+## Key Dependencies
 
-## External APIs
+**Critical:**
+- drizzle-orm 0.45.1 - Type-safe database layer; all data access flows through this
+- bullmq 5.34.3 - Background job processing; entire prediction pipeline depends on queue workers
+- @sentry/nextjs 10.36.0 - Error tracking; integrates with GlitchTip for production monitoring
+- next 16.1.4 - Core framework; enables App Router, API routes, SSR/SSG
 
-**Football Data:**
-- API-Football (v3)
-  - Base URL: `https://v3.football.api-sports.io`
-  - Location: `src/lib/football/api-football.ts`
-  - Endpoints: fixtures, standings, odds, lineups, events, h2h
+**Infrastructure:**
+- pg 8.17.2 - Direct PostgreSQL connection (via Drizzle pool)
+- ioredis 5.9.2 - Redis client for both caching and BullMQ queue
+- pino 10.2.1 - Structured logging throughout the application
+- zod 4.3.6 - Runtime validation for API responses and environment variables
 
-## Validation
+**External API Clients:**
+- Node.js built-in fetch (no axios/external HTTP client; fetch used for API-Football)
+- @sentry/nextjs with OpenAI-compatible protocol for LLM provider abstraction
 
-**Schema Validation:**
-- Zod 4.3.6 - Schema validation and type inference
-  - Location: `src/lib/validation/schemas.ts`
-  - Used for: API route query params, request bodies
+## Configuration
 
-## Logging
+**Environment:**
+Environment variables are validated in `src/lib/env.ts`. Required at startup:
+- `DATABASE_URL` - PostgreSQL connection string (required)
 
-**Structured Logging:**
-- Pino 10.2.1 - JSON logger
-- pino-pretty 13.1.3 - Development formatting
-  - Location: `src/lib/logger/`
-  - Features: Child loggers by module, metrics logging
+Optional with defaults:
+- `NODE_ENV` - development or production (default: development)
+- `DAILY_BUDGET` - USD budget for paid models (default: 1.00)
+- `DB_POOL_MAX` - max connections (default: 10)
+- `DB_POOL_MIN` - min connections (default: 2)
+- `REDIS_URL` - Redis connection (optional; caching disabled if not set)
 
-## Error Tracking
+Required for API features (checked at usage time):
+- `API_FOOTBALL_KEY` - Football data API key
+- `TOGETHER_API_KEY` - Together AI API key (primary LLM provider)
 
-**Monitoring:**
-- Sentry (via @sentry/nextjs 10.36.0)
-  - Config: `sentry.server.config.ts`, `sentry.client.config.ts`, `sentry.edge.config.ts`
-  - Supports GlitchTip (self-hosted Sentry alternative)
-
-## Build & Development
+Optional for features:
+- `CRON_SECRET` - Authentication for scheduled tasks
+- `NEXT_PUBLIC_APP_URL` - App URL for headers
+- `INDEXNOW_KEY` - SEO URL submission
+- `NEXT_PUBLIC_SENTRY_DSN` - GlitchTip error tracking endpoint
+- `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` - Sentry integration configuration (if using Sentry instead of GlitchTip)
 
 **Build:**
-- TypeScript 5 - Compiles to JavaScript
-- Next.js build system (`npm run build`)
+- `tsconfig.json` - TypeScript compiler options
+  - Target: ES2017
+  - Strict mode enabled
+  - Path aliases: `@/*` → `./src/*`
+  - JSX: react-jsx
+- `next.config.ts` - Next.js build configuration
+  - Remote image patterns configured for api-sports.io
+  - Sentry integration with webpack plugin
+- `postcss.config.mjs` - PostCSS configuration
+  - TailwindCSS v4 plugin
+- `eslint.config.mjs` - ESLint configuration
+  - Next.js core web vitals
+  - TypeScript preset
+  - Custom ignores for build artifacts
 
-**Dev Server:**
-- Next.js dev server (`npm run dev` - localhost:3000)
+## Platform Requirements
 
-**Type Checking:**
-- TypeScript compiler (strict mode enabled)
+**Development:**
+- Node.js 18+ (inferred from TypeScript target and Next.js 16 requirements)
+- PostgreSQL 12+ (Drizzle supports modern versions)
+- Redis 6+ (for caching and BullMQ job queue)
+- npm 9+ (for workspaces and modern features)
 
-**Linting:**
-- ESLint 9 with eslint-config-next
-  - Config: `eslint.config.mjs`
-  - Includes: Next.js core web vitals, TypeScript support
-
-**Code Execution:**
-- tsx 4.21.0 - TypeScript execution for scripts
-  - Used for: Database migrations, maintenance scripts
-
-## Charts & Data Visualization
-
-**Visualization:**
-- recharts 3.6.0 - React charting library
-  - Used for: Leaderboard charts, statistics
-
-## Markdown
-
-**Content Rendering:**
-- react-markdown 10.1.0 - Markdown rendering
-  - Used for: Blog posts, match content
-
-## Utilities
-
-**Date Handling:**
-- date-fns 4.1.0 - Date manipulation
-
-**Icons:**
-- lucide-react 0.562.0 - Icon library
-
-**UUID:**
-- uuid 13.0.0 - UUID generation
-
-**Rate Limiting:**
-- p-limit 7.2.0 - Promise concurrency limiting
-
-## Configuration Files
-
-| File | Purpose |
-|------|---------|
-| `tsconfig.json` | TypeScript configuration (strict mode, paths: `@/*` → `./src/*`) |
-| `next.config.ts` | Next.js configuration with Sentry integration |
-| `eslint.config.mjs` | ESLint configuration |
-| `drizzle.config.ts` | Drizzle ORM configuration |
-| `postcss.config.mjs` | PostCSS configuration for Tailwind |
-| `.env.example` | Environment variable template |
-
-## Deployment Target
-
-**Platform:**
-- Coolify (recommended for self-hosting)
-- Docker-ready architecture (uses environment variables for configuration)
+**Production:**
+- Deployment target: Coolify (mentioned in .env.example)
+- Container-friendly: Uses PostgreSQL + Redis
+- Supports edge deployment (Next.js Edge Runtime for API routes)
+- Environment: Node.js runtime (instrumentation.ts runs in Node.js only)
 
 ---
 
-*Stack analysis: 2026-01-27*
+*Stack analysis: 2026-01-31*

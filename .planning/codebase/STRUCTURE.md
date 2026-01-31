@@ -1,410 +1,349 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-01-27
+**Analysis Date:** 2026-01-31
 
 ## Directory Layout
 
 ```
 bettingsoccer/
 ├── src/
-│   ├── app/                    # Next.js App Router (pages + API routes)
-│   ├── components/             # React components
-│   │   ├── ui/                 # shadcn/ui base components
-│   │   ├── admin/              # Admin dashboard components
-│   │   ├── match/              # Match-specific components
-│   │   ├── competition/        # Competition components
-│   │   └── *.tsx               # Shared components
-│   ├── lib/                    # Core library code
-│   │   ├── db/                 # Drizzle ORM (schema, queries, connection)
-│   │   ├── cache/              # Redis caching layer
-│   │   ├── queue/              # BullMQ queues + workers
-│   │   ├── football/           # API-Football integration
-│   │   ├── llm/                # LLM provider abstraction
-│   │   ├── logger/             # Pino structured logging
-│   │   ├── validation/         # Zod schemas + middleware
-│   │   ├── utils/              # Utility functions
-│   │   └── content/            # AI content generation
-│   ├── types/                  # TypeScript type definitions
-│   ├── middleware.ts           # Next.js middleware (CORS, security)
-│   └── instrumentation.ts      # OpenTelemetry instrumentation
-├── scripts/                    # Migration and maintenance scripts
-├── drizzle/                    # Database migrations
-├── public/                     # Static assets
-├── .env.example                # Environment variable template
-├── next.config.ts              # Next.js configuration
-├── drizzle.config.ts           # Drizzle ORM configuration
-└── package.json                # Dependencies and scripts
+│   ├── app/                          # Next.js App Router (pages + API routes)
+│   │   ├── layout.tsx                # Root layout, metadata, schemas
+│   │   ├── page.tsx                  # Homepage (/ route)
+│   │   ├── error.tsx                 # Global error boundary
+│   │   ├── global-error.tsx          # Fatal error page
+│   │   ├── robots.ts                 # robots.txt generation
+│   │   ├── sitemap.ts                # sitemap.xml generation
+│   │   ├── middleware.ts             # CORS, security headers
+│   │   ├── api/                      # REST API endpoints
+│   │   │   ├── health/route.ts       # Health check
+│   │   │   ├── matches/              # Match data endpoints
+│   │   │   ├── stats/                # Statistics and leaderboard endpoints
+│   │   │   ├── admin/                # Admin-only endpoints (queue status, rescore, etc.)
+│   │   │   └── cron/                 # Periodic job triggers
+│   │   ├── matches/                  # Match pages
+│   │   ├── leagues/                  # League hub pages
+│   │   ├── blog/                     # Blog post pages
+│   │   ├── leaderboard/              # Leaderboard pages
+│   │   ├── models/                   # Model detail pages
+│   │   ├── admin/                    # Admin dashboard
+│   │   └── about/                    # Static pages
+│   ├── components/                   # React components
+│   │   ├── ui/                       # Primitive UI components (Radix-based)
+│   │   ├── match/                    # Match-specific components
+│   │   ├── leaderboard/              # Leaderboard-specific components
+│   │   ├── admin/                    # Admin-specific components
+│   │   ├── competition/              # Competition-specific components
+│   │   ├── *.tsx                     # Feature components (card, badge, filter, etc.)
+│   │   └── analytics.tsx             # Umami analytics integration
+│   ├── lib/                          # Core logic and utilities
+│   │   ├── db/                       # Database layer
+│   │   │   ├── index.ts              # Database connection singleton
+│   │   │   ├── schema.ts             # Drizzle ORM schema definitions
+│   │   │   ├── queries.ts            # Core database queries (2000+ lines)
+│   │   │   ├── queries/              # Query modules
+│   │   │   │   └── stats.ts          # Leaderboard aggregations
+│   │   │   ├── schema/               # Schema modules
+│   │   │   │   └── stats.ts          # Stats table definitions
+│   │   │   └── sync-models.ts        # Utility to sync model list
+│   │   ├── queue/                    # Job queue system (BullMQ)
+│   │   │   ├── index.ts              # Queue setup and job type definitions
+│   │   │   ├── setup.ts              # Redis connection, queue initialization
+│   │   │   ├── scheduler.ts          # Job scheduling logic (T-6h to T+kickoff)
+│   │   │   ├── types.ts              # Job payload type definitions
+│   │   │   ├── dead-letter.ts        # Dead-letter queue handling
+│   │   │   ├── catch-up.ts           # Catch-up logic for missed jobs
+│   │   │   └── workers/              # Job worker implementations
+│   │   │       ├── predictions.worker.ts
+│   │   │       ├── scoring.worker.ts
+│   │   │       ├── content.worker.ts
+│   │   │       ├── backfill.worker.ts
+│   │   │       └── odds.worker.ts
+│   │   ├── llm/                      # LLM provider integration
+│   │   │   ├── index.ts              # Provider registry and helpers
+│   │   │   ├── prompt.ts             # Prompt building and parsing
+│   │   │   ├── budget.ts             # Cost tracking
+│   │   │   └── providers/            # LLM provider implementations
+│   │   │       ├── base.ts           # Base provider class
+│   │   │       └── together.ts       # Together AI (35 models)
+│   │   ├── football/                 # Football data and API
+│   │   │   ├── api-client.ts         # API-Football wrapper
+│   │   │   ├── api-football.ts       # Detailed API-Football client
+│   │   │   ├── competitions.ts       # Competition data
+│   │   │   ├── match-analysis.ts     # Match context building
+│   │   │   ├── prompt-builder.ts     # LLM prompt construction
+│   │   │   ├── lineups.ts            # Lineup parsing
+│   │   │   ├── h2h.ts                # Head-to-head statistics
+│   │   │   ├── standings.ts          # League standings
+│   │   │   └── team-statistics.ts    # Team stats aggregation
+│   │   ├── content/                  # Content generation
+│   │   │   ├── generator.ts          # Main content generation
+│   │   │   ├── together-client.ts    # Together AI client for content
+│   │   │   ├── prompts.ts            # Content generation prompts
+│   │   │   ├── queries.ts            # Blog post queries
+│   │   │   ├── match-content.ts      # Match content utilities
+│   │   │   ├── deduplication.ts      # Prevent duplicate blog posts
+│   │   │   └── config.ts             # Content generation config
+│   │   ├── cache/                    # Redis caching layer
+│   │   │   └── redis.ts              # withCache() helper
+│   │   ├── logger/                   # Pino structured logging
+│   │   │   ├── modules.ts            # Named logger exports
+│   │   │   └── *.ts                  # Logger configuration
+│   │   ├── services/                 # Business logic services
+│   │   │   └── points-calculator.ts  # Kicktipp scoring logic
+│   │   ├── utils/                    # Utility functions
+│   │   │   ├── api-client.ts         # HTTP client with circuit breaker
+│   │   │   ├── circuit-breaker.ts    # Circuit breaker implementation
+│   │   │   ├── rate-limiter.ts       # Redis-based rate limiting
+│   │   │   ├── scoring.ts            # Score-related utilities
+│   │   │   ├── admin-auth.ts         # Admin auth checking
+│   │   │   ├── stats-auth.ts         # Stats API auth
+│   │   │   ├── error-sanitizer.ts    # Error message sanitization
+│   │   │   ├── date.ts               # Date parsing/formatting
+│   │   │   ├── retry-config.ts       # Retry strategies
+│   │   │   ├── retry-helpers.ts      # Retry utilities
+│   │   │   ├── env-validation.ts     # Environment variable validation
+│   │   │   ├── slugify.ts            # URL slug generation
+│   │   │   ├── indexnow.ts           # IndexNow search indexing
+│   │   │   ├── upset.ts              # Upset calculation
+│   │   │   └── *.ts                  # Other utilities
+│   │   ├── validation/               # Input validation
+│   │   │   ├── schemas.ts            # Zod validation schemas
+│   │   │   └── middleware.ts         # Validation middleware
+│   │   ├── seo/                      # SEO utilities
+│   │   │   └── *.ts                  # Schema generation, canonicals
+│   │   ├── table/                    # Table data processing
+│   │   ├── auth/                     # Authentication utilities
+│   │   ├── api/                      # API client utilities
+│   │   ├── env.ts                    # Centralized env config
+│   │   └── utils.ts                  # Top-level utility export
+│   └── types/                        # TypeScript types and interfaces
+│       └── index.ts                  # Central type exports
+├── scripts/                          # One-off scripts
+│   ├── migrate-betting-system.ts
+│   ├── migrate-predictions.ts
+│   ├── migrate-hotfix.ts
+│   ├── sync-models.ts
+│   ├── clean-predictions.ts
+│   └── regenerate-post-match-content.ts
+├── drizzle/                          # Drizzle ORM metadata
+│   └── meta/                         # Migration metadata
+├── migrations/                       # Database migrations (auto-generated)
+├── public/                           # Static assets
+│   ├── favicon.ico
+│   └── ...
+├── .env.local                        # Environment variables (not committed)
+├── package.json                      # Dependencies
+├── tsconfig.json                     # TypeScript config
+├── tailwind.config.ts                # Tailwind CSS config
+├── postcss.config.js                 # PostCSS config
+├── next.config.ts                    # Next.js config
+└── .planning/                        # Planning and documentation
+    └── codebase/                     # Architecture documentation
 ```
 
 ## Directory Purposes
 
-### `src/app/` - Next.js App Router
+**src/app/:**
+- Purpose: Next.js App Router - defines all routes (pages and API)
+- Contains: Page components (SSR), API handlers, error boundaries
+- Key files: `layout.tsx` (root), `page.tsx` (homepage), `api/**/*.ts` (endpoints)
 
-**Purpose:** All page routes and API endpoints
+**src/components/:**
+- Purpose: Reusable React components
+- Contains: UI primitives, feature-specific components, layout components
+- Pattern: Feature-based organization (`match/`, `admin/`, etc.)
+- Key files: `ui/` (Radix-based primitives), `*-card.tsx`, `*-table.tsx`
 
-**Structure:**
-```
-app/
-├── (implicit root layout)
-├── page.tsx                    # Homepage - live matches, upcoming, leaderboard preview
-├── layout.tsx                  # Root layout (nav, footer, metadata, analytics)
-├── error.tsx                   # Root error boundary
-├── global-error.tsx            # Global error boundary for edge cases
-├── robots.ts                   # robots.txt generator
-├── sitemap.ts                  # sitemap.xml generator
-│
-├── matches/                    # Matches pages
-│   ├── page.tsx                # Match list (search, filters, pagination)
-│   ├── live-refresher.tsx      # Live match auto-refresh component
-│   ├── [id]/
-│   │   ├── page.tsx            # Individual match page
-│   │   └── error.tsx           # Match-specific error boundary
-│   └── error.tsx               # Matches error boundary
-│
-├── leaderboard/                # Leaderboard page
-│   ├── page.tsx                # Leaderboard with filters (7d, 30d, 90d, all)
-│   └── error.tsx
-│
-├── leagues/                    # Competition pages (SEO-friendly slugs)
-│   ├── [slug]/
-│   │   ├── page.tsx            # League hub (matches, stats)
-│   │   ├── league-hub-content.tsx
-│   │   └── [match]/
-│   │       └── page.tsx        # Individual match in league context
-│   └── [slug]/[match]/page.tsx # Redirect to match page
-│
-├── models/                     # Model detail pages
-│   └── [id]/
-│       ├── page.tsx            # Model performance, betting stats
-│       └── error.tsx
-│
-├── admin/                      # Admin dashboard
-│   └── page.tsx                # Admin dashboard (requires auth)
-│
-├── blog/                       # AI-generated blog posts
-│   ├── page.tsx                # Blog listing
-│   └── [slug]/page.tsx         # Individual post
-│
-├── api/                        # REST API endpoints
-│   ├── health/route.ts         # GET /api/health - health check
-│   ├── matches/
-│   │   ├── route.ts            # GET /api/matches (list with filters)
-│   │   └── [id]/route.ts       # GET /api/matches/:id
-│   ├── leaderboard/route.ts    # GET /api/leaderboard
-│   ├── models/[id]/bets/route.ts # GET model betting history
-│   ├── og/                     # OpenGraph image generation
-│   │   ├── match/route.tsx     # Match card image
-│   │   ├── league/route.tsx    # League card image
-│   │   └── model/route.tsx     # Model card image
-│   ├── cron/                   # Cron endpoints (secret-protected)
-│   │   └── generate-content/route.ts # POST /api/cron/generate-content
-│   └── admin/                  # Admin operations
-│       ├── queue-status/route.ts     # GET queue stats
-│       ├── queues/[[...path]]/route.ts # Bull Board dashboard
-│       ├── rescore/route.ts           # POST trigger re-scoring
-│       ├── dlq/route.ts               # GET/DELETE dead letter queue
-│       ├── data/route.ts              # GET database stats
-│       ├── re-enable-model/route.ts   # POST re-enable auto-disabled model
-│       └── trigger-roundups/route.ts  # POST generate league roundups
-│
-├── llms.txt/route.ts           # LLM text file listing models
-└── llms-full.txt/route.ts      # Full LLM details
-```
+**src/lib/db/:**
+- Purpose: Data persistence layer
+- Contains: Drizzle schema, typed queries, database connection
+- Key files: `schema.ts` (entity definitions), `queries.ts` (2000+ lines of data access)
+- Pattern: Single `getDb()` export, all queries cached at caller
 
-### `src/components/` - React Components
+**src/lib/queue/:**
+- Purpose: Asynchronous job processing
+- Contains: BullMQ queue setup, job schedulers, worker implementations
+- Key files: `scheduler.ts` (timing logic), `workers/*.ts` (job handlers)
+- Pattern: Time-based scheduling relative to match kickoff
 
-**Purpose:** UI components (Server and Client)
+**src/lib/llm/:**
+- Purpose: LLM provider abstraction
+- Contains: Provider implementations, prompt builders, cost tracking
+- Key files: `index.ts` (registry), `providers/together.ts` (35 models)
+- Pattern: Pluggable providers, batch predictions
 
-**Structure:**
-```
-components/
-├── ui/                         # shadcn/ui base components
-│   ├── button.tsx              # Button with variants
-│   ├── card.tsx                # Card containers
-│   ├── table.tsx               # Data tables
-│   ├── dialog.tsx              # Modal dialogs
-│   ├── sheet.tsx               # Slide-out panels
-│   ├── tabs.tsx                # Tab navigation
-│   ├── select.tsx              # Select dropdowns
-│   ├── badge.tsx               # Status badges
-│   ├── skeleton.tsx            # Loading skeletons
-│   ├── collapsible.tsx         # Collapsible sections
-│   ├── dropdown-menu.tsx       # Dropdown menus
-│   ├── separator.tsx           # Visual separators
-│   └── ...
-│
-├── admin/                      # Admin dashboard components
-│   ├── admin-dashboard.tsx     # Main dashboard layout
-│   ├── cost-summary.tsx        # LLM cost summary
-│   └── model-health-table.tsx  # Model health status table
-│
-├── match/                      # Match-specific components
-│   ├── MatchContent.tsx        # AI-generated match content
-│   ├── MatchStats.tsx          # Match statistics display
-│   ├── MatchFAQSchema.tsx      # FAQ Schema.org markup
-│   └── PredictionInsightsBlockquote.tsx # AI insights
-│
-├── competition/                # Competition components
-│   ├── competition-header.tsx  # League header
-│   ├── competition-stats.tsx   # League statistics
-│   ├── competition-prediction-summary.tsx
-│   └── competition-top-models.tsx # Top performing models
-│
-├── navigation.tsx              # Main navigation bar
-├── footer.tsx                  # Site footer
-├── match-card.tsx              # Match preview card
-├── match-events.tsx            # Match events timeline
-├── leaderboard-table.tsx       # Leaderboard data table
-├── leaderboard-filters.tsx     # Time range filters
-├── prediction-table.tsx        # Predictions display
-├── model-stats-grid.tsx        # Model statistics grid
-├── model-performance-chart.tsx # Performance visualization
-├── model-competition-breakdown.tsx # Per-competition stats
-├── accuracy-chart.tsx          # Accuracy over time
-├── league-selector.tsx         # Competition selector
-├── league-card.tsx             # Competition card
-├── competition-filter.tsx      # Competition filter
-├── search-modal.tsx            # Global search
-├── client-date.tsx             # Client-side date display
-├── answer-capsule.tsx          # AI answer display
-├── quick-league-links.tsx      # League shortcuts
-│
-└── *Schema.tsx                 # Schema.org JSON-LD markup
-    ├── BreadcrumbSchema.tsx
-    ├── FaqSchema.tsx
-    ├── SportsEventSchema.tsx
-    └── WebPageSchema.tsx
-```
+**src/lib/football/:**
+- Purpose: Football data integration
+- Contains: API-Football client, match analysis, prompt building
+- Key files: `api-client.ts` (wrapper), `match-analysis.ts` (context)
+- Pattern: Fetches match data → builds LLM prompts
 
-### `src/lib/` - Core Library Code
+**src/lib/content/:**
+- Purpose: Blog post generation
+- Contains: Content generator, prompts, deduplication
+- Key files: `generator.ts` (main logic), `prompts.ts` (LLM prompts)
+- Pattern: Takes match results → generates markdown blog post
 
-**Purpose:** Business logic, integrations, and utilities
+**src/lib/cache/:**
+- Purpose: Redis caching layer
+- Contains: withCache() helper with TTL and invalidation
+- Key files: `redis.ts` (main caching utility)
+- Pattern: Wraps async queries, fires-and-forgets invalidation
 
-**Structure:**
-```
-lib/
-├── db/                         # Database layer
-│   ├── index.ts                # Connection pool, getDb(), closePool()
-│   ├── schema.ts               # All Drizzle table definitions
-│   └── queries.ts              # 1700+ lines of query functions
-│
-├── cache/                      # Redis caching
-│   └── redis.ts                # ioredis client, withCache(), cacheKeys
-│
-├── queue/                      # BullMQ job queues
-│   ├── index.ts                # Queue setup, getQueue(), QUEUE_NAMES
-│   ├── workers/                # Individual workers
-│   │   ├── index.ts            # Worker startup/exports
-│   │   ├── predictions.worker.ts
-│   │   ├── fixtures.worker.ts
-│   │   ├── analysis.worker.ts
-│   │   ├── odds.worker.ts
-│   │   ├── lineups.worker.ts
-│   │   ├── live-score.worker.ts
-│   │   ├── scoring.worker.ts
-│   │   ├── content.worker.ts
-│   │   ├── backfill.worker.ts
-│   │   ├── model-recovery.worker.ts
-│   │   └── standings.worker.ts
-│
-├── football/                   # API-Football integration
-│   ├── api-client.ts           # HTTP client with rate limiting
-│   ├── api-football.ts         # Main API functions
-│   ├── standings.ts            # League standings
-│   ├── match-analysis.ts       # Match data aggregation
-│   ├── prompt-builder.ts       # LLM prompt construction
-│   ├── h2h.ts                  # Head-to-head data
-│   ├── lineups.ts              # Team lineups
-│   └── team-statistics.ts      # Team statistics
-│
-├── llm/                        # LLM provider abstraction
-│   ├── index.ts                # Provider management
-│   ├── providers/
-│   │   ├── base.ts             # Base provider interface
-│   │   └── together.ts         # Together AI implementation
-│   ├── budget.ts               # Daily budget tracking
-│   └── prompt.ts               # Prediction prompts
-│
-├── logger/                     # Pino structured logging
-│   ├── index.ts                # Logger factory
-│   ├── modules.ts              # Named loggers (db, cache, queue, llm)
-│   ├── worker-logger.ts        # Worker-specific logging
-│   ├── metrics.ts              # Prometheus metrics
-│   ├── timing.ts               # Performance timing utilities
-│   └── request-context.ts      # Request-scoped context
-│
-├── validation/                 # Input validation
-│   ├── middleware.ts           # validateQuery, validateBody
-│   └── schemas.ts              # Zod schemas
-│
-├── content/                    # AI content generation
-│   ├── index.ts
-│   ├── match-content.ts        # Match previews, post-match content
-│   └── blog-posts.ts           # League roundups, model reports
-│
-├── utils/                      # Utility functions
-│   ├── rate-limiter.ts         # Token bucket rate limiting
-│   ├── admin-auth.ts           # Admin authentication
-│   ├── error-sanitizer.ts      # Error message sanitization
-│   └── scoring.ts              # Kicktipp scoring logic
-│
-└── env.ts                      # Environment variable validation
-```
+**src/lib/utils/:**
+- Purpose: Cross-cutting utilities
+- Contains: HTTP client, rate limiter, circuit breaker, validation
+- Key files: `api-client.ts`, `rate-limiter.ts`, `circuit-breaker.ts`
+- Pattern: Reusable utilities exported individually
 
-### `src/types/` - TypeScript Types
-
-**Purpose:** Type definitions exported for use across the app
-
-**Location:** `src/types/index.ts`
-
-**Key Types:**
-```typescript
-// Database types (re-exported from schema)
-export type { Competition, Match, Model, Bet, Prediction, MatchAnalysis }
-
-// Composite types
-export interface MatchWithPredictions { /* ... */ }
-export interface LeaderboardEntry { /* ... */ }
-
-// API-Football response types
-export interface APIFootballFixture { /* ... */ }
-export interface APIFootballPredictionResponse { /* ... */ }
-export interface APIFootballOddsResponse { /* ... */ }
-export interface APIFootballLineupsResponse { /* ... */ }
-
-// LLM types
-export interface LLMProvider { /* ... */ }
-export interface LLMPredictionResult { /* ... */ }
-
-// Scoring types
-export interface ScoringBreakdown { /* ... */ }
-export interface EnhancedLeaderboardEntry { /* ... */ }
-```
-
-### `scripts/` - Maintenance Scripts
-
-**Purpose:** One-time migrations and data operations
-
-**Files:**
-- `sync-models.ts` - Sync LLM models to database
-- `clean-predictions.ts` - Clean prediction data
-- `regenerate-post-match-content.ts` - Regenerate match content
-- `migrate-betting-system.ts` - Betting system migration
-- `backfill-post-match-content.ts` - Backfill historical content
-- `check-accuracy.ts` - Verify prediction accuracy
-- `generate-roundups.ts` - Generate league roundup posts
-- `trigger-rescore.ts` - Trigger re-scoring for matches
-- `migrate-predictions.ts` - Predictions migration
-- `migrate-hotfix.ts` - Hotfix migrations
-- `backfill-slugs.ts` - Generate URL slugs for matches
-- `update-standings.ts` - Update league standings
-- `fix-model-count.ts` - Fix model counts
-- `check-standings.ts` - Verify standings data
-- `test-season.ts` - Test season functionality
-- `apply-constraint-fix.ts` - Apply database constraints
-
-**Usage:** `npm run db:migrate` for schema changes, `npx tsx scripts/script.ts` for scripts
-
-## Configuration Files
-
-| File | Purpose |
-|------|---------|
-| `next.config.ts` | Next.js configuration (experimental features, images) |
-| `drizzle.config.ts` | Drizzle CLI configuration for migrations |
-| `tsconfig.json` | TypeScript configuration |
-| `eslint.config.mjs` | ESLint rules |
-| `postcss.config.mjs` | PostCSS for Tailwind |
-| `components.json` | shadcn/ui component configuration |
-| `.env.example` | Environment variable template |
-| `.env` | Local environment (not committed) |
+**src/types/:**
+- Purpose: Central TypeScript type definitions
+- Contains: Interfaces for data shapes, API responses, component props
+- Key files: `index.ts` (re-exports from schema, custom types)
+- Pattern: Domain-driven types (MatchWithPredictions, PredictionWithModel, etc.)
 
 ## Key File Locations
 
 **Entry Points:**
-- `src/app/page.tsx` - Homepage
-- `src/app/layout.tsx` - Root layout with providers
-- `src/middleware.ts` - Request preprocessing
+- `src/app/layout.tsx`: Root layout (metadata, schemas, navigation)
+- `src/app/page.tsx`: Homepage
+- `src/app/api/matches/route.ts`: Main match list API
+- `src/lib/queue/index.ts`: Queue setup (runs on server start)
+- `src/middleware.ts`: Global middleware (CORS, body size)
 
 **Configuration:**
-- `src/lib/db/index.ts` - Database connection
-- `src/lib/cache/redis.ts` - Redis client
-- `src/lib/queue/index.ts` - Queue setup
-- `src/lib/env.ts` - Environment validation
+- `.env.local`: Database URL, API keys, base URL
+- `tsconfig.json`: TypeScript compiler options
+- `next.config.ts`: Next.js build and runtime config
+- `tailwind.config.ts`: Tailwind design tokens
+- `src/lib/env.ts`: Runtime environment validation
 
 **Core Logic:**
-- `src/lib/db/schema.ts` - Database schema (483 lines)
-- `src/lib/db/queries.ts` - Database queries (1700+ lines)
-- `src/lib/queue/workers/predictions.worker.ts` - Prediction generation
+- `src/lib/db/queries.ts`: Central query hub (2000+ lines, all data access)
+- `src/lib/queue/scheduler.ts`: Job timing and priority system
+- `src/lib/queue/workers/predictions.worker.ts`: LLM prediction generation
+- `src/lib/queue/workers/scoring.worker.ts`: Kicktipp point calculation
+- `src/lib/services/points-calculator.ts`: Scoring algorithm
 
-**API Routes:**
-- `src/app/api/matches/route.ts` - Match listing
-- `src/app/api/admin/rescore/route.ts` - Trigger re-scoring
-- `src/app/api/cron/generate-content/route.ts` - Content generation cron
+**Testing & Validation:**
+- `src/lib/validation/schemas.ts`: Zod schemas for API requests
+- `src/lib/validation/middleware.ts`: Request validation middleware
 
-## Where to Add New Code
-
-### New Feature
-1. **Pages:** `src/app/[feature]/page.tsx` (Server Component)
-2. **Components:** `src/components/[feature]-*.tsx`
-3. **API:** `src/app/api/[feature]/route.ts`
-4. **Database:** Add tables to `src/lib/db/schema.ts`, queries to `src/lib/db/queries.ts`
-5. **Background Job:** Add worker to `src/lib/queue/workers/[feature].worker.ts`
-
-### New API Endpoint
-1. Create `src/app/api/[resource]/route.ts`
-2. Export `GET`, `POST`, etc. functions
-3. Add rate limiting via `checkRateLimit()`
-4. Add validation if needed via `validateQuery()`/`validateBody()`
-5. Use `getDb()` for database access
-6. Return `NextResponse.json()`
-
-### New Database Query
-1. Add to `src/lib/db/queries.ts`
-2. Use existing query patterns (withCache for expensive queries)
-3. Add proper error logging with `logQueryError()`
-4. Export function for use in pages/routes
-
-### New Background Job
-1. Create `src/lib/queue/workers/[jobname].worker.ts`
-2. Export worker function
-3. Register queue in `src/lib/queue/index.ts` if new queue needed
-4. Add job type constant to `JOB_TYPES`
-
-### New Component
-1. **UI Component:** Add to `src/components/ui/` (shadcn pattern)
-2. **Feature Component:** Add to appropriate folder under `src/components/`
-3. **Server Component:** Make async, fetch data directly
-4. **Client Component:** Add `'use client'` directive
+**Utilities:**
+- `src/lib/utils/api-client.ts`: HTTP client (circuit breaker, retries)
+- `src/lib/utils/rate-limiter.ts`: Redis-based rate limiting
+- `src/lib/utils/admin-auth.ts`: Admin password checking
+- `src/lib/utils/error-sanitizer.ts`: Error response sanitization
 
 ## Naming Conventions
 
-| Element | Convention | Example |
-|---------|------------|---------|
-| Files | kebab-case | `match-card.tsx`, `api-football.ts` |
-| Components | PascalCase | `MatchCard`, `StatsBar` |
-| Functions | camelCase | `getUpcomingMatches()` |
-| Constants | UPPER_SNAKE_CASE | `API_BASE_URL`, `CACHE_TTL` |
-| Types/Interfaces | PascalCase | `MatchWithPredictions` |
-| DB tables | camelCase | `matches`, `modelBalances` |
-| Queue names | kebab-case | `analysis-queue`, `predictions-queue` |
-| Job types | kebab-case | `settle-match`, `fetch-fixtures` |
+**Files:**
+- Page components: `*.tsx` in `src/app/` (e.g., `page.tsx`, `error.tsx`)
+- API routes: `route.ts` in `src/app/api/*`
+- Components: `kebab-case.tsx` in `src/components/` (e.g., `match-card.tsx`)
+- Utilities: `kebab-case.ts` in `src/lib/utils/`
+- Workers: `kebab-case.worker.ts` in `src/lib/queue/workers/` (e.g., `predictions.worker.ts`)
+- Tests: `*.test.ts` or `*.spec.ts` (co-located with source)
 
-## Import Order
+**Variables & Functions:**
+- camelCase for functions and variables
+- SCREAMING_SNAKE_CASE for constants and enums
+- PascalCase for React components and classes
+- Prefixed private functions with underscore if needed (rarely)
 
-```typescript
-// 1. External packages
-import { Suspense } from 'react';
-import { NextResponse } from 'next/server';
-import { eq, and, desc } from 'drizzle-orm';
+**Types:**
+- PascalCase for type/interface names (e.g., `MatchWithPredictions`)
+- Prefix type imports: `import type { Match } from '@/lib/db/schema'`
+- Use `New*` suffix for insert types: `NewMatch`, `NewBet`
+- Use `*Payload` suffix for job payloads: `PredictMatchPayload`
 
-// 2. Internal imports using @/ alias
-import { getDb, matches, models } from '@/lib/db';
-import { loggers } from '@/lib/logger/modules';
+## Where to Add New Code
 
-// 3. Type-only imports
-import type { Match, Model } from '@/lib/db/schema';
-```
+**New API Endpoint:**
+- File: `src/app/api/[feature]/route.ts`
+- Pattern: Export `GET(request)` or `POST(request)` handlers
+- Include: Rate limiting, validation, error handling
+- Example: `src/app/api/matches/route.ts`
 
----
+**New Database Query:**
+- File: `src/lib/db/queries.ts` or `src/lib/db/queries/[domain].ts` if large
+- Pattern: Async function returning typed data, wrapped in `withCache()` if needed
+- Include: Error handling with `logQueryError()`, proper Drizzle operators
+- Export: From `src/lib/db/queries.ts` for use in pages/workers
 
-*Structure analysis: 2026-01-27*
+**New Component:**
+- File: `src/components/[feature]/[name].tsx`
+- Pattern: Default export, typed props, use Radix UI primitives in `ui/` dir
+- Include: Accessible attributes (aria-*, role=)
+- Example: `src/components/match/match-card.tsx`
+
+**New Page:**
+- File: `src/app/[route]/page.tsx`
+- Pattern: Default export Server Component, async if fetching data
+- Include: Proper metadata, error boundaries, Suspense boundaries
+- Example: `src/app/matches/[id]/page.tsx`
+
+**New Job Worker:**
+- File: `src/lib/queue/workers/[job-name].worker.ts`
+- Pattern: Export worker function: `async (job: Job<PayloadType>) => void`
+- Include: Proper error handling, logging with job context
+- Register: In `src/lib/queue/setup.ts` via `.process()`
+
+**Shared Utility:**
+- File: `src/lib/utils/[utility-name].ts`
+- Pattern: Named exports (can have multiple per file)
+- Include: Type annotations, JSDoc comments
+- Example: `src/lib/utils/rate-limiter.ts`
+
+**Football Integration:**
+- File: `src/lib/football/[feature].ts`
+- Pattern: Exports functions that call `src/lib/football/api-client.ts`
+- Include: Error handling, retry logic via circuit breaker
+- Example: `src/lib/football/match-analysis.ts`
+
+**LLM Provider:**
+- File: `src/lib/llm/providers/[provider-name].ts`
+- Pattern: Class extending `LLMProvider` base
+- Include: `predictMatch()` method, error recovery
+- Register: In `src/lib/llm/index.ts` export
+
+## Special Directories
+
+**drizzle/:**
+- Purpose: Drizzle ORM metadata for migrations
+- Generated: Yes (auto-generated by `drizzle-kit`)
+- Committed: Yes (contains migration history)
+- Manual edits: No (managed by Drizzle)
+
+**migrations/:**
+- Purpose: Database migration files
+- Generated: Yes (auto-generated by `drizzle-kit generate`)
+- Committed: Yes (version control for schema changes)
+- Manual edits: Rarely (only if fixing broken migrations)
+
+**public/:**
+- Purpose: Static assets served directly by Next.js
+- Generated: No
+- Committed: Yes
+- Manual edits: Yes (add logos, favicons, robots.txt)
+
+**scripts/:**
+- Purpose: One-off maintenance scripts (run via `npm run [script]`)
+- Generated: No
+- Committed: Yes
+- Usage: Data migrations, cleanup, sync utilities
+- Examples: `migrate-betting-system.ts`, `sync-models.ts`
+
+**.next/:**
+- Purpose: Next.js build output
+- Generated: Yes (created by `next build`)
+- Committed: No (.gitignored)
+- Manual edits: Never
+
+**node_modules/:**
+- Purpose: Installed dependencies
+- Generated: Yes (created by `npm install`)
+- Committed: No (.gitignored)
+- Manual edits: Never
+

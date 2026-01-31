@@ -1,318 +1,223 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-01-27
+**Analysis Date:** 2026-01-31
 
 ## Tech Debt
 
-### Large Files Requiring Refactoring
+**Large Monolithic Query Files:**
+- Issue: `src/lib/db/queries.ts` is 2094 lines, making it difficult to maintain and test individual query functions
+- Files: `src/lib/db/queries.ts`
+- Impact: Harder to reason about query logic, increased merge conflict risk, slower IDE performance, difficult to test individual functions
+- Fix approach: Split into logical modules: `src/lib/db/queries/matches.ts`, `src/lib/db/queries/predictions.ts`, `src/lib/db/queries/models.ts`, etc. Organize by domain rather than all queries in one file.
 
-**`src/lib/db/queries.ts` (2048 lines)**
-- Issue: File exceeds 1000+ lines, making it difficult to maintain and navigate
-- Impact: Complex to understand, test, and modify individual query functions
-- Fix approach: Split into multiple files by domain (competitions, matches, models, predictions, content)
-- Priority: High
+**Content Generation Module Complexity:**
+- Issue: `src/lib/content/generator.ts` (992 lines) and `src/lib/content/match-content.ts` (484 lines) contain dense validation, deduplication, and generation logic intertwined
+- Files: `src/lib/content/generator.ts`, `src/lib/content/match-content.ts`
+- Impact: Difficult to debug deduplication issues, validation logic scattered across multiple files, content generation pipeline not clearly defined
+- Fix approach: Extract deduplication logic to `src/lib/content/deduplication-service.ts`, extract validation to `src/lib/content/validators.ts`, create a clear pipeline interface in `src/lib/content/pipeline.ts`.
 
-**`src/lib/football/match-analysis.ts` (740 lines)**
-- Issue: Contains multiple responsibilities (odds validation, prediction fetching, injury fetching, data extraction)
-- Impact: Hard to test individual functions, high cognitive load
-- Fix approach: Extract odds validation, extraction logic, and API wrappers into separate modules
-- Priority: Medium
+**Mixed Database Connection Handling:**
+- Issue: Multiple calls to `getDb()` throughout codebase (130+ occurrences) instead of dependency injection or request-scoped instances
+- Files: All files in `src/lib/**/*.ts` that call `getDb()`
+- Impact: Difficult to test, hard to implement request-scoped connections for transaction support, makes database layer tightly coupled to all consumers
+- Fix approach: Implement repository pattern or pass database instance as parameter to functions requiring it. Consider request-scoped context for Next.js handlers.
 
-**`src/lib/content/queries.ts` (691 lines)**
-- Issue: Large content query file with complex joins
-- Impact: Difficult to modify content-related queries
-- Fix approach: Split by query type (previews, roundups, reports)
-- Priority: Medium
+**Type Safety Gaps:**
+- Issue: 117+ uses of `any` types and unsafe casts (`as any`, `as unknown`) in codebase
+- Files: `src/app/api/admin/queues/[[...path]]/route.ts` (uses `any` for Express mock), multiple admin routes
+- Impact: Loss of type safety, potential runtime errors, harder to refactor, IDE autocomplete unreliable in these areas
+- Fix approach: Create proper Express adapter types, use strict TypeScript mode for new code, gradually migrate existing `any` uses to proper types.
 
-**`src/app/matches/[id]/page.tsx` (522 lines)**
-- Issue: Page component too large, handles data fetching, UI rendering, and error states
-- Impact: Hard to read and modify
-- Fix approach: Extract data fetching to separate hooks, UI components to separate files
-- Priority: Medium
+**Missing Environment Variable Validation:**
+- Issue: Critical env vars checked at runtime via `process.env.` calls scattered across codebase rather than validated at startup
+- Files: `src/lib/env.ts` (partial validation), but many direct `process.env.CRON_SECRET`, `process.env.DATABASE_URL` calls in route handlers
+- Impact: Failures can occur after app starts when processing first request requiring that env var, making deployment issues hard to catch
+- Fix approach: Import environment vars through centralized `src/lib/env.ts` module that validates at import time. Make `env.ts` the single source of truth.
 
-### Type Safety Issues
+## Known Bugs
 
-**Widespread `as` Type Assertions (100+ occurrences)**
-- Files: `src/lib/content/generator.ts`, `src/lib/football/match-analysis.ts`, various components
-- Issue: Code uses unsafe type assertions instead of proper type guards or validation
-- Examples:
-  - `matchData.analysis?.homeWinPct as number | undefined`
-  - `return { response: [], results: 0 } as unknown as APIFootballResponse`
-  - `(aVal as number) - (bVal as number)`
-- Impact: Runtime errors possible if types don't match expectations
-- Fix approach: Use proper type guards, Zod validation, or explicit type conversions
-- Priority: High
+**Unsanitized Local Development Database Credentials:**
+- Symptoms: `.env` file contains hardcoded local PostgreSQL credentials (postgres:postgres@localhost)
+- Files: `.env`
+- Trigger: Any commit that accidentally includes local `.env` values
+- Workaround: Use `.env.example` for deployment, never commit real credentials. Current setup exposes local dev DB to git history risk.
 
-**`any` Type Usage**
-- Found approximately 102 occurrences of `any`, `as any`, or `as unknown`
-- Location: Components, API routes, validation logic
-- Impact: Defeats TypeScript's type checking benefits
-- Fix approach: Replace with specific types or unknown with proper handling
-- Priority: High
+**Migration File Naming Collision:**
+- Symptoms: Two migration files with number prefix `003_` exist: `003_fix_tendency_constraint.sql` and `003_hotfix_restore_betting_tables.sql`
+- Files: `migrations/003_fix_tendency_constraint.sql`, `migrations/003_hotfix_restore_betting_tables.sql`
+- Trigger: Running migrations in unclear order could apply wrong schema changes
+- Workaround: Rename hotfix file to `003b_` or `004_`, establish clear migration naming convention (YYYY_MM_DD_description.sql or sequential with clear purposes)
 
-### Legacy Code
-
-**`src/lib/db/queries.ts:11-12`**
-- Issue: Commented legacy betting constant still present
-- Code: `// Legacy betting system constant (unused, kept for model_balances table compatibility)` and `const LEGACY_STARTING_BALANCE = 1000;`
-- Impact: Confusing for new developers, dead code
-- Fix approach: Remove if truly unused, or document why kept
-- Priority: Low
-
-### Inconsistent Error Handling Patterns
-
-**Mixed Console and Logger Usage**
-- Files: Various API routes (`src/app/api/admin/*/route.ts`)
-- Issue: Some error handlers use `console.error()`, others use structured logging
-- Examples:
-  - `src/app/api/admin/trigger-roundups/route.ts:106` - uses `console.error`
-  - `src/app/api/admin/rescore/route.ts:71` - console usage
-- Impact: Inconsistent log output, harder to debug
-- Fix approach: Standardize on structured logging via `loggers` throughout
-- Priority: Medium
-
-## Known Bugs and Issues
-
-### Potential Silent Failures
-
-**API Error Swallowing**
-- File: `src/lib/football/api-client.ts:160-163`
-- Code:
-  ```typescript
-  } catch (error) {
-    log.error({ fixtureId, error }, 'Error fetching prediction');
-    return null;
-  }
-  ```
-- Issue: API errors are caught and logged but return null silently
-- Impact: Callers may not distinguish between "no data" and "API error"
-- Fix approach: Create typed error return or throw specific exceptions
-- Priority: High
-
-**Cache Null Sentinel Issues**
-- File: `src/lib/cache/redis.ts`
-- Issue: Uses `CACHE_NULL_SENTINEL` string to distinguish cached null from cache miss
-- Risk: If cached value equals sentinel string exactly, incorrect behavior
-- Fix approach: Use more robust serialization (JSON with metadata) or Redis specific features
-- Priority: Low
-
-### Race Conditions
-
-**Redis Connection Singleton**
-- File: `src/lib/cache/redis.ts:25-77`
-- Issue: Redis client is lazily initialized but cached globally
-- Risk: In serverless/edge environments, connection may be reused incorrectly
-- Impact: Potential memory leaks or stale connections
-- Fix approach: Implement proper connection pooling or per-request connections
-- Priority: Medium
-
-**Queue Connection Tracking**
-- File: `src/lib/queue/index.ts:35-37`
-- Issue: `connection` and `connectionHealthy` are module-level singletons
-- Risk: In development hot-reload, state may persist incorrectly
-- Impact: Queue operations may fail silently
-- Fix approach: Implement connection health checks before each operation
-- Priority: Medium
+**Empty Stub Returns in Query Functions:**
+- Symptoms: Multiple query functions return `null`, `[]`, or `{}` when data is not found or errors occur
+- Files: `src/lib/db/queries.ts` (lines 432, 1171, 1288, 1343, 1353, 1567, 1974, 2061, 2090)
+- Trigger: Missing error handling allows stale/empty data to propagate through application layers
+- Workaround: Callers must check for null/empty and handle gracefully. Better to throw errors on critical queries and catch at middleware.
 
 ## Security Considerations
 
-### CORS Configuration
+**Admin Authentication in Routes:**
+- Risk: Admin routes (`src/app/api/admin/*`) use timing-safe comparison for `X-Admin-Password` header but password stored as env var (CRON_SECRET). If compromised, all admin endpoints exposed.
+- Files: `src/app/api/admin/queues/[[...path]]/route.ts`, `src/app/api/admin/dlq/route.ts`, `src/app/api/admin/rescore/route.ts`
+- Current mitigation: CRON_SECRET passed via environment; rate limiting in place (RATE_LIMIT_PRESETS.admin)
+- Recommendations:
+  1. Require both authentication header AND API key (defense in depth)
+  2. Log all admin API access attempts (successful and failed)
+  3. Consider IP allowlisting for admin routes
+  4. Rotate CRON_SECRET regularly
 
-**File: `src/middleware.ts:92-110`**
-- Risk: `isAllowedOrigin` checks against `NEXT_PUBLIC_BASE_URL` which could be misconfigured
-- Current: Only allows same-origin and configured base URL
-- Improvement: Add explicit allowlist for known domains, especially for production
-- Priority: Medium
+**API Key Exposure Risk:**
+- Risk: API_FOOTBALL_KEY logged in request logs via `log.info({ url: url.toString() })` which includes all query params
+- Files: `src/lib/football/api-client.ts` line 39
+- Current mitigation: None (keys could appear in logs)
+- Recommendations: Sanitize URLs before logging (remove API keys), use structured logging with separate field for URL without keys
 
-### Admin Route Authentication
-
-**File: `src/app/api/admin/trigger-roundups/route.ts:18-21`**
-- Risk: Simple secret check in query parameter
-- Code: `if (process.env.CRON_SECRET !== secret)`
-- Concern: Secret exposed in URLs (may be logged by proxies, browsers)
-- Fix approach: Use header-based authentication (`X-Cron-Secret`) as done in cron routes
-- Priority: High
-
-**File: `src/lib/auth/cron-auth.ts`**
-- Positive: Properly implemented header-based authentication for cron routes
-- Note: Admin routes should follow same pattern
-- Priority: Medium
-
-### XSS Potential
-
-**dangerouslySetInnerHTML Usage**
-- Files: `src/app/blog/[slug]/page.tsx`, `src/app/layout.tsx`, various schema components
-- Usage: `dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}`
-- Concern: While currently safe (JSON.stringify escapes properly), pattern is fragile
-- Mitigation: Ensure schema data is always validated before rendering
-- Priority: Low (currently safe but needs awareness)
-
-### Environment Variable Exposure
-
-**Server-Only Env Vars**
-- Files: Multiple (`src/lib/football/api-client.ts`, `src/lib/llm/providers/together.ts`, etc.)
-- Concern: API keys accessed via `process.env` throughout codebase
-- Current: Properly handled by Next.js (server components only)
-- Risk: If code moves to client components accidentally, keys could leak
-- Fix approach: Add linting rule to prevent `process.env` in client code
-- Priority: Medium
+**External Service Dependency on redis/Redis Availability:**
+- Risk: Circuit breaker and caching both depend on Redis. If Redis is unavailable, circuit breaker state lost and cache disabled, causing cascading failures
+- Files: `src/lib/utils/circuit-breaker.ts`, `src/lib/cache/redis.ts`
+- Current mitigation: Graceful fallback to in-memory state; fire-and-forget cache failures
+- Recommendations: Implement persistent circuit breaker state (database), add alerts for Redis unavailability, document single points of failure
 
 ## Performance Bottlenecks
 
-### Large Query Files
+**Unoptimized Cron Job Patterns:**
+- Problem: Multiple repeatable jobs run frequently without load-aware scheduling. Content worker has `concurrency: 1` but other workers may compete for resources.
+- Files: `src/lib/queue/setup.ts`, `src/lib/queue/workers/content.worker.ts` (line 96)
+- Cause: No adaptive rate limiting based on API limits or database load; jobs run on fixed schedules regardless of backlog
+- Improvement path: Implement job priority queue, add exponential backoff for rate-limited APIs, monitor queue depth and adjust concurrency dynamically
 
-**`src/lib/db/queries.ts`**
-- Issue: 2048 lines of queries without clear organization
-- Performance: Complex queries may not be optimized
-- Fix approach: Add query performance monitoring, optimize with proper indexes
-- Priority: Medium
+**Database Connection Pool Not Configured for Peak Load:**
+- Problem: Pool size defaults to min: 2, max: 10 connections. With 6+ concurrent workers and high traffic, pool exhaustion likely.
+- Files: `src/lib/db/index.ts` lines 18-19
+- Cause: Conservative defaults don't account for concurrent job workers + web requests
+- Improvement path: Increase max pool size to 20+ for production, monitor pool utilization, implement connection pooling at Redis layer for queue operations
 
-### Redis Health Check Cooldown
+**Cache Invalidation Using Pattern Matching:**
+- Problem: `cacheDeletePattern('db:leaderboard:*')` uses KEYS command which is O(N) and blocks Redis during full scan
+- Files: `src/lib/cache/redis.ts` line 283-295, used in `invalidateMatchCaches` line 348
+- Cause: After each match settlement, full pattern scan invalidates all leaderboard caches
+- Improvement path: Use Redis SCAN instead of KEYS, batch invalidations, or use cache versioning (increment version number instead of deleting keys)
 
-**File: `src/lib/cache/redis.ts:82-111`**
-- Issue: Health checks use adaptive cooldown (5-30 seconds)
-- Risk: In degraded state, 5-second cooldown may still be too slow for recovery detection
-- Impact: Temporary Redis failures may take several seconds to recover
-- Fix approach: Consider exponential backoff for health checks during degraded state
-- Priority: Low
-
-### Content Generation Concurrency
-
-**File: `src/lib/queue/workers/content.worker.ts:90`**
-- Setting: `concurrency: 1`
-- Impact: Only one content generation at a time, may be slow
-- Current: Intentionally set to avoid rate limits
-- Consideration: Could increase with better rate limiting per provider
-- Priority: Low
-
-## Dependency Risks
-
-### Outdated or Risky Dependencies
-
-**Note: Package versions from package.json analysis**
-- `next: ^16.1.4` - Very new version (Next.js 16 just released), potential instability
-- `react: 19.2.3` - React 19 is very new, may have compatibility issues
-- `drizzle-orm: ^0.45.1` - Major version 0.x, API may change
-- `express: ^5.2.1` - Express 5 is new (beta/RC), breaking changes from v4
-
-**Risk Assessment:**
-- Priority: Monitor for updates and breaking changes
-- Fix approach: Pin to specific versions, test thoroughly on updates
-- Priority: Medium
-
-### Missing Lockfile Analysis
-
-**Concern:** Unable to verify lockfile presence
-- Impact: Different environments may use different dependency versions
-- Fix approach: Ensure `package-lock.json` or `yarn.lock` is committed
-- Priority: High
-
-## Code Quality Issues
-
-### Missing Test Coverage
-
-**Test Framework Status: NOT CONFIGURED**
-- No test framework detected (no `jest.config.ts`, `vitest.config.ts`, or test files)
-- Impact: No automated testing, regressions may go undetected
-- Fix approach: Configure Vitest (recommended for Next.js), add unit and integration tests
-- Priority: High
-
-### TODO/FIXME Markers Found
-
-**Files with pending work:**
-- `src/lib/queue/scheduler.ts` - Various scheduling logic may need review
-- Multiple API routes - Comments suggest areas for improvement
-- Priority: Medium
-
-### Inconsistent Import Patterns
-
-**Observation:** Some files use `import { x } from 'module'` while others use different patterns
-- Impact: Minor, but reduces code readability
-- Fix approach: Enforce import order via ESLint
-- Priority: Low
-
-## Missing Features / Incomplete Implementations
-
-### OpenAI/Anthropic Providers Stubbed
-
-**File: `.env.example`**
-- Issue: OpenAI and Anthropic API keys are commented out
-- `src/lib/llm/providers/` - Only Together AI provider fully implemented
-- Impact: Premium models not available without implementation
-- Fix approach: Implement OpenAI and Anthropic providers following Together AI pattern
-- Priority: Low (feature gap, not bug)
-
-### No Rate Limit Visualization
-
-**Concern:** Budget control exists (`DAILY_BUDGET`) but no UI to monitor usage
-- Impact: Administrators cannot easily see current spending
-- Fix approach: Add admin dashboard showing daily/weekly usage
-- Priority: Medium
-
-## Deprecated Patterns
-
-### p-limit Usage Without Cleanup
-
-**File: `src/lib/football/match-analysis.ts:27`**
-- Code: `import pLimit from 'p-limit'`
-- Usage: May not properly clean up limiters after use
-- Impact: Resource leaks in long-running processes
-- Fix approach: Ensure p-limit instances are properly managed
-- Priority: Low
+**Content Generation Waits for API Response Serially:**
+- Problem: Multiple content sections (pre-match, betting, post-match) generated sequentially, each waiting for Together AI API
+- Files: `src/lib/content/match-content.ts`, `src/lib/queue/workers/content.worker.ts`
+- Cause: Non-blocking design means failures don't cascade but also means slow generation if APIs are slow
+- Improvement path: Parallel generation with Promise.all() for independent sections; implement request batching for multiple matches
 
 ## Fragile Areas
 
-### Circuit Breaker Implementation
+**Large Page Component Files:**
+- Files: `src/app/matches/[id]/page.tsx` (536 lines), `src/app/leagues/[slug]/[match]/page.tsx` (475 lines), `src/app/models/[id]/page.tsx` (384 lines)
+- Why fragile: Mix of data fetching, rendering, and client-side interactivity in single file; hard to test; changes to one section can break others
+- Safe modification: Extract data fetching to `src/lib/queries/*`, move UI components to `src/components/*`, keep pages thin as orchestrators
+- Test coverage: Limited - primarily visual testing needed; recommend extracting pure components with unit tests
 
-**File: `src/lib/utils/circuit-breaker.ts`**
-- Concern: Complex state machine for failure handling
-- Risk: May not handle all edge cases properly
-- Fix approach: Add comprehensive tests, consider using established library
-- Priority: Medium
+**Leaderboard Table Component:**
+- Files: `src/components/leaderboard-table.tsx` (579 lines)
+- Why fragile: Complex React table logic with sorting, filtering, pagination inline; TanStack React Table integration could be cleaner
+- Safe modification: Create separate context for table state, extract column definitions to constant, ensure prop drilling doesn't get worse
+- Test coverage: No unit tests visible; needs RTL tests for sorting/filtering logic
 
-### Match Content Generation
+**Match Analysis Validation Function:**
+- Files: `src/lib/content/generator.ts` lines 58-200 (validateLeagueRoundupOutput function)
+- Why fragile: 140+ lines of validation logic with many nested allowlists and edge cases; easy to miss validation rules when adding new fields
+- Safe modification: Convert allowlist arrays to constants or database records, add unit tests for each validation rule
+- Test coverage: No test file visible for deduplication/validation module
 
-**File: `src/lib/content/match-content.ts`**
-- Issue: Multiple database calls within single function
-- Risk: Incomplete transactions if failure occurs mid-process
-- Fix approach: Wrap in transactions, implement idempotency
-- Priority: High
+**Queue Job Retry Logic:**
+- Files: `src/lib/queue/workers/backfill.worker.ts` lines 92-106 (removing old jobs before queueing new ones)
+- Why fragile: Manually removing jobs by hardcoded ID patterns; if job IDs change, old jobs won't be cleaned up
+- Safe modification: Create centralized job ID generator, implement job replacement abstraction instead of manual removals
+- Test coverage: No visible tests for backfill worker
 
-## Scalability Limitations
+## Scaling Limits
 
-### Single Redis Instance
+**API-Football Rate Limiting:**
+- Current capacity: 100 requests/day on free tier; each match analysis needs ~5 API calls (fixture, odds, injuries, predictions, lineups)
+- Limit: At 20+ matches/day, API calls exceed free tier limit; paid tier required
+- Scaling path: Implement request batching where possible, cache more aggressively, monitor API usage per day, implement daily budget enforcement
 
-**Architecture:** Redis used for both caching and queues
-- Risk: Cache eviction may impact queue performance
-- Impact: Under high load, cache and queues compete for resources
-- Fix approach: Consider separate Redis instances for cache and queues
-- Priority: Low (early-stage application)
+**Redis Connection Pooling:**
+- Current capacity: Single shared Redis connection for both caching and queues
+- Limit: At high concurrency (many workers + requests), single connection may bottleneck; no connection pooling implemented
+- Scaling path: Use Redis Cluster or Sentinel for high availability, separate connections for cache vs. queue operations, implement connection pooling at client level
 
-### No Horizontal Scaling Preparation
+**Database Write Bottleneck on Match Settlement:**
+- Current capacity: Single `updatePredictions()` call updates potentially thousands of predictions when a match settles
+- Limit: Bulk update becomes slow at scale (1000+ predictions per match), locks table briefly
+- Scaling path: Batch writes in chunks, implement asynchronous settlement processing, add database write parallelization
 
-**Current:** Application designed for single instance
-- Risk: Not prepared for deployment to multiple replicas
-- Fix approach: Implement distributed locking, ensure idempotent operations
-- Priority: Low (not yet needed)
+**Worker Concurrency Limits:**
+- Current capacity: Content worker concurrency: 1; Fixtures/Live workers: unclear
+- Limit: With 100+ scheduled matches/day, single-threaded content generation becomes bottleneck
+- Scaling path: Increase content worker concurrency with rate limit tracking, implement worker auto-scaling based on queue depth
 
-## Documentation Gaps
+## Dependencies at Risk
 
-### Missing Inline Documentation
+**Together AI as Sole LLM Provider:**
+- Risk: All content generation and model descriptions depend on Together AI; no fallback provider configured
+- Impact: If Together service goes down, all content generation stops (model reports, match roundups, previews)
+- Migration plan: Implement provider abstraction (`src/lib/llm/providers/base.ts` partially done), add OpenAI fallback support, implement provider health checks and automatic failover
 
-**Files needing docs:**
-- `src/lib/db/queries.ts` - Complex queries need comments
-- `src/lib/football/match-analysis.ts` - Extraction logic unclear
-- Various worker files - Job processing logic undocumented
-- Priority: Medium
+**API-Football Single Point of Failure:**
+- Risk: All fixture data, odds, injuries, predictions come from one API provider
+- Impact: No data refreshes if API-Football is down; circuit breaker prevents cascading failures but users see stale data
+- Migration plan: Difficult to replace - API-Football is the standard in sports data APIs. Implement aggressive caching (24+ hour TTL for non-live data), cache warmup strategy
 
-### No Architecture Documentation
+**PostgreSQL Schema Changes Require Migrations:**
+- Risk: Drizzle ORM generates migrations; manual migrations exist but naming collision (003_) shows weak process
+- Impact: Failed migrations could corrupt data or lock tables; rollback not automated
+- Migration plan: Enforce migration naming convention (YYYYMMDD_description), implement automated rollback testing, document backup procedure before migrations
 
-**Missing:**
-- High-level system architecture diagram
-- Data flow documentation
-- Deployment guide
-- Priority: Medium
+## Missing Critical Features
+
+**No Request Transaction Support:**
+- Problem: Some operations (like prediction scoring) should be atomic across multiple table updates, but current code executes multiple separate queries
+- Blocks: Implementing race-condition-free settlement logic, ensuring consistency when multiple processes access same data
+- Implementation: Implement transaction support at database layer, wrap critical operations in transaction contexts
+
+**No Duplicate Content Prevention Across Restarts:**
+- Problem: Deduplication logic in `src/lib/content/deduplication.ts` runs in-process; if app restarts during content generation, duplicate detection lost
+- Blocks: Guaranteeing unique content across deployments, running multiple instances
+- Implementation: Store deduplication hashes in database or Redis, check before insertion instead of in-memory only
+
+**No Job Persistence After Queue Clear:**
+- Problem: If Redis is cleared accidentally, all queued jobs lost; no backup queue state
+- Blocks: Running multiple app instances with queue failover
+- Implementation: Snapshot queue state periodically to database, implement queue recovery on startup
+
+## Test Coverage Gaps
+
+**Database Query Module:**
+- What's not tested: 2094-line queries.ts file has no visible test file; complex query logic (aggregations, joins, filtering) untested
+- Files: `src/lib/db/queries.ts`
+- Risk: Queries returning wrong data won't be caught; schema changes break queries silently
+- Priority: High - implement unit tests for critical queries (getMatchById, upsertPrediction, getLeaderboard, etc.)
+
+**Content Generation and Deduplication:**
+- What's not tested: Content generator validation, deduplication logic, prompt building untested
+- Files: `src/lib/content/generator.ts`, `src/lib/content/deduplication.ts`, `src/lib/content/prompts.ts`
+- Risk: Generated content could have duplicates, validation rules could fail silently, prompts could have formatting issues
+- Priority: High - implement tests for deduplication edge cases, prompt formatting, validation rules
+
+**Worker Job Processing:**
+- What's not tested: Queue workers (fixtures, live-score, content, backfill) have no visible tests
+- Files: `src/lib/queue/workers/*.ts`
+- Risk: Job processing logic could fail in production without early detection; error handling untested
+- Priority: High - create mock queue and test job success/failure paths
+
+**API Client Error Handling:**
+- What's not tested: API retry logic, circuit breaker, rate limit detection untested
+- Files: `src/lib/utils/api-client.ts`, `src/lib/utils/circuit-breaker.ts`
+- Risk: Retry logic could fail under specific error conditions, circuit breaker state transitions untested
+- Priority: Medium - implement integration tests for API resilience patterns
+
+**Page Components:**
+- What's not tested: Large page components (matches, leaderboard, models) have no visible test files
+- Files: `src/app/matches/[id]/page.tsx`, `src/app/leaderboard/page.tsx`, `src/app/models/[id]/page.tsx`
+- Risk: UI rendering bugs, data fetching failures won't be caught
+- Priority: Medium - extract pure components and unit test, add visual regression tests
 
 ---
 
-*Concerns audit: 2026-01-27*
+*Concerns audit: 2026-01-31*

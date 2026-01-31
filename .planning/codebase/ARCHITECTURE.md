@@ -1,370 +1,270 @@
 # Architecture
 
-**Analysis Date:** 2026-01-27
+**Analysis Date:** 2026-01-31
 
 ## Pattern Overview
 
-**Overall:** Event-driven, queue-based architecture with Next.js 16 App Router for web UI and API routes
+**Overall:** Event-driven, multi-layered Next.js application with asynchronous job queue architecture.
 
 **Key Characteristics:**
-- Server Components by default (async React components with direct DB access)
-- REST API endpoints for external integrations and admin operations
-- BullMQ job queues for async processing (predictions, content generation, settlement)
-- Redis caching layer for expensive database queries and API-Football responses
-- PostgreSQL with Drizzle ORM for persistent storage
-- Separate Redis connections for caching (ioredis) and queues (ioredis) to avoid conflicts
+- Separates concerns between web layer (Next.js), background jobs (BullMQ), and data layer (PostgreSQL)
+- Time-coordinated job scheduling relative to football match kickoff times
+- Queue-first approach: all predictions and analysis run async via workers
+- Cache layer for hot data (Redis)
+- Modular service layer for domain-specific logic
 
 ## Layers
 
-### Presentation Layer (Next.js App Router)
+**Web Layer:**
+- Purpose: Server-side rendered pages and API endpoints
+- Location: `src/app/`
+- Contains: Next.js pages (SSR), API routes (REST endpoints), middleware
+- Depends on: Service layer, DB queries, cache
+- Used by: Browser clients, external API consumers
 
-**Purpose:** Server-side rendered pages and API endpoints
+**Job Queue Layer:**
+- Purpose: Asynchronous background job processing with timing guarantees
+- Location: `src/lib/queue/`
+- Contains: Job schedulers, worker definitions, queue setup, dead-letter handling
+- Depends on: Redis (BullMQ), DB queries, service layer
+- Used by: Scheduled jobs, cron triggers, manual API calls
 
-**Location:** `src/app/`
+**Service Layer:**
+- Purpose: Domain-specific business logic and integrations
+- Location: `src/lib/` (modular: `football/`, `llm/`, `content/`, `cache/`, etc.)
+- Contains: Football API client, LLM providers, content generation, scoring logic
+- Depends on: External APIs, utilities, validation
+- Used by: Job workers, API routes, components
 
-**Contains:**
-- Page routes (`page.tsx`) - Server Components that fetch data directly
-- API routes (`api/`) - REST endpoints for programmatic access
-- Layouts (`layout.tsx`) - Root layout with navigation and footer
-- Error boundaries (`error.tsx`, `global-error.tsx`)
+**Data Layer:**
+- Purpose: Database schema and query operations
+- Location: `src/lib/db/`
+- Contains: Drizzle schema definitions, parameterized queries, migrations
+- Depends on: PostgreSQL
+- Used by: All other layers via `getDb()` singleton
 
-**Dependencies:**
-- Uses `getDb()` from `@/lib/db` for direct database queries
-- Uses `withCache()` from `@/lib/cache/redis` for caching
-- Calls queue jobs via `@/lib/queue` for async operations
-
-**Used by:**
-- Browser requests to `/matches`, `/leaderboard`, `/leagues/*`
-- External API clients calling `/api/*` endpoints
-- Cron schedulers calling `/api/cron/*` endpoints
-
-### API Layer (REST Endpoints)
-
-**Purpose:** Programmatic access to data and admin operations
-
-**Location:** `src/app/api/`
-
-**Contains:**
-- Public endpoints: `/api/matches`, `/api/leaderboard`, `/api/health`
-- Admin endpoints: `/api/admin/*` (queue management, rescore, DLQ)
-- Cron endpoints: `/api/cron/*` (scheduled tasks)
-- OG image generation: `/api/og/*` (social share images)
-
-**Key Patterns:**
-```typescript
-// src/app/api/matches/route.ts
-export async function GET(request: NextRequest) {
-  // 1. Rate limiting check
-  const rateLimitResult = await checkRateLimit(`matches:${rateLimitKey}`, RATE_LIMIT_PRESETS.api);
-  if (!rateLimitResult.allowed) return new NextResponse(null, { status: 429 });
-
-  // 2. Validate query params with Zod
-  const { data: validatedQuery, error } = validateQuery(getMatchesQuerySchema, queryParams);
-  if (error) return error;
-
-  // 3. Fetch from database (optionally cached)
-  const matches = await getUpcomingMatches(48);
-
-  // 4. Return JSON response
-  return NextResponse.json(
-    { success: true, matches, count: matches.length },
-    { headers: createRateLimitHeaders(rateLimitResult) }
-  );
-}
-```
-
-**Admin Endpoints Security:**
-- Require `X-Admin-Password` header (checked with timing-safe comparison)
-- Additional rate limiting via `RATE_LIMIT_PRESETS.admin`
-- Queue dashboard at `/api/admin/queues/[[...path]]` using Bull Board
-
-### Service Layer (Queue Workers)
-
-**Purpose:** Async processing for long-running operations
-
-**Location:** `src/lib/queue/workers/`
-
-**Workers:**
-- `predictions.worker.ts` - Generate LLM predictions for matches
-- `fixtures.worker.ts` - Fetch upcoming fixtures from API-Football
-- `analysis.worker.ts` - Fetch and store match analysis (odds, injuries, H2H)
-- `odds.worker.ts` - Refresh betting odds
-- `lineups.worker.ts` - Fetch team lineups before kickoff
-- `live-score.worker.ts` - Monitor live match scores
-- `scoring.worker.ts` - Calculate prediction scores after match finishes
-- `content.worker.ts` - Generate AI content for SEO (blog posts, match previews)
-- `backfill.worker.ts` - Historical data backfill operations
-- `model-recovery.worker.ts` - Re-enable models after health checks
-- `standings.worker.ts` - Update league standings
-
-**Queue Names (from `src/lib/queue/index.ts`):**
-```typescript
-export const QUEUE_NAMES = {
-  ANALYSIS: 'analysis-queue',
-  PREDICTIONS: 'predictions-queue',
-  LINEUPS: 'lineups-queue',
-  ODDS: 'odds-queue',
-  LIVE: 'live-queue',
-  SETTLEMENT: 'settlement-queue',
-  CONTENT: 'content-queue',
-  FIXTURES: 'fixtures-queue',
-  BACKFILL: 'backfill-queue',
-  MODEL_RECOVERY: 'model-recovery-queue',
-  STANDINGS: 'standings-queue',
-};
-```
-
-**Job Configuration:**
-- 5 retry attempts with exponential backoff (30s → 480s)
-- Separate connection from cache Redis to avoid conflicts
-- Queue-specific timeouts (10min for predictions, 5min for analysis)
-
-### Data Access Layer (Drizzle ORM)
-
-**Purpose:** Type-safe database operations
-
-**Location:** `src/lib/db/`
-
-**Files:**
-- `index.ts` - Database connection pool and Drizzle instance (`getDb()`)
-- `schema.ts` - All table definitions with indexes and constraints
-- `queries.ts` - Reusable query functions (1700+ lines)
-
-**Query Pattern with Caching:**
-```typescript
-// src/lib/db/queries.ts
-export async function getActiveCompetitions(): Promise<Competition[]> {
-  return withCache(
-    cacheKeys.activeCompetitions(),
-    CACHE_TTL.COMPETITIONS, // 5 minutes
-    async () => {
-      const db = getDb();
-      return db.select().from(competitions).where(eq(competitions.active, true));
-    }
-  );
-}
-```
-
-**Transaction Pattern (for betting system):**
-```typescript
-// Lock ordering: bets -> modelBalances (prevents deadlocks)
-return db.transaction(async (tx) => {
-  await tx.insert(bets).values(betsData);
-  const balance = await tx.select().from(modelBalances)...
-  await tx.update(modelBalances).set({
-    currentBalance: sql`${modelBalances.currentBalance} - ${totalStake}`,
-  })...
-});
-```
-
-### Caching Layer (Redis)
-
-**Purpose:** Reduce database load and cache API-Football responses
-
-**Location:** `src/lib/cache/redis.ts`
-
-**TTL Presets:**
-```typescript
-export const CACHE_TTL = {
-  FIXTURES_LIVE: 30,      // Live match data (frequent updates)
-  FIXTURES_SCHEDULED: 300, // Upcoming fixtures (5 min)
-  STANDINGS: 14400,        // League standings (4 hours)
-  PREDICTIONS: 86400,      // Pre-match data (24 hours)
-  ODDS: 600,               // Betting odds (10 min)
-  LEADERBOARD: 60,         // Leaderboard (1 min)
-  MODELS: 300,             // Model list (5 min)
-};
-```
-
-**Cache Key Pattern:**
-```typescript
-export const cacheKeys = {
-  // API-Football
-  fixtures: (date: string) => `api:fixtures:${date}`,
-  odds: (fixtureId: number) => `api:odds:${fixtureId}`,
-  
-  // Database queries
-  activeModels: () => 'db:models:active',
-  leaderboard: (filters: string) => `db:leaderboard:${hashForCacheKey(filters)}`,
-  
-  // Invalidation
-  async function invalidateMatchCaches(matchId: string) {
-    await cacheDeletePattern('db:leaderboard:*');
-    await cacheDelete(cacheKeys.overallStats());
-    await cacheDelete(cacheKeys.matchPredictions(matchId));
-  }
-};
-```
-
-### External Integrations Layer
-
-**Purpose:** API-Football data and LLM predictions
-
-**Location:** `src/lib/football/` and `src/lib/llm/`
-
-**API-Football (`src/lib/football/`):**
-- `api-client.ts` - HTTP client with rate limiting (10 req/min)
-- `api-football.ts` - Main API functions (fixtures, odds, injuries)
-- `standings.ts` - League standings fetching and storage
-- `match-analysis.ts` - Comprehensive match data aggregation
-- `prompt-builder.ts` - LLM prompt construction
-
-**LLM Providers (`src/lib/llm/`):**
-- `providers/together.ts` - 35+ open-source models via Together AI
-- `budget.ts` - Daily cost tracking and limits
-- `prompt.ts` - Prediction prompt templates
-
-**Key Integration Points:**
-```typescript
-// src/lib/llm/providers/together.ts
-export class TogetherProvider {
-  async predict(homeTeam: string, awayTeam: string, competition: string) {
-    // Check daily budget
-    const today = new Date().toISOString().split('T')[0];
-    const usage = await getModelUsageToday(this.id);
-    if (usage.totalCost > DAILY_BUDGET) {
-      throw new Error('Daily budget exceeded');
-    }
-
-    // Call Together AI API
-    const response = await fetch('https://api.together.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${TOGETHER_API_KEY}` },
-      body: JSON.stringify({
-        model: this.model,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    });
-
-    // Update usage and return prediction
-    await updateModelUsage(this.id, today, tokens, cost);
-    return parsePrediction(response);
-  }
-}
-```
+**Presentation Layer:**
+- Purpose: React components for UI rendering
+- Location: `src/components/`
+- Contains: UI primitives, feature components, layout components
+- Depends on: Data queries, utility functions
+- Used by: Pages in `src/app/`
 
 ## Data Flow
 
-### 1. Match Lifecycle (Complete Flow)
+**Match Lifecycle Flow (Core Business Logic):**
 
-```
-API-Football ──► fixtures.worker ──► upsertMatch ──► matches table
-                                              │
-                                              ▼
-                     ◄──────────────────────────────────────◄
-                    │                                       │
-match───────────────┴──────────────────────────────────────┘
-status change?                                             │
-     │                                                     │
-     ▼                                                     │
-analysis.worker ──► fetch odds/injuries/H2H ──► match_analysis table
-                                              │
-                                              ▼
-                               ◄───────────────────────────────◄
-                              │                                │
-lineups needed? ◄─────────────┴────────────────────────────────┘
-     │                                                      │
-     ▼                                                      │
-lineups.worker ──► fetch lineups ──► match_analysis (updated)
-     │
-     ▼
-predictions.worker ──► LLM calls (35 models) ──► predictions table
-     │
-     ▼
-live-score.worker ──► poll API-Football ──► updateMatchResult
-     │
-     ▼
-scoring.worker ──► calculate Kicktipp scores ──► updatePredictionScores
-                ──► updateModelStreak
-                ──► invalidateMatchCaches
-```
+1. **Fetch Fixtures (T-6h to T-48h before kickoff)**
+   - Job: `fetchFixtures` via cron or manual trigger
+   - Calls: `src/lib/football/api-client.ts` → API-Football
+   - Stores: Matches in `matches` table with `status: 'scheduled'`
+   - Next: Scheduler queues analysis jobs
 
-### 2. API Request Flow
+2. **Analyze Match (T-6h)**
+   - Job: `analyzeMatch` (T-6h before kickoff)
+   - Calls: `src/lib/football/match-analysis.ts` → team stats, H2H, form
+   - Calls: `src/lib/football/standings.ts` → current league positions
+   - Stores: Analysis in `matchAnalysis` table
+   - Next: Scheduler queues odds refresh job
 
-```
-Browser ──► Next.js Route Handler
-              │
-              ├──► Middleware (CORS, body size check)
-              │
-              ├──► Rate Limiting (60 req/min for public, 10/min for admin)
-              │
-              ├──► Validation (Zod schemas)
-              │
-              ├──► Database Query (optionally cached)
-              │   └──► withCache(key, ttl, fetchFn)
-              │
-              └──► JSON Response
-```
+3. **Refresh Odds (T-2h)**
+   - Job: `refreshOdds` (T-2h before kickoff)
+   - Calls: `src/lib/football/api-client.ts` → API-Football odds
+   - Stores: Quota scores in `matches.quota{Home,Draw,Away}` (2-6 points)
+   - Next: Scheduler queues lineups job
 
-### 3. Admin Operation Flow
+4. **Fetch Lineups (T-60m)**
+   - Job: `fetchLineups` (T-60m before kickoff)
+   - Calls: `src/lib/football/lineups.ts` → API-Football lineups
+   - Stores: Lineup info in `matchAnalysis` table
+   - Next: Scheduler queues predictions job
 
-```
-Admin ──► POST /api/admin/rescore
-         │
-         ├──► Admin Auth (X-Admin-Password header)
-         │
-         ├──► Rate Limiting (10 req/min)
-         │
-         ├──► Query: getMatchesNeedingRescore()
-         │
-         └──► Queue: settlementQueue.add(JOB_TYPES.SETTLE_MATCH, { matchId })
-                     │
-                     └──► scoring.worker processes async
-```
+5. **Predict Match (T-30m, T-5m retry)**
+   - Job: `predictMatch` (T-30m, can retry at T-5m)
+   - Calls: `src/lib/llm/index.ts` → Get active providers (filters auto-disabled)
+   - Calls: `src/lib/llm/providers/together.ts` → Together AI API (35 models)
+   - Calls: `src/lib/llm/prompt.ts` → Build match context prompt
+   - Parses: LLM JSON response (score predictions: home/away with confidence)
+   - Stores: Predictions in `predictions` table + `bets` table (for historical tracking)
+   - Handles: JSON parse failures with automatic retries, model auto-disable on 3+ failures
+   - Next: Scheduler queues live monitoring job
 
-## State Management
+6. **Monitor Live (Kickoff + every 60s while live)**
+   - Job: `monitorLive` (starts at kickoff, repeats every 60s)
+   - Calls: `src/lib/football/api-client.ts` → API-Football live scores
+   - Updates: `matches.status`, `matches.matchMinute`, `matches.homeScore`, `matches.awayScore`
+   - Stops: When match status = 'finished'
+   - Next: Scheduler queues settlement job
 
-**Server State:**
-- Direct database queries in Server Components
-- `Suspense` boundaries for async data loading
-- No global client state library (React Context for local state only)
+7. **Settle Match (When match finishes)**
+   - Job: `settleMatch` (auto-triggered when status = 'finished')
+   - Calls: `src/lib/services/points-calculator.ts` → Calculate Kicktipp points for each prediction
+   - Calculates:
+     - Exact score: 10 points
+     - Correct result tendency: quota points (2-6 based on rarity)
+     - Streak tracking and model updates
+   - Stores: Points in `predictions.points`, updates `models.currentStreak*`
+   - Next: Scheduler queues roundup job
 
-**Client State:**
-- URL-based state (query parameters for filters)
-- Local component state with `useState`/`useReducer`
-- URL search params for match search (`/matches?q=manchester`)
+8. **Generate Roundup (After settlement)**
+   - Job: `generateContent` with type='generate-roundup'
+   - Calls: `src/lib/content/generator.ts` → Content generation via Together AI
+   - Prompts LLM with match results and model predictions
+   - Stores: Blog post in `blogPosts` + `matchRoundups` tables
+   - Publishes: New blog post visible at `/blog/[slug]`
+
+**Query/Read Flow (Web Layer):**
+
+1. **Homepage request** → `/api/matches?type=upcoming`
+   - Route: `src/app/api/matches/route.ts`
+   - Rate limited: 60 req/min per IP
+   - Calls: `src/lib/db/queries.ts` → `getUpcomingMatches()` + `getOverallStats()`
+   - Cached: 60s via Redis
+   - Returns: Upcoming matches with all predictions
+
+2. **Leaderboard request** → `/api/stats/leaderboard`
+   - Route: `src/app/api/stats/leaderboard/route.ts`
+   - Calls: `src/lib/db/queries/stats.ts` → `getLeaderboard()` (complex aggregation)
+   - Cached: 5min via Redis
+   - Returns: Model rankings by points, win rate, accuracy
+
+3. **Match detail request** → `/matches/[id]`
+   - Page: `src/app/matches/[id]/page.tsx` (Server Component)
+   - Calls: `src/lib/db/queries.ts` → `getMatchWithPredictions()`
+   - Renders: Match card, all model predictions, live score updates
+   - Cache busting: Uses `dynamic = 'force-dynamic'` if match in-progress
+
+**State Management:**
+
+- **In-Memory:** Job state via Redis (BullMQ)
+- **Database:** PostgreSQL stores all persistent state (matches, predictions, models, blog posts)
+- **Cache Layer:** Redis with TTL-based invalidation
+  - Active competitions: 24h TTL
+  - Leaderboard stats: 5min TTL
+  - Match predictions: 60s TTL
+  - Cache invalidation: Fire-and-forget on mutations (logged if fail)
+
+## Key Abstractions
+
+**Match (Entity):**
+- Purpose: Represents a single football match with live score tracking
+- Examples: `src/lib/db/schema.ts` lines 16-49
+- Pattern: Row in `matches` table with fields for teams, kickoff, score, status, metadata
+- Lifecycle: Created at fetch → Updated through live monitoring → Settled with points
+
+**Prediction (Entity):**
+- Purpose: One model's score prediction for one match
+- Examples: `src/lib/db/schema.ts`, related type `PredictionWithModel` in `src/types/index.ts`
+- Pattern: 1:1 mapping of (Model, Match, Prediction) stored in `predictions` table
+- Scoring: Kicktipp system (exact score 10pts, correct result 2-6pts based on odds quota)
+
+**LLMProvider (Service):**
+- Purpose: Abstraction over different LLM APIs and model implementations
+- Examples: `src/lib/llm/providers/base.ts`, `src/lib/llm/providers/together.ts`
+- Pattern: Base class with `predictMatch()` method, implementations handle API calls
+- Data: Each provider has id, tier, cost, rate limits, health tracking
+
+**Queue Job (Event):**
+- Purpose: Async work unit with payload and retry logic
+- Examples: `src/lib/queue/types.ts` (all job payload interfaces)
+- Pattern: Named job type (e.g., 'predict-match') with typed payload, routed to worker
+- Execution: BullMQ ensures exactly-once delivery, auto-retries, dead-letter handling
+
+**Query (Data Access):**
+- Purpose: Named database queries with caching layer
+- Examples: `src/lib/db/queries.ts` (2000+ lines of aggregations and filters)
+- Pattern: Async function returning typed data, wrapped in `withCache()` for TTL caching
+- Resilience: Fire-and-forget cache invalidation, DB errors handled and logged
+
+## Entry Points
+
+**Web Entry:**
+- Location: `src/app/layout.tsx`
+- Triggers: Browser requests to `/`
+- Responsibilities: Root layout, metadata, schema.org JSON-LD, navigation, footer
+
+**API Entry (REST):**
+- Location: `src/app/api/*/route.ts`
+- Triggers: HTTP requests to `/api/...`
+- Pattern: GET/POST handlers with rate limiting, validation, error handling
+- Middleware: `src/middleware.ts` adds CORS, body size checks before handlers
+
+**Job Entry (Background):**
+- Location: `src/lib/queue/scheduler.ts`, `src/lib/queue/workers/*.ts`
+- Triggers: Time-based scheduling (relative to match kickoff) or manual API calls
+- Pattern: Job types defined in `src/lib/queue/types.ts`, workers handle in `workers/` dir
+- Execution: BullMQ dequeues → calls appropriate worker → stores result in DB
+
+**Cron Entry (Periodic):**
+- Location: `src/app/api/cron/*/route.ts`
+- Triggers: External cron service (e.g., GitHub Actions, external cron)
+- Pattern: GET handler that manually enqueues repeatable jobs
+- Examples: `/api/cron/update-stats` → enqueues `fetchFixtures`, `/api/cron/generate-content` → enqueues content generation
 
 ## Error Handling
 
-**Layers:**
-1. **Middleware** - CORS validation, body size limits (`src/middleware.ts`)
-2. **Validation** - Zod schema validation (`src/lib/validation/middleware.ts`)
-3. **Rate Limiting** - Token bucket algorithm (`src/lib/utils/rate-limiter.ts`)
-4. **Logging** - Structured Pino logging (`src/lib/logger/modules.ts`)
-5. **Error Boundaries** - React error boundaries in pages
+**Strategy:** Layered error handling with logging and circuit breakers
 
-**Error Response Format:**
-```typescript
-{
-  success: false,
-  error: {
-    code: 'VALIDATION_ERROR' | 'RATE_LIMIT_EXCEEDED' | 'INTERNAL_ERROR',
-    message: 'Human-readable message',
-    details: [{ field: 'paramName', message: 'Specific error' }],
-  }
-}
-```
+**Patterns:**
+
+1. **API Client Layer** (`src/lib/utils/api-client.ts`)
+   - Wraps HTTP calls with circuit breaker
+   - Retries with exponential backoff (configurable per endpoint)
+   - Logs all failures with context (URL, status, response body)
+   - Throws typed errors for caller to handle
+
+2. **LLM Provider Layer** (`src/lib/llm/providers/base.ts`)
+   - JSON parse failures → retry with backlog tracking
+   - API timeouts → exponential backoff (3 retries)
+   - Auto-disable model after 3+ consecutive failures
+   - Stores `consecutiveFailures`, `lastFailureAt`, `failureReason` in models table
+
+3. **Queue Worker Layer** (`src/lib/queue/workers/*.ts`)
+   - Job failures go to dead-letter queue if retries exhausted
+   - Worker catches errors → logs with job context → throws for BullMQ retry
+   - Dead-letter queue accessible via `/api/admin/dlq` for inspection
+
+4. **Web Route Layer** (`src/app/api/*/route.ts`)
+   - Try/catch wraps all logic
+   - 400: Validation errors (sanitized)
+   - 429: Rate limit exceeded
+   - 500: Internal errors (sanitized, logged with request ID)
+   - Returns: JSON error response with status
+
+5. **Component Layer** (`src/app/*/error.tsx`)
+   - Error boundary components catch React rendering errors
+   - Display user-friendly error message
+   - Log error context to Sentry
 
 ## Cross-Cutting Concerns
 
 **Logging:**
-- Pino structured logging with named loggers per area
-- `loggers.db`, `loggers.cache`, `loggers.queue`, `loggers.llm`
-- Request context middleware for tracing
+- Framework: Pino (JSON structured logging)
+- Modules: `src/lib/logger/modules.ts` exports named loggers (db, queue, llm, api, etc.)
+- Usage: `loggers.queue.info({jobId, matchId}, 'Prediction job started')`
+- Output: Structured JSON to stdout (Sentry in production)
 
 **Validation:**
-- Zod for all input validation (query params, body, params)
-- Centralized schemas in `src/lib/validation/schemas.ts`
-
-**Rate Limiting:**
-- Token bucket algorithm per endpoint category
-- Configurable presets: `RATE_LIMIT_PRESETS.api`, `admin`, `cron`
+- Framework: Zod schemas
+- Location: `src/lib/validation/schemas.ts` for API request validation
+- Middleware: `src/lib/validation/middleware.ts` wraps query/body parsing
+- Usage: `validateQuery()` returns `{data, error}`, error is already formatted HTTP response
 
 **Authentication:**
-- Admin routes require `X-Admin-Password` header
-- Cron routes require `secret` query parameter
-- No user authentication (public platform)
+- Admin routes: `src/lib/utils/admin-auth.ts` checks `X-Admin-Password` header
+- Stats API: `src/lib/utils/stats-auth.ts` allows public access with optional token
+- Implementation: Middleware pattern, inline in route handlers
 
----
+**Rate Limiting:**
+- Framework: Redis-based counter with sliding window
+- Location: `src/lib/utils/rate-limiter.ts`
+- Presets: 60 req/min for public API, 30 req/min for expensive endpoints
+- Headers: Returns `RateLimit-*` headers, `Retry-After` when exceeded
+- Keying: IP address for public routes, token for authenticated
 
-*Architecture analysis: 2026-01-27*
+**Caching:**
+- Framework: Redis with typed key builders
+- Location: `src/lib/cache/redis.ts`
+- Pattern: `withCache(key, ttl, async () => query())` wraps expensive queries
+- Invalidation: Fire-and-forget `cacheDelete()` on mutations (errors logged, not thrown)
+

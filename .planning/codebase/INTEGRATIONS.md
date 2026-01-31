@@ -1,261 +1,173 @@
 # External Integrations
 
-**Analysis Date:** 2026-01-27
+**Analysis Date:** 2026-01-31
 
 ## APIs & External Services
 
-### Football Data: API-Football
+**Football Data:**
+- API-Football (api-sports.io)
+  - What it's used for: Match fixtures, lineups, statistics, competition standings, head-to-head data
+  - SDK/Client: Custom client in `src/lib/football/api-football.ts` using native fetch
+  - Auth: `API_FOOTBALL_KEY` environment variable (header: `x-apisports-key`)
+  - Rate limit handling: 300ms delay between requests, configured retry logic in `src/lib/utils/retry-config.ts`
+  - Base URL: `https://v3.football.api-sports.io`
 
-**Service:** API-Football v3
-**Purpose:** Fetch football match data, standings, odds, lineups, and statistics
-**Documentation:** https://dashboard.api-football.com/
+**LLM Providers:**
+- Together AI (Primary)
+  - What it's used for: Match predictions, content generation, roundup analysis
+  - SDK/Client: Custom OpenAI-compatible provider in `src/lib/llm/providers/together.ts`
+  - Auth: `TOGETHER_API_KEY` environment variable (Authorization: Bearer)
+  - Endpoint: `https://api.together.xyz/v1/chat/completions`
+  - Models: 29 open-source models configured with JSON mode support
+    - DeepSeek V3.1, DeepSeek R1
+    - Moonshot, Claude, Llama 3.3, Mistral, Qwen
+    - Models categorized by tier: free, ultra-budget, budget, premium
+  - Cost tracking: Per-model pricing configured, budget control via `DAILY_BUDGET`
+  - Budget enforcement: Model auto-disabling when budget exceeded (tracked in database)
 
-**Configuration:**
-- API Key: `API_FOOTBALL_KEY` environment variable
-- Header: `x-apisports-key`
-
-**Implementation:**
-- Location: `src/lib/football/api-football.ts`
-- Base URL: `https://v3.football.api-sports.io`
-- Rate limiting: 300ms delay between requests (100 req/day free tier)
-
-**Endpoints Used:**
-| Endpoint | Purpose | Frequency |
-|----------|---------|-----------|
-| `/fixtures` | Match fixtures and schedules | Every 3 hours |
-| `/fixtures/events` | Match events (goals, cards) | Per match |
-| `/odds` | Betting odds | Every 10 minutes pre-match |
-| `/standings` | League standings | Daily |
-| `/teams` | Team information | As needed |
-| `/teams/statistics` | Team statistics | Pre-match analysis |
-| `/headtohead` | Historical matchups | Pre-match analysis |
-| `/injuries` | Player injuries | Pre-match |
-| `/lineups` | Starting formations | Near kickoff |
-
-**Competitions Tracked:**
-- UEFA Champions League (league ID: e.g., 2)
-- Premier League (league ID: e.g., 39)
-- Other configured in `src/lib/football/competitions.ts`
-
-**Error Handling:**
-- Retry mechanism with exponential backoff
-- Timeout: 10 seconds per request
-- Circuit breaker pattern for resilience
-
-### LLM Provider: Together AI
-
-**Service:** Together AI
-**Purpose:** Generate match predictions and blog content using open-source LLMs
-**Documentation:** https://docs.together.ai/
-
-**Configuration:**
-- API Key: `TOGETHER_API_KEY` environment variable
-- Endpoint: `https://api.together.xyz/v1/chat/completions`
-
-**Implementation:**
-- Predictions: `src/lib/llm/providers/together.ts`
-- Content generation: `src/lib/content/together-client.ts`
-- Model: `meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8`
-
-**Models Available (29 total):**
-
-| Model Family | Models | Tier |
-|--------------|--------|------|
-| DeepSeek | V3.1, R1 | Budget, Premium |
-| Moonshot | Kimi K2 (2 variants) | Budget |
-| Qwen | 3 235B, 3 Next 80B, 2.5 7B/72B Turbo | Premium, Budget |
-| Meta Llama | 4 Maverick, 4 Scout, 3.3 70B, 3.1 8B/405B, 3.2 3B, 3 8B Lite, 3 70B | Budget, Premium, Ultra-budget |
-| OpenAI OSS | GPT-OSS 20B | Ultra-budget |
-| Deep Cogito | v2 70B, v2 109B MoE, v2 405B, v2.1 671B | Budget, Premium |
-| Mistral | Ministral 3 14B, Small 3 24B, 7B v0.2/v0.3 | Budget |
-| NVIDIA | Nemotron Nano 9B v2 | Budget |
-| Google | Gemma 3n E4B | Ultra-budget |
-| Essential AI | Rnj-1 Instruct | Budget |
-| Marin Community | Marin 8B Instruct | Ultra-budget |
-
-**Pricing (per 1M tokens):**
-- Llama 4 Maverick: $0.27 input, $0.85 output
-- Ultra-budget models: $0.02-$0.20 per 1M tokens
-- Premium models: $1.25-$7.00 per 1M tokens
-
-**Budget Control:**
-- `DAILY_BUDGET` environment variable (default: $1.00/day)
-- Usage tracking per model in `model_usage` table
+**SEO & Indexing:**
+- IndexNow
+  - What it's used for: Notify search engines (Bing, Yandex) of URL updates
+  - Implementation: `src/lib/utils/indexnow.ts`
+  - Auth: `INDEXNOW_KEY` environment variable
+  - Endpoints:
+    - https://api.indexnow.org/indexnow
+    - https://www.bing.com/indexnow
+    - https://search.yandex.com/indexnow
 
 ## Data Storage
 
-### Database: PostgreSQL
+**Databases:**
+- PostgreSQL (Primary data store)
+  - Connection: Via `DATABASE_URL` environment variable
+  - Client: `pg` v8.17.2 driver
+  - ORM: Drizzle ORM v0.45.1
+  - Connection pooling: Configurable pool (min: 2, max: 10)
+  - Schema: `src/lib/db/schema.ts`
+    - Tables: competitions, matches, models, modelUsage, matchAnalysis, leagueStandings, seasons, modelBalances, bets, predictions, autoDisabledModels
+  - Migrations: Drizzle Kit migrations in `drizzle/` directory
 
-**Provider:** Self-hosted PostgreSQL (recommended via Coolify)
-**Connection:**
-- Environment: `DATABASE_URL`
-- Format: `postgresql://user:password@host:5432/database`
-- Client: Drizzle ORM with pg driver
+**Caching:**
+- Redis
+  - Connection: Via `REDIS_URL` environment variable (optional)
+  - Supports: Standard Redis URL or Upstash Redis REST API
+  - Client: ioredis v5.9.2 with health checks and adaptive cooldown
+  - Use cases:
+    - Query result caching (matches, standings, statistics)
+    - Cache warming on startup (frequently accessed data)
+  - Graceful degradation: Application continues without Redis if URL not set
+  - Health check: 30s interval when healthy, 5s when degraded
 
-**ORM Configuration:**
-- Location: `src/lib/db/index.ts`, `src/lib/db/schema.ts`
-- Pool settings:
-  - Max connections: `DB_POOL_MAX` (default: 10)
-  - Min connections: `DB_POOL_MIN` (default: 2)
-  - Idle timeout: 30 seconds
-  - Connection timeout: 5 seconds
+**Job Queue Storage:**
+- Redis
+  - Connection: Same `REDIS_URL` as caching (BullMQ requirement)
+  - Queue library: BullMQ v5.34.3
+  - Job types: `src/lib/queue/types.ts`
+    - Repeatable: fetch-fixtures (6h), backfill-missing, check-disabled-models, update-standings
+    - Per-match: analyze-match, refresh-odds, fetch-lineups, predict-match, monitor-live, settle-match, generate-roundup
+    - Utility: catch-up scheduling
+  - Queue UI: Bull Board (Express + API) for job monitoring
 
-**Schema Tables:**
-- `competitions` - Tracked leagues (UCL, EPL, etc.)
-- `matches` - Match data with scores and status
-- `models` - LLM models with health tracking
-- `predictions` - Model predictions with scoring
-- `model_usage` - Daily cost tracking
-- `model_balances` - Budget allocation per model
-- `bets` - Betting records
-- `content` - Generated blog content
-- `match_content` - Match-specific generated content
-- `events` - Match events
-- `odds` - Betting odds snapshots
-- `team_statistics` - Pre-match team stats
-- `head_to_head` - Historical matchups
+## Authentication & Identity
 
-### Cache: Redis
+**Auth Provider:**
+- Custom implementation via environment variables
+- Mechanisms:
+  - `CRON_SECRET` - Authentication for cron/scheduled task endpoints
+    - Used in: `src/app/api/cron/*` routes
+    - Validation: Header-based secret comparison
+  - `ADMIN_PASSWORD` - Password protection for admin pages (if configured)
+    - Used in: `src/app/admin/*` routes
+  - No third-party auth provider integrated (Clerk, Auth0, Firebase not used)
 
-**Provider:** Redis (self-hosted or cloud)
-**Connection:**
-- Environment: `REDIS_URL`
-- Client: ioredis 5.9.2
+## Monitoring & Observability
 
-**Implementation:**
-- Location: `src/lib/cache/redis.ts`
-- Connection name: `bettingsoccer-cache`
-- Connection timeout: 10 seconds
-- Command timeout: 5 seconds
-- Max retries per request: 3
+**Error Tracking:**
+- GlitchTip (via Sentry SDK)
+  - Implementation: @sentry/nextjs v10.36.0
+  - DSN: `NEXT_PUBLIC_SENTRY_DSN` environment variable
+  - Used in: Error boundaries (`src/app/error.tsx`, `src/app/global-error.tsx`)
+  - Webpack plugin: Configured in `next.config.ts`
+  - Note: Can alternatively use Sentry directly with `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`
 
-**Cache TTL Presets:**
-| Data Type | TTL | Purpose |
-|-----------|-----|---------|
-| Live fixtures | 30s | Real-time scores |
-| Scheduled fixtures | 5min | Match schedules |
-| Odds | 10min | Pre-match betting odds |
-| Lineups | 5min | Starting formations |
-| Standings | 4h | League tables |
-| Team stats | 6h | Pre-match analysis |
-| H2H data | 7d | Historical matchups |
-| Predictions | 24h | Model predictions |
-| Leaderboard | 1min | Performance rankings |
+**Logs:**
+- Pino structured logging (v10.2.1)
+  - Implementation: `src/lib/logger/index.ts` with modules in `src/lib/logger/modules.ts`
+  - Output: Pretty-printed JSON in development (pino-pretty), compact JSON in production
+  - Log levels: Configurable via `LOG_LEVEL` environment variable
+  - Format: ISO timestamps, service name, environment metadata
+  - Modules: dedicated loggers for apiFootball, db, cache, queue, llm, instrumentation, etc.
 
-**Cache Key Patterns:**
-- `api:fixtures:{date}` - Fixtures for a date
-- `api:standings:{leagueId}:{season}` - League standings
-- `db:models:active` - Active models list
-- `db:leaderboard:{hash}` - Cached leaderboard
+**Metrics & Analytics:**
+- Umami Analytics
+  - Website: Hosted at https://umami.kroam.xyz
+  - Website ID: 2e966abd-99fc-4363-8007-3737d99bc4c1
+  - Implementation: Client-side script in `src/components/analytics.tsx`
+  - Tracks: User visits, page views, events on public site
 
-## Job Queue: BullMQ + Redis
+**Queue Monitoring:**
+- Bull Board Web UI
+  - Implementation: Express middleware in API route `src/app/api/admin/queues/[[...path]]/route.ts`
+  - Accessible at: `/api/admin/queues`
+  - Shows: Job status, queue metrics, dead-letter queue
 
-**Implementation:**
-- Location: `src/lib/queue/index.ts`, `src/lib/queue/setup.ts`
-- Redis connection: Separate from cache Redis
-- Job types: 10+ queues for different operations
+## CI/CD & Deployment
 
-**Queues:**
-| Queue | Purpose | Schedule |
-|-------|---------|----------|
-| `fixtures-queue` | Fetch fixtures | Every 3 hours |
-| `predictions-queue` | Generate predictions | Every 10 min |
-| `analysis-queue` | Match analysis | Every 10 min |
-| `lineups-queue` | Fetch lineups | Near kickoff |
-| `odds-queue` | Refresh odds | Every 10 min |
-| `live-queue` | Monitor live scores | Every minute |
-| `settlement-queue` | Score predictions | Every 10 min |
-| `content-queue` | Generate blog content | Hourly + on-demand |
-| `backfill-queue` | Fill missing data | Hourly + on startup |
-| `model-recovery-queue` | Re-enable failed models | Every 30 min |
-| `standings-queue` | Update standings | Daily at 4 AM |
+**Hosting:**
+- Coolify (recommended in .env.example)
+  - Supports: PostgreSQL deployment, Redis deployment, Next.js app deployment
+  - Container-friendly: Docker-ready application structure
 
-**Job Configuration:**
-- Retry attempts: 5 with exponential backoff (30s → 480s)
-- Job timeout: 2-10 minutes (queue-dependent)
-- Remove on complete: 24 hours, 1000 jobs
-- Remove on fail: 7 days
+**CI Pipeline:**
+- GitHub Actions (inferred from directory structure, not configured in analyzed files)
+- No explicit CI config found in codebase
 
-## Authentication & Security
-
-### Cron Authentication
-
-**Implementation:** `src/lib/auth/cron-auth.ts`
-- Environment: `CRON_SECRET`
-- Purpose: Authenticate cron job endpoints
-
-### Admin Authentication
-
-**Implementation:** `src/lib/utils/admin-auth.ts`
-- Purpose: Protect admin endpoints
-
-### API Rate Limiting
-
-**Implementation:** `src/lib/utils/rate-limiter.ts`
-- Purpose: Prevent API abuse
-
-## Error Tracking: Sentry/GlitchTip
-
-**Configuration:**
-- Environment: `NEXT_PUBLIC_SENTRY_DSN`
-- Config files:
-  - `sentry.server.config.ts` - Server-side setup
-  - `sentry.client.config.ts` - Client-side setup
-  - `sentry.edge.config.ts` - Edge runtime setup
-
-**Supported Platforms:**
-- Sentry (cloud)
-- GlitchTip (self-hosted, privacy-focused)
+**Database Migrations:**
+- Drizzle Kit
+  - Commands: `db:push`, `db:migrate`, `db:generate`
+  - Migration files: `drizzle/` directory
+  - Schema definition: `src/lib/db/schema.ts`
 
 ## Environment Configuration
 
 **Required env vars:**
-| Variable | Required | Purpose |
-|----------|----------|---------|
-| `DATABASE_URL` | Yes | PostgreSQL connection |
-| `API_FOOTBALL_KEY` | Yes | Football data API |
-| `TOGETHER_API_KEY` | Yes | LLM provider |
-| `CRON_SECRET` | No | Cron endpoint auth |
-| `REDIS_URL` | No | Cache/queue Redis |
-| `DAILY_BUDGET` | No | LLM budget limit (default: 1.00) |
-| `NEXT_PUBLIC_SENTRY_DSN` | No | Error tracking |
-| `NEXT_PUBLIC_APP_URL` | No | App URL for API ref |
+- `DATABASE_URL` - PostgreSQL connection string (must be set at startup)
 
-**Optional env vars:**
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `DB_POOL_MAX` | 10 | Max DB connections |
-| `DB_POOL_MIN` | 2 | Min DB connections |
-| `LOG_LEVEL` | debug/info | Logging verbosity |
-| `NODE_ENV` | development | Environment |
+**Critical optional env vars:**
+- `API_FOOTBALL_KEY` - Required if using football data features
+- `TOGETHER_API_KEY` - Required if using LLM prediction features
+- `REDIS_URL` - Required for job queue and caching (will fail to start without it for queue operations)
+
+**Feature-specific env vars:**
+- `CRON_SECRET` - Enables scheduled task endpoints
+- `INDEXNOW_KEY` - Enables SEO URL submission
+- `NEXT_PUBLIC_SENTRY_DSN` - Enables GlitchTip error tracking
+- `NEXT_PUBLIC_APP_URL` - Sets application URL for redirects and headers
+
+**Development env vars:**
+- `NODE_ENV` - Set to 'development' or 'production'
+- `LOG_LEVEL` - Controls Pino logger verbosity
+- `DB_POOL_MAX`, `DB_POOL_MIN` - Connection pool sizing
+
+**Secrets location:**
+- Environment variables stored in:
+  - `.env.local` (development, not committed)
+  - `.env.example` (template, committed)
+  - Deployment platform (Coolify or other hosting)
 
 ## Webhooks & Callbacks
 
-**Incoming Webhooks:**
-- Cron endpoints at `/api/cron/` authenticated via `CRON_SECRET`
+**Incoming:**
+- Cron job endpoints: `src/app/api/cron/*`
+  - `/api/cron/generate-content` - Trigger content generation
+  - `/api/cron/update-stats` - Trigger stats updates
+  - Secured with `CRON_SECRET` header validation
 
-**Cron Endpoints:**
-| Endpoint | Schedule | Purpose |
-|----------|----------|---------|
-| `/api/cron/update-live-scores` | Every minute | Live match updates |
-| `/api/cron/fetch-fixtures` | Every 6 hours | Upcoming matches |
-| `/api/cron/fetch-analysis` | Every 10 minutes | Match analysis |
-| `/api/cron/generate-predictions` | Every 10 minutes | LLM predictions |
-| `/api/cron/update-results` | Every 10 minutes | Final scores |
-
-## Monitoring Endpoints
-
-**Health Check:**
-- Location: `src/app/api/health/route.ts`
-- Returns: Service health status
-
-**Admin Endpoints:**
-- `/api/admin/queue-status` - Queue statistics
-- `/api/admin/dlq` - Dead letter queue
-- `/api/admin/rescore` - Rescore predictions
-- `/api/admin/data` - Data management
-- `/api/admin/re-enable-model` - Re-enable disabled model
+**Outgoing:**
+- IndexNow URL pings (non-blocking, informational)
+- Sentry/GlitchTip error reports (automatic, from error boundaries)
+- No webhook subscriptions to external services detected
 
 ---
 
-*Integration audit: 2026-01-27*
+*Integration audit: 2026-01-31*
