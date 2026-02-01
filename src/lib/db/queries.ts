@@ -2381,49 +2381,66 @@ export interface MatchRoundupData {
 
 /**
  * Get roundup for a match by match ID
- * Returns null if no roundup exists
+ * Returns null if no roundup exists or table doesn't exist yet
  */
 export async function getMatchRoundup(matchId: string): Promise<MatchRoundupData | null> {
-  const db = getDb();
-  
-  const result = await db
-    .select()
-    .from(matchRoundups)
-    .where(eq(matchRoundups.matchId, matchId))
-    .limit(1);
-  
-  if (!result || result.length === 0) {
-    return null;
+  try {
+    const db = getDb();
+
+    const result = await db
+      .select()
+      .from(matchRoundups)
+      .where(eq(matchRoundups.matchId, matchId))
+      .limit(1);
+
+    if (!result || result.length === 0) {
+      return null;
+    }
+
+    return result[0];
+  } catch (error: any) {
+    // Table doesn't exist yet (42P01 = undefined_table)
+    if (error?.code === '42P01') {
+      return null;
+    }
+    throw error;
   }
-  
-  return result[0];
 }
 
 /**
  * Get roundup for a match by slug
  * Joins matches table to query by slug
+ * Returns null if table doesn't exist yet
  */
 export async function getMatchRoundupBySlug(competitionSlug: string, matchSlug: string): Promise<MatchRoundupData | null> {
-  const db = getDb();
-  
-  const result = await db
-    .select({
-      roundup: matchRoundups,
-    })
-    .from(matchRoundups)
-    .innerJoin(matches, eq(matchRoundups.matchId, matches.id))
-    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
-    .where(
-      and(
-        eq(competitions.slug, competitionSlug),
-        eq(matches.slug, matchSlug)
+  try {
+    const db = getDb();
+
+    const result = await db
+      .select({
+        roundup: matchRoundups,
+      })
+      .from(matchRoundups)
+      .innerJoin(matches, eq(matchRoundups.matchId, matches.id))
+      .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+      .where(
+        and(
+          eq(competitions.slug, competitionSlug),
+          eq(matches.slug, matchSlug)
+        )
       )
-    )
-    .limit(1);
-  
-  if (!result || result.length === 0) {
-    return null;
+      .limit(1);
+
+    if (!result || result.length === 0) {
+      return null;
+    }
+
+    return result[0].roundup;
+  } catch (error: any) {
+    // Table doesn't exist yet (42P01 = undefined_table)
+    if (error?.code === '42P01') {
+      return null;
+    }
+    throw error;
   }
-  
-  return result[0].roundup;
 }
