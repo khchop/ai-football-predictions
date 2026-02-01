@@ -10,8 +10,8 @@ import { Worker, Job } from 'bullmq';
 import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { PredictMatchPayload } from '../types';
-import { 
-  getMatchById, 
+import {
+  getMatchById,
   getMatchAnalysisByMatchId,
   getPredictionsForMatch,
   createPredictionsBatch,
@@ -29,6 +29,42 @@ import { generateBettingContent } from '@/lib/content/match-content';
 import { v4 as uuidv4 } from 'uuid';
 import { loggers } from '@/lib/logger/modules';
 import { getMatchWithRetry } from '@/lib/utils/retry-helpers';
+
+/**
+ * Error classification for retry strategy
+ */
+type ErrorType = 'retryable' | 'unrecoverable' | 'unknown';
+
+function classifyError(error: unknown): ErrorType {
+  const errorMsg = error instanceof Error ? error.message : String(error);
+
+  // Retryable: network errors, timeouts, connection issues
+  if (errorMsg.includes('timeout') ||
+      errorMsg.includes('ECONNREFUSED') ||
+      errorMsg.includes('ETIMEDOUT') ||
+      errorMsg.includes('ENOTFOUND') ||
+      errorMsg.includes('ECONNRESET') ||
+      errorMsg.includes('rate limit') ||
+      errorMsg.includes('429')) {
+    return 'retryable';
+  }
+
+  // Unrecoverable: business logic issues that won't fix on retry
+  if (errorMsg.includes('match started') ||
+      errorMsg.includes('cancelled') ||
+      errorMsg.includes('postponed') ||
+      errorMsg.includes('kickoff passed')) {
+    return 'unrecoverable';
+  }
+
+  // Unknown: retry but with backoff
+  return 'unknown';
+}
+
+function isRetryable(error: unknown): boolean {
+  const type = classifyError(error);
+  return type === 'retryable' || type === 'unknown';
+}
 
 export function createPredictionsWorker() {
   return new Worker<PredictMatchPayload>(
@@ -74,20 +110,20 @@ export function createPredictionsWorker() {
         let homeStanding = null;
         let awayStanding = null;
         
-        if (competition.apiFootballId) {
-          try {
-            const standingsMap = await getStandingsForLeagues([competition.apiFootballId], competition.season);
-            homeStanding = getStandingFromMap(match.homeTeam, competition.apiFootballId, standingsMap);
-            awayStanding = getStandingFromMap(match.awayTeam, competition.apiFootballId, standingsMap);
-            } catch (error: any) {
-              log.error({ 
-                matchId,
-                competitionId: competition.apiFootballId,
-                attemptsMade: job.attemptsMade,
-                err: error 
-              }, `Failed to get standings`);
-            }
-        }
+         if (competition.apiFootballId) {
+           try {
+             const standingsMap = await getStandingsForLeagues([competition.apiFootballId], competition.season);
+             homeStanding = getStandingFromMap(match.homeTeam, competition.apiFootballId, standingsMap);
+             awayStanding = getStandingFromMap(match.awayTeam, competition.apiFootballId, standingsMap);
+             } catch (error: unknown) {
+               log.error({ 
+                 matchId,
+                 competitionId: competition.apiFootballId,
+                 attemptsMade: job.attemptsMade,
+                 err: error instanceof Error ? error.message : String(error)
+               }, `Failed to get standings`);
+             }
+         }
         
           // Get active providers (filtered to exclude auto-disabled models)
           const providers = await getActiveProviders();
@@ -117,7 +153,7 @@ export function createPredictionsWorker() {
              }]);
              
               // Call LLM with score prediction system prompt
-              const rawResponse = await (provider as any).callAPI(BATCH_SYSTEM_PROMPT, prompt);
+               const rawResponse = await (provider as unknown as { callAPI: (system: string, user: string) => Promise<string> }).callAPI(BATCH_SYSTEM_PROMPT, prompt);
               
               // Parse simple JSON: [{match_id: "xxx", home_score: X, away_score: Y}]
               const parsed = parseBatchPredictionResponse(rawResponse, [matchId]);
@@ -153,14 +189,15 @@ export function createPredictionsWorker() {
              
              // Track successful model but DON'T record health yet
              successfulModelIds.push(provider.id);
-             log.info({ matchId, modelId: provider.id, prediction: `${prediction.homeScore}-${prediction.awayScore}` }, `✓ Prediction generated`);
-             successCount++;
-             } catch (error: any) {
-               log.error({ matchId, modelId: provider.id, err: error }, `Error generating prediction`);
-               const { autoDisabled } = await recordModelFailure(provider.id, error.message);
-               if (autoDisabled) {
-                 log.warn({ matchId, modelId: provider.id }, `⚠️ Auto-disabled after 3 consecutive failures`);
-               }
+              log.info({ matchId, modelId: provider.id, prediction: `${prediction.homeScore}-${prediction.awayScore}` }, `✓ Prediction generated`);
+              successCount++;
+              } catch (error: unknown) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                log.error({ matchId, modelId: provider.id, err: error }, `Error generating prediction`);
+                const { autoDisabled } = await recordModelFailure(provider.id, errorMessage);
+                if (autoDisabled) {
+                  log.warn({ matchId, modelId: provider.id }, `⚠️ Auto-disabled after 3 consecutive failures`);
+                }
                failCount++;
             }
          }
