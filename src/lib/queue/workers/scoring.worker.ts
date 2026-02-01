@@ -80,6 +80,17 @@ export function createScoringWorker() {
         // Step 2: Save quotas to match for display
         await updateMatchQuotas(matchId, quotas.home, quotas.draw, quotas.away);
 
+        // ========================================================
+        // CRITICAL: Cache invalidation timing
+        // ========================================================
+        // Cache must be invalidated ONLY after transaction commits.
+        // If invalidated during transaction:
+        //   1. Another request might refill cache with old data
+        //   2. Transaction could rollback, leaving stale cache
+        //
+        // Pattern: await transaction() -> await invalidateMatchCaches()
+        // ========================================================
+
         // Step 3: Score all predictions in a single transaction with row-level locking
         // This prevents race conditions when concurrent settlement jobs run
         // (e.g., live-score worker + backfill job both triggering for same match)
@@ -108,9 +119,10 @@ export function createScoringWorker() {
         // Step 4: Post-transaction operations (cache invalidation, stats, content)
         // IMPORTANT: These happen ONLY after transaction commits successfully
         if (scoredCount > 0) {
-          // Invalidate caches after successful scoring to ensure fresh data
+          // AFTER TRANSACTION: Invalidate caches to ensure fresh data
+          // (See CRITICAL comment above - must be post-commit)
           await invalidateMatchCaches(matchId);
-          log.info(`Invalidated caches for match ${matchId}`);
+          log.info({ matchId, scoredCount }, 'Cache invalidated after successful settlement');
 
           // Generate post-match content (non-blocking)
           try {
