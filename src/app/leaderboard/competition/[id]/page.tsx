@@ -1,11 +1,11 @@
 import { Suspense } from 'react';
-import { notFound } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LeaderboardTable } from '@/components/leaderboard-table';
 import { LeaderboardTableSkeleton } from '@/components/leaderboard/skeleton';
 import type { LeaderboardEntry } from '@/lib/table/columns';
 import { LeaderboardFilters } from '@/components/leaderboard-filters';
+import { LiveTabRefresher } from '@/app/matches/live-refresher';
 import { Trophy } from 'lucide-react';
 import type { Metadata } from 'next';
 
@@ -59,25 +59,6 @@ async function fetchCompetitionStats(competitionId: string, filters: Record<stri
   }
 
   return response.json();
-}
-
-function LoadingSkeleton() {
-  return (
-    <Card className="bg-card/50 border-border/50">
-      <CardContent className="p-6">
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-4">
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <Skeleton className="h-4 flex-1" />
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-4 w-16" />
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
 }
 
 interface LeaderboardContentProps {
@@ -206,29 +187,31 @@ export default async function CompetitionLeaderboardPage({ params, searchParams 
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="h-12 w-12 rounded-xl gradient-primary flex items-center justify-center">
-          <Trophy className="h-6 w-6 text-white" />
+    <LiveTabRefresher refreshInterval={30000}>
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-xl gradient-primary flex items-center justify-center">
+            <Trophy className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">{competitionName || 'Competition'} Leaderboard</h1>
+            <p className="text-muted-foreground">
+              AI model performance for {competitionName || 'this competition'}
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-3xl font-bold">{competitionName || 'Competition'} Leaderboard</h1>
-          <p className="text-muted-foreground">
-            AI model performance for {competitionName || 'this competition'}
-          </p>
-        </div>
+
+        {/* Filters */}
+        <Suspense fallback={<Skeleton className="h-10 w-full" />}>
+          <LeaderboardFilters disabledFilters={['competition']} />
+        </Suspense>
+
+        {/* Leaderboard Content */}
+        <Suspense fallback={<LeaderboardTableSkeleton />}>
+          <LeaderboardContent competitionId={competitionId} searchParams={resolvedParams} />
+        </Suspense>
       </div>
-
-      {/* Filters */}
-      <Suspense fallback={<Skeleton className="h-10 w-full" />}>
-        <LeaderboardFilters disabledFilters={['competition']} />
-      </Suspense>
-
-      {/* Leaderboard Content */}
-      <Suspense fallback={<LeaderboardTableSkeleton />}>
-        <LeaderboardContent competitionId={competitionId} searchParams={resolvedParams} />
-      </Suspense>
-    </div>
+    </LiveTabRefresher>
   );
 }
