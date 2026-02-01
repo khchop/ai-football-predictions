@@ -5,36 +5,36 @@
 See: .planning/PROJECT.md (updated 2026-01-31)
 
 **Core value:** Prediction pipeline reliably generates scores from 35 LLMs before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** Phase 2 - Data Accuracy
+**Current focus:** Phase 2 Complete - Ready for Phase 3
 
 ## Current Position
 
-Phase: 2 of 4 (Data Accuracy)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-02-01 - Completed 02-03-PLAN.md (Streak edge cases)
+Phase: 2 of 4 (Data Accuracy) - COMPLETE
+Plan: 4 of 4 in current phase
+Status: Phase complete
+Last activity: 2026-02-01 - Completed 02-04-PLAN.md (Non-blocking cache invalidation)
 
-Progress: [████████░░░░░░░░░░░] 47%
+Progress: [█████████░░░░░░░░░░] 53%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 3.9 min (3, 3, 7, 3, 4, 3.5, 4 min)
-- Total execution time: 27.5 min
+- Total plans completed: 8
+- Average duration: 3.6 min (3, 3, 7, 3, 4, 3.5, 4, 2 min)
+- Total execution time: 29.5 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Critical Stability | 4/4 | 16 min | 4.0 min/plan |
-| 2. Data Accuracy | 3/4 | 11.5 min | 3.8 min/plan |
+| 2. Data Accuracy | 4/4 | 13.5 min | 3.4 min/plan |
 | 3. Infrastructure Performance | 0/4 | - | - |
 | 4. UX Polish | 0/3 | - | - |
 
 **Recent Trend:**
-- Last 5 plans: 01-04 (3 min), 02-01 (4 min), 02-02 (3.5 min), 02-03 (4 min)
-- Trend: Consistent ~3.5-4 min per plan
+- Last 5 plans: 02-01 (4 min), 02-02 (3.5 min), 02-03 (4 min), 02-04 (2 min)
+- Trend: Consistent ~3-4 min per plan
 
 *Updated after each plan completion*
 
@@ -69,6 +69,8 @@ Recent decisions affecting current work:
 - Kicktipp formula: Use (MAX / (10 * P)) - (MAX / 10) + MIN for quota calculation
 - shouldUpdateStreak validates match status (finished), scores (not null), and prediction status (not void)
 - FOR UPDATE row lock on models table prevents streak corruption from concurrent scoring
+- SCAN over KEYS: Use SCAN with COUNT 100 for non-blocking cache iteration
+- Parallel invalidation: Use Promise.all for concurrent cache deletes
 
 ### Pending Todos
 
@@ -81,5 +83,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 02-03-PLAN.md (Streak edge cases)
+Stopped at: Completed 02-04-PLAN.md (Non-blocking cache invalidation)
 Resume file: None
