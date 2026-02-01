@@ -8,8 +8,8 @@ export const competitions = pgTable('competitions', {
   apiFootballId: integer('api_football_id').notNull(), // API-Football league ID
   season: integer('season').notNull(), // e.g., 2024
   active: boolean('active').default(true),
-  slug: text('slug').unique(), // SEO-friendly slug, e.g., "champions-league"
-  createdAt: timestamp('created_at').defaultNow(),
+  slug: text('slug'), // SEO-friendly slug, e.g., "champions-league"
+  createdAt: text('created_at').default(sql`now()`),
 });
 
 // Individual matches
@@ -38,8 +38,8 @@ export const matches = pgTable('matches', {
   quotaDraw: integer('quota_draw'), // Points for predicting draw (2-6)
   quotaAway: integer('quota_away'), // Points for predicting away win (2-6)
   slug: text('slug'), // SEO-friendly slug, e.g., "manchester-city-vs-arsenal-2026-01-22" (nullable for backfill)
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  createdAt: text('created_at').default(sql`now()`),
+  updatedAt: text('updated_at').default(sql`now()`),
 }, (table) => [
   index('idx_matches_competition_id').on(table.competitionId),
   index('idx_matches_status').on(table.status),
@@ -57,7 +57,7 @@ export const models = pgTable('models', {
   modelDescription: text('model_description'), // AI-generated description of the model
   isPremium: boolean('is_premium').default(false),
   active: boolean('active').default(true),
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: text('created_at').default(sql`now()`),
   // Streak tracking (updated in real-time when matches are scored)
   currentStreak: integer('current_streak').default(0), // Positive = wins, negative = losses
   currentStreakType: text('current_streak_type').default('none'), // 'exact', 'tendency', 'none'
@@ -88,8 +88,8 @@ export const modelUsage = pgTable('model_usage', {
     .references(() => models.id),
   predictionsCount: integer('predictions_count').default(0),
   totalCost: text('total_cost').default('0'), // Stored as string for precision
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  createdAt: text('created_at').default(sql`now()`),
+  updatedAt: text('updated_at').default(sql`now()`),
 }, (table) => [
   unique('model_usage_date_model_unique').on(table.date, table.modelId),
   index('idx_model_usage_date').on(table.date),
@@ -222,7 +222,7 @@ export const matchAnalysis = pgTable('match_analysis', {
   rawH2HData: text('raw_h2h_data'),                   // Raw H2H API response
   
   analysisUpdatedAt: text('analysis_updated_at'),
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: text('created_at').default(sql`now()`),
 });
 
 export type MatchAnalysis = typeof matchAnalysis.$inferSelect;
@@ -255,7 +255,7 @@ export const leagueStandings = pgTable('league_standings', {
   awayLost: integer('away_lost'),
   awayGoalsFor: integer('away_goals_for'),
   awayGoalsAgainst: integer('away_goals_against'),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  updatedAt: text('updated_at').default(sql`now()`),
 }, (table) => [
   index('idx_league_standings_league_id').on(table.leagueId),
   index('idx_league_standings_team_name').on(table.teamName),
@@ -380,11 +380,11 @@ export type NewPrediction = typeof predictions.$inferInsert;
 // AI-generated blog posts for SEO/GEO
 export const blogPosts = pgTable('blog_posts', {
   id: text('id').primaryKey(), // UUID
-  slug: text('slug').notNull().unique(), // SEO-friendly URL slug
+  slug: text('slug').notNull(), // SEO-friendly URL slug
   title: text('title').notNull(),
-  excerpt: text('excerpt').notNull(), // Short summary (150-160 chars for meta description)
+  excerpt: text('excerpt'), // Short summary (nullable in production)
   content: text('content').notNull(), // Full markdown content
-  contentType: text('content_type').notNull(), // 'league_roundup' | 'model_report' | 'analysis'
+  contentType: text('content_type').default('blog'), // 'league_roundup' | 'model_report' | 'analysis' | 'blog'
 
   // SEO metadata
   metaTitle: text('meta_title'),
@@ -415,8 +415,8 @@ export const blogPosts = pgTable('blog_posts', {
   promptTokens: integer('prompt_tokens'),
   completionTokens: integer('completion_tokens'),
 
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
   index('idx_blog_posts_slug').on(table.slug),
   index('idx_blog_posts_status').on(table.status),
@@ -431,10 +431,7 @@ export type NewBlogPost = typeof blogPosts.$inferInsert;
 // AI-generated match previews for SEO/GEO
 export const matchPreviews = pgTable('match_previews', {
   id: text('id').primaryKey(), // UUID
-  matchId: text('match_id')
-    .notNull()
-    .unique()
-    .references(() => matches.id),
+  matchId: text('match_id').notNull(),
   
   // Content sections
   introduction: text('introduction').notNull(), // Opening paragraph
@@ -459,8 +456,8 @@ export const matchPreviews = pgTable('match_previews', {
   promptTokens: integer('prompt_tokens'),
   completionTokens: integer('completion_tokens'),
   
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
   index('idx_match_previews_match_id').on(table.matchId),
   index('idx_match_previews_status').on(table.status),
@@ -477,10 +474,7 @@ export type NewMatchPreview = typeof matchPreviews.$inferInsert;
 // 3. Post-match (~150-200 words) - results/performance
 export const matchContent = pgTable('match_content', {
   id: text('id').primaryKey(), // UUID
-  matchId: text('match_id')
-    .notNull()
-    .unique()
-    .references(() => matches.id, { onDelete: 'cascade' }),
+  matchId: text('match_id').notNull(),
 
   // Pre-match section (generated after odds refresh, ~6h before kickoff)
   preMatchContent: text('pre_match_content'),
@@ -499,8 +493,8 @@ export const matchContent = pgTable('match_content', {
   totalTokens: integer('total_tokens').default(0),
   totalCost: text('total_cost').default('0'),
 
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  createdAt: text('created_at').default(sql`now()`),
+  updatedAt: text('updated_at').default(sql`now()`),
 }, (table) => [
   index('idx_match_content_match_id').on(table.matchId),
 ]);

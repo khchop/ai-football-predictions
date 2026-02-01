@@ -16,7 +16,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 import { getDb } from '../src/lib/db';
 import { models } from '../src/lib/db/schema';
 import { TOGETHER_PROVIDERS } from '../src/lib/llm/providers/together';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 async function syncModels() {
   console.log('\n🔄 [Sync Models] Starting database sync...\n');
@@ -48,7 +48,7 @@ async function syncModels() {
           displayName: provider.displayName,
           isPremium: provider.isPremium,
           active: true,
-          createdAt: new Date(),
+          createdAt: new Date().toISOString(),
         };
         
         if (existing.length === 0) {
