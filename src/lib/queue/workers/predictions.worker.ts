@@ -67,7 +67,7 @@ function isRetryable(error: unknown): boolean {
 }
 
 export function createPredictionsWorker() {
-  return new Worker<PredictMatchPayload>(
+  const worker = new Worker<PredictMatchPayload>(
     QUEUE_NAMES.PREDICTIONS,
     async (job: Job<PredictMatchPayload>) => {
       const { matchId, skipIfDone = false } = job.data;
@@ -294,6 +294,63 @@ export function createPredictionsWorker() {
     {
       connection: getQueueConnection(),
       concurrency: 1, // Process one match at a time (models run in parallel within)
+      settings: {
+        backoffStrategy: (attemptsMade: number, type: string, err?: Error) => {
+          const errorMsg = err?.message || '';
+
+          // Rate limit: 60s fixed backoff
+          if (errorMsg.includes('rate limit') || errorMsg.includes('429')) {
+            loggers.predictionsWorker.info({ attemptsMade }, 'Rate limit detected, backoff 60s');
+            return 60000;
+          }
+
+          // Timeout: Linear backoff (5s, 10s, 15s... max 30s)
+          if (errorMsg.includes('timeout') || errorMsg.includes('ETIMEDOUT')) {
+            const backoff = Math.min(attemptsMade * 5000, 30000);
+            loggers.predictionsWorker.info({ attemptsMade, backoff }, 'Timeout detected, linear backoff');
+            return backoff;
+          }
+
+          // Parse errors: Quick retry (5s, 10s, 20s)
+          if (errorMsg.includes('parse') || errorMsg.includes('JSON')) {
+            const backoff = Math.min(5000 * Math.pow(2, attemptsMade - 1), 20000);
+            loggers.predictionsWorker.info({ attemptsMade, backoff }, 'Parse error detected, exponential backoff');
+            return backoff;
+          }
+
+          // Default: Exponential backoff with jitter
+          const baseDelay = 1000;
+          const exponentialDelay = baseDelay * Math.pow(2, attemptsMade - 1);
+          const jitter = Math.random() * 0.2; // 20% jitter
+          const backoff = Math.min(exponentialDelay * (1 + jitter), 60000);
+          loggers.predictionsWorker.info({ attemptsMade, backoff }, 'Default exponential backoff with jitter');
+          return backoff;
+        },
+      },
     }
   );
+
+  // Worker event handlers for monitoring
+  worker.on('completed', (job) => {
+    loggers.predictionsWorker.info({
+      jobId: job.id,
+      matchId: job.data.matchId,
+      attempts: job.attemptsMade,
+    }, 'Job completed successfully');
+  });
+
+  worker.on('failed', (job, err) => {
+    loggers.predictionsWorker.error({
+      jobId: job?.id,
+      matchId: job?.data.matchId,
+      error: err.message,
+      attempts: job?.attemptsMade,
+    }, 'Job failed');
+  });
+
+  worker.on('error', (err) => {
+    loggers.predictionsWorker.error({ error: err.message }, 'Worker error');
+  });
+
+  return worker;
 }
