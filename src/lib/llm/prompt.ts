@@ -548,7 +548,7 @@ function extractScorePatterns(response: string): Array<{ matchId: string; homeSc
  */
 function extractFlexibleScores(response: string): Array<{ matchId: string; homeScore: number; awayScore: number }> | null {
   // Look for patterns like: matchId: "xxx", home: 1, away: 2
-  const flexiblePattern = /matchId["']?\s*[:=]\s*"([^"]+)".*?(?:home|home_score|homeScore)["']?\s*[:=]\s*(\d+).*?(?:away|away_score|awayScore)["']?\s*[:=]\s*(\d+)/gis;
+  const flexiblePattern = /matchId["']?\s*[:=]\s*"([^"]+)"[\s\S]*?(?:home|home_score|homeScore)["']?\s*[:=]\s*(\d+)[\s\S]*?(?:away|away_score|awayScore)["']?\s*[:=]\s*(\d+)/gi;
 
   const predictions: Array<{ matchId: string; homeScore: number; awayScore: number }> = [];
   const matches = [...response.matchAll(flexiblePattern)];
