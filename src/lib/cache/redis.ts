@@ -277,21 +277,40 @@ export async function cacheDelete(key: string): Promise<boolean> {
 }
 
 /**
- * Delete multiple cache keys by pattern
- * Use with caution - KEYS command can be slow on large databases
+ * Delete multiple cache keys by pattern using SCAN (non-blocking)
+ * SCAN iterates through keys without blocking Redis, unlike KEYS which blocks
  */
 export async function cacheDeletePattern(pattern: string): Promise<number> {
   const redis = getRedis();
   if (!redis) return 0;
 
-   try {
-     const keys = await redis.keys(pattern);
-     if (keys.length === 0) return 0;
-     return await redis.del(...keys);
-   } catch (error) {
-     loggers.cache.error({ pattern, error: error instanceof Error ? error.message : String(error) }, 'Error deleting cache pattern');
-     return 0;
-   }
+  try {
+    let deletedCount = 0;
+    let cursor = '0';
+
+    // Use SCAN to iterate through keys matching pattern
+    // SCAN is non-blocking and returns in batches
+    do {
+      // SCAN cursor MATCH pattern COUNT 100
+      const [nextCursor, keys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+      cursor = nextCursor;
+
+      if (keys.length > 0) {
+        // Delete found keys in batch
+        const deleted = await redis.del(...keys);
+        deletedCount += deleted;
+      }
+    } while (cursor !== '0'); // SCAN returns '0' when complete
+
+    loggers.cache.debug({ pattern, deletedCount }, 'Deleted cache keys by pattern (SCAN)');
+    return deletedCount;
+  } catch (error) {
+    loggers.cache.error({
+      pattern,
+      error: error instanceof Error ? error.message : String(error)
+    }, 'Error deleting cache pattern with SCAN');
+    return 0;
+  }
 }
 
 /**
