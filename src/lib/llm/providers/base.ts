@@ -9,7 +9,9 @@ import {
   EnhancedParseResult,
   BatchParsedResult,
 } from '../prompt';
-import { logger } from '../logger';
+import { loggers } from '@/lib/logger/modules';
+
+const logger = loggers.llm;
 import { fetchWithRetry, APIError, RateLimitError } from '@/lib/utils/api-client';
 import { TOGETHER_PREDICTION_RETRY, TOGETHER_PREDICTION_TIMEOUT_MS, TOGETHER_PREDICTION_BATCH_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
 

@@ -1,7 +1,9 @@
 // Prompt templates for LLM score predictions
 // Updated: January 2026 - Kicktipp Quota Scoring System
 
-import { logger } from '../logger';
+import { loggers } from '@/lib/logger/modules';
+
+const logger = loggers.llm;
 
 // ============================================================================
 // SYSTEM PROMPT: Kicktipp Quota Scoring - Value-Based Strategy
