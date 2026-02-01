@@ -79,7 +79,7 @@ export async function recordPredictionCost(
 ): Promise<void> {
   const db = getDb();
   const today = getTodayDate();
-  const now = new Date();
+  const nowISOString = new Date().toISOString();
 
   // Atomic upsert: insert or update in a single operation
   await db
@@ -90,15 +90,15 @@ export async function recordPredictionCost(
       modelId,
       predictionsCount: 1,
       totalCost: cost.toFixed(6),
-      createdAt: now,
-      updatedAt: now,
+      createdAt: nowISOString,
+      updatedAt: nowISOString,
     })
     .onConflictDoUpdate({
       target: [modelUsage.date, modelUsage.modelId],
       set: {
         predictionsCount: sql`${modelUsage.predictionsCount} + 1`,
         totalCost: sql`CAST(CAST(${modelUsage.totalCost} AS NUMERIC) + ${cost} AS TEXT)`,
-        updatedAt: now,
+        updatedAt: nowISOString,
       },
     });
 }

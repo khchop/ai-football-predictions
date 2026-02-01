@@ -68,7 +68,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     openGraph: {
       title: post.title,
-      description: post.excerpt,
+      description: post.excerpt || undefined,
       type: 'article',
       publishedTime: post.publishedAt || undefined,
       url: url,
@@ -84,7 +84,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     twitter: {
       card: 'summary_large_image',
       title: post.title,
-      description: post.excerpt,
+      description: post.excerpt || undefined,
       images: [ogImageUrl],
     },
   };
@@ -101,7 +101,7 @@ export default async function BlogPostPage({ params }: PageProps) {
   // Generate Article schema for SEO
   const articleSchema = generateArticleSchema({
     title: post.title,
-    description: post.excerpt,
+    description: post.excerpt || post.title,
     author: post.generatedBy || 'kroam.xyz',
     publishedAt: post.publishedAt || new Date().toISOString(),
     url: `https://kroam.xyz/blog/${slug}`,
@@ -115,9 +115,9 @@ export default async function BlogPostPage({ params }: PageProps) {
          dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
        />
 
-       <WebPageSchema 
+       <WebPageSchema
          name={post.title}
-         description={post.excerpt}
+         description={post.excerpt || post.title}
          url={`https://kroam.xyz/blog/${post.slug}`}
          datePublished={post.publishedAt || undefined}
          breadcrumb={[

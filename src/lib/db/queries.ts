@@ -105,7 +105,7 @@ export async function upsertMatch(data: Omit<NewMatch, 'id'> & { id?: string }):
         homeScore: data.homeScore,
         awayScore: data.awayScore,
         status: data.status,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       },
     })
     .returning({ id: matches.id });
@@ -533,7 +533,7 @@ export async function updateMatchResult(
       awayScore,
       status,
       matchMinute: matchMinute ?? null,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     })
     .where(eq(matches.id, matchId));
 }

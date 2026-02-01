@@ -222,7 +222,7 @@ export async function generateMatchPreview(matchData: {
     target: matchPreviews.matchId,
     set: {
       ...newPreview,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     },
   });
 
@@ -390,7 +390,7 @@ export async function generateLeagueRoundup(roundupData: {
     target: blogPosts.slug,
     set: {
       ...newPost,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     },
   });
 
@@ -467,7 +467,7 @@ export async function generateModelReport(reportData: {
     target: blogPosts.slug,
     set: {
       ...newPost,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     },
   });
 
@@ -968,7 +968,7 @@ IMPORTANT: Write this roundup from a completely different angle than typical mat
         generatedBy: CONTENT_CONFIG.model,
         totalTokens: finalUsage.totalTokens,
         totalCost: finalCost.toFixed(4),
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       },
     });
 

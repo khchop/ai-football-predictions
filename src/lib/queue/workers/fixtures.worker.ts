@@ -111,8 +111,8 @@ export function createFixturesWorker() {
                     quotaHome: null,
                     quotaDraw: null,
                     quotaAway: null,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
                   },
                   competition: {
                     id: competition.id,
