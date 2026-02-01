@@ -21,11 +21,34 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 
 ## Current State
 
-**Brownfield project with existing codebase.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. However, it currently has multiple categories of bugs and errors requiring stabilization before new feature development.
+**Brownfield project with v1.0 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. v1.0 stabilization milestone completed 2026-02-01 with all 18 bug fixes shipped.
 
-### Existing Validated Features
+### Validated (v1.0)
 
-The following capabilities are already built and (when working correctly) validated:
+The following requirements were validated in v1.0:
+
+- ✓ **CRIT-01**: JSON parse failures handled with multi-strategy extraction — v1.0
+- ✓ **CRIT-02**: API timeouts recovered gracefully with error-type-aware backoff — v1.0
+- ✓ **CRIT-03**: Model auto-disable uses proper threshold (5 failures) and recovery — v1.0
+- ✓ **CRIT-04**: Queue workers handle null/malformed API data without crashing — v1.0
+- ✓ **CRIT-05**: Database connection pool sized appropriately with monitoring — v1.0
+- ✓ **DATA-01**: Settlement uses database transaction with row lock — v1.0
+- ✓ **DATA-02**: Leaderboard totals calculated correctly — v1.0
+- ✓ **DATA-03**: Streak tracking handles voided/cancelled matches — v1.0
+- ✓ **DATA-04**: Cache invalidation timing ensures no stale data — v1.0
+- ✓ **DATA-05**: Quota point calculation matches Kicktipp formula — v1.0
+- ✓ **UIUX-01**: Match detail pages load within acceptable time — v1.0
+- ✓ **UIUX-02**: Leaderboard updates visible without manual refresh — v1.0
+- ✓ **UIUX-03**: Mobile responsiveness for prediction cards — v1.0
+- ✓ **UIUX-04**: Error boundaries catch all React rendering failures — v1.0
+- ✓ **INFR-01**: Circuit breaker state persists through Redis restarts — v1.0
+- ✓ **INFR-02**: Cache pattern deletion uses SCAN instead of KEYS — v1.0
+- ✓ **INFR-03**: API rate limits enforced at budget level — v1.0
+- ✓ **INFR-04**: Redis unavailability handled gracefully — v1.0
+
+### Existing Features
+
+The following capabilities are built and operational:
 
 - **Match Data Pipeline**: Automated fetching of fixtures, live scores, lineups, and statistics from API-Football for 17 leagues
 - **LLM Integration**: 35 open-source models via Together AI API with automatic retry and failure handling
@@ -38,25 +61,11 @@ The following capabilities are already built and (when working correctly) valida
 - **Caching Layer**: Redis-based caching for API responses and expensive aggregations
 - **Admin Interface**: Bull Board queue monitoring and dead-letter queue inspection
 
-### Known Issues
+### Context
 
-**Critical Bugs:**
-- Prediction pipeline failures (JSON parse errors, API timeouts not recovering gracefully)
-- Model auto-disable logic triggering prematurely or not resetting after recovery
-- Queue worker crashes on edge cases (missing match data, malformed API responses)
-- Database connection pool exhaustion under load
-
-**Data/Accuracy Issues:**
-- Leaderboard calculations occasionally showing incorrect totals
-- Streak tracking not properly handling edge cases (draws, voided matches)
-- Cache invalidation delays causing stale data display
-- Quota point calculation discrepancies on high-traffic match days
-
-**UI/UX Problems:**
-- Slow page loads on match detail pages with 35+ predictions
-- Leaderboard not updating in real-time (requires manual refresh)
-- Mobile responsiveness issues on prediction cards
-- Error boundaries not catching all React rendering failures
+Shipped v1.0 with 38,470 LOC TypeScript.
+Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI.
+All 18 v1 requirements validated and shipped.
 
 ## Constraints
 
@@ -103,9 +112,7 @@ The following capabilities are already built and (when working correctly) valida
 
 ## Open Questions
 
-- Which specific matches or dates show the worst bug occurrences? (need logs)
-- Are certain models failing more than others? (need failure analysis)
-- What's the priority order: critical bugs → data issues → UI fixes?
+None currently. Ready for next milestone planning.
 
 ---
-*Last updated: 2026-01-31 after initialization*
+*Last updated: 2026-02-01 after v1.0 milestone*
