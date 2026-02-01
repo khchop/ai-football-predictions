@@ -8,56 +8,24 @@ import { LeaderboardFilters } from '@/components/leaderboard-filters';
 import { LiveTabRefresher } from '@/app/matches/live-refresher';
 import { Trophy } from 'lucide-react';
 import type { Metadata } from 'next';
+import { getDb, matches } from '@/lib/db';
+import { eq, or } from 'drizzle-orm';
+import { getLeaderboard, type LeaderboardFilters as LeaderboardQueryFilters } from '@/lib/db/queries/stats';
+
+// ISR: Revalidate every 60 seconds
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-// Fetch club stats from the API
-async function fetchClubStats(clubId: string, filters: Record<string, string>): Promise<{
-  success: boolean;
-  data?: {
-    clubId: string;
-    clubName: string;
-    season: string;
-    isHome?: boolean;
-    models: Array<{
-      modelId: string;
-      displayName: string;
-      provider: string;
-      totalPredictions: number;
-      totalPoints: number;
-      avgPoints: number;
-      accuracy: number;
-      wins: number;
-      draws: number;
-      losses: number;
-    }>;
-  };
-  error?: string;
-}> {
-  const cronSecret = process.env.CRON_SECRET || '';
-  
-  const searchParams = new URLSearchParams(filters);
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/stats/club/${clubId}?${searchParams}`,
-    {
-      headers: {
-        'Authorization': `Bearer ${cronSecret}`,
-      },
-      next: { revalidate: 60 },
-    }
-  );
-
-  if (!response.ok) {
-    if (response.status === 404) {
-      return { success: false, error: 'Club not found' };
-    }
-    throw new Error(`Failed to fetch club stats: ${response.statusText}`);
-  }
-
-  return response.json();
+async function getClubExists(clubId: string): Promise<boolean> {
+  const db = getDb();
+  const matchCheck = await db.query.matches.findFirst({
+    where: or(eq(matches.homeTeam, clubId), eq(matches.awayTeam, clubId)),
+  });
+  return !!matchCheck;
 }
 
 interface LeaderboardContentProps {
@@ -67,37 +35,34 @@ interface LeaderboardContentProps {
 
 async function LeaderboardContent({ clubId, searchParams }: LeaderboardContentProps) {
   // Parse filter parameters
-  const season = typeof searchParams.season === 'string' ? searchParams.season : undefined;
-  const model = typeof searchParams.model === 'string' ? searchParams.model : undefined;
-  const isHome = typeof searchParams.isHome === 'string' ? searchParams.isHome : undefined;
-  const limit = 50; // Default limit
+  const season = typeof searchParams.season === 'string' ? parseInt(searchParams.season, 10) : undefined;
+  const isHome = typeof searchParams.isHome === 'string' ? searchParams.isHome === 'true' : undefined;
 
-  const filters: Record<string, string> = {};
-  if (season) filters.season = season;
-  if (model) filters.model = model;
-  if (isHome) filters.isHome = isHome;
-  if (limit) filters.limit = String(limit);
+  // Verify club has matches
+  const clubExists = await getClubExists(clubId);
 
-  const result = await fetchClubStats(clubId, filters);
-
-  if (!result.success) {
-    if (result.error === 'Club not found') {
-      return (
-        <div className="rounded-xl border border-dashed border-border/50 bg-card/30 p-12 text-center">
-          <Trophy className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-          <p className="text-muted-foreground">Club not found.</p>
-          <p className="text-sm text-muted-foreground/70 mt-1">
-            The requested club does not exist or has no match data.
-          </p>
-        </div>
-      );
-    }
-    throw new Error(result.error || 'Failed to load club stats');
+  if (!clubExists) {
+    return (
+      <div className="rounded-xl border border-dashed border-border/50 bg-card/30 p-12 text-center">
+        <Trophy className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+        <p className="text-muted-foreground">Club not found.</p>
+        <p className="text-sm text-muted-foreground/70 mt-1">
+          The requested club does not exist or has no match data.
+        </p>
+      </div>
+    );
   }
 
-  const { data } = result;
+  // Build filters and query database directly
+  const filters: LeaderboardQueryFilters = {
+    clubId,
+    isHome,
+    season,
+  };
 
-  if (!data || data.models.length === 0) {
+  const leaderboard = await getLeaderboard(50, 'avgPoints', filters);
+
+  if (leaderboard.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border/50 bg-card/30 p-12 text-center">
         <Trophy className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
@@ -110,15 +75,15 @@ async function LeaderboardContent({ clubId, searchParams }: LeaderboardContentPr
   }
 
   // Format data for LeaderboardTable
-  const formattedLeaderboard: LeaderboardEntry[] = data.models.map((model) => ({
-    modelId: model.modelId,
-    displayName: model.displayName,
-    provider: model.provider,
-    totalPredictions: model.totalPredictions,
-    totalPoints: model.totalPoints,
-    averagePoints: model.avgPoints,
-    exactScores: model.wins, // Using wins as exact scores proxy for club stats
-    correctTendencies: model.wins + model.draws, // Total correct outcomes
+  const formattedLeaderboard: LeaderboardEntry[] = leaderboard.map((entry) => ({
+    modelId: entry.modelId,
+    displayName: entry.displayName,
+    provider: entry.provider,
+    totalPredictions: entry.totalPredictions,
+    totalPoints: entry.totalPoints,
+    averagePoints: entry.avgPoints,
+    exactScores: entry.exactScores,
+    correctTendencies: entry.correctTendencies,
   }));
 
   return (
@@ -132,29 +97,16 @@ async function LeaderboardContent({ clubId, searchParams }: LeaderboardContentPr
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id: clubId } = await params;
-  
-  // Try to get club name from API
-  const cronSecret = process.env.CRON_SECRET || '';
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/stats/club/${clubId}`,
-      {
-        headers: { 'Authorization': `Bearer ${cronSecret}` },
-        next: { revalidate: 3600 },
-      }
-    );
-    
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success && data.data?.clubName) {
-        return {
-          title: `${data.data.clubName} Model Performance | kroam`,
-          description: `AI model prediction performance for ${data.data.clubName} matches`,
-        };
-      }
-    }
-  } catch {
-    // Ignore errors, use fallback
+
+  const clubExists = await getClubExists(clubId);
+
+  if (clubExists) {
+    // Use clubId as the name (formatted)
+    const clubName = clubId.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    return {
+      title: `${clubName} Model Performance | kroam`,
+      description: `AI model prediction performance for ${clubName} matches`,
+    };
   }
 
   return {
@@ -167,25 +119,8 @@ export default async function ClubLeaderboardPage({ params, searchParams }: Page
   const { id: clubId } = await params;
   const resolvedParams = await searchParams;
 
-  // Get club name for page title
-  let clubName: string | null = null;
-  try {
-    const cronSecret = process.env.CRON_SECRET || '';
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/stats/club/${clubId}`,
-      {
-        headers: { 'Authorization': `Bearer ${cronSecret}` },
-        next: { revalidate: 60 },
-      }
-    );
-    
-    if (response.ok) {
-      const data = await response.json();
-      clubName = data.data?.clubName || null;
-    }
-  } catch {
-    // Ignore errors, will show fallback
-  }
+  // Format club ID as name (title case)
+  const clubName = clubId.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
   return (
     <LiveTabRefresher refreshInterval={30000}>
@@ -196,9 +131,9 @@ export default async function ClubLeaderboardPage({ params, searchParams }: Page
             <Trophy className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">{clubName || 'Club'} Model Performance</h1>
+            <h1 className="text-3xl font-bold">{clubName} Model Performance</h1>
             <p className="text-muted-foreground">
-              AI model predictions for {clubName || 'this club&apos;s'} matches
+              AI model predictions for {clubName} matches
             </p>
           </div>
         </div>

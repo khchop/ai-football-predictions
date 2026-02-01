@@ -10,6 +10,7 @@ import { Trophy } from 'lucide-react';
 import type { Metadata } from 'next';
 import type { FAQItem } from '@/lib/seo/schemas';
 import { LiveTabRefresher } from '@/app/matches/live-refresher';
+import { getLeaderboard } from '@/lib/db/queries/stats';
 
 // FAQ data for model ranking questions
 const leaderboardFaqs: FAQItem[] = [
@@ -55,86 +56,32 @@ export const metadata: Metadata = {
   },
 };
 
-/**
- * Fetch leaderboard data from the API with ISR caching.
- *
- * ISR Pattern: Uses fetch-level `revalidate: 60` option (Phase 3 pattern)
- *
- * Note: Next.js supports two valid ISR patterns:
- * 1. Fetch-level: next: { revalidate: 60 } in fetch options (used here)
- * 2. Page-level: export const revalidate = 60 at module scope (Phase 5 pattern)
- *
- * The fetch-level approach allows more granular control when pages make multiple
- * fetch calls with different revalidation needs. Leaderboard pages were built
- * using this pattern in Phase 3 and remain consistent with the original design.
- */
-async function fetchLeaderboard(filters: Record<string, string>): Promise<{
-  success: boolean;
-  data?: Array<{
-    rank: number;
-    modelId: string;
-    displayName: string;
-    provider: string;
-    totalPredictions: number;
-    scoredPredictions: number;
-    totalPoints: number;
-    avgPoints: number;
-    accuracy: number;
-    exactScores: number;
-    correctTendencies: number;
-  }>;
-  error?: string;
-}> {
-  const cronSecret = process.env.CRON_SECRET || '';
-
-  const searchParams = new URLSearchParams(filters);
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/stats/leaderboard?${searchParams}`,
-    {
-      headers: {
-        'Authorization': `Bearer ${cronSecret}`,
-      },
-      next: { revalidate: 60 },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch leaderboard: ${response.statusText}`);
-  }
-
-  return response.json();
-}
+// ISR: Revalidate every 60 seconds
+export const revalidate = 60;
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 async function LeaderboardContent({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
-  // Parse filter parameters - note: timeRange is not passed to API as it's not supported
-  const competition = typeof searchParams.competition === 'string' && searchParams.competition !== 'all'
+  // Parse filter parameters
+  const competitionId = typeof searchParams.competition === 'string' && searchParams.competition !== 'all'
     ? searchParams.competition
     : undefined;
   const season = typeof searchParams.season === 'string' && searchParams.season !== 'all'
-    ? searchParams.season
-    : undefined;
-  const model = typeof searchParams.model === 'string' && searchParams.model !== 'all'
-    ? searchParams.model
+    ? parseInt(searchParams.season, 10)
     : undefined;
   const minPredictions = typeof searchParams.minPredictions === 'string'
     ? parseInt(searchParams.minPredictions, 10)
     : 0;
 
-  // Build filters for API
-  const filters: Record<string, string> = {};
-  if (competition) filters.competition = competition;
-  if (season) filters.season = season;
-  if (model) filters.model = model;
+  // Query database directly instead of HTTP fetch (avoids self-referential timeout)
+  const leaderboard = await getLeaderboard(50, 'avgPoints', {
+    competitionId,
+    season,
+  });
 
-  // Fetch from API
-  const result = await fetchLeaderboard(filters);
-  const leaderboard = result.data || [];
-
-  if (!result.success || leaderboard.length === 0) {
+  if (leaderboard.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border/50 bg-card/30 p-12 text-center">
         <Trophy className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
