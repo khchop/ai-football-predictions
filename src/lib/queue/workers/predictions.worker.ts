@@ -29,13 +29,14 @@ import { generateBettingContent } from '@/lib/content/match-content';
 import { v4 as uuidv4 } from 'uuid';
 import { loggers } from '@/lib/logger/modules';
 import { getMatchWithRetry } from '@/lib/utils/retry-helpers';
+import { classifyErrorType, isModelSpecificFailure, ErrorType } from '@/lib/utils/retry-config';
 
 /**
- * Error classification for retry strategy
+ * Error classification for retry strategy (LEGACY - now using retry-config)
  */
-type ErrorType = 'retryable' | 'unrecoverable' | 'unknown';
+type LegacyErrorType = 'retryable' | 'unrecoverable' | 'unknown';
 
-function classifyError(error: unknown): ErrorType {
+function classifyError(error: unknown): LegacyErrorType {
   const errorMsg = error instanceof Error ? error.message : String(error);
 
   // Retryable: network errors, timeouts, connection issues
@@ -162,8 +163,9 @@ export function createPredictionsWorker() {
 
               // Validate response before parsing (defensive null check)
               if (!rawResponse || typeof rawResponse !== 'string') {
-                log.warn({ modelId: provider.id }, 'Provider returned null/invalid response');
-                await recordModelFailure(provider.id, 'empty_response');
+                const errorType = ErrorType.PARSE_ERROR; // Empty response treated as parse error
+                log.warn({ modelId: provider.id, errorType }, 'Provider returned null/invalid response');
+                await recordModelFailure(provider.id, 'empty_response', errorType);
                 failCount++;
                 continue;
               }
@@ -174,13 +176,15 @@ export function createPredictionsWorker() {
                if (!parsed.success || parsed.predictions.length === 0) {
                  // Log error with raw response preview for debugging
                  const responsePreview = rawResponse.slice(0, 300).replace(/\s+/g, ' ');
+                 const errorType = ErrorType.PARSE_ERROR;
                  log.warn({
                    matchId,
                    modelId: provider.id,
                    error: parsed.error,
+                   errorType,
                    rawResponsePreview: responsePreview
                  }, `Failed to parse prediction`);
-                 await recordModelFailure(provider.id, parsed.error || 'Parse failed');
+                 await recordModelFailure(provider.id, parsed.error || 'Parse failed', errorType);
                  failCount++;
                  continue;
                }
@@ -207,8 +211,27 @@ export function createPredictionsWorker() {
               successCount++;
               } catch (modelError: unknown) {
                 const errorMessage = modelError instanceof Error ? modelError.message : String(modelError);
-                log.warn({ matchId, modelId: provider.id, error: errorMessage }, `Model prediction failed`);
-                await recordModelFailure(provider.id, errorMessage);
+                const errorType = classifyErrorType(modelError);
+
+                log.warn({
+                  matchId,
+                  modelId: provider.id,
+                  error: errorMessage,
+                  errorType,
+                  countsTowardDisable: isModelSpecificFailure(errorType),
+                }, `Model prediction failed`);
+
+                await recordModelFailure(provider.id, errorMessage, errorType);
+
+                // Log if error is model-specific (counts toward disable threshold)
+                if (isModelSpecificFailure(errorType)) {
+                  log.warn({
+                    modelId: provider.id,
+                    errorType,
+                    errorMessage,
+                  }, 'Model-specific failure - counts toward disable threshold');
+                }
+
                failCount++;
             }
          }
