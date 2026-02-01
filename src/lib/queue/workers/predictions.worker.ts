@@ -318,7 +318,7 @@ export function createPredictionsWorker() {
       connection: getQueueConnection(),
       concurrency: 1, // Process one match at a time (models run in parallel within)
       settings: {
-        backoffStrategy: (attemptsMade: number, type: string, err?: Error) => {
+        backoffStrategy: (attemptsMade: number, type?: string, err?: Error) => {
           const errorMsg = err?.message || '';
 
           // Rate limit: 60s fixed backoff
