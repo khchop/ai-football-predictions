@@ -10,31 +10,31 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 ## Current Position
 
 Phase: 1 of 4 (Critical Stability)
-Plan: 2 of 4 in current phase
-Status: In progress
-Last activity: 2026-02-01 - Completed 01-02-PLAN.md
+Plan: 4 of 4 in current phase
+Status: Phase complete
+Last activity: 2026-02-01 - Completed 01-04-PLAN.md
 
-Progress: [██████░░░░░░░░░░░░░] 50%
+Progress: [████████████░░░░░░░] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 3.0 min (3, 3 min)
-- Total execution time: 6 min
+- Total plans completed: 4
+- Average duration: 4.0 min (3, 3, 7, 3 min)
+- Total execution time: 16 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Critical Stability | 2/4 | 6 min | 3.0 min/plan |
+| 1. Critical Stability | 4/4 | 16 min | 4.0 min/plan |
 | 2. Data Accuracy | 0/4 | - | - |
 | 3. Infrastructure Performance | 0/4 | - | - |
 | 4. UX Polish | 0/3 | - | - |
 
 **Recent Trend:**
-- Last 2 plans: 01-01 (3 min), 01-02 (3 min)
-- Trend: Consistent 3-minute execution per plan
+- Last 5 plans: 01-01 (3 min), 01-02 (3 min), 01-03 (7 min), 01-04 (3 min)
+- Trend: Averaging ~4 min per plan, one outlier (01-03) at 7 min
 
 *Updated after each plan completion*
 
@@ -58,6 +58,11 @@ Recent decisions affecting current work:
 - Backoff strategy: rate-limit 60s fixed, timeout linear (5s increments max 30s), parse exponential (5s→10s→20s), default exponential+jitter
 - Model isolation: each model wrapped in try-catch, failures don't affect other models in batch
 - Null validation: check matchData and rawResponse for null/malformed before processing
+- Error-type-aware backoff: 7 error types with type-specific strategies (rate-limit: 60s, timeout: linear, parse: exponential)
+- Model-specific failure classification: Only parse errors and 4xx count toward disable threshold, transient errors excluded
+- Partial failure reset: Recovered models start with consecutiveFailures=2, require 3 more failures before re-disable
+- Auto-disable threshold: Increased from 3 to 5 consecutive model-specific failures
+- Automated recovery: Models recover after 1h cooldown with partial reset via 30-minute recovery worker
 
 ### Pending Todos
 
@@ -70,5 +75,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 01-02-PLAN.md (defensive error handling)
+Stopped at: Completed 01-04-PLAN.md (error-type-aware timeout & model recovery) - PHASE 1 COMPLETE
 Resume file: None
