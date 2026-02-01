@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { loggers } from '@/lib/logger/modules';
 
 import { withCache, cacheKeys, CACHE_TTL, cacheDelete } from '@/lib/cache/redis';
+import { calculateQuotaScores } from '@/lib/utils/scoring';
 
 // Legacy betting system constant (unused, kept for model_balances table compatibility)
 const LEGACY_STARTING_BALANCE = 1000;
@@ -612,6 +613,39 @@ export async function getModelById(id: string): Promise<Model | undefined> {
   const db = getDb();
   const result = await db.select().from(models).where(eq(models.id, id)).limit(1);
   return result[0];
+}
+
+/**
+ * Determine if a match result should update model streaks
+ *
+ * Rules:
+ * - Only finished matches with valid scores count
+ * - Voided, cancelled, postponed matches do NOT affect streaks
+ * - Predictions with 'void' status do NOT affect streaks
+ */
+export function shouldUpdateStreak(
+  matchStatus: string,
+  homeScore: number | null,
+  awayScore: number | null,
+  predictionStatus: string
+): boolean {
+  // Only finished matches count
+  if (matchStatus !== 'finished') {
+    return false;
+  }
+
+  // Must have valid scores
+  if (homeScore === null || awayScore === null) {
+    return false;
+  }
+
+  // Voided predictions don't count
+  if (predictionStatus === 'void') {
+    return false;
+  }
+
+  // Valid match with valid prediction - update streak
+  return true;
 }
 
 // Update model streak after a prediction is scored
@@ -1593,6 +1627,231 @@ export async function getMatchByExternalId(externalId: string): Promise<Match | 
 }
 
 // ============= PREDICTIONS SYSTEM (Kicktipp Quota Scoring) =============
+
+/**
+ * Helper function to update model streak within a transaction context
+ * Uses FOR UPDATE row-level locking to prevent lost updates when multiple
+ * predictions for the same model are scored concurrently.
+ */
+async function updateModelStreakInTransaction(
+  tx: any, // Transaction context from drizzle-orm
+  modelId: string,
+  resultType: 'exact' | 'tendency' | 'wrong'
+): Promise<void> {
+  // Lock model row for update to prevent concurrent streak modifications
+  const modelResult = await tx
+    .select()
+    .from(models)
+    .where(eq(models.id, modelId))
+    .for('update')
+    .limit(1);
+
+  const model = modelResult[0];
+  if (!model) return;
+
+  const currentStreak = model.currentStreak || 0;
+  const currentStreakType = model.currentStreakType || 'none';
+  let bestStreak = model.bestStreak || 0;
+  let worstStreak = model.worstStreak || 0;
+  let bestExactStreak = model.bestExactStreak || 0;
+  let bestTendencyStreak = model.bestTendencyStreak || 0;
+
+  let newStreak: number;
+  let newStreakType: string;
+
+  if (resultType === 'wrong') {
+    // Wrong prediction - start or extend losing streak
+    if (currentStreak < 0) {
+      newStreak = currentStreak - 1; // Extend losing streak
+    } else {
+      newStreak = -1; // Start new losing streak
+    }
+    newStreakType = 'none';
+    // Update worst streak if this is worse
+    if (newStreak < worstStreak) {
+      worstStreak = newStreak;
+    }
+  } else {
+    // Correct prediction (exact or tendency)
+    if (currentStreak > 0) {
+      newStreak = currentStreak + 1; // Extend winning streak
+      // Keep the "better" streak type (exact > tendency)
+      if (resultType === 'exact') {
+        newStreakType = 'exact';
+      } else {
+        newStreakType = currentStreakType === 'exact' ? 'exact' : 'tendency';
+      }
+    } else {
+      newStreak = 1; // Start new winning streak
+      newStreakType = resultType;
+    }
+    // Update best streaks
+    if (newStreak > bestStreak) {
+      bestStreak = newStreak;
+    }
+    // Track consecutive exact scores separately
+    if (resultType === 'exact') {
+      const exactCount = currentStreakType === 'exact' ? bestExactStreak + 1 : 1;
+      if (exactCount > bestExactStreak) {
+        bestExactStreak = exactCount;
+      }
+    }
+    if (newStreak > bestTendencyStreak) {
+      bestTendencyStreak = newStreak;
+    }
+  }
+
+  await tx
+    .update(models)
+    .set({
+      currentStreak: newStreak,
+      currentStreakType: newStreakType,
+      bestStreak,
+      worstStreak,
+      bestExactStreak,
+      bestTendencyStreak,
+    })
+    .where(eq(models.id, modelId));
+}
+
+/**
+ * Score all predictions for a match in a single database transaction with row-level locking.
+ *
+ * This function prevents race conditions when concurrent settlement jobs attempt to score
+ * the same match (e.g., live-score worker + backfill job running simultaneously).
+ *
+ * Uses SELECT FOR UPDATE to lock prediction rows during scoring, ensuring exactly-once
+ * scoring per prediction even under concurrent access.
+ *
+ * IMPORTANT: Cache invalidation must be called by the caller AFTER this function returns
+ * successfully. Do NOT call cache invalidation inside transactions.
+ *
+ * @returns Object with success status, scored count, failed count, and optional error
+ */
+export async function scorePredictionsTransactional(
+  matchId: string,
+  actualHome: number,
+  actualAway: number,
+  quotas: { home: number; draw: number; away: number }
+): Promise<{
+  success: boolean;
+  scoredCount: number;
+  failedCount: number;
+  totalPointsAwarded: number;
+  error?: string;
+}> {
+  const db = getDb();
+  const log = loggers.db.child({ matchId, fn: 'scorePredictionsTransactional' });
+
+  let scoredCount = 0;
+  let failedCount = 0;
+  let totalPointsAwarded = 0;
+
+  try {
+    await db.transaction(async (tx) => {
+      // Step 1: Lock all pending predictions for this match with FOR UPDATE
+      // This prevents other settlement jobs from reading/updating these rows
+      const pendingPredictions = await tx
+        .select()
+        .from(predictions)
+        .where(and(
+          eq(predictions.matchId, matchId),
+          eq(predictions.status, 'pending')
+        ))
+        .for('update');
+
+      // If no pending predictions, another job already scored them (idempotent)
+      if (pendingPredictions.length === 0) {
+        log.info('No pending predictions found - already scored');
+        return;
+      }
+
+      log.info({ count: pendingPredictions.length }, 'Locked predictions for scoring');
+
+      // Step 2: Score each prediction within the transaction
+      for (const prediction of pendingPredictions) {
+        try {
+          // Calculate points using Kicktipp Quota System
+          const breakdown = calculateQuotaScores({
+            predictedHome: prediction.predictedHome,
+            predictedAway: prediction.predictedAway,
+            actualHome,
+            actualAway,
+            quotaHome: quotas.home,
+            quotaDraw: quotas.draw,
+            quotaAway: quotas.away,
+          });
+
+          // Update prediction with scores
+          await tx
+            .update(predictions)
+            .set({
+              tendencyPoints: breakdown.tendencyPoints,
+              goalDiffBonus: breakdown.goalDiffBonus,
+              exactScoreBonus: breakdown.exactScoreBonus,
+              totalPoints: breakdown.total,
+              status: 'scored',
+              scoredAt: new Date(),
+            })
+            .where(eq(predictions.id, prediction.id));
+
+          // Step 3: Update model streak within same transaction
+          // This ensures atomicity of both prediction scoring and streak updates
+          const resultType: 'exact' | 'tendency' | 'wrong' =
+            breakdown.total === 0 ? 'wrong' :
+            breakdown.exactScoreBonus > 0 ? 'exact' : 'tendency';
+
+          try {
+            await updateModelStreakInTransaction(tx, prediction.modelId, resultType);
+          } catch (streakError: any) {
+            // Log but don't fail - prediction score is the primary concern
+            log.warn({
+              modelId: prediction.modelId,
+              resultType,
+              error: streakError.message
+            }, 'Failed to update model streak within transaction');
+          }
+
+          scoredCount++;
+          totalPointsAwarded += breakdown.total;
+
+          log.debug({
+            predictionId: prediction.id,
+            modelId: prediction.modelId,
+            points: breakdown.total,
+          }, 'Scored prediction');
+
+        } catch (predError: any) {
+          failedCount++;
+          log.error({
+            predictionId: prediction.id,
+            modelId: prediction.modelId,
+            error: predError.message,
+          }, 'Failed to score individual prediction');
+          // Continue with other predictions - don't abort entire transaction
+          // unless we want strict all-or-nothing (can be changed if needed)
+        }
+      }
+    });
+
+    return {
+      success: true,
+      scoredCount,
+      failedCount,
+      totalPointsAwarded,
+    };
+
+  } catch (error: any) {
+    log.error({ error: error.message, stack: error.stack }, 'Transaction failed');
+    return {
+      success: false,
+      scoredCount: 0,
+      failedCount: 0,
+      totalPointsAwarded: 0,
+      error: error.message,
+    };
+  }
+}
 
 // Get predictions for a match with model details
 export async function getPredictionsForMatchWithDetails(matchId: string) {
