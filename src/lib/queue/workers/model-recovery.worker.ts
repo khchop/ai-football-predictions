@@ -10,75 +10,49 @@
 import { Worker, Job } from 'bullmq';
 import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES } from '../index';
-import { getAutoDisabledModels, reEnableModel } from '@/lib/db/queries';
+import { recoverDisabledModels } from '@/lib/db/queries';
 import { loggers } from '@/lib/logger/modules';
 
-const COOLDOWN_HOURS = 1; // Re-enable after 1 hour cooldown
-
+/**
+ * Model Recovery Worker
+ *
+ * Checks for auto-disabled models that have been in cooldown long enough (1 hour)
+ * and re-enables them with partial failure count reset (consecutiveFailures=2).
+ *
+ * This requires 3 more model-specific failures before re-disable (threshold is 5).
+ *
+ * Runs every 30 minutes.
+ */
 export function createModelRecoveryWorker() {
   return new Worker(
     QUEUE_NAMES.MODEL_RECOVERY,
     async (job: Job) => {
       const log = loggers.modelRecoveryWorker.child({ jobId: job.id, jobName: job.name });
-      
+
       try {
-        log.info('Checking for models ready to re-enable...');
-        
-        const disabledModels = await getAutoDisabledModels();
-        
-        if (disabledModels.length === 0) {
-          log.info('No disabled models found');
-          return { recovered: 0, checked: 0, failed: 0, errors: [] };
-        }
-        
-        const cooldownMs = COOLDOWN_HOURS * 60 * 60 * 1000;
-        const now = Date.now();
-        let recovered = 0;
-        let failed = 0;
-        const errors: Array<{ modelId: string; displayName: string; error: string }> = [];
-        
-        for (const model of disabledModels) {
-          const lastFailure = model.lastFailureAt ? new Date(model.lastFailureAt).getTime() : 0;
-          const timeSinceFailure = now - lastFailure;
-          
-          if (timeSinceFailure >= cooldownMs) {
-            try {
-              // Attempt to re-enable this model
-              await reEnableModel(model.id);
-              log.info({ modelId: model.id, displayName: model.displayName, disabledMinutes: Math.round(timeSinceFailure / 60000) }, '✓ Re-enabled model');
-              recovered++;
-            } catch (error) {
-              // Isolate failures - continue with other models
-              failed++;
-              const errorMsg = error instanceof Error ? error.message : String(error);
-              errors.push({ modelId: model.id, displayName: model.displayName, error: errorMsg });
-              log.warn({ modelId: model.id, displayName: model.displayName, error: errorMsg }, '✗ Failed to re-enable model');
-            }
-          } else {
-            const remainingMin = Math.ceil((cooldownMs - timeSinceFailure) / 60000);
-            log.debug({ modelId: model.id, displayName: model.displayName, remainingMinutes: remainingMin }, 'Model still in cooldown');
-          }
-        }
-        
-        log.info({ recovered, checked: disabledModels.length, failed }, 'Model recovery complete');
-        return { recovered, checked: disabledModels.length, failed, errors };
+        log.info('Starting model recovery check');
+
+        const recoveredCount = await recoverDisabledModels();
+
+        log.info({ recoveredCount }, 'Model recovery check completed');
+        return { recoveredCount };
+
       } catch (error) {
-         // Outer catch for critical errors
-         const errorMsg = error instanceof Error ? error.message : String(error);
-         log.error({ error: errorMsg }, 'Model recovery worker failed');
-         
-         Sentry.captureException(error, {
-           level: 'error',
-           tags: {
-             worker: 'model-recovery',
-           },
-           extra: {
-             jobId: job.id,
-             errorMessage: errorMsg,
-           },
-         });
-         
-         throw error; // Re-throw for BullMQ retry
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        log.error({ error: errorMsg }, 'Model recovery check failed');
+
+        Sentry.captureException(error, {
+          level: 'error',
+          tags: {
+            worker: 'model-recovery',
+          },
+          extra: {
+            jobId: job.id,
+            errorMessage: errorMsg,
+          },
+        });
+
+        throw error; // Re-throw for BullMQ retry
       }
     },
     {
