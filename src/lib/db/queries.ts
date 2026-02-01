@@ -743,35 +743,62 @@ export async function recordModelSuccess(modelId: string): Promise<void> {
 }
 
 // Record a failed prediction attempt for a model
-// Auto-disables after 3 consecutive failures
+// Auto-disables after 5 consecutive MODEL-SPECIFIC failures (parse errors, 4xx)
+// Transient errors (rate limits, timeouts, 5xx) do NOT count toward disable
 export async function recordModelFailure(
   modelId: string,
-  reason: string
-): Promise<{ autoDisabled: boolean }> {
+  reason: string,
+  errorType?: string
+): Promise<{ autoDisabled: boolean; consecutiveFailures: number }> {
   const db = getDb();
-  
+
+  const DISABLE_THRESHOLD = 5;
+  const isModelSpecific = errorType === 'parse-error' || errorType === 'client-error';
+
+  // Only increment consecutive failures for model-specific errors
+  const incrementExpr = isModelSpecific
+    ? sql`COALESCE(${models.consecutiveFailures}, 0) + 1`
+    : models.consecutiveFailures;
+
+  // Auto-disable only for model-specific failures at threshold
+  const autoDisableExpr = isModelSpecific
+    ? sql`CASE WHEN COALESCE(${models.consecutiveFailures}, 0) + 1 >= ${DISABLE_THRESHOLD} THEN TRUE ELSE ${models.autoDisabled} END`
+    : models.autoDisabled;
+
   // Use atomic SQL to avoid race condition
   const result = await db
     .update(models)
     .set({
-      consecutiveFailures: sql`COALESCE(${models.consecutiveFailures}, 0) + 1`,
+      consecutiveFailures: incrementExpr,
       lastFailureAt: new Date().toISOString(),
       failureReason: reason.substring(0, 500), // Truncate long error messages
-      // Auto-disable if failures >= 3 (evaluated atomically)
-      autoDisabled: sql`CASE WHEN COALESCE(${models.consecutiveFailures}, 0) + 1 >= 3 THEN TRUE ELSE ${models.autoDisabled} END`,
+      autoDisabled: autoDisableExpr,
     })
     .where(eq(models.id, modelId))
-    .returning({ 
-      newFailures: models.consecutiveFailures,
+    .returning({
+      consecutiveFailures: models.consecutiveFailures,
       autoDisabled: models.autoDisabled,
     });
-  
-  return { 
-    autoDisabled: result[0]?.autoDisabled || false,
+
+  const updated = result[0];
+
+  // Log auto-disable event
+  if (updated?.autoDisabled && isModelSpecific) {
+    loggers.db.warn({
+      modelId,
+      consecutiveFailures: updated.consecutiveFailures,
+      threshold: DISABLE_THRESHOLD,
+      errorType,
+    }, 'Model auto-disabled after consecutive failures');
+  }
+
+  return {
+    autoDisabled: updated?.autoDisabled || false,
+    consecutiveFailures: updated?.consecutiveFailures || 0,
   };
 }
 
-// Re-enable a model that was auto-disabled
+// Re-enable a model that was auto-disabled (legacy - use recoverDisabledModels for automated recovery)
 export async function reEnableModel(modelId: string): Promise<void> {
   const db = getDb();
   await db
@@ -782,6 +809,44 @@ export async function reEnableModel(modelId: string): Promise<void> {
       failureReason: null,
     })
     .where(eq(models.id, modelId));
+}
+
+// Recover auto-disabled models after cooldown
+// Partial reset: consecutiveFailures = 2 (require 3 more failures before re-disable at threshold 5)
+export async function recoverDisabledModels(): Promise<number> {
+  const db = getDb();
+  const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour cooldown
+
+  const disabledModels = await getAutoDisabledModels();
+  let recoveredCount = 0;
+
+  for (const model of disabledModels) {
+    const lastFailure = model.lastFailureAt ? new Date(model.lastFailureAt).getTime() : 0;
+    const timeSinceFailure = Date.now() - lastFailure;
+
+    if (timeSinceFailure >= COOLDOWN_MS) {
+      // Reset to partial count (2) - not fully trusted yet
+      await db
+        .update(models)
+        .set({
+          autoDisabled: false,
+          consecutiveFailures: 2,
+          failureReason: 'Recovered after 1h cooldown',
+        })
+        .where(eq(models.id, model.id));
+
+      loggers.db.info({
+        modelId: model.id,
+        displayName: model.displayName,
+        consecutiveFailures: 2,
+        cooldownHours: COOLDOWN_MS / (60 * 60 * 1000),
+      }, 'Model re-enabled after cooldown with partial reset');
+
+      recoveredCount++;
+    }
+  }
+
+  return recoveredCount;
 }
 
 // Get all models with their health status (for admin page)
