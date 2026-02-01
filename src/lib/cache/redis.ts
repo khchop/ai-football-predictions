@@ -15,6 +15,10 @@ let lastHealthCheck = 0;
 const HEALTH_CHECK_INTERVAL_HEALTHY_MS = 30000; // 30 seconds when healthy
 const HEALTH_CHECK_INTERVAL_DEGRADED_MS = 5000; // 5 seconds when degraded
 
+// Graceful degradation state
+let redisUnavailableUntil = 0; // Timestamp when to retry Redis
+const REDIS_UNAVAILABLE_COOLDOWN_MS = 5000; // 5 second cooldown before retry
+
 // Sentinel value for cached null - distinguishes cache hit (null value) from cache miss
 const CACHE_NULL_SENTINEL = '___CACHE_NULL___';
 
@@ -174,6 +178,34 @@ export async function closeRedis(): Promise<void> {
  }
 
 /**
+ * Check if Redis should be used (with cooldown for graceful degradation)
+ */
+function shouldUseRedis(): boolean {
+  // Check if in cooldown period
+  if (redisUnavailableUntil > Date.now()) {
+    return false;
+  }
+
+  // Check if Redis client exists
+  const redis = getRedis();
+  return redis !== null;
+}
+
+/**
+ * Mark Redis as unavailable and set cooldown
+ */
+function markRedisUnavailable(error?: unknown): void {
+  redisUnavailableUntil = Date.now() + REDIS_UNAVAILABLE_COOLDOWN_MS;
+  isRedisHealthy = false;
+
+  loggers.cache.warn({
+    error: error instanceof Error ? error.message : String(error),
+    cooldownMs: REDIS_UNAVAILABLE_COOLDOWN_MS,
+    retryAt: new Date(redisUnavailableUntil).toISOString()
+  }, 'Redis marked unavailable - entering degraded mode');
+}
+
+/**
  * Cache TTL presets (in seconds)
  */
 export const CACHE_TTL = {
@@ -206,6 +238,8 @@ export const CACHE_TTL = {
  * Generic cache get with type safety
  */
 export async function cacheGet<T>(key: string): Promise<T | null> {
+   if (!shouldUseRedis()) return null;
+
    const redis = getRedis();
    if (!redis) return null;
 
@@ -215,6 +249,7 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
       if (cached === CACHE_NULL_SENTINEL) return null;  // Cached null value
       return JSON.parse(cached) as T;
     } catch (error) {
+      markRedisUnavailable(error);
       loggers.cache.error({ key, error: error instanceof Error ? error.message : String(error) }, 'Error getting cache value');
       return null;
     }
@@ -228,6 +263,8 @@ export async function cacheSet<T>(
    value: T,
    ttlSeconds: number
 ): Promise<boolean> {
+   if (!shouldUseRedis()) return false;
+
    const redis = getRedis();
    if (!redis) return false;
 
@@ -255,6 +292,7 @@ export async function cacheSet<T>(
       await redis.setex(key, ttlSeconds, serialized);
       return true;
     } catch (error) {
+      markRedisUnavailable(error);
       loggers.cache.error({ key, ttl: ttlSeconds, error: error instanceof Error ? error.message : String(error) }, 'Cache set failed: Redis error');
       return false;
     }
@@ -264,6 +302,8 @@ export async function cacheSet<T>(
  * Delete a cache key
  */
 export async function cacheDelete(key: string): Promise<boolean> {
+  if (!shouldUseRedis()) return false;
+
   const redis = getRedis();
   if (!redis) return false;
 
@@ -271,6 +311,7 @@ export async function cacheDelete(key: string): Promise<boolean> {
      await redis.del(key);
      return true;
    } catch (error) {
+     markRedisUnavailable(error);
      loggers.cache.error({ key, error: error instanceof Error ? error.message : String(error) }, 'Error deleting cache value');
      return false;
    }
@@ -420,34 +461,39 @@ export async function withCache<T>(
    ttlSeconds: number,
    fetchFn: () => Promise<T>
 ): Promise<T> {
-   const redis = getRedis();
-   
-   // Try to get from cache first
-   if (redis) {
-     try {
-       const cached = await redis.get(key);
-       if (cached !== null) {
-         // Key exists - return value (null if sentinel, parsed value otherwise)
-         if (cached === CACHE_NULL_SENTINEL) {
-           return null as T;  // Cached null value
+   // Try to get from cache first (with graceful degradation)
+   if (shouldUseRedis()) {
+     const redis = getRedis();
+     if (redis) {
+       try {
+         const cached = await redis.get(key);
+         if (cached !== null) {
+           // Key exists - return value (null if sentinel, parsed value otherwise)
+           if (cached === CACHE_NULL_SENTINEL) {
+             return null as T;  // Cached null value
+           }
+           return JSON.parse(cached) as T;
          }
-         return JSON.parse(cached) as T;
+       } catch (error) {
+         markRedisUnavailable(error);
+         loggers.cache.error({ key, error: error instanceof Error ? error.message : String(error) }, 'Error reading cache - continuing without cache');
        }
-     } catch (error) {
-       loggers.cache.error({ key, error: error instanceof Error ? error.message : String(error) }, 'Error reading cache');
      }
    }
 
-   // Cache miss - fetch fresh
+   // Cache miss or degraded mode - fetch fresh
    const data = await fetchFn();
-   
+
    // Cache the result (fire and forget with logging)
-   cacheSet(key, data, ttlSeconds).catch((error) => {
-     loggers.cache.warn(
-       { key, error: error instanceof Error ? error.message : String(error) },
-       'Background cache set failed - data returned but not cached'
-     );
-   });
+   // Only attempt if Redis is available
+   if (shouldUseRedis()) {
+     cacheSet(key, data, ttlSeconds).catch((error) => {
+       loggers.cache.warn(
+         { key, error: error instanceof Error ? error.message : String(error) },
+         'Background cache set failed - data returned but not cached'
+       );
+     });
+   }
 
    return data;
 }

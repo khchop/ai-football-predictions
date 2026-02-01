@@ -108,6 +108,22 @@ export type NewModel = typeof models.$inferInsert;
 export type ModelUsage = typeof modelUsage.$inferSelect;
 export type NewModelUsage = typeof modelUsage.$inferInsert;
 
+// Circuit breaker state persistence (survives Redis restarts)
+export const circuitBreakerStates = pgTable('circuit_breaker_states', {
+  service: text('service').primaryKey(), // 'api-football', 'together-predictions', etc.
+  state: text('state').notNull().default('closed'), // 'closed', 'open', 'half-open'
+  failures: integer('failures').default(0),
+  successes: integer('successes').default(0),
+  lastFailureAt: timestamp('last_failure_at'),
+  lastStateChange: timestamp('last_state_change').defaultNow(),
+  totalFailures: integer('total_failures').default(0),
+  totalSuccesses: integer('total_successes').default(0),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export type CircuitBreakerState = typeof circuitBreakerStates.$inferSelect;
+export type NewCircuitBreakerState = typeof circuitBreakerStates.$inferInsert;
+
 // Pre-match analysis data from API-Football
 export const matchAnalysis = pgTable('match_analysis', {
   id: text('id').primaryKey(), // UUID
