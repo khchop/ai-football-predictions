@@ -10,30 +10,30 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 ## Current Position
 
 Phase: 2 of 4 (Data Accuracy)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-02-01 - Completed 02-02-PLAN.md (Kicktipp-accurate quota calculation)
+Last activity: 2026-02-01 - Completed 02-03-PLAN.md (Streak edge cases)
 
-Progress: [███████░░░░░░░░░░░░] 40%
+Progress: [████████░░░░░░░░░░░] 47%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 3.9 min (3, 3, 7, 3, 4, 3.5 min)
-- Total execution time: 23.5 min
+- Total plans completed: 7
+- Average duration: 3.9 min (3, 3, 7, 3, 4, 3.5, 4 min)
+- Total execution time: 27.5 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Critical Stability | 4/4 | 16 min | 4.0 min/plan |
-| 2. Data Accuracy | 2/4 | 7.5 min | 3.75 min/plan |
+| 2. Data Accuracy | 3/4 | 11.5 min | 3.8 min/plan |
 | 3. Infrastructure Performance | 0/4 | - | - |
 | 4. UX Polish | 0/3 | - | - |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (7 min), 01-04 (3 min), 02-01 (4 min), 02-02 (3.5 min)
+- Last 5 plans: 01-04 (3 min), 02-01 (4 min), 02-02 (3.5 min), 02-03 (4 min)
 - Trend: Consistent ~3.5-4 min per plan
 
 *Updated after each plan completion*
@@ -67,6 +67,8 @@ Recent decisions affecting current work:
 - Streak updates inside transaction: Model streak updates happen atomically with prediction scoring
 - Post-commit cache invalidation: Cache only invalidated after transaction commits successfully
 - Kicktipp formula: Use (MAX / (10 * P)) - (MAX / 10) + MIN for quota calculation
+- shouldUpdateStreak validates match status (finished), scores (not null), and prediction status (not void)
+- FOR UPDATE row lock on models table prevents streak corruption from concurrent scoring
 
 ### Pending Todos
 
@@ -79,5 +81,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 02-02-PLAN.md (Kicktipp-accurate quota calculation)
+Stopped at: Completed 02-03-PLAN.md (Streak edge cases)
 Resume file: None
