@@ -47,13 +47,13 @@ Plans:
   3. Model streaks correctly reset on wrong predictions and ignore voided/cancelled matches
   4. Cache shows updated data within 5 seconds of settlement completion
   5. Quota points match Kicktipp standard formula (2-6 points based on prediction rarity)
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 02-01: Settlement transaction with row locking
-- [ ] 02-02: Cache invalidation timing (after all predictions scored)
-- [ ] 02-03: Quota calculation formula correction
-- [ ] 02-04: Streak tracking edge case handling
+- [ ] 02-01-PLAN.md — Settlement transaction with row locking and atomic streak updates
+- [ ] 02-02-PLAN.md — Quota calculation formula correction to match Kicktipp standard
+- [ ] 02-03-PLAN.md — Streak tracking edge cases (voided/cancelled/postponed matches)
+- [ ] 02-04-PLAN.md — Cache invalidation with SCAN and post-transaction timing
 
 ### Phase 3: Infrastructure Performance
 **Goal**: Redis operations are non-blocking and pages load quickly
@@ -96,7 +96,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Critical Stability | 4/4 | ✓ Complete | 2026-02-01 |
-| 2. Data Accuracy | 0/4 | Not started | - |
+| 2. Data Accuracy | 0/4 | In progress | - |
 | 3. Infrastructure Performance | 0/4 | Not started | - |
 | 4. UX Polish | 0/3 | Not started | - |
 
