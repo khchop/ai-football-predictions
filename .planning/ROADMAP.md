@@ -80,12 +80,12 @@ Plans:
   1. Prediction cards display correctly on mobile without horizontal scrolling
   2. Leaderboard updates visible within 30 seconds of settlement (polling or cache-busting)
   3. React rendering failures show error UI, not white screens (error boundaries catch all async failures)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: Mobile responsiveness for prediction components
-- [ ] 04-02: Leaderboard polling/auto-refresh
-- [ ] 04-03: Error boundary coverage expansion
+- [ ] 04-01-PLAN.md — Mobile responsive prediction cards
+- [ ] 04-02-PLAN.md — Leaderboard auto-refresh with LiveTabRefresher
+- [ ] 04-03-PLAN.md — Error boundary coverage with react-error-boundary
 
 ## Progress
 
@@ -97,7 +97,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. Critical Stability | 4/4 | ✓ Complete | 2026-02-01 |
 | 2. Data Accuracy | 4/4 | ✓ Complete | 2026-02-01 |
 | 3. Infrastructure Performance | 3/3 | ✓ Complete | 2026-02-01 |
-| 4. UX Polish | 0/3 | Not started | - |
+| 4. UX Polish | 0/3 | Planned | - |
 
 ---
 *Roadmap created: 2026-01-31*
