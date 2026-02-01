@@ -37,6 +37,36 @@ export interface PredictMatchPayload {
   force?: boolean;       // Generate even without lineups
 }
 
+// Prediction job data (extends payload with retry tracking)
+export interface PredictionJobData extends PredictMatchPayload {
+  retryCount?: number;
+}
+
+// Job execution result
+export interface JobResult {
+  success: boolean;
+  predictionCount?: number;
+  failedCount?: number;
+  skipped?: boolean;
+  reason?: string;
+  error?: string;
+}
+
+// Job status enumeration
+export enum JobStatus {
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  SKIPPED = 'skipped',
+}
+
+// Worker configuration
+export interface WorkerConfig {
+  concurrency: number;
+  maxRetries: number;
+}
+
 // Monitor live (kickoff, repeats every 60s)
 export interface MonitorLivePayload {
   matchId: string;
