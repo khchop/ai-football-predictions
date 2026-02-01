@@ -356,24 +356,60 @@ export const cacheKeys = {
 
 /**
  * Invalidate caches when match finishes
- * Called from scoring logic
+ * Called from scoring logic AFTER transaction commits
  */
 export async function invalidateMatchCaches(matchId: string): Promise<void> {
   const redis = getRedis();
   if (!redis) return;
 
-   try {
-     // Invalidate leaderboard caches (all filter combinations)
-     await cacheDeletePattern('db:leaderboard:*');
-     // Invalidate overall stats
-     await cacheDelete(cacheKeys.overallStats());
-     // Invalidate specific match predictions
-     await cacheDelete(cacheKeys.matchPredictions(matchId));
-     
-     loggers.cache.debug({ matchId }, 'Invalidated match caches');
-   } catch (error) {
-     loggers.cache.error({ matchId, error: error instanceof Error ? error.message : String(error) }, 'Error invalidating match caches');
-   }
+  try {
+    // Delete in parallel for speed
+    await Promise.all([
+      // Invalidate ALL leaderboard caches (various filter combinations)
+      cacheDeletePattern('db:leaderboard:*'),
+
+      // Invalidate overall stats
+      cacheDelete(cacheKeys.overallStats()),
+
+      // Invalidate top performing model cache
+      cacheDelete(cacheKeys.topPerformingModel()),
+
+      // Invalidate specific match predictions cache
+      cacheDelete(cacheKeys.matchPredictions(matchId)),
+    ]);
+
+    loggers.cache.info({ matchId }, 'Invalidated match caches (leaderboard, stats, predictions)');
+  } catch (error) {
+    loggers.cache.error({
+      matchId,
+      error: error instanceof Error ? error.message : String(error)
+    }, 'Error invalidating match caches');
+  }
+}
+
+/**
+ * Force refresh stats cache after settlement
+ * Called after transaction commit to ensure fresh data
+ */
+export async function invalidateStatsCache(options?: { matchId?: string }): Promise<void> {
+  const redis = getRedis();
+  if (!redis) return;
+
+  try {
+    await Promise.all([
+      cacheDelete(cacheKeys.overallStats()),
+      cacheDelete(cacheKeys.topPerformingModel()),
+      // Model-specific caches if matchId provided
+      ...(options?.matchId ? [cacheDeletePattern('db:model:*:stats')] : []),
+    ]);
+
+    loggers.cache.debug(options || {}, 'Invalidated stats caches');
+  } catch (error) {
+    loggers.cache.error({
+      error: error instanceof Error ? error.message : String(error),
+      ...options,
+    }, 'Error invalidating stats caches');
+  }
 }
 
 /**
