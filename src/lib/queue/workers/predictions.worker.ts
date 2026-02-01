@@ -71,10 +71,15 @@ export function createPredictionsWorker() {
     QUEUE_NAMES.PREDICTIONS,
     async (job: Job<PredictMatchPayload>) => {
       const { matchId, skipIfDone = false } = job.data;
-      const log = loggers.predictionsWorker.child({ jobId: job.id, jobName: job.name });
-      
-      log.info(`Generating predictions for match ${matchId}`);
-      
+      const log = loggers.predictionsWorker.child({
+        jobId: job.id,
+        jobName: job.name,
+        matchId,
+        attempt: job.attemptsMade + 1,
+      });
+
+      log.info({ matchId }, 'Starting prediction job');
+
       try {
          // Check if predictions already exist
          if (skipIfDone) {
@@ -84,11 +89,11 @@ export function createPredictionsWorker() {
              return { skipped: true, reason: 'predictions_already_exist', predictionCount: existingPredictions.length };
            }
          }
-        
+
          // Get match data with retry (handles race condition where job runs before DB write completes)
          const matchData = await getMatchWithRetry(matchId, 3, 2000, log);
-         if (!matchData) {
-           log.warn({ matchId, retriesAttempted: 3 }, 'Match not found after retries');
+         if (!matchData || typeof matchData !== 'object') {
+           log.warn({ matchId, retriesAttempted: 3 }, 'Match not found or invalid data');
            return { skipped: true, reason: 'match_not_found' };
          }
         
@@ -137,7 +142,7 @@ export function createPredictionsWorker() {
          // Track which models succeeded so we can record health AFTER batch insert
          const successfulModelIds: string[] = [];
          
-         // Generate predictions for each model
+         // Generate predictions for each model with isolation
          for (const provider of providers) {
            try {
              // Build prompt (WITHOUT ODDS - only stats, form, H2H, standings)
@@ -151,31 +156,40 @@ export function createPredictionsWorker() {
                homeStanding,
                awayStanding,
              }]);
-             
+
               // Call LLM with score prediction system prompt
                const rawResponse = await (provider as unknown as { callAPI: (system: string, user: string) => Promise<string> }).callAPI(BATCH_SYSTEM_PROMPT, prompt);
-              
+
+              // Validate response before parsing (defensive null check)
+              if (!rawResponse || typeof rawResponse !== 'string') {
+                log.warn({ modelId: provider.id }, 'Provider returned null/invalid response');
+                await recordModelFailure(provider.id, 'empty_response');
+                failCount++;
+                continue;
+              }
+
               // Parse simple JSON: [{match_id: "xxx", home_score: X, away_score: Y}]
               const parsed = parseBatchPredictionResponse(rawResponse, [matchId]);
-              
+
                if (!parsed.success || parsed.predictions.length === 0) {
                  // Log error with raw response preview for debugging
                  const responsePreview = rawResponse.slice(0, 300).replace(/\s+/g, ' ');
-                 log.error({ 
-                   matchId, 
-                   modelId: provider.id, 
+                 log.warn({
+                   matchId,
+                   modelId: provider.id,
                    error: parsed.error,
-                   rawResponsePreview: responsePreview 
+                   rawResponsePreview: responsePreview
                  }, `Failed to parse prediction`);
+                 await recordModelFailure(provider.id, parsed.error || 'Parse failed');
                  failCount++;
                  continue;
                }
-             
+
              const prediction = parsed.predictions[0];
-             
+
              // Determine result tendency (H/D/A)
              const result = getResult(prediction.homeScore, prediction.awayScore);
-             
+
              // Collect prediction for batch insert
              predictionsToInsert.push({
                id: uuidv4(),
@@ -186,18 +200,15 @@ export function createPredictionsWorker() {
                predictedResult: result,
                status: 'pending',
              });
-             
+
              // Track successful model but DON'T record health yet
              successfulModelIds.push(provider.id);
               log.info({ matchId, modelId: provider.id, prediction: `${prediction.homeScore}-${prediction.awayScore}` }, `✓ Prediction generated`);
               successCount++;
-              } catch (error: unknown) {
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                log.error({ matchId, modelId: provider.id, err: error }, `Error generating prediction`);
-                const { autoDisabled } = await recordModelFailure(provider.id, errorMessage);
-                if (autoDisabled) {
-                  log.warn({ matchId, modelId: provider.id }, `⚠️ Auto-disabled after 3 consecutive failures`);
-                }
+              } catch (modelError: unknown) {
+                const errorMessage = modelError instanceof Error ? modelError.message : String(modelError);
+                log.warn({ matchId, modelId: provider.id, error: errorMessage }, `Model prediction failed`);
+                await recordModelFailure(provider.id, errorMessage);
                failCount++;
             }
          }
@@ -229,26 +240,35 @@ export function createPredictionsWorker() {
              }
            }
           
-          log.info(`Complete: ${successCount} success, ${failCount} failed`);
-        
-        return { 
-          success: true, 
-          successCount, 
+          log.info({
+            totalModels: providers.length,
+            successful: successCount,
+            failed: failCount,
+          }, 'Prediction job completed');
+
+        return {
+          success: true,
+          successCount,
           failCount,
           totalModels: providers.length,
         };
-       } catch (error: any) {
-           log.error({ 
+       } catch (error: unknown) {
+           const errorMsg = error instanceof Error ? error.message : String(error);
+           const errorType = classifyError(error);
+
+           log.error({
              matchId,
+             error: errorMsg,
+             errorType,
              attemptsMade: job.attemptsMade,
-             err: error 
-           }, `Error processing predictions`);
-           
+           }, 'Job failed with exception');
+
            Sentry.captureException(error, {
              level: 'error',
              tags: {
                worker: 'predictions',
                matchId,
+               errorType,
              },
              extra: {
                jobId: job.id,
@@ -256,17 +276,19 @@ export function createPredictionsWorker() {
                matchId,
              },
            });
-           
-           // Throw error to enable BullMQ retry logic
-           // Only transient errors should retry (network, timeout, rate limit)
-          if (error.message?.includes('timeout') ||
-             error.message?.includes('ECONNREFUSED') ||
-             error.message?.includes('rate limit') ||
-             error.message?.includes('429')) {
-           throw new Error(`Retryable error for match ${matchId}: ${error.message}`);
-         }
-         // Non-retryable errors (business logic) should not retry
-         throw error;
+
+           // Throw for retryable errors (triggers BullMQ retry)
+           if (isRetryable(error)) {
+             throw new Error(`Retryable: ${errorMsg}`);
+           }
+
+         // Return skip result for unrecoverable errors (no retry)
+         return {
+           success: false,
+           skipped: true,
+           reason: 'unrecoverable',
+           error: errorMsg,
+         };
        }
     },
     {
