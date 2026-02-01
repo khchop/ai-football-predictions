@@ -57,91 +57,192 @@ export function PredictionTable({
     return a.modelDisplayName.localeCompare(b.modelDisplayName);
   });
 
-  return (
-    <div className="space-y-3">
-      {sortedPredictions.map((prediction, index) => (
-        <div 
-          key={prediction.id}
-          className={cn(
-            "flex items-center gap-4 p-4 rounded-xl border transition-colors",
-            prediction.isExact && "bg-green-500/10 border-green-500/30",
-            prediction.isCorrectResult && !prediction.isExact && "bg-yellow-500/10 border-yellow-500/30",
-            !prediction.isExact && !prediction.isCorrectResult && isFinished && prediction.points === 0 && "bg-muted/30 border-border/50",
-            !isFinished && "bg-card/50 border-border/50 hover:bg-card/80"
-          )}
-        >
-          {/* Rank/Icon */}
-          <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
-            {isFinished ? (
-              prediction.isExact ? (
-                <Trophy className="h-5 w-5 text-green-400" />
-              ) : prediction.isCorrectResult ? (
-                <Target className="h-5 w-5 text-yellow-400" />
-              ) : (
-                <X className="h-5 w-5 text-muted-foreground" />
-              )
+  // Mobile Card Component
+  const MobilePredictionCard = ({
+    prediction,
+    index
+  }: {
+    prediction: Prediction;
+    index: number;
+  }) => (
+    <div
+      className={cn(
+        "rounded-lg border p-4 space-y-3 transition-colors",
+        prediction.isExact && "bg-green-500/10 border-green-500/30",
+        prediction.isCorrectResult && !prediction.isExact && "bg-yellow-500/10 border-yellow-500/30",
+        !prediction.isExact && !prediction.isCorrectResult && isFinished && prediction.points === 0 && "bg-muted/30 border-border/50",
+        !isFinished && "bg-card/50 border-border/50"
+      )}
+    >
+      {/* Header: Icon + Model Name + Points */}
+      <div className="flex items-center gap-3">
+        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+          {isFinished ? (
+            prediction.isExact ? (
+              <Trophy className="h-4 w-4 text-green-400" />
+            ) : prediction.isCorrectResult ? (
+              <Target className="h-4 w-4 text-yellow-400" />
             ) : (
-              <span className="text-sm font-mono text-muted-foreground">{index + 1}</span>
-            )}
-          </div>
-
-          {/* Model Info */}
-          <div className="flex-1 min-w-0">
-            <p className="font-medium truncate">{prediction.modelDisplayName}</p>
-            <p className="text-xs text-muted-foreground capitalize">{prediction.provider}</p>
-          </div>
-
-          {/* Prediction */}
-          <div className="flex items-center gap-2 text-center">
-            <div className="min-w-[80px]">
-              <p className="text-xs text-muted-foreground mb-1 truncate">{homeTeam}</p>
-              <p className="text-2xl font-bold font-mono">{prediction.predictedHomeScore}</p>
-            </div>
-            <span className="text-muted-foreground">-</span>
-            <div className="min-w-[80px]">
-              <p className="text-xs text-muted-foreground mb-1 truncate">{awayTeam}</p>
-              <p className="text-2xl font-bold font-mono">{prediction.predictedAwayScore}</p>
-            </div>
-          </div>
-
-          {/* Points Badge */}
-          {isFinished && (prediction.pointsTotal !== undefined || prediction.points !== null) && (
-            <div className="flex-shrink-0 flex flex-col items-end gap-1">
-              <div className={cn(
-                "px-3 py-1.5 rounded-lg text-sm font-semibold min-w-[70px] text-center",
-                (prediction.pointsTotal || prediction.points || 0) >= 5 && "bg-green-500/20 text-green-400",
-                (prediction.pointsTotal || prediction.points || 0) >= 2 && (prediction.pointsTotal || prediction.points || 0) < 5 && "bg-yellow-500/20 text-yellow-400",
-                (prediction.pointsTotal || prediction.points || 0) < 2 && "bg-muted text-muted-foreground"
-              )}>
-                {prediction.pointsTotal ?? prediction.points ?? 0} pts
-              </div>
-              {/* Points breakdown tooltip/details for enhanced scoring */}
-              {prediction.pointsTotal !== undefined && (prediction.pointsTotal || 0) > 0 && (
-                <div className="flex gap-1 text-[10px]">
-                  {(prediction.pointsExactScore || 0) > 0 && (
-                    <span className="text-green-400" title="Exact Score">ES</span>
-                  )}
-                  {(prediction.pointsResult || 0) > 0 && (
-                    <span className="text-yellow-400" title="Correct Result">CR</span>
-                  )}
-                  {(prediction.pointsGoalDiff || 0) > 0 && (
-                    <span className="text-blue-400" title="Goal Diff">GD</span>
-                  )}
-                  {(prediction.pointsOverUnder || 0) > 0 && (
-                    <span className="text-purple-400" title="Over/Under">O/U</span>
-                  )}
-                  {(prediction.pointsBtts || 0) > 0 && (
-                    <span className="text-cyan-400" title="Both Teams Score">BTS</span>
-                  )}
-                  {(prediction.pointsUpsetBonus || 0) > 0 && (
-                    <span className="text-orange-400" title="Upset Bonus">UPS</span>
-                  )}
-                </div>
-              )}
-            </div>
+              <X className="h-4 w-4 text-muted-foreground" />
+            )
+          ) : (
+            <span className="text-xs font-mono text-muted-foreground">{index + 1}</span>
           )}
         </div>
-      ))}
+        <div className="flex-1 min-w-0">
+          <p className="font-medium truncate">{prediction.modelDisplayName}</p>
+          <p className="text-xs text-muted-foreground capitalize">{prediction.provider}</p>
+        </div>
+        {isFinished && (prediction.pointsTotal !== undefined || prediction.points !== null) && (
+          <div className={cn(
+            "px-2.5 py-1 rounded-lg text-xs font-semibold",
+            (prediction.pointsTotal || prediction.points || 0) >= 5 && "bg-green-500/20 text-green-400",
+            (prediction.pointsTotal || prediction.points || 0) >= 2 && (prediction.pointsTotal || prediction.points || 0) < 5 && "bg-yellow-500/20 text-yellow-400",
+            (prediction.pointsTotal || prediction.points || 0) < 2 && "bg-muted text-muted-foreground"
+          )}>
+            {prediction.pointsTotal ?? prediction.points ?? 0} pts
+          </div>
+        )}
+      </div>
+
+      {/* Score Display */}
+      <div className="flex items-center justify-center gap-3">
+        <div className="flex-1 text-center min-w-0">
+          <p className="text-xs text-muted-foreground mb-1 truncate">{homeTeam}</p>
+          <p className="text-3xl font-bold font-mono">{prediction.predictedHomeScore}</p>
+        </div>
+        <span className="text-xl text-muted-foreground">-</span>
+        <div className="flex-1 text-center min-w-0">
+          <p className="text-xs text-muted-foreground mb-1 truncate">{awayTeam}</p>
+          <p className="text-3xl font-bold font-mono">{prediction.predictedAwayScore}</p>
+        </div>
+      </div>
+
+      {/* Points Breakdown (if enhanced scoring) */}
+      {isFinished && prediction.pointsTotal !== undefined && (prediction.pointsTotal || 0) > 0 && (
+        <div className="flex justify-center gap-2 text-[10px]">
+          {(prediction.pointsExactScore || 0) > 0 && (
+            <span className="text-green-400" title="Exact Score">ES</span>
+          )}
+          {(prediction.pointsResult || 0) > 0 && (
+            <span className="text-yellow-400" title="Correct Result">CR</span>
+          )}
+          {(prediction.pointsGoalDiff || 0) > 0 && (
+            <span className="text-blue-400" title="Goal Diff">GD</span>
+          )}
+          {(prediction.pointsOverUnder || 0) > 0 && (
+            <span className="text-purple-400" title="Over/Under">O/U</span>
+          )}
+          {(prediction.pointsBtts || 0) > 0 && (
+            <span className="text-cyan-400" title="Both Teams Score">BTS</span>
+          )}
+          {(prediction.pointsUpsetBonus || 0) > 0 && (
+            <span className="text-orange-400" title="Upset Bonus">UPS</span>
+          )}
+        </div>
+      )}
     </div>
+  );
+
+  return (
+    <>
+      {/* Desktop View */}
+      <div className="hidden md:block space-y-3">
+        {sortedPredictions.map((prediction, index) => (
+          <div
+            key={prediction.id}
+            className={cn(
+              "flex items-center gap-4 p-4 rounded-xl border transition-colors",
+              prediction.isExact && "bg-green-500/10 border-green-500/30",
+              prediction.isCorrectResult && !prediction.isExact && "bg-yellow-500/10 border-yellow-500/30",
+              !prediction.isExact && !prediction.isCorrectResult && isFinished && prediction.points === 0 && "bg-muted/30 border-border/50",
+              !isFinished && "bg-card/50 border-border/50 hover:bg-card/80"
+            )}
+          >
+            {/* Rank/Icon */}
+            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
+              {isFinished ? (
+                prediction.isExact ? (
+                  <Trophy className="h-5 w-5 text-green-400" />
+                ) : prediction.isCorrectResult ? (
+                  <Target className="h-5 w-5 text-yellow-400" />
+                ) : (
+                  <X className="h-5 w-5 text-muted-foreground" />
+                )
+              ) : (
+                <span className="text-sm font-mono text-muted-foreground">{index + 1}</span>
+              )}
+            </div>
+
+            {/* Model Info */}
+            <div className="flex-1 min-w-0">
+              <p className="font-medium truncate">{prediction.modelDisplayName}</p>
+              <p className="text-xs text-muted-foreground capitalize">{prediction.provider}</p>
+            </div>
+
+            {/* Prediction */}
+            <div className="flex items-center gap-2 text-center">
+              <div className="min-w-[80px]">
+                <p className="text-xs text-muted-foreground mb-1 truncate">{homeTeam}</p>
+                <p className="text-2xl font-bold font-mono">{prediction.predictedHomeScore}</p>
+              </div>
+              <span className="text-muted-foreground">-</span>
+              <div className="min-w-[80px]">
+                <p className="text-xs text-muted-foreground mb-1 truncate">{awayTeam}</p>
+                <p className="text-2xl font-bold font-mono">{prediction.predictedAwayScore}</p>
+              </div>
+            </div>
+
+            {/* Points Badge */}
+            {isFinished && (prediction.pointsTotal !== undefined || prediction.points !== null) && (
+              <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                <div className={cn(
+                  "px-3 py-1.5 rounded-lg text-sm font-semibold min-w-[70px] text-center",
+                  (prediction.pointsTotal || prediction.points || 0) >= 5 && "bg-green-500/20 text-green-400",
+                  (prediction.pointsTotal || prediction.points || 0) >= 2 && (prediction.pointsTotal || prediction.points || 0) < 5 && "bg-yellow-500/20 text-yellow-400",
+                  (prediction.pointsTotal || prediction.points || 0) < 2 && "bg-muted text-muted-foreground"
+                )}>
+                  {prediction.pointsTotal ?? prediction.points ?? 0} pts
+                </div>
+                {/* Points breakdown tooltip/details for enhanced scoring */}
+                {prediction.pointsTotal !== undefined && (prediction.pointsTotal || 0) > 0 && (
+                  <div className="flex gap-1 text-[10px]">
+                    {(prediction.pointsExactScore || 0) > 0 && (
+                      <span className="text-green-400" title="Exact Score">ES</span>
+                    )}
+                    {(prediction.pointsResult || 0) > 0 && (
+                      <span className="text-yellow-400" title="Correct Result">CR</span>
+                    )}
+                    {(prediction.pointsGoalDiff || 0) > 0 && (
+                      <span className="text-blue-400" title="Goal Diff">GD</span>
+                    )}
+                    {(prediction.pointsOverUnder || 0) > 0 && (
+                      <span className="text-purple-400" title="Over/Under">O/U</span>
+                    )}
+                    {(prediction.pointsBtts || 0) > 0 && (
+                      <span className="text-cyan-400" title="Both Teams Score">BTS</span>
+                    )}
+                    {(prediction.pointsUpsetBonus || 0) > 0 && (
+                      <span className="text-orange-400" title="Upset Bonus">UPS</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {sortedPredictions.map((prediction, index) => (
+          <MobilePredictionCard
+            key={prediction.id}
+            prediction={prediction}
+            index={index}
+          />
+        ))}
+      </div>
+    </>
   );
 }
