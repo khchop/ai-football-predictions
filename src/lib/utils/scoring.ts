@@ -4,15 +4,18 @@ import { MatchResult, ScoringResult, ScoringBreakdown } from '@/types';
 // Points = TendencyQuota (2-6) + GoalDiffBonus (0-1) + ExactScoreBonus (0-3)
 // Maximum: 10 points
 //
-// Quota Calculation:
+// Quota Calculation (Kicktipp formula):
 // - Count predictions by tendency (Home/Draw/Away)
-// - rawQuota = totalPredictions / predictionsForThatTendency
+// - P = predictions_for_tendency / total_predictions
+// - rawQuota = (MAX / (10 * P)) - (MAX / 10) + MIN
 // - Clamp to range [2, 6]
 // - Rare predictions = more points, common predictions = fewer points
+// - Unpredicted outcomes = MAX_QUOTA (6 points)
 //
 // Example (30 models, actual: Away Win 0-1):
 // - Predictions: 24 Home, 4 Draw, 2 Away
-// - Quotas: H=2, D=6, A=6 (clamped)
+// - P values: Home=0.8, Draw=0.133, Away=0.067
+// - Quotas: H=2, D=5, A=6 (computed via formula)
 // - Model predicted 0-1 (Away, exact): 6 + 1 + 3 = 10 points
 // - Model predicted 2-0 (Home, wrong): 0 points
 
@@ -83,41 +86,48 @@ export interface QuotaResult {
   away: number;  // Quota for away win predictions (2-6)
 }
 
-// Calculate quotas from prediction distribution
+// Calculate quotas from prediction distribution using Kicktipp formula
 // Each quota represents the points a model earns for correctly predicting that outcome
+// Kicktipp formula: Points = (MAX / (10 * P)) - (MAX / 10) + MIN
+// Where P = predictions_for_tendency / total_predictions
 export function calculateQuotas(
   predictions: Array<{ predictedHome: number; predictedAway: number }>
 ): QuotaResult {
   const total = predictions.length;
-  
+
   if (total === 0) {
     // Default quotas if no predictions
     return { home: MIN_QUOTA, draw: MIN_QUOTA, away: MIN_QUOTA };
   }
-  
+
   // Count predictions by tendency
   let homeCount = 0;
   let drawCount = 0;
   let awayCount = 0;
-  
+
   for (const pred of predictions) {
     const result = getResult(pred.predictedHome, pred.predictedAway);
     if (result === 'H') homeCount++;
     else if (result === 'D') drawCount++;
     else awayCount++;
   }
-  
-  // Calculate raw quotas: total / count for each tendency
-  // If no one predicted that outcome, use MAX_QUOTA (rarest possible)
-  const rawHomeQuota = homeCount > 0 ? total / homeCount : MAX_QUOTA;
-  const rawDrawQuota = drawCount > 0 ? total / drawCount : MAX_QUOTA;
-  const rawAwayQuota = awayCount > 0 ? total / awayCount : MAX_QUOTA;
-  
-  // Clamp to [MIN_QUOTA, MAX_QUOTA] and round to nearest integer
+
+  // Kicktipp formula: Points = (MAX / (10 * P)) - (MAX / 10) + MIN
+  // Where P = predictions_for_tendency / total_predictions
+  function computeQuota(count: number): number {
+    if (count === 0) return MAX_QUOTA; // Max points for unpredicted outcome
+
+    const P = count / total;
+    const rawQuota = (MAX_QUOTA / (10 * P)) - (MAX_QUOTA / 10) + MIN_QUOTA;
+
+    // Clamp then round (per research recommendation)
+    return Math.round(Math.min(MAX_QUOTA, Math.max(MIN_QUOTA, rawQuota)));
+  }
+
   return {
-    home: Math.round(Math.min(MAX_QUOTA, Math.max(MIN_QUOTA, rawHomeQuota))),
-    draw: Math.round(Math.min(MAX_QUOTA, Math.max(MIN_QUOTA, rawDrawQuota))),
-    away: Math.round(Math.min(MAX_QUOTA, Math.max(MIN_QUOTA, rawAwayQuota))),
+    home: computeQuota(homeCount),
+    draw: computeQuota(drawCount),
+    away: computeQuota(awayCount),
   };
 }
 
