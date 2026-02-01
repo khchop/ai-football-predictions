@@ -385,26 +385,36 @@ export const blogPosts = pgTable('blog_posts', {
   excerpt: text('excerpt').notNull(), // Short summary (150-160 chars for meta description)
   content: text('content').notNull(), // Full markdown content
   contentType: text('content_type').notNull(), // 'league_roundup' | 'model_report' | 'analysis'
-  
+
   // SEO metadata
   metaTitle: text('meta_title'),
   metaDescription: text('meta_description'),
   keywords: text('keywords'), // Comma-separated
-  
+
+  // Legacy columns (kept for schema compatibility, not actively used)
+  featuredImage: text('featured_image'),
+  author: text('author'),
+  matchId: text('match_id'),
+  seoTitle: text('seo_title'),
+  seoDescription: text('seo_description'),
+  seoKeywords: text('seo_keywords'),
+  tags: text('tags'),
+  viewCount: integer('view_count').default(0),
+
   // Relations
   competitionId: text('competition_id').references(() => competitions.id), // For league roundups
   modelId: text('model_id').references(() => models.id), // For model reports
-  
+
   // Publishing
   status: text('status').default('draft'), // 'draft' | 'published'
   publishedAt: text('published_at'),
-  
+
   // AI generation metadata
   generatedBy: text('generated_by').notNull(), // 'gemini-3-flash-preview'
   generationCost: text('generation_cost'), // Cost in USD
   promptTokens: integer('prompt_tokens'),
   completionTokens: integer('completion_tokens'),
-  
+
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => [
