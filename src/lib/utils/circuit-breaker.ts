@@ -17,6 +17,8 @@
 import { loggers } from '@/lib/logger/modules';
 import type { ServiceName } from './retry-config';
 import { cacheGet, cacheSet } from '@/lib/cache/redis';
+import { getDb, circuitBreakerStates } from '@/lib/db';
+import { eq } from 'drizzle-orm';
 
 // Re-export for convenience
 export type { ServiceName };
@@ -83,9 +85,10 @@ function getCircuitKey(service: ServiceName): string {
 }
 
 /**
- * Load circuit state from Redis (on startup or first access)
+ * Load circuit state from Redis (fast) with database fallback (durable)
  */
 async function loadCircuitFromRedis(service: ServiceName): Promise<CircuitStatus | null> {
+  // Try Redis first (fast)
   try {
     const cached = await cacheGet<CircuitStatus>(getCircuitKey(service));
     if (cached) {
@@ -93,20 +96,109 @@ async function loadCircuitFromRedis(service: ServiceName): Promise<CircuitStatus
       return cached;
     }
   } catch (error) {
-    loggers.circuitBreaker.warn({ service, error }, 'Failed to load circuit state from Redis (falling back to in-memory)');
+    loggers.circuitBreaker.warn({ service, error }, 'Failed to load circuit state from Redis, trying database fallback');
+  }
+
+  // Fall back to database if Redis unavailable or empty
+  const dbCircuit = await loadCircuitFromDatabase(service);
+  if (dbCircuit) {
+    loggers.circuitBreaker.info({ service }, 'Recovered circuit state from database (Redis was unavailable)');
+    // Repopulate Redis cache
+    try {
+      await cacheSet(getCircuitKey(service), dbCircuit, CIRCUIT_BREAKER_TTL);
+    } catch (error) {
+      // Redis still unavailable, continue with database-only
+      loggers.circuitBreaker.debug({ service }, 'Could not repopulate Redis, continuing with database-only');
+    }
+    return dbCircuit;
+  }
+
+  return null;
+}
+
+/**
+ * Persist circuit state to database (survives Redis restarts)
+ */
+async function saveCircuitToDatabase(service: ServiceName, circuit: CircuitStatus): Promise<void> {
+  try {
+    const db = getDb();
+    await db
+      .insert(circuitBreakerStates)
+      .values({
+        service,
+        state: circuit.state,
+        failures: circuit.failures,
+        successes: circuit.successes,
+        lastFailureAt: circuit.lastFailureAt > 0 ? new Date(circuit.lastFailureAt) : null,
+        lastStateChange: new Date(circuit.lastStateChange),
+        totalFailures: circuit.totalFailures,
+        totalSuccesses: circuit.totalSuccesses,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: circuitBreakerStates.service,
+        set: {
+          state: circuit.state,
+          failures: circuit.failures,
+          successes: circuit.successes,
+          lastFailureAt: circuit.lastFailureAt > 0 ? new Date(circuit.lastFailureAt) : null,
+          lastStateChange: new Date(circuit.lastStateChange),
+          totalFailures: circuit.totalFailures,
+          totalSuccesses: circuit.totalSuccesses,
+          updatedAt: new Date(),
+        },
+      });
+    loggers.circuitBreaker.debug({ service }, 'Saved circuit state to database');
+  } catch (error) {
+    loggers.circuitBreaker.warn({ service, error }, 'Failed to save circuit state to database');
+  }
+}
+
+/**
+ * Load circuit state from database (fallback when Redis unavailable)
+ */
+async function loadCircuitFromDatabase(service: ServiceName): Promise<CircuitStatus | null> {
+  try {
+    const db = getDb();
+    const result = await db
+      .select()
+      .from(circuitBreakerStates)
+      .where(eq(circuitBreakerStates.service, service))
+      .limit(1);
+
+    if (result.length > 0) {
+      const row = result[0];
+      const circuit: CircuitStatus = {
+        state: row.state as CircuitState,
+        failures: row.failures ?? 0,
+        successes: row.successes ?? 0,
+        lastFailureAt: row.lastFailureAt ? row.lastFailureAt.getTime() : 0,
+        lastStateChange: row.lastStateChange?.getTime() ?? Date.now(),
+        totalFailures: row.totalFailures ?? 0,
+        totalSuccesses: row.totalSuccesses ?? 0,
+      };
+      loggers.circuitBreaker.debug({ service }, 'Loaded circuit state from database');
+      return circuit;
+    }
+  } catch (error) {
+    loggers.circuitBreaker.warn({ service, error }, 'Failed to load circuit state from database');
   }
   return null;
 }
 
 /**
- * Persist circuit state to Redis
+ * Persist circuit state to both Redis (fast) and database (durable)
  */
 async function persistCircuitToRedis(service: ServiceName, circuit: CircuitStatus): Promise<void> {
+  // Save to Redis for fast access
   try {
     await cacheSet(getCircuitKey(service), circuit, CIRCUIT_BREAKER_TTL);
   } catch (error) {
     loggers.circuitBreaker.warn({ service, error }, 'Failed to persist circuit state to Redis (continuing with in-memory)');
   }
+
+  // Also save to database for durability (survives Redis restarts)
+  await saveCircuitToDatabase(service, circuit);
 }
 
 // ============================================================================
@@ -315,20 +407,21 @@ export function resetCircuit(service: ServiceName): void {
 /**
  * Initialize circuits from Redis on startup (for known services)
  * This ensures circuit state survives app restarts
+ * Falls back to database if Redis unavailable
  */
 export async function initializeCircuitsFromRedis(): Promise<void> {
   const services: ServiceName[] = ['api-football', 'together-predictions', 'together-content'];
-  
+
   for (const service of services) {
     try {
       const loadedCircuit = await loadCircuitFromRedis(service);
       if (loadedCircuit) {
         circuits.set(service, loadedCircuit);
         redisLoadAttempts.add(service);
-        loggers.circuitBreaker.info({ service }, 'Circuit state restored from Redis');
+        loggers.circuitBreaker.info({ service, state: loadedCircuit.state }, 'Circuit state restored');
       }
     } catch (error) {
-      loggers.circuitBreaker.warn({ service, error }, 'Failed to restore circuit from Redis');
+      loggers.circuitBreaker.warn({ service, error }, 'Failed to restore circuit (will start with default state)');
     }
   }
 }
