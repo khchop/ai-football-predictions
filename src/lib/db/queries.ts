@@ -657,13 +657,14 @@ export async function updateModelStreak(
 ) {
   const db = getDb();
   
-  // Use transaction with serializable isolation to prevent race conditions
+  // Use transaction with row-level locking to prevent race conditions
   await db.transaction(async (tx) => {
-    // Read current model state within transaction
+    // Lock model row for update to prevent concurrent streak modifications
     const modelResult = await tx
       .select()
       .from(models)
       .where(eq(models.id, modelId))
+      .for('update')
       .limit(1);
     
     const model = modelResult[0];
@@ -1732,7 +1733,8 @@ export async function scorePredictionsTransactional(
   matchId: string,
   actualHome: number,
   actualAway: number,
-  quotas: { home: number; draw: number; away: number }
+  quotas: { home: number; draw: number; away: number },
+  matchStatus: string = 'finished'
 ): Promise<{
   success: boolean;
   scoredCount: number;
@@ -1795,21 +1797,30 @@ export async function scorePredictionsTransactional(
             })
             .where(eq(predictions.id, prediction.id));
 
-          // Step 3: Update model streak within same transaction
-          // This ensures atomicity of both prediction scoring and streak updates
-          const resultType: 'exact' | 'tendency' | 'wrong' =
-            breakdown.total === 0 ? 'wrong' :
-            breakdown.exactScoreBonus > 0 ? 'exact' : 'tendency';
+          // Step 3: Update model streak within same transaction (if valid)
+          // Uses shouldUpdateStreak to check match status, scores, and prediction status
+          // Voided/cancelled/postponed matches do NOT affect streaks
+          if (shouldUpdateStreak(matchStatus, actualHome, actualAway, prediction.status || 'pending')) {
+            const resultType: 'exact' | 'tendency' | 'wrong' =
+              breakdown.total === 0 ? 'wrong' :
+              breakdown.exactScoreBonus > 0 ? 'exact' : 'tendency';
 
-          try {
-            await updateModelStreakInTransaction(tx, prediction.modelId, resultType);
-          } catch (streakError: any) {
-            // Log but don't fail - prediction score is the primary concern
-            log.warn({
+            try {
+              await updateModelStreakInTransaction(tx, prediction.modelId, resultType);
+            } catch (streakError: any) {
+              // Log but don't fail - prediction score is the primary concern
+              log.warn({
+                modelId: prediction.modelId,
+                resultType,
+                error: streakError.message
+              }, 'Failed to update model streak within transaction');
+            }
+          } else {
+            log.debug({
               modelId: prediction.modelId,
-              resultType,
-              error: streakError.message
-            }, 'Failed to update model streak within transaction');
+              matchStatus,
+              predictionStatus: prediction.status,
+            }, 'Skipping streak update - match/prediction not valid for streak tracking');
           }
 
           scoredCount++;

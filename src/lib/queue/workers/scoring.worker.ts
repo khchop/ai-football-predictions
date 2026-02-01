@@ -83,11 +83,13 @@ export function createScoringWorker() {
         // Step 3: Score all predictions in a single transaction with row-level locking
         // This prevents race conditions when concurrent settlement jobs run
         // (e.g., live-score worker + backfill job both triggering for same match)
+        // Pass match.status to enable streak validation (voided/cancelled matches don't affect streaks)
         const result = await scorePredictionsTransactional(
           matchId,
           actualHome,
           actualAway,
-          quotas
+          quotas,
+          match.status
         );
 
         if (!result.success) {
