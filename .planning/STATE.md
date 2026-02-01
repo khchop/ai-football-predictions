@@ -10,31 +10,31 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 ## Current Position
 
 Phase: 1 of 4 (Critical Stability)
-Plan: 3 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-31 - Completed 01-03-PLAN.md
+Last activity: 2026-02-01 - Completed 01-02-PLAN.md
 
-Progress: [███████░░░░░░░░░░░░] 75%
+Progress: [██████░░░░░░░░░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 4.3 min (3, 3, 7 min)
-- Total execution time: 13 min
+- Total plans completed: 2
+- Average duration: 3.0 min (3, 3 min)
+- Total execution time: 6 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Critical Stability | 3/4 | 4.3 min | 4.3 min/plan |
+| 1. Critical Stability | 2/4 | 6 min | 3.0 min/plan |
 | 2. Data Accuracy | 0/4 | - | - |
 | 3. Infrastructure Performance | 0/4 | - | - |
 | 4. UX Polish | 0/3 | - | - |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (3 min), 01-02 (3 min), 01-03 (5 min)
-- Trend: Stable execution, averaging ~4 min per plan
+- Last 2 plans: 01-01 (3 min), 01-02 (3 min)
+- Trend: Consistent 3-minute execution per plan
 
 *Updated after each plan completion*
 
@@ -54,6 +54,10 @@ Recent decisions affecting current work:
 - Multi-strategy JSON parsing: 4-strategy fallback chain (direct → markdown → regex → flexible) for robust LLM response extraction
 - Score validation: Reject negative, >20, non-integer scores with type predicates for type narrowing
 - Enhanced parser with fallback: Enhanced parser tries 4 strategies, falls back to original parser for backward compatibility
+- Error classification: retryable (network/timeout), unrecoverable (match started/cancelled), unknown (default retry)
+- Backoff strategy: rate-limit 60s fixed, timeout linear (5s increments max 30s), parse exponential (5s→10s→20s), default exponential+jitter
+- Model isolation: each model wrapped in try-catch, failures don't affect other models in batch
+- Null validation: check matchData and rawResponse for null/malformed before processing
 
 ### Pending Todos
 
@@ -65,6 +69,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31
-Stopped at: Completed 01-03-PLAN.md (multi-strategy JSON extraction)
+Last session: 2026-02-01
+Stopped at: Completed 01-02-PLAN.md (defensive error handling)
 Resume file: None
