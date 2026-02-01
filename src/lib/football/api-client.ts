@@ -7,6 +7,10 @@ import { fetchWithRetry, APIError, RateLimitError } from '@/lib/utils/api-client
 import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
 import { API_FOOTBALL_RETRY, API_FOOTBALL_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
 import { loggers } from '@/lib/logger/modules';
+import { checkAndIncrementBudget, BudgetExceededError } from '@/lib/football/api-budget';
+
+// Re-export for convenience
+export { BudgetExceededError };
 
 const log = loggers.apiFootball;
 
@@ -23,13 +27,16 @@ interface FetchOptions {
  */
 export async function fetchFromAPIFootball<T>({ endpoint, params }: FetchOptions): Promise<T> {
   const apiKey = process.env.API_FOOTBALL_KEY;
-  
+
   if (!apiKey) {
     throw new Error('API_FOOTBALL_KEY is not configured');
   }
 
+  // Check budget BEFORE making request
+  await checkAndIncrementBudget();
+
   const url = new URL(`${API_BASE_URL}${endpoint}`);
-  
+
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.append(key, String(value));
