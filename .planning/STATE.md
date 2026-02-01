@@ -10,31 +10,31 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 ## Current Position
 
 Phase: 2 of 4 (Data Accuracy)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-02-01 - Completed 02-01-PLAN.md (transaction-safe settlement)
+Last activity: 2026-02-01 - Completed 02-02-PLAN.md (Kicktipp-accurate quota calculation)
 
-Progress: [██████░░░░░░░░░░░░░] 33%
+Progress: [███████░░░░░░░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 4.0 min (3, 3, 7, 3, 4 min)
-- Total execution time: 20 min
+- Total plans completed: 6
+- Average duration: 3.9 min (3, 3, 7, 3, 4, 3.5 min)
+- Total execution time: 23.5 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Critical Stability | 4/4 | 16 min | 4.0 min/plan |
-| 2. Data Accuracy | 1/4 | 4 min | 4.0 min/plan |
+| 2. Data Accuracy | 2/4 | 7.5 min | 3.75 min/plan |
 | 3. Infrastructure Performance | 0/4 | - | - |
 | 4. UX Polish | 0/3 | - | - |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (3 min), 01-03 (7 min), 01-04 (3 min), 02-01 (4 min)
-- Trend: Consistent ~4 min per plan
+- Last 5 plans: 01-03 (7 min), 01-04 (3 min), 02-01 (4 min), 02-02 (3.5 min)
+- Trend: Consistent ~3.5-4 min per plan
 
 *Updated after each plan completion*
 
@@ -66,6 +66,7 @@ Recent decisions affecting current work:
 - Transaction-safe settlement: FOR UPDATE locking on predictions prevents concurrent settlement race conditions
 - Streak updates inside transaction: Model streak updates happen atomically with prediction scoring
 - Post-commit cache invalidation: Cache only invalidated after transaction commits successfully
+- Kicktipp formula: Use (MAX / (10 * P)) - (MAX / 10) + MIN for quota calculation
 
 ### Pending Todos
 
@@ -78,5 +79,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 02-01-PLAN.md (transaction-safe settlement with FOR UPDATE locking)
+Stopped at: Completed 02-02-PLAN.md (Kicktipp-accurate quota calculation)
 Resume file: None
