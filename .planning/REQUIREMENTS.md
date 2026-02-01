@@ -9,11 +9,11 @@ Bug fix stabilization milestone. All requirements are fixes to existing function
 
 ### Critical Bugs (CRIT)
 
-- [ ] **CRIT-01**: JSON parse failures handled with multi-strategy extraction (direct -> markdown -> regex -> score pattern)
-- [ ] **CRIT-02**: API timeouts recovered gracefully with error-type-aware backoff (rate limit -> 60s, timeout -> linear)
-- [ ] **CRIT-03**: Model auto-disable uses proper threshold (5 failures) and time-based recovery (1h cooldown)
-- [ ] **CRIT-04**: Queue workers handle null/malformed API data without crashing (defensive error handling)
-- [ ] **CRIT-05**: Database connection pool sized appropriately (20+ connections) with health monitoring
+- [x] **CRIT-01**: JSON parse failures handled with multi-strategy extraction (direct -> markdown -> regex -> score pattern)
+- [x] **CRIT-02**: API timeouts recovered gracefully with error-type-aware backoff (rate limit -> 60s, timeout -> linear)
+- [x] **CRIT-03**: Model auto-disable uses proper threshold (5 failures) and time-based recovery (1h cooldown)
+- [x] **CRIT-04**: Queue workers handle null/malformed API data without crashing (defensive error handling)
+- [x] **CRIT-05**: Database connection pool sized appropriately (20+ connections) with health monitoring
 
 ### Data Accuracy (DATA)
 
@@ -77,11 +77,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CRIT-01 | Phase 1 | Pending |
-| CRIT-02 | Phase 1 | Pending |
-| CRIT-03 | Phase 1 | Pending |
-| CRIT-04 | Phase 1 | Pending |
-| CRIT-05 | Phase 1 | Pending |
+| CRIT-01 | Phase 1 | Complete |
+| CRIT-02 | Phase 1 | Complete |
+| CRIT-03 | Phase 1 | Complete |
+| CRIT-04 | Phase 1 | Complete |
+| CRIT-05 | Phase 1 | Complete |
 | DATA-01 | Phase 2 | Pending |
 | DATA-02 | Phase 2 | Pending |
 | DATA-03 | Phase 2 | Pending |
