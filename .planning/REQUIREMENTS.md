@@ -17,11 +17,11 @@ Bug fix stabilization milestone. All requirements are fixes to existing function
 
 ### Data Accuracy (DATA)
 
-- [ ] **DATA-01**: Settlement uses database transaction with row lock to prevent race conditions
-- [ ] **DATA-02**: Leaderboard totals calculated correctly (cache invalidation after all predictions scored)
-- [ ] **DATA-03**: Streak tracking handles voided matches, draws, and cancelled matches correctly
-- [ ] **DATA-04**: Cache invalidation timing ensures no stale data visible after settlement
-- [ ] **DATA-05**: Quota point calculation matches Kicktipp standard formula
+- [x] **DATA-01**: Settlement uses database transaction with row lock to prevent race conditions
+- [x] **DATA-02**: Leaderboard totals calculated correctly (cache invalidation after all predictions scored)
+- [x] **DATA-03**: Streak tracking handles voided matches, draws, and cancelled matches correctly
+- [x] **DATA-04**: Cache invalidation timing ensures no stale data visible after settlement
+- [x] **DATA-05**: Quota point calculation matches Kicktipp standard formula
 
 ### UI/UX (UIUX)
 
@@ -82,11 +82,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CRIT-03 | Phase 1 | Complete |
 | CRIT-04 | Phase 1 | Complete |
 | CRIT-05 | Phase 1 | Complete |
-| DATA-01 | Phase 2 | Pending |
-| DATA-02 | Phase 2 | Pending |
-| DATA-03 | Phase 2 | Pending |
-| DATA-04 | Phase 2 | Pending |
-| DATA-05 | Phase 2 | Pending |
+| DATA-01 | Phase 2 | Complete |
+| DATA-02 | Phase 2 | Complete |
+| DATA-03 | Phase 2 | Complete |
+| DATA-04 | Phase 2 | Complete |
+| DATA-05 | Phase 2 | Complete |
 | UIUX-01 | Phase 3 | Pending |
 | UIUX-02 | Phase 4 | Pending |
 | UIUX-03 | Phase 4 | Pending |
