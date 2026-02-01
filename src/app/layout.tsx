@@ -4,7 +4,7 @@ import "./globals.css";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { Analytics } from "@/components/analytics";
-import { Sparkles } from "lucide-react";
+import { ErrorBoundaryProvider } from "@/components/error-boundary-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -125,11 +125,13 @@ export default function RootLayout({
         </div>
         
         <Navigation />
-        
+
         <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
-          {children}
+          <ErrorBoundaryProvider>
+            {children}
+          </ErrorBoundaryProvider>
         </main>
-        
+
         <Footer />
       </body>
     </html>
