@@ -60,18 +60,17 @@ Plans:
 **Depends on**: Phase 2 (correct data required before optimizing delivery)
 **Requirements**: INFR-01, INFR-02, INFR-03, INFR-04, UIUX-01
 **Success Criteria** (what must be TRUE):
-  1. Cache pattern deletion uses SCAN (cursor-based), not KEYS (blocking)
+  1. Cache pattern deletion uses SCAN (cursor-based), not KEYS (blocking) - ALREADY DONE in Phase 2
   2. Match detail pages with 35+ predictions load in under 2 seconds (streamed)
   3. Circuit breaker state survives Redis restarts (persisted to database fallback)
   4. API-Football requests are tracked against daily budget (100/day free tier)
   5. System continues functioning when Redis is unavailable (degraded mode, no crashes)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: KEYS to SCAN migration for cache invalidation
-- [ ] 03-02: Match page SSR optimization with streaming
-- [ ] 03-03: Circuit breaker state persistence
-- [ ] 03-04: API budget enforcement and Redis graceful degradation
+- [ ] 03-01-PLAN.md — Match page SSR optimization with streaming Suspense
+- [ ] 03-02-PLAN.md — Circuit breaker state database persistence
+- [ ] 03-03-PLAN.md — API budget enforcement and Redis graceful degradation
 
 ### Phase 4: UX Polish
 **Goal**: Frontend is responsive, real-time, and handles errors gracefully
@@ -97,7 +96,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Critical Stability | 4/4 | ✓ Complete | 2026-02-01 |
 | 2. Data Accuracy | 4/4 | ✓ Complete | 2026-02-01 |
-| 3. Infrastructure Performance | 0/4 | Not started | - |
+| 3. Infrastructure Performance | 0/3 | Planned | - |
 | 4. UX Polish | 0/3 | Not started | - |
 
 ---
