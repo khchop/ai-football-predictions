@@ -152,18 +152,20 @@ All 50 requirements validated across v1.0, v1.1, and v1.2 milestones.
 - Real-time prediction updates during match (post-kickoff is settled)
 - Model fine-tuning or custom training
 
-## Next Milestone Goals
+## Current Milestone: v1.3 Match Page Refresh
 
-To be defined with `/gsd:new-milestone`.
+**Goal:** Redesign match detail pages for mobile-first UX with consolidated content, fix LLM content generation pipeline, and optimize for AI search engines.
 
-Potential areas:
-- v1.3+ Advanced Metrics (calibration, Brier score)
-- v1.3+ GEO/Internationalization (Spanish translations, hreflang)
-- v1.3+ Advanced UX (visual charts, model profiles)
+**Target features:**
+- Consolidated match page layout removing duplicate data (score, predictions shown once)
+- Working LLM content generation (pre-match, prediction, post-match text)
+- Mobile-first responsive design with minimal scrolling
+- AI search optimization (Perplexity, ChatGPT, Claude) with clean structured content
+- GEO/SEO optimized metadata and structured data
 
 ## Open Questions
 
 None currently.
 
 ---
-*Last updated: 2026-02-02 after v1.2 milestone*
+*Last updated: 2026-02-02 after v1.3 milestone started*
