@@ -52,7 +52,7 @@ export function ReadMoreText({
       </div>
       <button
         onClick={() => setExpanded(!expanded)}
-        className="text-primary hover:underline mt-3 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded"
+        className="text-primary hover:underline mt-3 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded min-h-[44px] inline-flex items-center"
         aria-expanded={expanded}
         aria-label={expanded ? 'Collapse content to preview' : 'Expand to read full content'}
         type="button"

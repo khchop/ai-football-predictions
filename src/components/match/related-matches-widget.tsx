@@ -31,7 +31,7 @@ export async function RelatedMatchesWidget({ matchId, competitionSlug }: Related
               <Link
                 key={match.id}
                 href={matchUrl}
-                className="block p-3 rounded-lg border border-border/50 hover:bg-accent transition-colors"
+                className="block p-3 rounded-lg border border-border/50 hover:bg-accent transition-colors min-h-[44px]"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
