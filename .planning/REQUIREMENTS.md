@@ -79,31 +79,31 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STAT-01 | TBD | Pending |
-| STAT-02 | TBD | Pending |
-| STAT-03 | TBD | Pending |
-| STAT-04 | TBD | Pending |
-| STAT-05 | TBD | Pending |
-| STAT-06 | TBD | Pending |
-| MIGR-01 | TBD | Pending |
-| MIGR-02 | TBD | Pending |
-| MIGR-03 | TBD | Pending |
-| SEO-01 | TBD | Pending |
-| SEO-02 | TBD | Pending |
-| SEO-03 | TBD | Pending |
-| SEO-04 | TBD | Pending |
-| SEO-05 | TBD | Pending |
-| SEO-06 | TBD | Pending |
-| SEO-07 | TBD | Pending |
-| UX-01 | TBD | Pending |
-| UX-02 | TBD | Pending |
-| UX-03 | TBD | Pending |
+| STAT-01 | Phase 5 | Pending |
+| STAT-02 | Phase 5 | Pending |
+| STAT-03 | Phase 5 | Pending |
+| STAT-04 | Phase 5 | Pending |
+| STAT-05 | Phase 5 | Pending |
+| STAT-06 | Phase 5 | Pending |
+| MIGR-01 | Phase 6 | Pending |
+| MIGR-02 | Phase 6 | Pending |
+| MIGR-03 | Phase 6 | Pending |
+| SEO-01 | Phase 7 | Pending |
+| SEO-02 | Phase 7 | Pending |
+| SEO-03 | Phase 7 | Pending |
+| SEO-04 | Phase 7 | Pending |
+| SEO-05 | Phase 7 | Pending |
+| SEO-06 | Phase 7 | Pending |
+| SEO-07 | Phase 7 | Pending |
+| UX-01 | Phase 8 | Pending |
+| UX-02 | Phase 8 | Pending |
+| UX-03 | Phase 8 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 19 total
-- Mapped to phases: 0 (awaiting roadmap)
-- Unmapped: 19
+- Mapped to phases: 19/19 (100% coverage)
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-02 after initial definition*
+*Last updated: 2026-02-02 after roadmap creation*

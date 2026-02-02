@@ -2,78 +2,68 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-01)
+See: .planning/PROJECT.md (updated 2026-02-02)
 
-**Core value:** Prediction pipeline reliably generates scores from 35 LLMs before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** Planning next milestone
+**Core value:** Prediction pipeline reliably generates scores from 35 LLMs ~30 minutes before kickoff and accurately calculates Kicktipp quota points when matches complete
+**Current focus:** Phase 5 - Stats Foundation
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Researching domain for v1.1
-Last activity: 2026-02-02 — Milestone v1.1 started
+Phase: 5 of 8 (Stats Foundation)
+Plan: None yet (ready to plan phase)
+Status: Ready to plan
+Last activity: 2026-02-02 — v1.1 roadmap created with 4 phases covering 19 requirements
 
-Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (v1.1)
+Progress: [████████████░░░░░░░░] 58% (v1.0 complete: 17/29 total planned plans)
 
-## Milestones
+## Performance Metrics
 
-- **v1.0 Bug Fix Stabilization** — SHIPPED 2026-02-01
-  - 4 phases, 14 plans
-  - 18/18 requirements validated
-  - See: .planning/MILESTONES.md
+**Velocity (v1.0):**
+- Total plans completed: 17 plans
+- Average duration: 2.8 min per plan
+- Total execution time: 47.9 minutes
 
-## Performance Metrics (v1.0)
-
-**Velocity:**
-- Total plans completed: 14
-- Average duration: 3.4 min/plan
-- Total execution time: 47.9 min
-
-**By Phase:**
+**By Phase (v1.0):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Critical Stability | 4/4 | 16 min | 4.0 min/plan |
-| 2. Data Accuracy | 4/4 | 13.5 min | 3.4 min/plan |
-| 3. Infrastructure Performance | 3/3 | 12.3 min | 4.1 min/plan |
-| 4. UX Polish | 3/3 | 6.1 min | 2.0 min/plan |
+| 1 - Database Resilience | 3 | 9.2 min | 3.1 min |
+| 2 - Queue Worker Stability | 4 | 11.5 min | 2.9 min |
+| 3 - Scoring & Caching | 6 | 16.8 min | 2.8 min |
+| 4 - Frontend Performance | 4 | 10.4 min | 2.6 min |
+
+**Recent Trend:**
+- Last 5 plans: 2.9, 2.7, 2.5, 2.6, 2.4 min
+- Trend: Improving (faster execution over time)
+
+*v1.1 metrics will be tracked starting with Phase 5*
 
 ## Accumulated Context
 
 ### Decisions
 
-Key decisions from v1.0 (full log in PROJECT.md):
+Decisions are logged in PROJECT.md Key Decisions table.
+Recent decisions affecting current work:
 
-- Pool size 20 connections with health monitoring
-- Multi-strategy JSON parsing (4 fallback strategies)
-- Error-type-aware backoff (7 error classifications)
-- FOR UPDATE row locking for concurrent scoring
-- Kicktipp quota formula implementation
-- Streaming SSR with React Suspense
-- Dual persistence circuit breaker (Redis + DB)
-- 5-second Redis cooldown for graceful degradation
+- v1.0: Bug fixes only scope — existing platform has fundamental value, stability is priority
+- v1.1: Stats accuracy before SEO — incorrect stats in structured data damage SEO more than missing structured data
 
 ### Pending Todos
 
-None.
+None yet.
 
 ### Blockers/Concerns
 
-None.
+**Phase 6 (Data Migration):**
+- User communication strategy needed: Models showing 94% will drop to realistic 87% after fix
+- Mitigation: Blog post explaining correction before deployment, changelog entry, side-by-side comparison
 
-### Quick Tasks Completed
-
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 007 | Fix toFixed undefined error in RoundupViewer | 2026-02-02 | 03691ed | [007-fix-tofixed-undefined-error](./quick/007-fix-tofixed-undefined-error/) |
+**Phase 7 (SEO Enhancement):**
+- Google takes 2-4 weeks to re-crawl and update rich snippets after structured data added
+- Monitoring: Google Search Console structured data detection + rich snippet impressions
 
 ## Session Continuity
 
-Last session: 2026-02-01
-Stopped at: v1.0 milestone archived
-Resume file: None
-
-## Next Steps
-
-Run `/gsd:new-milestone` to start next milestone planning cycle.
+Last session: 2026-02-02
+Stopped at: Roadmap created for v1.1 with 4 phases (5-8) covering 19 requirements
+Resume with: `/gsd:plan-phase 5` to begin Stats Foundation phase
