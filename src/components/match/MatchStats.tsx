@@ -2,7 +2,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { MatchAnalysis, LeagueStanding } from '@/lib/db/schema';
 import { H2HMatch } from '@/types';
 import { cn } from '@/lib/utils';
-import { Trophy, History, TrendingUp } from 'lucide-react';
+import { Trophy, History, TrendingUp, BarChart3 } from 'lucide-react';
+
+export interface RoundupStats {
+  possession?: number;
+  shots?: number;
+  shotsOnTarget?: number;
+  corners?: number;
+  xG?: number;
+  [key: string]: number | undefined;
+}
 
 interface MatchStatsProps {
   analysis: MatchAnalysis | null;
@@ -10,16 +19,29 @@ interface MatchStatsProps {
   awayStanding: LeagueStanding | null;
   homeTeam: string;
   awayTeam: string;
+  roundupStats?: RoundupStats | null;
+  isFinished?: boolean;
 }
 
-export function MatchStats({ analysis, homeStanding, awayStanding, homeTeam, awayTeam }: MatchStatsProps) {
+export function MatchStats({ analysis, homeStanding, awayStanding, homeTeam, awayTeam, roundupStats, isFinished }: MatchStatsProps) {
   const h2hResults = analysis?.h2hResults ? JSON.parse(analysis.h2hResults) as H2HMatch[] : [];
   
   // Check if this is a cup match (teams not in same league standings)
   const isCupMatch = !homeStanding || !awayStanding;
+
+  // Check if we have meaningful roundup stats to show
+  const hasRoundupStats = isFinished && roundupStats && (
+    roundupStats.possession !== undefined ||
+    roundupStats.xG !== undefined ||
+    roundupStats.shots !== undefined ||
+    roundupStats.corners !== undefined
+  );
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className={cn(
+      "grid grid-cols-1 gap-6",
+      hasRoundupStats ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-3"
+    )}>
       {/* Standings & Form */}
       <Card className="bg-card/50 border-border/50">
         <CardContent className="p-6 space-y-6">
@@ -151,6 +173,50 @@ export function MatchStats({ analysis, homeStanding, awayStanding, homeTeam, awa
           )}
         </CardContent>
       </Card>
+
+      {/* Match Statistics (from roundup for finished matches) */}
+      {hasRoundupStats && (
+        <Card className="bg-card/50 border-border/50">
+          <CardContent className="p-6 space-y-4">
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Match Stats
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              {roundupStats.possession !== undefined && (
+                <div className="p-3 rounded-lg bg-muted/30 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Possession</p>
+                  <p className="text-lg font-bold">{roundupStats.possession}%</p>
+                </div>
+              )}
+              {roundupStats.xG !== undefined && (
+                <div className="p-3 rounded-lg bg-muted/30 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">xG</p>
+                  <p className="text-lg font-bold">{roundupStats.xG.toFixed(2)}</p>
+                </div>
+              )}
+              {roundupStats.shots !== undefined && (
+                <div className="p-3 rounded-lg bg-muted/30 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Shots</p>
+                  <p className="text-lg font-bold">{roundupStats.shots}</p>
+                </div>
+              )}
+              {roundupStats.shotsOnTarget !== undefined && (
+                <div className="p-3 rounded-lg bg-muted/30 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">On Target</p>
+                  <p className="text-lg font-bold">{roundupStats.shotsOnTarget}</p>
+                </div>
+              )}
+              {roundupStats.corners !== undefined && (
+                <div className="p-3 rounded-lg bg-muted/30 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Corners</p>
+                  <p className="text-lg font-bold">{roundupStats.corners}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

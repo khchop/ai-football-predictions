@@ -1,23 +1,19 @@
 import { notFound, permanentRedirect } from 'next/navigation';
-import Image from 'next/image';
 import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { MatchEvents } from '@/components/match-events';
 import { MatchContentSection } from '@/components/match/MatchContent';
-import { MatchFAQSchema } from '@/components/match/MatchFAQSchema';
-import { PredictionInsightsBlockquote } from '@/components/match/PredictionInsightsBlockquote';
-import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails, getStandingsForTeams, getNextMatchesForTeams, getMatchRoundup, getRelatedMatches } from '@/lib/db/queries';
+import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails, getStandingsForTeams, getNextMatchesForTeams, getMatchRoundup } from '@/lib/db/queries';
 import { RelatedMatchesWidget } from '@/components/match/related-matches-widget';
 import { getMatchEvents } from '@/lib/football/api-football';
 import { getCompetitionByIdOrAlias } from '@/lib/football/competitions';
-import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, Target, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Trophy, Target, ChevronRight, Compass } from 'lucide-react';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 import { PredictionTable } from '@/components/prediction-table';
 import { MatchPageSchema } from '@/components/MatchPageSchema';
-import { MatchStats } from '@/components/match/MatchStats';
-import { RoundupViewer } from '@/components/match/roundup-viewer';
+import { MatchStats, type RoundupStats } from '@/components/match/MatchStats';
+import { TopPerformers } from '@/components/match/top-performers';
 import { buildMatchMetadata } from '@/lib/seo/metadata';
 import { mapMatchToSeoData } from '@/lib/seo/types';
 import { MatchH1 } from '@/components/match/match-h1';
@@ -278,39 +274,25 @@ export default async function MatchPage({ params }: MatchPageProps) {
         </Card>
       )}
 
-      <MatchStats 
+      <MatchStats
         analysis={analysis || null}
         homeStanding={homeStanding}
         awayStanding={awayStanding}
         homeTeam={matchData.homeTeam}
         awayTeam={matchData.awayTeam}
+        roundupStats={roundup?.stats ? JSON.parse(roundup.stats) as RoundupStats : null}
+        isFinished={isFinished}
       />
       
       <MatchContentSection matchId={matchData.id} matchStatus={matchData.status} />
-      
-      {/* Match Roundup (for finished matches with roundup available) */}
-      {roundup && (
-        <section>
-          <h2 className="text-2xl font-bold mb-6">Match Roundup</h2>
-          <RoundupViewer
-            title={roundup.title}
-            scoreboard={JSON.parse(roundup.scoreboard)}
-            events={roundup.events ? JSON.parse(roundup.events) : []}
-            stats={JSON.parse(roundup.stats)}
-            modelPredictions={roundup.modelPredictions}
-            topPerformers={JSON.parse(roundup.topPerformers)}
-            narrative={roundup.narrative}
-            keywords={roundup.keywords ? roundup.keywords.split(',').map(k => k.trim()) : []}
-          />
-        </section>
-      )}
-      
+
       <Card className="bg-card/50 border-border/50">
-        <CardContent className="p-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+        <CardContent className="p-6 space-y-6">
+          <h2 className="text-xl font-bold flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
             AI Model Predictions
           </h2>
+
           <PredictionTable
             predictions={predictions.map(p => ({
               id: p.predictionId,
@@ -327,151 +309,75 @@ export default async function MatchPage({ params }: MatchPageProps) {
             awayTeam={matchData.awayTeam}
             isFinished={isFinished}
           />
+
+          {predictions.length > 0 && (() => {
+            const { homeAvg, awayAvg } = renderPredictionAnalysis(predictions);
+            return (
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
+                <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
+                  <p className="text-sm text-muted-foreground">Avg Predicted</p>
+                  <p className="text-lg font-bold">{homeAvg.toFixed(1)} - {awayAvg.toFixed(1)}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
+                  <p className="text-sm text-muted-foreground">Models</p>
+                  <p className="text-lg font-bold">{predictions.length}</p>
+                </div>
+              </div>
+            );
+          })()}
+
+          {isFinished && roundup?.topPerformers && (
+            <div className="pt-4 border-t border-border/50">
+              <TopPerformers
+                topPerformers={JSON.parse(roundup.topPerformers)}
+                compact
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
       <Card className="bg-card/50 border-border/50">
         <CardContent className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-bold">AI Analysis & Insights</h2>
-          </div>
-          
-          {predictions.length > 0 && (() => {
-            const { homeAvg, awayAvg } = renderPredictionAnalysis(predictions);
-            
-            return (
-              <div className="space-y-4">
-                <p className="text-muted-foreground">
-                  Based on {predictions.length} AI model predictions for this match:
-                </p>
-                
-                <div className="grid grid-cols-2 gap-4 my-4">
-                  <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                    <p className="text-sm text-muted-foreground">Avg Predicted Score</p>
-                    <p className="text-lg font-bold">
-                      {homeAvg.toFixed(1)}
-                      {' - '}
-                      {awayAvg.toFixed(1)}
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                    <p className="text-sm text-muted-foreground">Prediction Count</p>
-                    <p className="text-lg font-bold">{predictions.length} models</p>
-                  </div>
-                </div>
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <Compass className="h-5 w-5 text-primary" />
+            Explore More
+          </h3>
 
-                <PredictionInsightsBlockquote 
-                  predictions={predictions} 
-                  homeAvg={homeAvg} 
-                  awayAvg={awayAvg} 
-                />
-              </div>
-            );
-          })()}
-
-          <MatchFAQSchema 
-            match={matchData}
-            competition={competition}
-          />
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-bold mb-4">Explore {competition.name}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Competition link */}
             <Link
               href={`/leagues/${competitionSlug}`}
               className="group flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-primary/10 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <Trophy className="h-5 w-5 text-primary" />
-                <span>View all {competition.name} matches</span>
+                <span className="text-sm font-medium">All {competition.name}</span>
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
             </Link>
-          </CardContent>
-        </Card>
 
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-bold mb-4">Upcoming Fixtures</h3>
-            <div className="space-y-3">
-              {nextMatches.filter(m => m.match.id !== matchData.id).slice(0, 2).map((m) => {
-                // Get canonical competition ID for link
-                const matchCompConfig = m.competition.slug ? getCompetitionByIdOrAlias(m.competition.slug) : null;
-                const matchCompSlug = matchCompConfig?.id || m.competition.slug || m.competition.id;
-                return (
-                  <Link
-                    key={m.match.id}
-                    href={`/leagues/${matchCompSlug}/${m.match.slug}`}
-                    className="group flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors text-sm"
-                  >
-                    <span className="truncate">{m.match.homeTeam} vs {m.match.awayTeam}</span>
-                    <ChevronRight className="h-3 w-3 text-muted-foreground group-hover:text-primary" />
-                  </Link>
-                );
-              })}
-              {nextMatches.length <= 1 && (
-                <p className="text-sm text-muted-foreground italic">No other upcoming matches found for these teams.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-bold mb-4">More {competition.name} Matches</h3>
-            <div className="space-y-3">
-              {nextMatches.slice(0, 3).map((m) => {
-                // Get canonical competition ID for link
-                const matchCompConfig = m.competition.slug ? getCompetitionByIdOrAlias(m.competition.slug) : null;
-                const matchCompSlug = matchCompConfig?.id || m.competition.slug || m.competition.id;
-                return (
-                  <Link
-                    key={m.match.id}
-                    href={`/leagues/${matchCompSlug}/${m.match.slug}`}
-                    className="group flex items-start justify-between p-3 rounded-lg bg-muted/20 hover:bg-primary/10 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{m.match.homeTeam} vs {m.match.awayTeam}</p>
-                      <p className="text-xs text-muted-foreground">{format(parseISO(m.match.kickoffTime), 'MMM d, HH:mm')}</p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary mt-1" />
-                  </Link>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-bold mb-4">Popular Models</h3>
-            <div className="space-y-3">
-              {predictions.slice(0, 3).map((p) => (
+            {/* Next fixtures for these teams */}
+            {nextMatches.filter(m => m.match.id !== matchData.id).slice(0, 2).map((m) => {
+              const matchCompConfig = m.competition.slug ? getCompetitionByIdOrAlias(m.competition.slug) : null;
+              const matchCompSlug = matchCompConfig?.id || m.competition.slug || m.competition.id;
+              return (
                 <Link
-                  key={p.modelId}
-                  href={`/models/${p.modelId}`}
-                  className="group flex items-start justify-between p-3 rounded-lg bg-muted/20 hover:bg-primary/10 transition-colors"
+                  key={m.match.id}
+                  href={`/leagues/${matchCompSlug}/${m.match.slug}`}
+                  className="group flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-primary/10 transition-colors"
                 >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{p.modelDisplayName}</p>
-                    <p className="text-xs text-muted-foreground">Provider: {p.provider}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{m.match.homeTeam} vs {m.match.awayTeam}</p>
+                    <p className="text-xs text-muted-foreground">{format(parseISO(m.match.kickoffTime), 'MMM d, HH:mm')}</p>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary mt-1" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary flex-shrink-0" />
                 </Link>
-              ))}
-              {predictions.length === 0 && (
-                <p className="text-sm text-muted-foreground italic">No model predictions available yet.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Related Matches - SEO Internal Linking */}
       <RelatedMatchesWidget matchId={matchData.id} competitionSlug={competitionSlug} />
