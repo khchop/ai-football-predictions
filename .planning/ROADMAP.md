@@ -4,7 +4,7 @@
 
 - [x] **v1.0 Bug Fix Stabilization** - Phases 1-4 (shipped 2026-02-01)
 - [x] **v1.1 Stats Accuracy & SEO** - Phases 5-8 (shipped 2026-02-02)
-- [ ] **v1.2 Technical SEO Fixes** - Phases 9-12 (in progress)
+- [x] **v1.2 Technical SEO Fixes** - Phases 9-12 (shipped 2026-02-02)
 
 ## Phases
 
@@ -93,8 +93,8 @@ Plans:
 
 </details>
 
-<details open>
-<summary>v1.2 Technical SEO Fixes (Phases 9-12) - IN PROGRESS</summary>
+<details>
+<summary>v1.2 Technical SEO Fixes (Phases 9-12) - SHIPPED 2026-02-02</summary>
 
 ### Phase 9: Critical SEO Errors
 **Goal**: Eliminate 500 errors, 404s in sitemap, and broken redirects
@@ -130,15 +130,15 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — Add RelatedMatchesWidget and RelatedModelsWidget to match and model pages
-- [ ] 12-02-PLAN.md — Add RecentPredictionsWidget to competition hub pages
+- [x] 12-01-PLAN.md — Add RelatedMatchesWidget and RelatedModelsWidget to match and model pages
+- [x] 12-02-PLAN.md — Add RecentPredictionsWidget to competition hub pages
 
 </details>
 
 ## Progress
 
 **Execution Order:**
-v1.0 and v1.1 complete. v1.2 in progress.
+v1.0, v1.1, and v1.2 complete.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -153,7 +153,7 @@ v1.0 and v1.1 complete. v1.2 in progress.
 | 9. Critical SEO Errors | v1.2 | 3/3 | Complete | 2026-02-02 |
 | 10. Page Structure | v1.2 | 2/2 | Complete | 2026-02-02 |
 | 11. Redirect Optimization | v1.2 | 2/2 | Complete | 2026-02-02 |
-| 12. Internal Linking | v1.2 | 0/2 | Pending | — |
+| 12. Internal Linking | v1.2 | 2/2 | Complete | 2026-02-02 |
 
 ---
-*Last updated: 2026-02-02 (Phase 12 planned)*
+*Last updated: 2026-02-02 (v1.2 milestone complete)*
