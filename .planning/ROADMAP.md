@@ -127,10 +127,11 @@ Plans:
 ### Phase 12: Internal Linking
 **Goal**: Strong internal link structure for crawl depth optimization
 **Requirements**: SEO-T11, SEO-T12, SEO-T13
+**Plans**: 2 plans
 
 Plans:
-- [ ] 12-01: Add related content sections to match and model pages
-- [ ] 12-02: Add recent predictions widget to competition pages
+- [ ] 12-01-PLAN.md — Add RelatedMatchesWidget and RelatedModelsWidget to match and model pages
+- [ ] 12-02-PLAN.md — Add RecentPredictionsWidget to competition hub pages
 
 </details>
 
@@ -152,7 +153,7 @@ v1.0 and v1.1 complete. v1.2 in progress.
 | 9. Critical SEO Errors | v1.2 | 3/3 | Complete | 2026-02-02 |
 | 10. Page Structure | v1.2 | 2/2 | Complete | 2026-02-02 |
 | 11. Redirect Optimization | v1.2 | 2/2 | Complete | 2026-02-02 |
-| 12. Internal Linking | v1.2 | 0/? | Pending | — |
+| 12. Internal Linking | v1.2 | 0/2 | Pending | — |
 
 ---
-*Last updated: 2026-02-02 (Phase 11 complete)*
+*Last updated: 2026-02-02 (Phase 12 planned)*
