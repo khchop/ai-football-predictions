@@ -8,6 +8,12 @@
  * - Denominator: ALWAYS scored predictions (status = 'scored')
  * - Numerator: tendencyPoints > 0 (not IS NOT NULL - that includes 0-point wrong predictions)
  * - Division protection: NULLIF(denominator, 0) + COALESCE(result, 0)
+ *
+ * USAGE:
+ * This service provides the canonical implementation. Existing queries in queries.ts
+ * and content/queries.ts inline the same formula for now. New features should import
+ * from this service. Migration of existing queries to use these functions is tracked
+ * for Phase 6 (Data Migration) to ensure consistent behavior during the transition.
  */
 
 import { eq, and, sql } from 'drizzle-orm';
