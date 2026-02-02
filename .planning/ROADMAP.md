@@ -102,9 +102,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Add slug alias system to competition config with canonical redirects
-- [ ] 09-02-PLAN.md — Fix sitemap generation and internal links to use canonical URLs
-- [ ] 09-03-PLAN.md — Fix redirect chains and investigate 500 error
+- [x] 09-01-PLAN.md — Add slug alias system to competition config with canonical redirects
+- [x] 09-02-PLAN.md — Fix sitemap generation and internal links to use canonical URLs
+- [x] 09-03-PLAN.md — Fix redirect chains and investigate 500 error
 
 ### Phase 10: Page Structure
 **Goal**: All pages have proper H1 tags and titles under character limits
@@ -147,10 +147,10 @@ v1.0 and v1.1 complete. v1.2 in progress.
 | 6. Data Migration | v1.1 | 2/2 | Complete | 2026-02-02 |
 | 7. SEO Enhancement | v1.1 | 3/3 | Complete | 2026-02-02 |
 | 8. UX Transparency | v1.1 | 2/2 | Complete | 2026-02-02 |
-| 9. Critical SEO Errors | v1.2 | 0/3 | Planned | — |
+| 9. Critical SEO Errors | v1.2 | 3/3 | Complete | 2026-02-02 |
 | 10. Page Structure | v1.2 | 0/? | Pending | — |
 | 11. Redirect Optimization | v1.2 | 0/? | Pending | — |
 | 12. Internal Linking | v1.2 | 0/? | Pending | — |
 
 ---
-*Last updated: 2026-02-02 (Phase 9 planned)*
+*Last updated: 2026-02-02 (Phase 9 complete)*
