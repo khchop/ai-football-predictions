@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 10 of 12 (v1.2 milestone) — Page Structure COMPLETE
-Plan: 2/2 complete
-Status: Phase 10 verified, ready for Phase 11
-Last activity: 2026-02-02 — Phase 10 executed and verified
+Phase: 11 of 12 (v1.2 milestone) — Redirect Optimization IN PROGRESS
+Plan: 1/2 complete
+Status: Plan 11-01 complete, ready for Plan 11-02
+Last activity: 2026-02-02 — Completed 11-01-PLAN.md (Legacy Match Redirect Fix)
 
-Progress: [████████████████████░] 83% (10/12 phases complete)
+Progress: [████████████████████░░] 87% (11/12 phases in progress)
 
 ## Performance Metrics
 
@@ -32,8 +32,9 @@ Progress: [████████████████████░] 83% 
 **Velocity (v1.2 - Current):**
 - Phase 9 plans completed: 3 plans
 - Phase 10 plans completed: 2 plans
-- Total v1.2 commits: 15
-- Phase 10-02 duration: 2 min
+- Phase 11 plans completed: 1 plan
+- Total v1.2 commits: 16
+- Phase 11-01 duration: 2 min
 
 ## Accumulated Context
 
@@ -57,6 +58,9 @@ Full decision history available in phase SUMMARY.md files.
 - League title: "{competition} Predictions | kroam.xyz" (removed verbose suffix)
 - RoundupViewer h1 changed to h2 to maintain single H1 per page (verification fix)
 
+**Phase 11 Decisions:**
+- Use permanentRedirect() (308) instead of redirect() with RedirectType.replace (307) for SEO redirects
+
 ### Pending Todos
 
 None.
@@ -67,6 +71,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-02
-Stopped at: Completed Phase 10 (Page Structure)
-Resume with: `/gsd:plan-phase 11` to plan Redirect Optimization phase
+Last session: 2026-02-02 15:32
+Stopped at: Completed 11-01-PLAN.md (Legacy Match Redirect Fix)
+Resume with: `/gsd:execute-phase 11-02` to execute Sitemap Redirect Cleanup plan
