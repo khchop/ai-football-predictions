@@ -5,6 +5,7 @@ import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { Analytics } from "@/components/analytics";
 import { ErrorBoundaryProvider } from "@/components/error-boundary-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -123,16 +124,18 @@ export default function RootLayout({
           <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl" />
           <div className="absolute top-1/3 -left-40 h-80 w-80 rounded-full bg-indigo-500/10 blur-3xl" />
         </div>
-        
-        <Navigation />
 
-        <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
-          <ErrorBoundaryProvider>
-            {children}
-          </ErrorBoundaryProvider>
-        </main>
+        <TooltipProvider delayDuration={300} skipDelayDuration={100}>
+          <Navigation />
 
-        <Footer />
+          <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
+            <ErrorBoundaryProvider>
+              {children}
+            </ErrorBoundaryProvider>
+          </main>
+
+          <Footer />
+        </TooltipProvider>
       </body>
     </html>
   );
