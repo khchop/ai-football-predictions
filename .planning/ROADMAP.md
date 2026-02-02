@@ -2,13 +2,13 @@
 
 ## Milestones
 
-- ✅ **v1.0 Bug Fix Stabilization** - Phases 1-4 (shipped 2026-02-01)
-- 🚧 **v1.1 Stats Accuracy & SEO** - Phases 5-8 (in progress)
+- [x] **v1.0 Bug Fix Stabilization** - Phases 1-4 (shipped 2026-02-01)
+- [ ] **v1.1 Stats Accuracy & SEO** - Phases 5-8 (in progress)
 
 ## Phases
 
 <details>
-<summary>✅ v1.0 Bug Fix Stabilization (Phases 1-4) - SHIPPED 2026-02-01</summary>
+<summary>v1.0 Bug Fix Stabilization (Phases 1-4) - SHIPPED 2026-02-01</summary>
 
 ### Phase 1: Database Resilience
 **Goal**: Prevent database-related crashes
@@ -53,7 +53,7 @@ Plans:
 
 </details>
 
-## 🚧 v1.1 Stats Accuracy & SEO (In Progress)
+## v1.1 Stats Accuracy & SEO (In Progress)
 
 **Milestone Goal:** Fix inconsistent accuracy calculations and optimize for search engines.
 
@@ -75,9 +75,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [x] 05-01-PLAN.md — Create stats service layer with canonical accuracy formula
-- [x] 05-02-PLAN.md — Fix queries.ts functions with incorrect formulas
-- [x] 05-03-PLAN.md — Fix model detail page metadata accuracy bug
+- [x] 05-01-PLAN.md - Create stats service layer with canonical accuracy formula
+- [x] 05-02-PLAN.md - Fix queries.ts functions with incorrect formulas
+- [x] 05-03-PLAN.md - Fix model detail page metadata accuracy bug
 
 ### Phase 6: Data Migration
 
@@ -93,10 +93,11 @@ Plans:
   3. User can view explanation of why accuracy numbers changed (changelog, methodology page)
   4. Historical data preserved for 30-day rollback window in case of issues
 
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: TBD
+- [ ] 06-01-PLAN.md - Execute migration with snapshot and verification report
+- [ ] 06-02-PLAN.md - Create methodology page and changelog entry
 
 ### Phase 7: SEO Enhancement
 
@@ -141,7 +142,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 5 → 6 → 7 → 8
+Phases execute in numeric order: 5 -> 6 -> 7 -> 8
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -150,9 +151,9 @@ Phases execute in numeric order: 5 → 6 → 7 → 8
 | 3. Scoring & Caching Fixes | v1.0 | 6/6 | Complete | 2026-02-01 |
 | 4. Frontend Performance | v1.0 | 4/4 | Complete | 2026-02-01 |
 | 5. Stats Foundation | v1.1 | 3/3 | Complete | 2026-02-02 |
-| 6. Data Migration | v1.1 | 0/1 | Not started | - |
+| 6. Data Migration | v1.1 | 0/2 | Not started | - |
 | 7. SEO Enhancement | v1.1 | 0/3 | Not started | - |
 | 8. UX Transparency | v1.1 | 0/1 | Not started | - |
 
 ---
-*Last updated: 2026-02-02 (Phase 5 complete with 3 plans)*
+*Last updated: 2026-02-02 (Phase 6 planned with 2 plans)*
