@@ -8,6 +8,18 @@ import { loggers } from '@/lib/logger/modules';
 import { withCache, cacheKeys, CACHE_TTL, cacheDelete } from '@/lib/cache/redis';
 import { calculateQuotaScores } from '@/lib/utils/scoring';
 
+/**
+ * Database queries for the application.
+ *
+ * STATS ACCURACY FORMULA:
+ * For accuracy calculations, use the canonical formula from src/lib/services/stats.ts
+ * - Numerator: tendencyPoints > 0 (correct predictions only)
+ * - Denominator: predictions with status = 'scored' (not total predictions)
+ * - Division protection: NULLIF(denominator, 0) + COALESCE(result, 0)
+ *
+ * DO NOT use `tendencyPoints IS NOT NULL` - it includes 0-point wrong predictions.
+ */
+
 // Legacy betting system constant (unused, kept for model_balances table compatibility)
 const LEGACY_STARTING_BALANCE = 1000;
 
