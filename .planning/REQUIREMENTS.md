@@ -9,12 +9,12 @@ Requirements for UI/UX Overhaul. Each maps to roadmap phases.
 
 ### Design System
 
-- [ ] **DSGN-01**: Semantic color tokens defined for sports states (win/loss/draw, live/upcoming/finished)
-- [ ] **DSGN-02**: Typography scale with responsive sizing across breakpoints
-- [ ] **DSGN-03**: Spacing system with consistent rhythm (4px/8px base)
-- [ ] **DSGN-04**: Component variants for all match states
-- [ ] **DSGN-05**: Full dark mode support with toggle
-- [ ] **DSGN-06**: View Transitions API enabled for smooth navigation
+- [x] **DSGN-01**: Semantic color tokens defined for sports states (win/loss/draw, live/upcoming/finished)
+- [x] **DSGN-02**: Typography scale with responsive sizing across breakpoints
+- [x] **DSGN-03**: Spacing system with consistent rhythm (4px/8px base)
+- [x] **DSGN-04**: Component variants for all match states
+- [x] **DSGN-05**: Full dark mode support with toggle
+- [x] **DSGN-06**: View Transitions API enabled for smooth navigation
 
 ### Match Pages
 
