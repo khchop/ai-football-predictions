@@ -78,6 +78,24 @@
   --font-semibold: 600;
   --font-bold: 700;
 
+  /* Spacing Scale (4px/8px rhythm) */
+  --spacing-0: 0;
+  --spacing-0-5: 0.125rem;  /* 2px - half unit */
+  --spacing-1: 0.25rem;     /* 4px - base unit */
+  --spacing-1-5: 0.375rem;  /* 6px */
+  --spacing-2: 0.5rem;      /* 8px - major unit */
+  --spacing-2-5: 0.625rem;  /* 10px */
+  --spacing-3: 0.75rem;     /* 12px */
+  --spacing-4: 1rem;        /* 16px */
+  --spacing-5: 1.25rem;     /* 20px */
+  --spacing-6: 1.5rem;      /* 24px */
+  --spacing-8: 2rem;        /* 32px */
+  --spacing-10: 2.5rem;     /* 40px */
+  --spacing-12: 3rem;       /* 48px */
+  --spacing-16: 4rem;       /* 64px */
+  --spacing-20: 5rem;       /* 80px */
+  --spacing-24: 6rem;       /* 96px */
+
   /* Radius */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -209,6 +227,26 @@
     font-family: var(--font-sans);
     font-size: var(--text-base);
     line-height: var(--leading-normal);
+  }
+
+  /* Vertical rhythm for prose content */
+  .prose p,
+  .prose ul,
+  .prose ol {
+    margin-bottom: var(--spacing-4);
+  }
+
+  .prose h1,
+  .prose h2,
+  .prose h3 {
+    margin-bottom: var(--spacing-2);
+    margin-top: var(--spacing-8);
+  }
+
+  .prose h1:first-child,
+  .prose h2:first-child,
+  .prose h3:first-child {
+    margin-top: 0;
   }
 }
 
@@ -359,6 +397,25 @@
       box-shadow: 0 0 0 0 oklch(from var(--win) l c h / 0);
       border-color: oklch(from var(--live) l c h / 0.5);
     }
+  }
+
+  /* Numeric figure styling */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .proportional-nums {
+    font-variant-numeric: proportional-nums;
+  }
+
+  /* Slashed zero for data clarity */
+  .slashed-zero {
+    font-variant-numeric: slashed-zero;
+  }
+
+  /* Common number styling combo for tables */
+  .table-nums {
+    font-variant-numeric: tabular-nums slashed-zero;
   }
 }
 
