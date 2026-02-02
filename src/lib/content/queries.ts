@@ -172,7 +172,7 @@ export async function getTopModelsForReport(limit: number = 10) {
       totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
       totalPredictions: sql<number>`COUNT(${predictions.id})`,
       exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
-      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
+      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)`,
     })
     .from(models)
     .leftJoin(
