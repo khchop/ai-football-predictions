@@ -83,7 +83,7 @@ export function RoundupViewer({
       
       {/* Title Section */}
       <div className="text-center">
-        <h1 className="text-2xl md:text-3xl font-bold mb-2">{title}</h1>
+        <h2 className="text-2xl md:text-3xl font-bold mb-2">{title}</h2>
         {keywords.length > 0 && (
           <p className="text-sm text-muted-foreground">
             Keywords: {keywords.join(', ')}
