@@ -4,17 +4,15 @@ import type { MatchSeoData, MatchStatus } from '../types';
 import { isMatchFinished, isMatchLive, isMatchUpcoming } from '../types';
 
 // Map match status to schema.org EventStatus
-function mapEventStatus(status: MatchStatus): 'https://schema.org/EventScheduled' | 'https://schema.org/EventRescheduled' {
-  if (isMatchUpcoming(status)) {
-    return 'https://schema.org/EventScheduled';
-  }
-  // Live and finished both use rescheduled as there's no "live" status in schema.org for events
-  return 'https://schema.org/EventRescheduled';
+// Note: schema.org only has EventScheduled for all events - no EventCompleted
+// Finished matches signal completion via scores (homeTeamScore/awayTeamScore properties)
+function mapEventStatus(status: MatchStatus): 'https://schema.org/EventScheduled' {
+  return 'https://schema.org/EventScheduled';
 }
 
-export function buildSportsEventSchema(match: MatchSeoData): SportsEvent {
+export function buildSportsEventSchema(match: MatchSeoData, competitionId?: string): SportsEvent {
   const matchUrl = `${BASE_URL}/matches/${match.id}`;
-  
+
   // Build SportsEvent
   const event: SportsEvent = {
     '@type': 'SportsEvent',
@@ -25,6 +23,8 @@ export function buildSportsEventSchema(match: MatchSeoData): SportsEvent {
     location: {
       '@type': 'Place',
       name: match.venue ?? 'Unknown Venue',
+      // Google Rich Results requires Place @type explicitly
+      address: match.venue ?? 'Unknown Venue',
     },
     homeTeam: {
       '@type': 'SportsTeam',
@@ -53,7 +53,25 @@ export function buildSportsEventSchema(match: MatchSeoData): SportsEvent {
     sport: 'Football',
     description: createEventDescription(match),
   };
-  
+
+  // Add scores for finished matches to signal completion
+  if (isMatchFinished(match.status) && match.homeScore !== null && match.awayScore !== null) {
+    // @ts-expect-error - schema-dts types don't include these, but they're valid schema.org properties
+    event.homeTeamScore = match.homeScore;
+    // @ts-expect-error - schema-dts types don't include these, but they're valid schema.org properties
+    event.awayTeamScore = match.awayScore;
+  }
+
+  // Add competition reference if provided
+  // Note: superEvent expects an Event, but we can use type assertion for valid schema.org usage
+  if (competitionId) {
+    // @ts-expect-error - schema-dts expects Event, but SportsOrganization is valid per schema.org docs
+    event.superEvent = {
+      '@type': 'SportsOrganization',
+      '@id': `${BASE_URL}/leagues/${competitionId}`,
+    };
+  }
+
   return event;
 }
 
