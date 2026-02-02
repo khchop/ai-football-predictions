@@ -240,7 +240,13 @@ AI search optimization is infrastructure work that depends on content being visi
 **Goal**: Establish design tokens, component patterns, and infrastructure for all subsequent visual work
 **Requirements**: DSGN-01, DSGN-02, DSGN-03, DSGN-04, DSGN-05, DSGN-06
 **Dependencies**: None
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 17-01-PLAN.md — Semantic OKLCH color tokens and dark mode with next-themes
+- [ ] 17-02-PLAN.md — Typography scale (1.2 ratio) and spacing system (4px/8px rhythm)
+- [ ] 17-03-PLAN.md — MatchBadge and AccuracyBadge component variants
+- [ ] 17-04-PLAN.md — View Transitions API with accessibility handling
 
 **Success Criteria:**
 1. User sees consistent win/loss/draw colors across all match states (semantic tokens applied)
@@ -383,7 +389,7 @@ v1.0, v1.1, v1.2, and v1.3 complete. v2.0 in progress.
 | 14. Mobile Layout Consolidation | v1.3 | 4/4 | Complete | 2026-02-02 |
 | 15. Performance Optimization | v1.3 | 3/3 | Complete | 2026-02-02 |
 | 16. AI Search Optimization | v1.3 | 3/3 | Complete | 2026-02-02 |
-| **17. Design System Foundation** | **v2.0** | **0/?** | **Pending** | — |
+| **17. Design System Foundation** | **v2.0** | **0/4** | **Planned** | — |
 | **18. Match Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
 | **19. Blog Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
 | **20. League Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
@@ -392,4 +398,4 @@ v1.0, v1.1, v1.2, and v1.3 complete. v2.0 in progress.
 | **23. Performance & Polish** | **v2.0** | **0/?** | **Pending** | — |
 
 ---
-*Last updated: 2026-02-02 (v2.0 roadmap created)*
+*Last updated: 2026-02-02 (Phase 17 planned - 4 plans in 2 waves)*
