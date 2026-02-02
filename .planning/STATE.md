@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 7 of 8 in progress (SEO Enhancement)
-Plan: 1/3 complete
+Plan: 2/3 complete
 Status: In progress
-Last activity: 2026-02-02 — Completed 07-01-PLAN.md (Match Page Schema & Metadata)
+Last activity: 2026-02-02 — Completed 07-02-PLAN.md (Blog Roundups & Competition Schema)
 
-Progress: [█████████████████░░░] 74% (23/31 total planned plans)
+Progress: [█████████████████░░░] 77% (24/31 total planned plans)
 
 ## Performance Metrics
 
@@ -54,7 +54,8 @@ Progress: [█████████████████░░░] 74% (23
 | Plan | Duration | Description |
 |------|----------|-------------|
 | 07-01 | ~4 min | Match Page Schema & Metadata |
-| Total | ~4 min | 1 plan |
+| 07-02 | ~6 min | Blog Roundups & Competition Schema |
+| Total | ~10 min | 2 plans |
 
 ## Accumulated Context
 
@@ -78,6 +79,9 @@ Recent decisions affecting current work:
 - 07-01: Use EventScheduled for all matches — schema.org has no EventCompleted, signal completion via homeTeamScore/awayTeamScore
 - 07-01: Dynamic noindex at 30 days for finished matches — balances crawl budget vs. historical value
 - 07-01: Predicted score from likelyScores[0] — most probable outcome per bookmaker odds
+- 07-02: Match extraction for roundups — Primary: matchId field, Fallback: parse markdown /matches/ links
+- 07-02: Competition pages indexing — Set robots.index: true (were false), competitions are navigation hubs
+- 07-02: Unique title templates — Every page type has distinct pattern, site name suffix, under 60 chars
 
 ### Pending Todos
 
@@ -98,7 +102,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-02 11:14 UTC
-Stopped at: Completed 07-01-PLAN.md (Match Page Schema & Metadata)
+Last session: 2026-02-02 11:24 UTC
+Stopped at: Completed 07-02-PLAN.md (Blog Roundups & Competition Schema)
 Resume file: None
-Next step: Execute 07-02-PLAN.md or continue with remaining phase 7 plans
+Next step: Execute 07-03-PLAN.md (final plan in phase 7)
