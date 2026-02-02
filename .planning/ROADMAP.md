@@ -213,6 +213,12 @@ ISR configuration requires knowing exact rendering pipeline (what's static vs dy
 **Goal**: Match pages optimized for AI search engines (ChatGPT, Perplexity, Claude)
 **Requirements**: SRCH-01, SRCH-02, SRCH-03, SRCH-04
 **Dependencies**: Phase 13 (content must be visible for crawlers to index)
+**Plans**: 3 plans
+
+Plans:
+- [ ] 16-01-PLAN.md — Add missing AI crawler user-agents to robots.txt and verify llms.txt structure
+- [ ] 16-02-PLAN.md — Create consolidated MatchPageSchema component with @graph array
+- [ ] 16-03-PLAN.md — Integrate consolidated schema into match page and verify SSR content
 
 **Success Criteria:**
 1. AI crawler user-agents (GPTBot, ClaudeBot, PerplexityBot, Amazonbot) can access all match pages (verified via robots.txt)
@@ -248,7 +254,7 @@ v1.0, v1.1, and v1.2 complete. v1.3 in progress starting Phase 13.
 | **13. Content Pipeline Fixes** | **v1.3** | **3/3** | **Complete** | 2026-02-02 |
 | **14. Mobile Layout Consolidation** | **v1.3** | **4/4** | **Complete** | 2026-02-02 |
 | **15. Performance Optimization** | **v1.3** | **3/3** | **Complete** | 2026-02-02 |
-| **16. AI Search Optimization** | **v1.3** | **0/0** | **Ready** | — |
+| **16. AI Search Optimization** | **v1.3** | **0/3** | **Ready** | — |
 
 ---
-*Last updated: 2026-02-02 (Phase 15 complete)*
+*Last updated: 2026-02-02 (Phase 16 planned)*
