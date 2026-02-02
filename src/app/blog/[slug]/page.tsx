@@ -9,11 +9,17 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { getBlogPostBySlug } from '@/lib/db/queries';
 import { generateArticleSchema } from '@/lib/seo/schemas';
+import { buildRoundupSchema } from '@/lib/seo/schema/roundup';
+import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { format, parseISO } from 'date-fns';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { Metadata } from 'next';
 import { WebPageSchema } from '@/components/WebPageSchema';
+import { getDb } from '@/lib/db';
+import { matches } from '@/lib/db/schema';
+import { inArray } from 'drizzle-orm';
+import { BASE_URL } from '@/lib/seo/constants';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -35,7 +41,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   // Determine which OG image to use based on content type
   let ogImageUrl: string;
-  
+  let ogDescription = post.excerpt || post.title;
+
   if (post.contentType === 'model_report') {
     // Use model OG image for model reports
     const modelOgUrl = new URL(`${baseUrl}/api/og/model`);
@@ -50,6 +57,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     leagueOgUrl.searchParams.set('matchCount', '0');
     leagueOgUrl.searchParams.set('upcomingCount', '0');
     ogImageUrl = leagueOgUrl.toString();
+
+    // Enhanced OG description for roundups: include "AI predictions" and competition if available
+    if (post.competitionId) {
+      const { getCompetitionById } = await import('@/lib/football/competitions');
+      const competition = getCompetitionById(post.competitionId);
+      if (competition) {
+        ogDescription = `AI predictions and match analysis for ${competition.name}. See predictions from 35 models.`;
+      } else {
+        ogDescription = `AI predictions and match analysis. Compare predictions from 35 competing models.`;
+      }
+    } else {
+      ogDescription = `AI predictions and match analysis. Compare predictions from 35 competing models.`;
+    }
   } else {
     // Generic fallback for analysis posts
     const genericUrl = new URL(`${baseUrl}/api/og/league`);
@@ -68,7 +88,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     openGraph: {
       title: post.title,
-      description: post.excerpt || undefined,
+      description: ogDescription,
       type: 'article',
       publishedTime: post.publishedAt || undefined,
       url: url,
@@ -84,7 +104,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     twitter: {
       card: 'summary_large_image',
       title: post.title,
-      description: post.excerpt || undefined,
+      description: ogDescription,
       images: [ogImageUrl],
     },
   };
@@ -98,32 +118,97 @@ export default async function BlogPostPage({ params }: PageProps) {
     notFound();
   }
 
-  // Generate Article schema for SEO
-  const articleSchema = generateArticleSchema({
-    title: post.title,
-    description: post.excerpt || post.title,
-    author: post.generatedBy || 'kroam.xyz',
-    publishedAt: post.publishedAt || new Date().toISOString(),
-    url: `https://kroam.xyz/blog/${slug}`,
-  });
+  // Determine schema type based on content type
+  let schema: object;
+
+  if (post.contentType === 'league_roundup') {
+    // For roundups, try to extract match data
+    let matchData: Array<{ id: string; homeTeam: string; awayTeam: string; kickoffTime: string; competitionId: string; slug: string }> = [];
+
+    // Primary path: Check if matchId field contains a match ID (single match)
+    if (post.matchId) {
+      const db = getDb();
+      const matchResults = await db
+        .select({
+          id: matches.id,
+          homeTeam: matches.homeTeam,
+          awayTeam: matches.awayTeam,
+          kickoffTime: matches.kickoffTime,
+          competitionId: matches.competitionId,
+          slug: matches.slug,
+        })
+        .from(matches)
+        .where(inArray(matches.id, [post.matchId]))
+        .limit(10);
+      matchData = matchResults;
+    }
+
+    // Fallback: Parse markdown content for /matches/ links
+    if (matchData.length === 0) {
+      const matchIdPattern = /\/matches\/([a-zA-Z0-9-]+)/g;
+      const matchIds = new Set<string>();
+      let match;
+      while ((match = matchIdPattern.exec(post.content)) !== null) {
+        matchIds.add(match[1]);
+      }
+
+      if (matchIds.size > 0) {
+        const db = getDb();
+        const matchResults = await db
+          .select({
+            id: matches.id,
+            homeTeam: matches.homeTeam,
+            awayTeam: matches.awayTeam,
+            kickoffTime: matches.kickoffTime,
+            competitionId: matches.competitionId,
+            slug: matches.slug,
+          })
+          .from(matches)
+          .where(inArray(matches.id, Array.from(matchIds)))
+          .limit(10);
+        matchData = matchResults;
+      }
+    }
+
+    schema = buildRoundupSchema(post, matchData.length > 0 ? matchData : undefined);
+  } else {
+    // For other content types: Keep existing Article schema
+    schema = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        generateArticleSchema({
+          title: post.title,
+          description: post.excerpt || post.title,
+          author: post.generatedBy || 'kroam.xyz',
+          publishedAt: post.publishedAt || new Date().toISOString(),
+          url: `${BASE_URL}/blog/${slug}`,
+        }),
+        buildBreadcrumbSchema([
+          { name: 'Home', url: BASE_URL },
+          { name: 'Blog', url: `${BASE_URL}/blog` },
+          { name: post.title, url: `${BASE_URL}/blog/${slug}` },
+        ]),
+      ],
+    };
+  }
 
    return (
      <div className="max-w-3xl mx-auto space-y-8">
        {/* Article Schema for search engines */}
        <script
          type="application/ld+json"
-         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
        />
 
        <WebPageSchema
          name={post.title}
          description={post.excerpt || post.title}
-         url={`https://kroam.xyz/blog/${post.slug}`}
+         url={`${BASE_URL}/blog/${post.slug}`}
          datePublished={post.publishedAt || undefined}
          breadcrumb={[
-           { name: 'Home', url: 'https://kroam.xyz' },
-           { name: 'Blog', url: 'https://kroam.xyz/blog' },
-           { name: post.title, url: `https://kroam.xyz/blog/${post.slug}` },
+           { name: 'Home', url: BASE_URL },
+           { name: 'Blog', url: `${BASE_URL}/blog` },
+           { name: post.title, url: `${BASE_URL}/blog/${post.slug}` },
          ]}
        />
 
