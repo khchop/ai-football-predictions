@@ -204,6 +204,7 @@ export async function getMatchById(id: string): Promise<{ match: Match; competit
 /**
  * Get match by competition slug and match slug
  * Used for SEO-friendly URLs: /leagues/{league-slug}/{match-slug}
+ * Supports both competition.id (from config) and competition.slug (from database)
  */
 export async function getMatchBySlug(competitionSlug: string, matchSlug: string): Promise<{ match: Match; competition: Competition } | undefined> {
   const db = getDb();
@@ -216,12 +217,15 @@ export async function getMatchBySlug(competitionSlug: string, matchSlug: string)
     .innerJoin(competitions, eq(matches.competitionId, competitions.id))
     .where(
       and(
-        eq(competitions.slug, competitionSlug),
+        or(
+          eq(competitions.slug, competitionSlug),
+          eq(competitions.id, competitionSlug)
+        ),
         eq(matches.slug, matchSlug)
       )
     )
     .limit(1);
-  
+
   return result[0];
 }
 

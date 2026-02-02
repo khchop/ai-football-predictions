@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import Image from 'next/image';
 import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { MatchFAQSchema } from '@/components/match/MatchFAQSchema';
 import { PredictionInsightsBlockquote } from '@/components/match/PredictionInsightsBlockquote';
 import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails, getStandingsForTeams, getNextMatchesForTeams, getMatchRoundup } from '@/lib/db/queries';
 import { getMatchEvents } from '@/lib/football/api-football';
+import { getCompetitionByIdOrAlias } from '@/lib/football/competitions';
 import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, Target, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -31,7 +32,13 @@ interface MatchPageProps {
 
 export async function generateMetadata({ params }: MatchPageProps): Promise<Metadata> {
   const { slug, match } = await params;
-  const result = await getMatchBySlug(slug, match);
+
+  // Check if slug is an alias and get competition config
+  const competitionConfig = getCompetitionByIdOrAlias(slug);
+
+  // Use competition ID for database query if alias was used
+  const competitionSlug = competitionConfig?.id || slug;
+  const result = await getMatchBySlug(competitionSlug, match);
 
   if (!result) {
     return {
@@ -76,7 +83,18 @@ function renderPredictionAnalysis(predictions: Array<{ predictedHome: number | n
 
 export default async function MatchPage({ params }: MatchPageProps) {
   const { slug, match } = await params;
-  const result = await getMatchBySlug(slug, match);
+
+  // Check if slug is an alias and get competition config
+  const competitionConfig = getCompetitionByIdOrAlias(slug);
+
+  // Redirect to canonical URL if slug is an alias
+  if (competitionConfig && slug !== competitionConfig.id) {
+    permanentRedirect(`/leagues/${competitionConfig.id}/${match}`);
+  }
+
+  // Use competition ID for database query (either canonical or original slug)
+  const competitionSlug = competitionConfig?.id || slug;
+  const result = await getMatchBySlug(competitionSlug, match);
 
   if (!result) {
     notFound();
@@ -108,19 +126,19 @@ export default async function MatchPage({ params }: MatchPageProps) {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <SportsEventSchema match={matchData} />
-      <WebPageSchema 
+      <WebPageSchema
         name={`${matchData.homeTeam} vs ${matchData.awayTeam} Prediction`}
         description={`AI predictions for ${matchData.homeTeam} vs ${matchData.awayTeam} (${competition.name}). Compare forecasts from 35+ AI models.`}
-        url={`https://kroam.xyz/leagues/${competition.slug}/${matchData.slug}`}
+        url={`https://kroam.xyz/leagues/${competitionSlug}/${matchData.slug}`}
         breadcrumb={[
           { name: 'Home', url: 'https://kroam.xyz' },
           { name: 'Leagues', url: 'https://kroam.xyz/leagues' },
-          { name: competition.name, url: `https://kroam.xyz/leagues/${competition.slug}` },
-          { name: `${matchData.homeTeam} vs ${matchData.awayTeam}`, url: `https://kroam.xyz/leagues/${competition.slug}/${matchData.slug}` },
+          { name: competition.name, url: `https://kroam.xyz/leagues/${competitionSlug}` },
+          { name: `${matchData.homeTeam} vs ${matchData.awayTeam}`, url: `https://kroam.xyz/leagues/${competitionSlug}/${matchData.slug}` },
         ]}
       />
-      <Link 
-        href={`/leagues/${slug}`}
+      <Link
+        href={`/leagues/${competitionSlug}`}
         className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -377,8 +395,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-6">
             <h3 className="text-lg font-bold mb-4">Explore {competition.name}</h3>
-            <Link 
-              href={`/leagues/${competition.slug}`}
+            <Link
+              href={`/leagues/${competitionSlug}`}
               className="group flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-primary/10 transition-colors"
             >
               <div className="flex items-center gap-3">
@@ -394,16 +412,21 @@ export default async function MatchPage({ params }: MatchPageProps) {
           <CardContent className="p-6">
             <h3 className="text-lg font-bold mb-4">Upcoming Fixtures</h3>
             <div className="space-y-3">
-              {nextMatches.filter(m => m.match.id !== matchData.id).slice(0, 2).map((m) => (
-                <Link 
-                  key={m.match.id}
-                  href={`/leagues/${m.competition.slug}/${m.match.slug}`}
-                  className="group flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors text-sm"
-                >
-                  <span className="truncate">{m.match.homeTeam} vs {m.match.awayTeam}</span>
-                  <ChevronRight className="h-3 w-3 text-muted-foreground group-hover:text-primary" />
-                </Link>
-              ))}
+              {nextMatches.filter(m => m.match.id !== matchData.id).slice(0, 2).map((m) => {
+                // Get canonical competition ID for link
+                const matchCompConfig = getCompetitionByIdOrAlias(m.competition.slug);
+                const matchCompSlug = matchCompConfig?.id || m.competition.slug;
+                return (
+                  <Link
+                    key={m.match.id}
+                    href={`/leagues/${matchCompSlug}/${m.match.slug}`}
+                    className="group flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors text-sm"
+                  >
+                    <span className="truncate">{m.match.homeTeam} vs {m.match.awayTeam}</span>
+                    <ChevronRight className="h-3 w-3 text-muted-foreground group-hover:text-primary" />
+                  </Link>
+                );
+              })}
               {nextMatches.length <= 1 && (
                 <p className="text-sm text-muted-foreground italic">No other upcoming matches found for these teams.</p>
               )}
@@ -417,19 +440,24 @@ export default async function MatchPage({ params }: MatchPageProps) {
           <CardContent className="p-6">
             <h3 className="text-lg font-bold mb-4">More {competition.name} Matches</h3>
             <div className="space-y-3">
-              {nextMatches.slice(0, 3).map((m) => (
-                <Link 
-                  key={m.match.id}
-                  href={`/leagues/${m.competition.slug}/${m.match.slug}`}
-                  className="group flex items-start justify-between p-3 rounded-lg bg-muted/20 hover:bg-primary/10 transition-colors"
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{m.match.homeTeam} vs {m.match.awayTeam}</p>
-                    <p className="text-xs text-muted-foreground">{format(parseISO(m.match.kickoffTime), 'MMM d, HH:mm')}</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary mt-1" />
-                </Link>
-              ))}
+              {nextMatches.slice(0, 3).map((m) => {
+                // Get canonical competition ID for link
+                const matchCompConfig = getCompetitionByIdOrAlias(m.competition.slug);
+                const matchCompSlug = matchCompConfig?.id || m.competition.slug;
+                return (
+                  <Link
+                    key={m.match.id}
+                    href={`/leagues/${matchCompSlug}/${m.match.slug}`}
+                    className="group flex items-start justify-between p-3 rounded-lg bg-muted/20 hover:bg-primary/10 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{m.match.homeTeam} vs {m.match.awayTeam}</p>
+                      <p className="text-xs text-muted-foreground">{format(parseISO(m.match.kickoffTime), 'MMM d, HH:mm')}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary mt-1" />
+                  </Link>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
