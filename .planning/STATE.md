@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 17 - Design System Foundation
-Plan: 02 of 3 complete (Wave 1 complete)
-Status: In progress
-Last activity: 2026-02-02 - Completed 17-02-PLAN.md (Typography & Spacing Tokens)
+Plan: 03 of 3 complete (Phase complete)
+Status: Phase complete
+Last activity: 2026-02-02 - Completed 17-03-PLAN.md (Component Variants)
 
-Progress: [██░░░░░░░░░░░░░░░░░░░░░░] 6% (v2.0: 2/? plans, 2/33 requirements)
+Progress: [███░░░░░░░░░░░░░░░░░░░░░] 9% (v2.0: 3/? plans, 6/33 requirements)
 
 ## Milestone History
 
@@ -31,7 +31,7 @@ Progress: [██░░░░░░░░░░░░░░░░░░░░░
 
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
-| 17. Design System Foundation | Design tokens, dark mode, PPR infrastructure | DSGN-01 to DSGN-06 (6) | Plans 01-02 complete |
+| 17. Design System Foundation | Design tokens, dark mode, PPR infrastructure | DSGN-01 to DSGN-06 (6) | Complete |
 | 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | Pending |
 | 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Pending |
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Pending |
@@ -67,6 +67,8 @@ Full decision history available in phase SUMMARY.md files.
 - System font stack for fast loading and native feel
 - 1.2 ratio (Minor Third) type scale for balanced hierarchy
 - 4px/8px spacing rhythm for consistent component spacing
+- MatchBadge for structured outcome/status props, Badge variants for simple usage
+- AccuracyBadge thresholds: <40% red, 40-70% amber, >70% green
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -107,5 +109,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 17-02-PLAN.md (Typography & Spacing Tokens)
-Resume with: Run 17-03-PLAN.md (PPR Infrastructure) to complete Phase 17
+Stopped at: Completed 17-03-PLAN.md (Component Variants) - Phase 17 complete
+Resume with: Begin Phase 18 (Match Page Rebuild)
