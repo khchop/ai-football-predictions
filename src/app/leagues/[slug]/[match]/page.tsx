@@ -414,8 +414,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
             <div className="space-y-3">
               {nextMatches.filter(m => m.match.id !== matchData.id).slice(0, 2).map((m) => {
                 // Get canonical competition ID for link
-                const matchCompConfig = getCompetitionByIdOrAlias(m.competition.slug);
-                const matchCompSlug = matchCompConfig?.id || m.competition.slug;
+                const matchCompConfig = m.competition.slug ? getCompetitionByIdOrAlias(m.competition.slug) : null;
+                const matchCompSlug = matchCompConfig?.id || m.competition.slug || m.competition.id;
                 return (
                   <Link
                     key={m.match.id}
@@ -442,8 +442,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
             <div className="space-y-3">
               {nextMatches.slice(0, 3).map((m) => {
                 // Get canonical competition ID for link
-                const matchCompConfig = getCompetitionByIdOrAlias(m.competition.slug);
-                const matchCompSlug = matchCompConfig?.id || m.competition.slug;
+                const matchCompConfig = m.competition.slug ? getCompetitionByIdOrAlias(m.competition.slug) : null;
+                const matchCompSlug = matchCompConfig?.id || m.competition.slug || m.competition.id;
                 return (
                   <Link
                     key={m.match.id}
