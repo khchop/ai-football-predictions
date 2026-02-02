@@ -26,19 +26,33 @@ interface MatchPageProps {
 export async function generateMetadata({ params }: MatchPageProps): Promise<Metadata> {
   const { id } = await params;
   const result = await getMatchWithAnalysis(id);
-  
+
   if (!result) {
     return {
       title: 'Match Not Found',
       description: 'The requested match could not be found.',
     };
   }
-  
-  const { match, competition } = result;
-  
+
+  const { match, competition, analysis } = result;
+
   // Map match to SEO data format
   const seoData = mapMatchToSeoData(match);
-  
+
+  // Extract predicted scores from analysis if available
+  if (analysis?.likelyScores) {
+    try {
+      const likelyScores = JSON.parse(analysis.likelyScores) as LikelyScore[];
+      if (likelyScores[0]) {
+        const [homeScore, awayScore] = likelyScores[0].score.split('-').map(Number);
+        seoData.predictedHomeScore = homeScore;
+        seoData.predictedAwayScore = awayScore;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
   // Use the SEO utility builder for dynamic metadata based on match state
   return buildMatchMetadata(seoData);
 }
@@ -81,7 +95,12 @@ export default async function MatchPage({ params }: MatchPageProps) {
     : [];
 
   // Build JSON-LD structured data for the match
-  const jsonLd = buildMatchGraphSchema(mapMatchToSeoData(match));
+  const jsonLd = buildMatchGraphSchema(mapMatchToSeoData(match), {
+    competitionId: competition.id,
+    competitionName: competition.name,
+    competitionSlug: competition.slug ?? undefined,
+    matchSlug: match.slug ?? undefined,
+  });
 
   return (
     <>

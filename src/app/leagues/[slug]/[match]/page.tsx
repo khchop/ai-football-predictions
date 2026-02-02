@@ -17,6 +17,8 @@ import { SportsEventSchema } from '@/components/SportsEventSchema';
 import { MatchStats } from '@/components/match/MatchStats';
 import { WebPageSchema } from '@/components/WebPageSchema';
 import { RoundupViewer } from '@/components/match/roundup-viewer';
+import { buildMatchMetadata } from '@/lib/seo/metadata';
+import { mapMatchToSeoData } from '@/lib/seo/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,53 +32,39 @@ interface MatchPageProps {
 export async function generateMetadata({ params }: MatchPageProps): Promise<Metadata> {
   const { slug, match } = await params;
   const result = await getMatchBySlug(slug, match);
-  
+
   if (!result) {
     return {
       title: 'Match Not Found',
       description: 'The requested match could not be found.',
     };
   }
-  
+
   const { match: matchData, competition } = result;
-  const kickoff = format(parseISO(matchData.kickoffTime), 'MMM d, yyyy');
-  const kickoffFull = format(parseISO(matchData.kickoffTime), 'MMM d, yyyy HH:mm');
-  
-  const baseUrl = 'https://kroam.xyz';
-  const url = `${baseUrl}/leagues/${slug}/${match}`;
 
-  const ogImageUrl = new URL(`${baseUrl}/api/og/match`);
-  ogImageUrl.searchParams.set('homeTeam', matchData.homeTeam);
-  ogImageUrl.searchParams.set('awayTeam', matchData.awayTeam);
-  ogImageUrl.searchParams.set('competition', competition.name);
+  // Get analysis for predicted scores
+  const analysisData = await getMatchWithAnalysis(matchData.id);
+  const analysis = analysisData?.analysis;
 
-  return {
-    title: `${matchData.homeTeam} vs ${matchData.awayTeam} Prediction (${kickoff}) | ${competition.name} AI Forecasts`,
-    description: `AI predictions for ${matchData.homeTeam} vs ${matchData.awayTeam} (${competition.name}, ${kickoffFull}). See forecasts from 26 AI models, pre-match odds analysis, and post-match accuracy report.`,
-    alternates: {
-      canonical: url,
-    },
-    openGraph: {
-      title: `${matchData.homeTeam} vs ${matchData.awayTeam} Prediction`,
-      description: `AI score predictions for ${matchData.homeTeam} vs ${matchData.awayTeam} in ${competition.name}`,
-      url: url,
-      type: 'website',
-      images: [
-        {
-          url: ogImageUrl.toString(),
-          width: 1200,
-          height: 630,
-          alt: `${matchData.homeTeam} vs ${matchData.awayTeam} prediction`,
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${matchData.homeTeam} vs ${matchData.awayTeam} Prediction`,
-      description: `AI score predictions for ${matchData.homeTeam} vs ${matchData.awayTeam} in ${competition.name}`,
-      images: [ogImageUrl.toString()],
-    },
-  };
+  // Map to SEO data
+  const seoData = mapMatchToSeoData(matchData);
+
+  // Extract predicted scores from analysis if available
+  if (analysis?.likelyScores) {
+    try {
+      const likelyScores = JSON.parse(analysis.likelyScores);
+      if (likelyScores[0]) {
+        const [homeScore, awayScore] = likelyScores[0].score.split('-').map(Number);
+        seoData.predictedHomeScore = homeScore;
+        seoData.predictedAwayScore = awayScore;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  // Use centralized metadata builder
+  return buildMatchMetadata(seoData);
 }
 
 function renderPredictionAnalysis(predictions: Array<{ predictedHome: number | null; predictedAway: number | null }>) {
