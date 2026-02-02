@@ -3,6 +3,33 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic'; // Always fresh stats
 
+/**
+ * Cache Statistics API
+ *
+ * Returns Redis cache hit rate metrics for monitoring performance optimization.
+ *
+ * @example
+ * GET /api/admin/cache-stats
+ *
+ * Response:
+ * {
+ *   "hits": 12345,
+ *   "misses": 1234,
+ *   "total": 13579,
+ *   "hitRate": "90.91%",
+ *   "hitRateRaw": 90.90909090909091,
+ *   "target": "70%+",
+ *   "status": "healthy",
+ *   "timestamp": "2026-02-02T12:00:00.000Z"
+ * }
+ *
+ * Status values:
+ * - "healthy": hit rate >= 70% (meets target)
+ * - "acceptable": hit rate >= 50% (below target but functional)
+ * - "needs-optimization": hit rate < 50% (investigate cache configuration)
+ *
+ * Success criteria: Phase 15 requires cache hit rate > 70%
+ */
 export async function GET() {
   const redis = getRedis();
 
