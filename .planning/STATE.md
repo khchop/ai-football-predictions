@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 15 (Performance Optimization) - COMPLETE
-Plan: 3 of 3 complete
-Status: Phase complete
-Last activity: 2026-02-02 — Completed 15-03-PLAN.md (Cache Monitoring)
+Phase: 16 (AI Search Optimization) - IN PROGRESS
+Plan: 1 of 4 complete
+Status: In progress
+Last activity: 2026-02-02 - Completed 16-01-PLAN.md (AI Crawler Configuration)
 
-Progress: [███████████░░░░░░░░░░░░░] 52.5% (21/40 plans complete)
+Progress: [████████████░░░░░░░░░░░░] 55% (22/40 plans complete)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [███████████░░░░░░░░░░░░
 - +4,147 / -42 lines
 
 **Velocity (v1.3):**
-- Total plans completed: 12 plans (Phase 13, Phase 14, Phase 15 complete)
+- Total plans completed: 13 plans (Phase 13, Phase 14, Phase 15 complete, Phase 16 in progress)
 - Phases: 13-16 (Content Pipeline, Mobile Layout, Performance, AI Search)
-- Status: Phase 13 complete, Phase 14 complete, Phase 15 complete
+- Status: Phase 13 complete, Phase 14 complete, Phase 15 complete, Phase 16 plan 1 complete
 
 ## Accumulated Context
 
@@ -81,6 +81,10 @@ Full decision history available in phase SUMMARY.md files.
 - 15-03: 70% threshold for 'healthy' cache status (Phase 15 success criteria)
 - 15-03: force-dynamic for monitoring endpoints (always fresh stats)
 
+**Phase 16 Decisions:**
+- 16-01: Group AI crawlers by company in robots.ts (maintainability)
+- 16-01: Descriptive text in llms.txt markdown links (AI parser compatibility)
+
 ### Pending Todos
 
 None.
@@ -92,5 +96,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 15-03-PLAN.md (Cache Monitoring)
-Resume with: Continue to Phase 16 (AI Search Optimization)
+Stopped at: Completed 16-01-PLAN.md (AI Crawler Configuration)
+Resume with: Continue to 16-02-PLAN.md (Schema.org Consolidation)
