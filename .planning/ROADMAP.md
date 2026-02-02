@@ -75,9 +75,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Create stats service layer with canonical accuracy formula
-- [ ] 05-02-PLAN.md — Fix queries.ts functions with incorrect formulas
-- [ ] 05-03-PLAN.md — Fix model detail page metadata accuracy bug
+- [x] 05-01-PLAN.md — Create stats service layer with canonical accuracy formula
+- [x] 05-02-PLAN.md — Fix queries.ts functions with incorrect formulas
+- [x] 05-03-PLAN.md — Fix model detail page metadata accuracy bug
 
 ### Phase 6: Data Migration
 
@@ -149,10 +149,10 @@ Phases execute in numeric order: 5 → 6 → 7 → 8
 | 2. Queue Worker Stability | v1.0 | 4/4 | Complete | 2026-02-01 |
 | 3. Scoring & Caching Fixes | v1.0 | 6/6 | Complete | 2026-02-01 |
 | 4. Frontend Performance | v1.0 | 4/4 | Complete | 2026-02-01 |
-| 5. Stats Foundation | v1.1 | 0/3 | Planned | - |
+| 5. Stats Foundation | v1.1 | 3/3 | Complete | 2026-02-02 |
 | 6. Data Migration | v1.1 | 0/1 | Not started | - |
 | 7. SEO Enhancement | v1.1 | 0/3 | Not started | - |
 | 8. UX Transparency | v1.1 | 0/1 | Not started | - |
 
 ---
-*Last updated: 2026-02-02 (Phase 5 planned with 3 plans)*
+*Last updated: 2026-02-02 (Phase 5 complete with 3 plans)*
