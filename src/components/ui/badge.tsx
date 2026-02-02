@@ -9,6 +9,7 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
+        // Core variants
         default:
           "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
         secondary:
@@ -17,6 +18,16 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+
+        // Match outcome variants
+        win: "bg-win/10 text-win border-win/20 dark:bg-win/20",
+        draw: "bg-draw/10 text-draw border-draw/20 dark:bg-draw/20",
+        loss: "bg-loss/10 text-loss border-loss/20 dark:bg-loss/20",
+
+        // Match status variants
+        live: "bg-destructive text-white border-destructive animate-pulse",
+        upcoming: "bg-primary/10 text-primary border-primary/20",
+        finished: "bg-muted text-muted-foreground border-border",
       },
     },
     defaultVariants: {
