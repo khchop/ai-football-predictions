@@ -350,7 +350,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
         awayTeam={matchData.awayTeam}
       />
       
-      <MatchContentSection matchId={matchData.id} />
+      <MatchContentSection matchId={matchData.id} matchStatus={matchData.status} />
       
       {/* Match Roundup (for finished matches with roundup available) */}
       {roundup && (
