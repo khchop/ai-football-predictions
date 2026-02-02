@@ -20,6 +20,7 @@ import { WebPageSchema } from '@/components/WebPageSchema';
 import { RoundupViewer } from '@/components/match/roundup-viewer';
 import { buildMatchMetadata } from '@/lib/seo/metadata';
 import { mapMatchToSeoData } from '@/lib/seo/types';
+import { MatchH1 } from '@/components/match/match-h1';
 
 export const dynamic = 'force-dynamic';
 
@@ -177,6 +178,13 @@ export default async function MatchPage({ params }: MatchPageProps) {
           { name: competition.name, url: `https://kroam.xyz/leagues/${competitionSlug}` },
           { name: `${matchData.homeTeam} vs ${matchData.awayTeam}`, url: `https://kroam.xyz/leagues/${competitionSlug}/${matchData.slug}` },
         ]}
+      />
+      <MatchH1
+        homeTeam={matchData.homeTeam}
+        awayTeam={matchData.awayTeam}
+        status={matchData.status}
+        homeScore={matchData.homeScore}
+        awayScore={matchData.awayScore}
       />
       <Link
         href={`/leagues/${competitionSlug}`}

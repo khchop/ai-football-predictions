@@ -1,7 +1,7 @@
 interface MatchH1Props {
   homeTeam: string;
   awayTeam: string;
-  status: string;
+  status: string | null;
   homeScore: number | null;
   awayScore: number | null;
 }
