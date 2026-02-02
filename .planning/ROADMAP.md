@@ -5,6 +5,7 @@
 - [x] **v1.0 Bug Fix Stabilization** - Phases 1-4 (shipped 2026-02-01)
 - [x] **v1.1 Stats Accuracy & SEO** - Phases 5-8 (shipped 2026-02-02)
 - [x] **v1.2 Technical SEO Fixes** - Phases 9-12 (shipped 2026-02-02)
+- [ ] **v1.3 Match Page Refresh** - Phases 13-16 (in progress)
 
 ## Phases
 
@@ -135,10 +136,81 @@ Plans:
 
 </details>
 
+<details open>
+<summary>v1.3 Match Page Refresh (Phases 13-16) - IN PROGRESS</summary>
+
+### Phase 13: Content Pipeline Fixes
+**Goal**: LLM-generated content displays correctly on all match pages
+**Requirements**: CONT-01, CONT-02, CONT-03, CONT-04, CONT-05
+**Dependencies**: None
+
+**Success Criteria:**
+1. User sees pre-match AI narrative on upcoming match pages (150-200 word preview with "Read More")
+2. User sees prediction summary content on match pages with active predictions
+3. User sees post-match AI roundup on finished match pages (complete with stats, events, model analysis)
+4. User can click "Read More" on long content blocks to expand full narrative (no truncation on expansion)
+5. System queries unified content source (no missing content due to table misalignment)
+
+**Why This Phase:**
+Content exists in database but doesn't display due to dual-table writes (`matchContent` vs `matchRoundups`) and query misalignment. Fixing this unblocks all user-facing content features and must complete before mobile layout work (can't optimize layout for content that doesn't render).
+
+---
+
+### Phase 14: Mobile Layout Consolidation
+**Goal**: Match pages display data exactly once with minimal scrolling on mobile
+**Requirements**: MOBL-01, MOBL-02, MOBL-03, MOBL-04, MOBL-05, MOBL-06
+**Dependencies**: Phase 13 (content must render before layout optimization)
+
+**Success Criteria:**
+1. User sees match score exactly once in sticky header (not duplicated in stats, roundup, or other sections)
+2. User navigates between Summary/Stats/Predictions/Analysis tabs without page reload
+3. User swipes left/right to switch tabs on mobile touchscreen
+4. User taps "Show More" to expand advanced stats (hidden by default on mobile)
+5. All interactive elements (tabs, buttons, toggles) meet 44x44px minimum touch target size
+
+**Why This Phase:**
+After content renders correctly (Phase 13), consolidating duplicate displays and adding tabbed navigation provides immediate UX improvement. Mobile-first layout is foundation for performance optimization (Phase 15) since caching strategy depends on final component structure.
+
+---
+
+### Phase 15: Performance Optimization
+**Goal**: Match pages load under 400ms TTFB with smart caching
+**Requirements**: PERF-01, PERF-02, PERF-03
+**Dependencies**: Phase 14 (caching strategy depends on finalized component structure)
+
+**Success Criteria:**
+1. User sees match page initial render in under 400ms TTFB on mobile network (measured via Chrome DevTools)
+2. User viewing live match sees score updates within 60 seconds without manual refresh (ISR revalidation active)
+3. User viewing finished match experiences instant page load from cache (3600s revalidation, served from edge)
+4. Developer confirms parallel data fetching reduces query waterfall from 4x to 1x baseline time
+5. Cache hit rate exceeds 70% for match pages (measured via Redis INFO stats)
+
+**Why This Phase:**
+ISR configuration requires knowing exact rendering pipeline (what's static vs dynamic) from Phases 13-14. Optimizing before layout stabilizes risks rework. Performance improvements have massive cost savings (60-80% server load reduction) and SEO benefit (Core Web Vitals).
+
+---
+
+### Phase 16: AI Search Optimization
+**Goal**: Match pages optimized for AI search engines (ChatGPT, Perplexity, Claude)
+**Requirements**: SRCH-01, SRCH-02, SRCH-03, SRCH-04
+**Dependencies**: Phase 13 (content must be visible for crawlers to index)
+
+**Success Criteria:**
+1. AI crawler user-agents (GPTBot, ClaudeBot, PerplexityBot, Amazonbot) can access all match pages (verified via robots.txt)
+2. llms.txt file provides structured sitemap with match, competition, model, and blog URLs
+3. Match pages serve single consolidated Schema.org JSON-LD graph (SportsEvent + WebPage + BreadcrumbList in @graph array)
+4. Schema.org validator shows zero errors for match page structured data
+5. AI-generated content (pre-match, post-match narratives) renders server-side (visible in View Source, not client-only)
+
+**Why This Phase:**
+AI search optimization is infrastructure work that depends on content being visible (Phase 13) but is independent of layout/performance. Can execute in parallel with cleanup work or after performance optimization since it doesn't affect core UX.
+
+</details>
+
 ## Progress
 
 **Execution Order:**
-v1.0, v1.1, and v1.2 complete.
+v1.0, v1.1, and v1.2 complete. v1.3 in progress starting Phase 13.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -154,6 +226,10 @@ v1.0, v1.1, and v1.2 complete.
 | 10. Page Structure | v1.2 | 2/2 | Complete | 2026-02-02 |
 | 11. Redirect Optimization | v1.2 | 2/2 | Complete | 2026-02-02 |
 | 12. Internal Linking | v1.2 | 2/2 | Complete | 2026-02-02 |
+| **13. Content Pipeline Fixes** | **v1.3** | **0/0** | **Pending** | — |
+| **14. Mobile Layout Consolidation** | **v1.3** | **0/0** | **Pending** | — |
+| **15. Performance Optimization** | **v1.3** | **0/0** | **Pending** | — |
+| **16. AI Search Optimization** | **v1.3** | **0/0** | **Pending** | — |
 
 ---
-*Last updated: 2026-02-02 (v1.2 milestone complete)*
+*Last updated: 2026-02-02 (v1.3 milestone started)*

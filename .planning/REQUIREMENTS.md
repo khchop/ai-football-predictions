@@ -72,30 +72,30 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MOBL-01 | TBD | Pending |
-| MOBL-02 | TBD | Pending |
-| MOBL-03 | TBD | Pending |
-| MOBL-04 | TBD | Pending |
-| MOBL-05 | TBD | Pending |
-| MOBL-06 | TBD | Pending |
-| CONT-01 | TBD | Pending |
-| CONT-02 | TBD | Pending |
-| CONT-03 | TBD | Pending |
-| CONT-04 | TBD | Pending |
-| CONT-05 | TBD | Pending |
-| PERF-01 | TBD | Pending |
-| PERF-02 | TBD | Pending |
-| PERF-03 | TBD | Pending |
-| SRCH-01 | TBD | Pending |
-| SRCH-02 | TBD | Pending |
-| SRCH-03 | TBD | Pending |
-| SRCH-04 | TBD | Pending |
+| CONT-01 | Phase 13 | Pending |
+| CONT-02 | Phase 13 | Pending |
+| CONT-03 | Phase 13 | Pending |
+| CONT-04 | Phase 13 | Pending |
+| CONT-05 | Phase 13 | Pending |
+| MOBL-01 | Phase 14 | Pending |
+| MOBL-02 | Phase 14 | Pending |
+| MOBL-03 | Phase 14 | Pending |
+| MOBL-04 | Phase 14 | Pending |
+| MOBL-05 | Phase 14 | Pending |
+| MOBL-06 | Phase 14 | Pending |
+| PERF-01 | Phase 15 | Pending |
+| PERF-02 | Phase 15 | Pending |
+| PERF-03 | Phase 15 | Pending |
+| SRCH-01 | Phase 16 | Pending |
+| SRCH-02 | Phase 16 | Pending |
+| SRCH-03 | Phase 16 | Pending |
+| SRCH-04 | Phase 16 | Pending |
 
 **Coverage:**
 - v1.3 requirements: 18 total
-- Mapped to phases: 0
-- Unmapped: 18 (pending roadmap creation)
+- Mapped to phases: 18
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-02 after initial definition*
+*Last updated: 2026-02-02 after roadmap creation*

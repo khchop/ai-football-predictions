@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Prediction pipeline reliably generates scores from 35 LLMs ~30 minutes before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** v1.3 Match Page Refresh
+**Current focus:** v1.3 Match Page Refresh - Mobile-first match pages with consolidated content and AI search optimization
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Researching domain ecosystem
-Last activity: 2026-02-02 — Milestone v1.3 started
+Phase: 13 (Content Pipeline Fixes)
+Plan: Not started
+Status: Ready for planning
+Last activity: 2026-02-02 — v1.3 roadmap created
 
-Progress: [░░░░░░░░░░░░░░░░░░░░░░░░] 0% (v1.3 in progress)
+Progress: [░░░░░░░░░░░░░░░░░░░░░░░░] 0% (0/4 phases complete)
 
 ## Performance Metrics
 
@@ -35,6 +35,11 @@ Progress: [░░░░░░░░░░░░░░░░░░░░░░░
 - 22 commits, 34 files changed
 - +4,147 / -42 lines
 
+**Velocity (v1.3):**
+- Total plans completed: 0 plans
+- Phases: 13-16 (Content Pipeline, Mobile Layout, Performance, AI Search)
+- Status: Not started
+
 ## Accumulated Context
 
 ### Decisions
@@ -42,12 +47,12 @@ Progress: [░░░░░░░░░░░░░░░░░░░░░░░
 Decisions are logged in PROJECT.md Key Decisions table.
 Full decision history available in phase SUMMARY.md files.
 
-**Key v1.2 Decisions:**
-- Use 308 Permanent Redirect via permanentRedirect() for SEO-critical redirects
-- Add aliases array to CompetitionConfig for long-form slug support
-- Edge-level redirects in next.config.ts for performance
-- sr-only H1 tags for SEO without visual changes
-- Server Components for all internal linking widgets
+**Key v1.3 Decisions:**
+- Content Pipeline fixes before Mobile Layout (can't optimize layout for broken content)
+- Unified content query system (`getMatchContentUnified()`) to resolve dual-table writes
+- ISR with conditional revalidation (60s scheduled, 30s live, 3600s finished) replacing force-dynamic
+- Consolidated Schema.org JSON-LD @graph for AI search engines
+- 4 phases derived from 18 requirements (comprehensive depth, natural clustering)
 
 ### Pending Todos
 
@@ -60,5 +65,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Starting v1.3 milestone research
-Resume with: Complete research phase, then define requirements
+Stopped at: v1.3 roadmap created, ready for Phase 13 planning
+Resume with: `/gsd:plan-phase 13` to start Content Pipeline Fixes
