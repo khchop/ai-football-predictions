@@ -1,689 +1,492 @@
-# Pitfalls Research: Match Page Refresh
+# Domain Pitfalls: UI/UX Redesign for Next.js Sports Platform
 
-## Summary
-
-Redesigning sports match pages for mobile-first UX while maintaining AI search optimization and fixing content generation pipelines presents several critical challenges. The primary risks include React Server Component hydration errors from dynamic content, performance degradation from improper caching strategies, mobile UX failures from information overload, and AI search visibility loss from poor structured data consolidation. This research identifies 18 specific pitfalls across mobile UX, AI search optimization, React/Next.js architecture, and content generation pipelines, with actionable prevention strategies for each.
+**Domain:** Next.js sports prediction platform UI/UX rebuild
+**Researched:** 2026-02-02
+**Confidence:** HIGH (verified via official Next.js docs, GitHub issues, and current project analysis)
 
 ---
 
-## Critical Pitfalls (Project-Breaking)
+## Critical Pitfalls
 
-### P1: Duplicate Data Display Creating Cognitive Overload on Mobile
+Mistakes that cause rewrites, major regressions, or SEO damage.
 
-**Risk:** Showing the same information multiple times (score in header, predictions section, odds panel) creates visual clutter on small screens. Your codebase shows this pattern in `/src/app/leagues/[slug]/[match]/page.tsx` where match score, team names, and competition data repeat across MatchHeader, MatchOddsPanel, and PredictionsSection.
+### Pitfall 1: Client Component Creep Destroys Bundle Size
 
-**Warning Signs:**
-- Mobile viewport requires >3 scrolls to reach predictions
-- Bounce rate >60% on mobile match pages
-- Average session duration <30 seconds on mobile
-- Heatmaps show users scrolling past duplicate data without engaging
+**What goes wrong:** During redesign, developers add `'use client'` to components for convenience (using hooks, event handlers) without considering the cascade effect. Child components become client components too, bloating the JavaScript bundle.
+
+**Why it happens:**
+- Redesign often means adding interactivity
+- Easier to make everything client than think about boundaries
+- Existing codebase may already have this problem (current `navigation.tsx` is client-side)
+
+**Consequences:**
+- Bundle size increases 30-60%
+- LCP degrades significantly
+- INP suffers from hydration overhead
+- RSC benefits disappear
+
+**Warning signs:**
+- Many files start with `'use client'`
+- Components that only render data still marked as client
+- Next.js bundle analyzer shows large client chunks
 
 **Prevention:**
-1. Single source of truth for each data type (score, predictions, odds)
-2. Progressive disclosure pattern - show summary cards with expand/collapse for details
-3. Sticky header with minimal info (teams + score) that persists during scroll
-4. Mobile-first component audit: measure rendered height of each section at 375px width
-5. Target: Match page fits in 2-3 screen heights on mobile (750px-1125px total)
+1. Audit every `'use client'` directive during redesign
+2. Create clear component boundaries: Server for data, Client for interaction
+3. Use composition pattern: Server component wraps Client component
+4. Move data fetching to Server Components (current match pages do this well)
 
-**Phase:** Phase 1 (Mobile Layout Consolidation) - First milestone, highest impact
-
----
-
-### P2: React Server Component Hydration Mismatch from Dynamic Timestamps
-
-**Risk:** Your `MatchContentSection` component at line 40-43 uses `new Date(content.preMatchGeneratedAt).toLocaleString()` which will produce different output on server vs client due to timezone differences. This causes React hydration errors that break interactivity.
-
-**Warning Signs:**
+**Detection:**
+```bash
+# Count client components
+grep -r "'use client'" src/components | wc -l
 ```
-Warning: Text content did not match. Server: "1/15/2026, 2:30:00 PM" Client: "1/15/2026, 3:30:00 PM"
-Error: Hydration failed because the initial UI does not match what was rendered on the server
-```
-- Console shows hydration warnings in development
-- Interactive elements (buttons, links) don't respond to clicks immediately after page load
-- Flash of incorrect content before correction
 
-**Prevention:**
-1. **Never render user-timezone dates in RSC** - Use `suppressHydrationWarning={true}` only as last resort
-2. **Two-pass rendering pattern for timestamps:**
-   ```typescript
-   const [isClient, setIsClient] = useState(false);
-   useEffect(() => setIsClient(true), []);
-   return isClient ? new Date().toLocaleString() : null;
-   ```
-3. **Better: Use relative time on server, absolute time on client:**
-   - Server: "Generated 2 hours ago"
-   - Client upgrade: "Generated at 14:30 CET"
-4. **Best: ISO format with client-side formatting library (date-fns)**
+**Which phase:** Address in Phase 1 (Component Architecture). Establish patterns before building.
 
-**Phase:** Phase 1 (Mobile Layout Consolidation) - Must fix before launch to avoid broken interactions
-
-**Sources:** [Next.js Hydration Error Docs](https://nextjs.org/docs/messages/react-hydration-error), [Debugging Hydration Issues](https://blog.somewhatabstract.com/2022/01/03/debugging-and-fixing-hydration-issues/)
+**Current codebase observation:** Navigation is client (`navigation.tsx`), which is correct for `usePathname`. But 71+ component files need audit.
 
 ---
 
-### P3: force-dynamic on Match Pages Killing Performance
+### Pitfall 2: LCP Regression from Hero/Above-the-Fold Changes
 
-**Risk:** Your `/src/app/matches/[id]/page.tsx` uses `export const dynamic = 'force-dynamic'` (line 18) which disables all caching and forces server rendering on every request. For a sports site with thousands of match pages, this will cause slow TTFB (Time To First Byte) and increased server costs.
+**What goes wrong:** Redesign changes what appears above the fold. New hero images, new layout causes Largest Contentful Paint element to change. Missing `priority` attribute on new LCP element causes 2-4 second delay.
 
-**Warning Signs:**
-- TTFB >800ms on match pages
-- Server CPU usage spikes during peak traffic (match days)
-- Vercel/hosting costs scale linearly with traffic
-- Google PageSpeed Insights shows "Reduce server response time" warning
+**Why it happens:**
+- Next.js lazy-loads images by default
+- New LCP element not marked with `priority` or `fetchpriority="high"`
+- Developers don't test on throttled connections
+- Multiple images compete for priority
+
+**Consequences:**
+- LCP goes from green (<2.5s) to red (>4s)
+- Google Search Console shows Core Web Vitals regression
+- SEO rankings drop within weeks
+
+**Warning signs:**
+- Console warning: "Image with src X was detected as LCP"
+- PageSpeed Insights shows "Largest Contentful Paint element" is an image without preload
+- Field data in Search Console degrades
 
 **Prevention:**
-1. **Remove force-dynamic**, use ISR with smart revalidation:
-   ```typescript
-   export const revalidate = 60; // 1-minute cache for upcoming matches
-   export const dynamic = 'force-static'; // Static with ISR
-   ```
-2. **Conditional caching based on match state:**
-   - Scheduled matches: 60s revalidate (predictions change)
-   - Live matches: 30s revalidate (scores update frequently)
-   - Finished matches: 3600s revalidate (rarely change)
-3. **Use on-demand revalidation when predictions complete:**
-   ```typescript
-   // In prediction worker after generation
-   await revalidatePath(`/leagues/${competitionId}/${matchSlug}`);
-   ```
-4. **Monitor cache hit rates** - Target >70% cache hits on match pages
+1. Identify LCP element for each page type before redesign
+2. Mark LCP images with `priority` (or `preload` in Next.js 16+)
+3. Add PageSpeed Insights check to CI/CD pipeline
+4. Test on 3G throttled connection before merge
 
-**Performance Impact:** ISR reduces TTFB from 800ms to <200ms, cuts server costs by 60-80%.
+**Detection:**
+- Run Lighthouse on each page type
+- Check: `<Image priority />` on above-fold images
 
-**Phase:** Phase 2 (Performance Optimization) - After mobile layout works, before traffic scales
+**Which phase:** Phase 2 (Core Web Vitals). Must be addressed before any visual redesign deploys.
 
-**Sources:** [Next.js ISR Guide](https://nextjs.org/docs/app/guides/incremental-static-regeneration), [Next.js Caching 2026 Guide](https://dev.to/md_marufrahman_3552855e/nextjs-caching-and-rendering-a-complete-guide-for-2026-21lh)
+**Current codebase observation:** Match pages don't have hero images (good), but any redesign adding team logos above fold needs priority handling.
 
 ---
 
-### P4: AI Search Engines Missing Your Content Due to Structured Data Fragmentation
+### Pitfall 3: Breaking Existing URLs During Redesign
 
-**Risk:** AI search engines (ChatGPT, Perplexity, Claude) rely on clean, consolidated structured data. Your match pages have duplicate/conflicting schema.org data across multiple components (SportsEventSchema, WebPageSchema, MatchFAQSchema) which confuses AI crawlers and reduces citation probability.
+**What goes wrong:** URL structure changes during redesign. Old URLs return 404. Backlinks break. Google drops pages from index.
 
-**Warning Signs:**
-- Zero citations in ChatGPT/Perplexity search results
-- Google Rich Results Test shows multiple conflicting entities
-- Schema.org validation shows duplicate `@id` properties
-- Search Console reports "Duplicate structured data" warnings
+**Why it happens:**
+- New routing structure seems cleaner
+- Parameter changes (e.g., from `/matches/[id]` to `/match/[slug]`)
+- Forgetting to add redirects
+
+**Consequences:**
+- Immediate SEO traffic loss (25-80%)
+- Broken backlinks
+- Users bookmarks fail
+- Google shows 404 errors in Search Console
+
+**Warning signs:**
+- New route patterns in `app/` directory
+- Old route files deleted without redirect implementation
+- No redirect testing in deployment
 
 **Prevention:**
-1. **Single JSON-LD graph per page** - Consolidate all schemas into one `@graph` array
-2. **Canonical entity IDs** - Use consistent URLs for `@id`:
-   ```json
-   {
-     "@context": "https://schema.org",
-     "@graph": [
-       {
-         "@type": "SportsEvent",
-         "@id": "https://kroam.xyz/leagues/premier-league/match-slug#event"
-       },
-       {
-         "@type": "WebPage",
-         "@id": "https://kroam.xyz/leagues/premier-league/match-slug",
-         "mainEntity": { "@id": "https://kroam.xyz/leagues/premier-league/match-slug#event" }
-       }
-     ]
-   }
-   ```
-3. **AI-optimized content structure:**
-   - Clear H2/H3 hierarchy (no skipped levels)
-   - "Answer capsules" at start of each section (2-3 sentence summary)
-   - Explicit relationships: "The match between X and Y" not just "The match"
-4. **Implement citation tracking** - Monitor Perplexity API for your domain mentions
+1. Document all existing URL patterns before redesign
+2. Keep existing routes or implement 301 redirects
+3. Add redirect map to `next.config.js`
+4. Test all old URLs post-deployment
 
-**Why This Matters:** ChatGPT has 800M weekly users. Perplexity Reddit mentions: 3.2M. If AI search can't cite your predictions, you lose massive discovery channel.
+**Detection:**
+- Crawl site before and after, compare URL lists
+- Check Search Console for 404 spike
 
-**Phase:** Phase 2 (AI Search Optimization) - After mobile works, critical for growth
+**Which phase:** Phase 1 (Planning). URL audit must happen before any routing changes.
 
-**Sources:** [GEO Complete Guide 2026](https://adratechsystems.com/en/resources/geo-generative-engine-optimization-complete-guide), [AI Search Optimization 2026](https://www.pagetraffic.com/blog/ai-search-optimization-in-2025/)
+**Current codebase observation:** Already has good pattern with `/leagues/[slug]/[match]` and redirect from `/matches/[id]`. This pattern must be preserved.
 
 ---
 
-## Mobile UX Pitfalls
+### Pitfall 4: ISR Cache Staleness with CDN Layer
 
-### P5: Touch Target Sizes Below 48px Causing Mis-taps
+**What goes wrong:** Next.js ISR works in development but production shows stale content. Two caching layers (Next.js + CDN) create 2x stale time.
 
-**Risk:** Sports prediction UI has dense data (35 models × multiple columns). Shrinking to fit mobile creates touch targets <48px which leads to accidental taps and user frustration.
+**Why it happens:**
+- Next.js sets `Cache-Control: s-maxage=X, stale-while-revalidate`
+- CDN respects this header and caches stale response
+- Request hits CDN cache, CDN requests from origin, origin returns cached stale
+- Result: 2x configured revalidate time
 
-**Warning Signs:**
-- User testing shows frequent mis-taps on model names/predictions
-- Analytics show multiple rapid clicks on same element (user trying to hit correct target)
-- High mobile exit rate on prediction table section
+**Consequences:**
+- Live match scores show old data
+- Predictions don't update after matches
+- Users see outdated content for hours
+
+**Warning signs:**
+- Content older than `revalidate` time appears
+- Production behaves differently than development
+- Manual refresh shows different content than navigation
 
 **Prevention:**
-1. **Minimum 48×48px touch targets** (WCAG AAA guideline)
-2. **Expandable rows pattern** for mobile prediction tables:
-   - Collapsed: Model name + score (80px row height)
-   - Tap to expand: Full details, accuracy, reasoning
-3. **Increase vertical spacing** between interactive elements (16px minimum)
-4. **Test with thumb simulator** - Ensure bottom 30% of screen is most interactive zone
+1. For truly dynamic sports data, use `export const dynamic = 'force-dynamic'`
+2. Configure CDN to respect `must-revalidate`
+3. Use on-demand revalidation via API routes for critical updates
+4. Test ISR behavior in staging with CDN layer
 
-**Phase:** Phase 1 (Mobile Layout Consolidation)
+**Detection:**
+- Check `Cache-Control` headers in production
+- Compare data timestamp to server time
 
-**Sources:** [Mobile Sportsbook UX Best Practices](https://medium.com/@adelinabutler684/mobile-first-sportsbook-design-ux-best-practices-for-higher-retention-2eac17dcb435)
+**Which phase:** Phase 2 (Performance). Must verify caching strategy for each page type.
+
+**Current codebase observation:** Match pages have both `dynamic = 'force-dynamic'` and `revalidate = 60`. These conflict - `force-dynamic` wins but intention is unclear.
 
 ---
 
-### P6: Typography Unreadable on Mobile - Insufficient Contrast
+### Pitfall 5: Structured Data (JSON-LD) Breaks During Component Refactoring
 
-**Risk:** Your dark mode theme uses subtle grays (`text-muted-foreground`) which fail WCAG contrast requirements on small screens in bright sunlight (common sports viewing scenario).
+**What goes wrong:** Schema.org structured data lives in components being redesigned. Refactoring breaks or removes JSON-LD scripts. Google loses rich results.
 
-**Warning Signs:**
-- Contrast ratio <4.5:1 for body text
-- User feedback about "can't read scores in daylight"
-- High mobile bounce during afternoon matches (1pm-5pm peaks)
+**Why it happens:**
+- Schema generation mixed with UI components
+- Developers don't understand SEO impact
+- No automated validation in CI
+
+**Consequences:**
+- Rich snippets disappear from search results
+- Click-through rate drops
+- Competitive disadvantage
+
+**Warning signs:**
+- JSON-LD scripts moved or deleted during refactor
+- Schema test in Google shows errors
+- Rich results drop in Search Console
 
 **Prevention:**
-1. **Minimum contrast ratios:**
-   - Body text: 4.5:1 (WCAG AA)
-   - Critical info (scores, predictions): 7:1 (WCAG AAA)
-2. **Responsive font sizing:**
-   - Mobile base: 16px (not 14px - too small for sports data)
-   - Match scores: 48px minimum on mobile
-   - Team names: 18px minimum
-3. **Test in bright sunlight** - Simulate high ambient light conditions
-4. **High contrast mode toggle** - Optional user preference for outdoor viewing
+1. Extract all schema generation to dedicated module (`/lib/seo/`)
+2. Keep schema logic separate from UI components
+3. Add schema validation to test suite
+4. Monitor Search Console enhancements report
 
-**Phase:** Phase 1 (Mobile Layout Consolidation)
+**Detection:**
+- Test with Google's Rich Results Test
+- Validate all pages have required schema types
 
-**Sources:** [Sports App Design Trends 2026](https://www.iihglobal.com/blog/top-sports-app-design-trends/), [Startup Web Design Mistakes](https://webgamma.ca/startup-web-design-mistakes-that-kill-conversions/)
+**Which phase:** Phase 1 (Planning). Audit and protect existing schema before any UI changes.
+
+**Current codebase observation:** Good - schema is already in `/lib/seo/schema/` and components (`MatchPageSchema.tsx`, etc.). Preserve this separation.
 
 ---
 
-### P7: Slow Mobile Load Times During Live Matches
+## Moderate Pitfalls
 
-**Risk:** 47% of sports fans abandon pages that take >2 seconds to load. Live matches are peak traffic when users have lowest patience. Your match page loads multiple external APIs (match events, standings, next matches) which block rendering.
+Mistakes that cause delays, technical debt, or user experience degradation.
 
-**Warning Signs:**
-- Mobile LCP (Largest Contentful Paint) >2.5s
-- Analytics show 40%+ bounce rate during live match windows
-- Server logs show API-Football timeout errors during concurrent match times
+### Pitfall 6: Navigation State Loss During Client-Side Transitions
+
+**What goes wrong:** Client components in layout re-render on navigation in production (but not development). Search input loses text, modals close unexpectedly, filters reset.
+
+**Why it happens:**
+- Known Next.js issue: Client components in root layout may re-render
+- `React.memo` can make it worse (state loss)
+- Difference between dev and production behavior
+
+**Consequences:**
+- Users frustrated by lost input
+- Search modal closes on navigation
+- Filter selections reset
+
+**Warning signs:**
+- Works in development, breaks in production
+- Components lose state during soft navigation
+- Console shows unexpected re-renders
 
 **Prevention:**
-1. **Progressive loading with Suspense boundaries:**
-   ```typescript
-   <Suspense fallback={<MatchHeaderSkeleton />}>
-     <MatchHeader /> {/* Critical - fast render */}
-   </Suspense>
-   <Suspense fallback={<PredictionsSkeleton />}>
-     <PredictionsSection /> {/* Slower - can stream in */}
-   </Suspense>
-   ```
-2. **Prefetch critical data** at build time (team logos, competition data)
-3. **Client-side polling for live scores** - Don't block page load on match events
-4. **Service Worker caching** for repeat visitors (cache team logos, static assets)
-5. **Budget: Mobile LCP <1.8s, mobile page weight <500KB**
+1. Test navigation state in production build (`next build && next start`)
+2. Lift persistent state to context or URL params
+3. Use `<Link>` for SPA transitions, not `<a>` tags
+4. Avoid `React.memo` on stateful layout components
 
-**Phase:** Phase 2 (Performance Optimization)
+**Detection:**
+- Type in search, navigate, check if text persists
+- Open modal, click nav link, check if modal state preserved
 
-**Sources:** [Common UX Design Challenges in Sports Betting](https://sportbex.com/blog/ui-ux-design-challenges-in-sports-betting-apps/), [Sports Betting App UX 2026](https://prometteursolutions.com/blog/user-experience-and-interface-in-sports-betting-apps/)
+**Which phase:** Phase 3 (Component Implementation). Test each interactive component's state persistence.
+
+**Current codebase observation:** `SearchModal` in navigation - test search input persistence after navigation.
 
 ---
 
-### P8: Information Architecture Doesn't Follow Mobile Thumb Zones
+### Pitfall 7: Internal Link Automation Creates Broken Links
 
-**Risk:** Critical actions (view predictions, compare models) placed in top corners of mobile screen - hardest area to reach with one-handed thumb navigation (64.95% of sports fans use mobile).
+**What goes wrong:** Automated internal linking system generates links to pages that don't exist, have changed URLs, or are behind 404s.
 
-**Warning Signs:**
-- Heatmaps show low engagement with top-right CTAs
-- User testing reveals two-handed usage for navigation
-- High scroll depth but low interaction rate
+**Why it happens:**
+- Links generated from database that's out of sync with routes
+- URL pattern changes without updating link generation
+- Soft-deleted content still has link entries
+
+**Consequences:**
+- Broken links hurt SEO (waste crawl budget)
+- User experience degrades
+- 42% of websites have broken internal links (industry stat)
+
+**Warning signs:**
+- 404 spike in Search Console
+- Crawl reports show broken links
+- Users report "page not found"
 
 **Prevention:**
-1. **Thumb-friendly navigation zones:**
-   - Top 25%: Logo, back button (passive)
-   - Middle 50%: Scrollable content (read-only)
-   - Bottom 25%: Primary actions (compare, filter, share)
-2. **Bottom sheet pattern** for modal content (filter predictions, model details)
-3. **Floating action button** for key action (e.g., "Compare Models") in bottom-right
-4. **Test with one-handed navigation** - All interactive elements within thumb reach
+1. Validate generated links exist before rendering
+2. Add link health check to build process
+3. Use database foreign keys to prevent orphaned links
+4. Monitor 404 rate in analytics
 
-**Phase:** Phase 1 (Mobile Layout Consolidation)
+**Detection:**
+- Run Screaming Frog or similar crawler monthly
+- Check `404` requests in server logs
 
-**Sources:** [Mobile-First App Design 2025](https://triare.net/insights/mobile-first-design-2025/)
+**Which phase:** Phase 4 (Internal Linking). Build validation into link generation.
+
+**Current codebase observation:** `RelatedMatchesWidget` generates links from database queries - ensure query only returns valid matches with slugs.
 
 ---
 
-## AI Search Optimization Pitfalls
+### Pitfall 8: Mobile-First Design Inversion
 
-### P9: Missing Entity Relationships in Structured Data
+**What goes wrong:** Desktop redesign completed first, then "shrunk" for mobile. Mobile experience is cramped, unusable, or completely different.
 
-**Risk:** AI search engines like Claude and Perplexity understand football through entity relationships (Team → Competition → Match). Your structured data defines entities but doesn't connect them properly, reducing relevance signals.
+**Why it happens:**
+- Designers work on large screens
+- Stakeholders review on desktop
+- Mobile treated as afterthought
 
-**Warning Signs:**
-- AI search returns competitor sites for "[team] vs [team] prediction"
-- Google Knowledge Graph doesn't show your predictions in match cards
-- Perplexity API cites Wikipedia for your match data instead of your site
+**Consequences:**
+- 60% of traffic has poor experience (mobile majority)
+- Bounce rate increases on mobile
+- Core Web Vitals fail on mobile specifically
+
+**Warning signs:**
+- No mobile mockups in design phase
+- Testing only happens on desktop
+- Mobile CSS is overrides and `!important`
 
 **Prevention:**
-1. **Explicit entity connections in schema.org:**
-   ```json
-   {
-     "@type": "SportsEvent",
-     "homeTeam": {
-       "@type": "SportsTeam",
-       "@id": "https://kroam.xyz/teams/liverpool",
-       "name": "Liverpool",
-       "memberOf": { "@id": "https://kroam.xyz/leagues/premier-league" }
-     },
-     "superEvent": { "@id": "https://kroam.xyz/leagues/premier-league" }
-   }
-   ```
-2. **Bidirectional linking:**
-   - Match page links to team pages
-   - Team pages link back to recent matches
-   - Competition pages list all matches (you have this)
-3. **Wikipedia entity alignment** - Use same team names as Wikipedia for entity matching
-4. **SameAs properties** - Link to official team/league pages
+1. Design mobile first, enhance for desktop
+2. Include mobile in every design review
+3. Test on real devices, not just browser resize
+4. Set mobile as primary viewport in Lighthouse
 
-**Phase:** Phase 2 (AI Search Optimization)
+**Detection:**
+- Run PageSpeed Insights with "Mobile" selected
+- Test on actual phones (iOS Safari, Android Chrome)
 
-**Sources:** [AI Search SEO for ChatGPT and Perplexity](https://www.gravitatedesign.com/blog/ai-search-seo/)
+**Which phase:** Phase 1 (Design). Establish mobile-first workflow from the start.
+
+**Current codebase observation:** `match-tabs-mobile.tsx` exists (good mobile consideration), but desktop has separate layout. Ensure parity.
 
 ---
 
-### P10: Content Structure Not Optimized for LLM Context Windows
+### Pitfall 9: Component Library Version Drift
 
-**Risk:** AI search engines extract text in chunks. Your match pages have scattered information (predictions in table, analysis in card, stats in another section) which prevents LLMs from building coherent context.
+**What goes wrong:** Radix/shadcn components updated mid-redesign. New version has different prop contracts, breaking existing components.
 
-**Warning Signs:**
-- ChatGPT provides incomplete answers about your matches
-- Perplexity cites multiple sources for single match instead of just yours
-- AI-generated summaries omit key prediction data
+**Why it happens:**
+- Developer runs `npm update` during redesign
+- Major version of Radix changes API
+- shadcn CLI pulls newer versions
+
+**Consequences:**
+- Build breaks
+- Components behave differently
+- Debugging time wasted
+
+**Warning signs:**
+- TypeScript errors after install
+- Components render incorrectly
+- Props that worked before now error
 
 **Prevention:**
-1. **Answer capsule pattern** at page top:
-   ```markdown
-   ## Match Prediction Summary
-   35 AI models predict Liverpool vs Manchester City (Premier League, Jan 15 2026).
-   Consensus: Manchester City win 2-1 (60% of models).
-   Top model: Claude 3.5 Sonnet predicted exact 2-1 (10 points).
-   ```
-2. **Hierarchical content structure:**
-   - H2: What are the AI predictions?
-   - H3: Consensus prediction
-   - H3: Top performing models
-   - H2: How accurate are these predictions?
-3. **Context-rich first paragraphs** - Include all essential entities in opening 150 words
-4. **Avoid pronoun ambiguity** - "Liverpool's form" not "Their form" (LLMs lose context)
+1. Pin Radix/shadcn versions in package.json
+2. Don't update dependencies during active redesign
+3. If update needed, do it as isolated task with full regression test
+4. Use lockfile (`package-lock.json` or `pnpm-lock.yaml`)
 
-**Phase:** Phase 2 (AI Search Optimization)
+**Detection:**
+- Check for version changes in `package-lock.json` diff
+- TypeScript errors on existing component props
 
-**Sources:** [How to Rank on AI Search Engines 2026](https://almcorp.com/blog/how-to-rank-on-chatgpt-perplexity-ai-search-engines-complete-guide-generative-engine-optimization/)
+**Which phase:** All phases. Lock versions before starting, update only when complete.
 
 ---
 
-### P11: Schema.org Validation Errors Breaking AI Parser
+### Pitfall 10: Over-Engineering Design System for Small Team
 
-**Risk:** Your buildMatchGraphSchema generates JSON-LD with nested quotes and special characters that break JSON parsing for AI crawlers.
+**What goes wrong:** Team builds comprehensive design system with 50+ components before shipping anything. System goes unused because it doesn't match actual needs.
 
-**Warning Signs:**
-- Google Rich Results Test shows "Invalid JSON-LD"
-- Schema.org validator reports syntax errors
-- AI search engines show no structured snippets for your matches
+**Why it happens:**
+- Trying to build "the right way"
+- Following enterprise patterns for startup scale
+- Building for hypothetical future needs
+
+**Consequences:**
+- Months wasted on unused components
+- Actual UI needs differ from predictions
+- Team resistance to overly complex system
+
+**Warning signs:**
+- More time on design system than product features
+- Components built without immediate use case
+- Extensive documentation for internal team of 1-2
 
 **Prevention:**
-1. **Use sanitizeJsonLd consistently** (you already have this at line 111)
-2. **Validate all dynamic content:**
-   ```typescript
-   const sanitizeForJsonLd = (str: string) =>
-     str.replace(/"/g, '\\"').replace(/\n/g, ' ').trim();
-   ```
-3. **Test with multiple validators:**
-   - Google Rich Results Test
-   - Schema.org Validator
-   - Perplexity structured data checker
-4. **Unit tests for schema generation** - Catch errors before deploy
+1. Build components as needed (just-in-time)
+2. Extract patterns after 3rd use, not before 1st
+3. Use shadcn's copy-paste model - components in your codebase
+4. Documentation only for non-obvious patterns
 
-**Phase:** Phase 2 (AI Search Optimization)
+**Detection:**
+- Count components with zero imports
+- Check ratio of system work to feature work
+
+**Which phase:** Phase 1 (Planning). Define minimal viable system.
 
 ---
 
-## React/Next.js Pitfalls
+## Minor Pitfalls
 
-### P12: Suspense Boundary Placement Causing Waterfall Requests
+Mistakes that cause annoyance but are fixable.
 
-**Risk:** Your match page wraps `PredictionsSection` in Suspense (line 146) but fetches related data sequentially, causing waterfall: match → analysis → predictions → events. Total time: 4× single query time.
+### Pitfall 11: Inconsistent Spacing/Colors Across New Components
 
-**Warning Signs:**
-- Server logs show sequential database queries with 100-200ms gaps
-- Match page TTFB varies wildly (500ms-2000ms)
-- Database connection pool exhaustion during peak traffic
+**What goes wrong:** Different developers use different spacing values. Some use Tailwind spacing scale, others use arbitrary values. Visual inconsistency.
 
 **Prevention:**
-1. **Parallel data fetching:**
-   ```typescript
-   const [matchResult, predictions, events] = await Promise.all([
-     getMatchWithAnalysis(id),
-     getPredictionsForMatchWithDetails(id),
-     getMatchEvents(externalId),
-   ]);
-   ```
-2. **Granular Suspense boundaries** - Each section fetches independently:
-   ```typescript
-   <Suspense fallback={<HeaderSkeleton />}>
-     <MatchHeader matchId={id} />
-   </Suspense>
-   <Suspense fallback={<PredictionsSkeleton />}>
-     <PredictionsSection matchId={id} />
-   </Suspense>
-   ```
-3. **Preload patterns** for critical data:
-   ```typescript
-   preload(matchId, getMatchWithAnalysis);
-   ```
+- Define and enforce spacing scale (4, 8, 12, 16, 24, 32, 48)
+- Use CSS custom properties for colors (already done in globals.css)
+- Add ESLint rule for arbitrary spacing values
 
-**Phase:** Phase 2 (Performance Optimization)
-
-**Sources:** [Next.js Data Fetching](https://nextjs.org/docs/14/app/building-your-application/data-fetching/fetching-caching-and-revalidating)
+**Current codebase observation:** Good - using CSS variables (`--border`, `--muted`, etc.). Maintain this pattern.
 
 ---
 
-### P13: generateStaticParams Removed - Missing Build-Time Optimization
+### Pitfall 12: Missing Loading States in Redesigned Components
 
-**Risk:** Your `/src/app/leagues/[slug]/page.tsx` comment at line 16 says "Removed generateStaticParams to avoid build-time database queries". This means all league pages render on-demand, increasing cold start latency.
-
-**Warning Signs:**
-- First visit to league page: 1-2s load
-- Subsequent visits: 200ms load (cached)
-- Vercel build time <5 minutes (good) but runtime performance suffers
+**What goes wrong:** Old loading states not recreated in new components. Users see blank screens during data fetch.
 
 **Prevention:**
-1. **Implement generateStaticParams for competition pages only:**
-   ```typescript
-   export async function generateStaticParams() {
-     return COMPETITIONS.map(comp => ({ slug: comp.id }));
-   }
-   ```
-   - 17 leagues = 17 static pages at build time
-   - Minimal build cost, huge runtime benefit
-2. **Dynamic params true for catch-all:**
-   ```typescript
-   export const dynamicParams = true; // Allow new slugs at runtime
-   ```
-3. **Keep on-demand for match pages** (thousands of matches, infeasible to build all)
+- Audit all existing Suspense boundaries and skeletons
+- Create corresponding loading states for new components
+- Use `loading.tsx` files in route segments
 
-**Phase:** Phase 2 (Performance Optimization)
-
-**Sources:** [Next.js 16 dynamicParams Issues](https://github.com/vercel/next.js/discussions/81155), [generateStaticParams Purpose](https://github.com/vercel/next.js/discussions/73959)
+**Current codebase observation:** Has `predictions-skeleton.tsx`, `leaderboard/skeleton.tsx` - ensure redesign preserves these.
 
 ---
 
-### P14: Defensive Error Handling Hiding Real Issues
+### Pitfall 13: Forgetting Error Boundaries in New Component Tree
 
-**Risk:** Your match page uses try-catch blocks that swallow errors and return null data (lines 101-126, 139-167). This masks production issues - users see partial pages without knowing something failed.
-
-**Warning Signs:**
-- Console full of "Failed to fetch X" errors but page looks fine
-- Users report "predictions missing" but no error tracking fires
-- Database errors logged but not surfaced to monitoring
+**What goes wrong:** Error boundary exists in old tree, not added to new tree. Single component error crashes entire page.
 
 **Prevention:**
-1. **Fail loudly for critical data:**
-   ```typescript
-   const result = await getMatchBySlug(competitionSlug, match);
-   if (!result) {
-     notFound(); // 404 is better than broken page
-   }
-   ```
-2. **Graceful degradation for supplementary data:**
-   ```typescript
-   const events = await getMatchEvents(id).catch(err => {
-     logger.error({ matchId: id, err }, 'Events fetch failed');
-     captureException(err); // Send to Sentry
-     return []; // Empty array, show "Events unavailable"
-   });
-   ```
-3. **User-visible error states:**
-   ```typescript
-   {events.length === 0 && isLive && (
-     <ErrorBoundary fallback={<EventsUnavailable />}>
-       <MatchEvents />
-     </ErrorBoundary>
-   )}
-   ```
-4. **Monitoring thresholds** - Alert if >5% of match page loads have missing data
+- Add `error.tsx` to each route segment
+- Wrap risky components with error boundaries
+- Test error states explicitly
 
-**Phase:** Phase 3 (Content Generation Pipeline Fixes)
-
-**Sources:** [React Error Boundaries](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)
+**Current codebase observation:** Has `ErrorBoundaryProvider` in layout - ensure new components are covered.
 
 ---
 
-### P15: Client-Side State Hydration for Server-Fetched Data
+### Pitfall 14: Date/Time Display Without Timezone Handling
 
-**Risk:** Your PredictionTable component receives server-fetched predictions but may need client-side sorting/filtering. If you add useState for this, you'll hit hydration mismatches.
-
-**Warning Signs:**
-- "Hydration failed" errors when adding sort functionality
-- Table flickers during initial render
-- Sort state resets on navigation
+**What goes wrong:** Match times display in wrong timezone for users. Already have `client-date.tsx` pattern but new components don't use it.
 
 **Prevention:**
-1. **URL-based filtering** (no client state needed):
-   ```typescript
-   const searchParams = useSearchParams();
-   const sortBy = searchParams.get('sortBy') || 'points';
-   ```
-2. **Server actions for interactions:**
-   ```typescript
-   'use server'
-   export async function sortPredictions(matchId: string, sortKey: string) {
-     return getPredictions(matchId, { sortBy: sortKey });
-   }
-   ```
-3. **Client components for UI-only state:**
-   ```typescript
-   'use client'
-   function PredictionTableClient({ predictions }: { predictions: Prediction[] }) {
-     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-     // Local UI state only - no hydration conflict
-   }
-   ```
-
-**Phase:** Phase 1 (Mobile Layout Consolidation)
-
-**Sources:** [React Server Components Patterns](https://react.dev/reference/react/use-client)
+- All date displays must use client-side component
+- Use existing `client-date.tsx` pattern for new components
+- Consider user locale for formatting
 
 ---
 
-## Content Generation Pipeline Pitfalls
+### Pitfall 15: Accessibility Regression in New Interactive Components
 
-### P16: LLM Hallucination Validation Missing for Real-Time Content
-
-**Risk:** Your content generator has `validateLeagueRoundupOutput` for blog posts but no validation for `MatchContentSection` live content. LLMs can hallucinate player names, fake statistics, or wrong match details.
-
-**Warning Signs:**
-- User reports "wrong player scored" in match content
-- Generated content mentions players not in the match
-- AI writes about events that didn't happen
-- SEO credibility damaged by factual errors
+**What goes wrong:** New modals, tabs, dropdowns lack proper ARIA attributes, keyboard navigation, focus management.
 
 **Prevention:**
-1. **Entity validation for match content:**
-   ```typescript
-   function validateMatchContent(content: string, allowedEntities: {
-     teams: string[];
-     players: string[];
-     competition: string;
-   }) {
-     const mentions = extractEntities(content);
-     const invalid = mentions.filter(m => !allowedEntities.includes(m));
-     if (invalid.length > 0) {
-       throw new ValidationError(`Invalid entities: ${invalid.join(', ')}`);
-     }
-   }
-   ```
-2. **Source data constraints in prompts:**
-   ```
-   You are writing about {homeTeam} vs {awayTeam}.
-   ONLY mention these players: {playerList}
-   DO NOT invent statistics or events.
-   ```
-3. **Post-generation fact checking** - Compare generated stats against source data
-4. **Human review queue** for high-traffic matches
+- Use Radix primitives (already in stack) which handle a11y
+- Test with keyboard-only navigation
+- Run axe-core in CI
 
-**Phase:** Phase 3 (Content Generation Pipeline Fixes)
-
-**Sources:** [LLM Failure Modes](https://medium.com/@adnanmasood/a-field-guide-to-llm-failure-modes-5ffaeeb08e80), [Handling LLM Output Errors](https://apxml.com/courses/prompt-engineering-llm-application-development/chapter-7-output-parsing-validation-reliability/handling-parsing-errors)
-
----
-
-### P17: Content Deduplication Over-Aggressive - Blocking Legitimate Variations
-
-**Risk:** Your `checkForDuplicates` function uses similarity threshold that may flag legitimate match variations as duplicates (e.g., two 2-1 wins with similar phrasing).
-
-**Warning Signs:**
-- Content generation logs show frequent "skip duplicate" actions
-- Multiple matches missing post-match content
-- Generated content feels repetitive (validation too strict forces formulaic writing)
-
-**Prevention:**
-1. **Tune similarity thresholds per content type:**
-   ```typescript
-   const thresholds = {
-     postMatchRoundup: 0.85, // High - each match should be unique
-     leagueRoundup: 0.70, // Medium - weekly patterns acceptable
-     matchPreview: 0.75, // Medium-high
-   };
-   ```
-2. **Whitelist common football phrases:**
-   - "found the back of the net"
-   - "clinical finish"
-   - "kept a clean sheet"
-   These shouldn't count toward similarity score
-3. **Semantic similarity vs string similarity:**
-   - Use embeddings (OpenAI ada-002) instead of character-based comparison
-   - Two different phrasings of same facts = acceptable
-4. **Monitor regeneration attempts** - If >20% of content needs regeneration, threshold too strict
-
-**Phase:** Phase 3 (Content Generation Pipeline Fixes)
-
-**Sources:** [Debugging LLM Failures](https://dev.to/kuldeep_paul/how-to-effectively-debug-llm-failures-a-step-by-step-guide-2e8n)
-
----
-
-### P18: Queue Worker Retry Strategy Causing Duplicate Content
-
-**Risk:** Your BullMQ workers retry failed jobs with exponential backoff, but content generation isn't idempotent. A transient database error during insert could generate content twice and charge 2× API cost.
-
-**Warning Signs:**
-- Duplicate rows in `matchContent` table with same `matchId`
-- Together AI bill shows 2× expected usage
-- Content generation logs show successful generation but database insert failures
-
-**Prevention:**
-1. **Idempotent content generation:**
-   ```typescript
-   // Check existence before generating
-   const existing = await getMatchContent(matchId);
-   if (existing && existing.postMatchContent) {
-     logger.info({ matchId }, 'Content already exists, skipping generation');
-     return existing.id;
-   }
-   ```
-2. **Database transactions with locks:**
-   ```typescript
-   await db.transaction(async (tx) => {
-     const locked = await tx
-       .select()
-       .from(matchContent)
-       .where(eq(matchContent.matchId, matchId))
-       .for('update') // Row-level lock
-       .execute();
-
-     if (locked.length > 0) return locked[0].id;
-
-     // Generate and insert atomically
-     const content = await generateContent();
-     return await tx.insert(matchContent).values(content);
-   });
-   ```
-3. **Retry with generation cache:**
-   ```typescript
-   // Store generated content in Redis before database insert
-   await redis.setex(`content:${matchId}`, 3600, generatedContent);
-   // Retry insert from cache, not regeneration
-   ```
-4. **Monitor duplicate detection** - Alert if >1% of content generations are duplicates
-
-**Phase:** Phase 3 (Content Generation Pipeline Fixes)
-
-**Sources:** [Retry Mechanisms for LLM Calls](https://apxml.com/courses/prompt-engineering-llm-application-development/chapter-7-output-parsing-validation-reliability/implementing-retry-mechanisms), [Failover Strategies for LLMs](https://portkey.ai/blog/failover-routing-strategies-for-llms-in-production/)
+**Current codebase observation:** Using Radix (`@radix-ui/react-*`) - continue using primitives, don't build custom.
 
 ---
 
 ## Phase-Specific Warnings
 
-| Phase | Primary Pitfall Risk | Mitigation Priority |
-|-------|---------------------|---------------------|
-| Phase 1: Mobile Layout | P1 (Duplicate Data Overload), P5 (Touch Targets), P15 (Hydration Mismatch) | Design mobile-first mockups before coding. Validate with real devices. |
-| Phase 2: Performance & AI Search | P3 (force-dynamic), P4 (Schema Fragmentation), P7 (Slow Load) | Set performance budgets before implementation. Monitor cache hit rates. |
-| Phase 3: Content Pipeline | P16 (Hallucination), P17 (Over-Deduplication), P18 (Duplicate Generation) | Build validation framework before scaling content generation. |
+| Phase Topic | Likely Pitfall | Mitigation |
+|-------------|---------------|------------|
+| Component Architecture | Client component creep (#1) | Establish server/client boundaries in design doc |
+| Core Web Vitals | LCP regression (#2) | Add Lighthouse to CI before any visual changes |
+| URL Structure | Breaking URLs (#3) | Complete URL audit before any route changes |
+| Caching Strategy | ISR staleness (#4) | Document caching intent for each page type |
+| SEO Protection | Schema breakage (#5) | Keep schema separate, add validation tests |
+| Navigation | State loss (#6) | Test production build, not just dev |
+| Internal Linking | Broken links (#7) | Validate links at generation time |
+| Responsive Design | Mobile afterthought (#8) | Mobile-first design process |
+| Dependencies | Version drift (#9) | Lock versions, isolated update PRs |
+| Design System | Over-engineering (#10) | Just-in-time component creation |
 
 ---
 
-## Integration Pitfalls with Existing System
+## Quick Validation Checklist Before Each Phase
 
-### Existing Architecture Dependencies
+Before starting any phase:
 
-Your codebase uses:
-- **Next.js 16 + React 19** - Latest async params API (breaking changes from 15)
-- **BullMQ job queues** - Content generation triggered by match lifecycle events
-- **PostgreSQL + Redis** - Dual caching layer (data + queue state)
-- **Together AI API** - 35 LLM models for predictions and content
+- [ ] LCP element identified for affected pages?
+- [ ] URL changes documented with redirect plan?
+- [ ] Schema/JSON-LD protected from refactor?
+- [ ] Mobile design addressed, not deferred?
+- [ ] Caching behavior verified for page type?
+- [ ] Existing loading/error states preserved?
 
-**Integration Risks:**
+Before deploying:
 
-1. **Breaking existing prediction pipeline** - Match page redesign must not interfere with T-30m prediction generation
-2. **Cache invalidation cascade** - Changing match page structure requires coordinated revalidation across multiple pages
-3. **Schema migration without downtime** - Restructuring content tables while queue workers are running
-4. **Mobile layout breaking desktop** - 70% traffic is mobile but 30% desktop users exist
-
-**Mitigation:**
-
-1. **Feature flags for rollout:**
-   ```typescript
-   const useNewMatchLayout = process.env.FEATURE_NEW_MATCH_LAYOUT === 'true';
-   return useNewMatchLayout ? <NewMatchPage /> : <LegacyMatchPage />;
-   ```
-2. **Parallel component development** - Build new mobile components alongside existing desktop ones
-3. **Gradual traffic migration** - 10% → 50% → 100% over 2 weeks
-4. **Rollback plan** - Keep old match page code for 1 sprint after 100% rollout
+- [ ] Bundle size compared to baseline?
+- [ ] Lighthouse scores compared to baseline?
+- [ ] All old URLs tested (redirects work)?
+- [ ] Production build tested, not just dev?
+- [ ] Search Console monitored for 48 hours post-deploy?
 
 ---
 
 ## Sources
 
-**Mobile UX:**
-- [Mobile-First Sportsbook Design: UX Best Practices](https://medium.com/@adelinabutler684/mobile-first-sportsbook-design-ux-best-practices-for-higher-retention-2eac17dcb435)
-- [UI/UX Design Challenges in Sports Betting Apps](https://sportbex.com/blog/ui-ux-design-challenges-in-sports-betting-apps/)
-- [Sports App UI/UX Design Trends](https://www.iihglobal.com/blog/top-sports-app-design-trends/)
-- [Startup Web Design Mistakes](https://webgamma.ca/startup-web-design-mistakes-that-kill-conversions/)
-- [Mobile-First App Design 2025](https://triare.net/insights/mobile-first-design-2025/)
+**Official Documentation:**
+- [Next.js ISR Guide](https://nextjs.org/docs/pages/guides/incremental-static-regeneration)
+- [Next.js Image Component](https://nextjs.org/docs/app/api-reference/components/image)
+- [Next.js generateMetadata](https://nextjs.org/docs/app/api-reference/functions/generate-metadata)
+- [Google Core Web Vitals](https://developers.google.com/search/docs/appearance/core-web-vitals)
 
-**AI Search Optimization:**
-- [GEO: Complete Guide to Ranking on ChatGPT, Perplexity & Google AI](https://adratechsystems.com/en/resources/geo-generative-engine-optimization-complete-guide)
-- [How to Rank on AI Search Engines 2026](https://almcorp.com/blog/how-to-rank-on-chatgpt-perplexity-ai-search-engines-complete-guide-generative-engine-optimization/)
-- [AI Search Optimization in 2026](https://www.pagetraffic.com/blog/ai-search-optimization-in-2025/)
-- [AI Search SEO: ChatGPT, Perplexity & Gemini](https://www.gravitatedesign.com/blog/ai-search-seo/)
+**GitHub Issues & Discussions:**
+- [Layout re-render on navigation](https://github.com/vercel/next.js/issues/52558)
+- [ISR stale data issue](https://github.com/vercel/next.js/issues/58909)
+- [LCP warning discussion](https://github.com/vercel/next.js/discussions/48255)
 
-**React/Next.js:**
-- [Next.js Hydration Error Documentation](https://nextjs.org/docs/messages/react-hydration-error)
-- [Debugging Hydration Issues](https://blog.somewhatabstract.com/2022/01/03/debugging-and-fixing-hydration-issues/)
-- [Next.js ISR Guide](https://nextjs.org/docs/app/guides/incremental-static-regeneration)
-- [Next.js Caching 2026 Complete Guide](https://dev.to/md_marufrahman_3552855e/nextjs-caching-and-rendering-a-complete-guide-for-2026-21lh)
-- [Next.js Data Fetching Guide](https://nextjs.org/docs/14/app/building-your-application/data-fetching/fetching-caching-and-revalidating)
-
-**LLM Content Generation:**
-- [Debugging LLM Failures: Step-by-Step Guide](https://dev.to/kuldeep_paul/how-to-effectively-debug-llm-failures-a-step-by-step-guide-2e8n)
-- [Retry Mechanisms for LLM Calls](https://apxml.com/courses/prompt-engineering-llm-application-development/chapter-7-output-parsing-validation-reliability/implementing-retry-mechanisms)
-- [Failover Routing Strategies for LLMs](https://portkey.ai/blog/failover-routing-strategies-for-llms-in-production/)
-- [Field Guide to LLM Failure Modes](https://medium.com/@adnanmasood/a-field-guide-to-llm-failure-modes-5ffaeeb08e80)
-- [Handling LLM Output Parsing Errors](https://apxml.com/courses/prompt-engineering-llm-application-development/chapter-7-output-parsing-validation-reliability/handling-parsing-errors)
-
----
-
-**Research completed:** 2026-02-02
-**Confidence level:** HIGH (code analysis + current best practices)
-**Next step:** Create phase roadmap based on pitfall severity and dependencies
+**Industry Research:**
+- [Next.js App Router Common Mistakes](https://upsun.com/blog/avoid-common-mistakes-with-next-js-app-router/)
+- [Design System Adoption Pitfalls](https://www.netguru.com/blog/design-system-adoption-pitfalls)
+- [Internal Linking Mistakes](https://www.quattr.com/improve-discoverability/internal-linking-mistakes)
+- [UX Design Mistakes 2025](https://www.designstudiouiux.com/blog/ux-design-mistakes/)
+- [Core Web Vitals Optimization 2025](https://nitropack.io/blog/core-web-vitals-strategy/)

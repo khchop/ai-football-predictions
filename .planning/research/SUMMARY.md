@@ -1,326 +1,241 @@
 # Project Research Summary
 
-**Project:** v1.3 Match Page Refresh
-**Domain:** Mobile-first sports prediction platform with AI search optimization
+**Project:** v2.0 UI/UX Overhaul for AI Football Predictions Platform
+**Domain:** Sports prediction platform with SEO and AI citation (GEO) optimization
 **Researched:** 2026-02-02
 **Confidence:** HIGH
 
 ## Executive Summary
 
-The match page redesign for kroam.xyz requires fixing architectural bloat and duplicate data rendering rather than adopting new technologies. The existing stack (Next.js 16, React 19, Tailwind v4, shadcn/ui) already provides the foundation needed - the problems are structural. The 545-line monolithic match page component renders match metadata 3 times, predictions 2-3 times, and suffers from a broken content pipeline where LLM-generated narratives exist in the database but don't display due to query misalignment between `matchContent` and `matchRoundups` tables.
+The v2.0 UI/UX overhaul is a **rebuild of presentation layer** over a solid data foundation. The existing stack (Next.js 16, React 19, Tailwind v4, shadcn/ui, PostgreSQL, Redis) requires no major changes — the problems are structural: cluttered match pages with duplicate data rendering, poor mobile navigation, weak internal linking, and missing GEO optimization. The recommended approach enables Next.js 16's Partial Prerendering (PPR) and View Transitions API, extends the existing design system with semantic tokens, and systematically adds FAQ schema to all page types for AI citation optimization.
 
-Industry research shows best-in-class mobile sports experiences follow a tabbed navigation pattern with persistent sticky headers and progressive disclosure. Users expect single-source-of-truth for each data point - score appears once in the sticky header, predictions appear once in a dedicated tab, not scattered across 10+ cards requiring excessive vertical scrolling. AI search engines (ChatGPT, Perplexity, Claude) require consolidated structured data and hierarchical content with clear entity relationships to provide accurate citations.
+Industry research confirms three critical patterns for sports prediction platforms: (1) mobile-first navigation with bottom nav bar (21% faster task completion), (2) tabbed content organization reducing scroll fatigue, and (3) answer-first content structure for AI engine citations (3.2x improvement with FAQ schema). The current platform already validates many mobile patterns from v1.3 (touch targets, swipe gestures, tabs) but lacks systematic GEO optimization and has cluttered desktop layouts with data appearing 3+ times per page.
 
-The critical path forward: (1) Fix content rendering pipeline by unifying dual-table writes, (2) Consolidate duplicate displays into tabbed interface reducing mobile scroll depth by 60%, (3) Optimize for AI search with robots.txt, llms.txt, and consolidated Schema.org entities, (4) Implement ISR caching to reduce server costs by 60-80% while maintaining data freshness. The main risks are React hydration mismatches from timezone-dependent content, performance regression from improper Suspense boundaries, and LLM hallucination in generated match content requiring validation.
+The key risks are: client component creep destroying bundle size (audit all 71+ component files), LCP regression from hero changes during redesign (mark new LCP elements with priority), and breaking existing URLs (document all routes before any changes). The mitigation strategy is to establish clear server/client boundaries in Phase 1, add Lighthouse to CI before visual changes, and preserve the existing route structure (`/leagues/[slug]/[match]`).
 
 ## Key Findings
 
 ### Recommended Stack
 
-**No major additions needed.** The existing Next.js 16 + React 19 + Tailwind v4 stack is optimal for mobile-first redesign and AI search optimization. The focus should be on configuration additions and utilizing existing but underused features.
+**No new packages required.** All recommendations use built-in Next.js 16 features, already-installed libraries (schema-dts, Tailwind v4), or native browser APIs.
 
-**Core technologies (existing):**
-- **Next.js 16.1.4**: Latest with Partial Prerendering (PPR), React Compiler support, and Turbopack — Enables static shell with dynamic content streaming for faster mobile loads
-- **React 19.2.3**: Latest with useActionState and useOptimistic hooks — Simplifies form state management and provides instant UI feedback critical for mobile UX
-- **Tailwind CSS v4**: CSS-first configuration with mobile-first breakpoints — Responsive design without JavaScript device detection
-- **shadcn/ui**: Mobile-first Radix UI primitives with Sheet component — Touch-friendly slide-out menus and dialogs
+**Core technologies (keep as-is):**
+- **Next.js 16.1.4**: Enable `cacheComponents: true` for PPR, `experimental.viewTransition: true` for native transitions
+- **React 19.2.3**: Use existing Server Components pattern, minimize client boundaries
+- **Tailwind CSS v4**: Extend `@theme` directive for semantic design tokens
+- **shadcn/ui**: Add sports-specific tokens (status-live, confidence-high, outcome-win)
+- **schema-dts 1.1.5**: Expand FAQPage schema to match, league, model pages
 
-**Configuration additions (required):**
-- **robots.txt**: Allow AI crawlers (GPTBot, ClaudeBot, PerplexityBot) for visibility in ChatGPT, Claude, Perplexity search results
-- **llms.txt**: Guide AI systems to authoritative content (emerging standard, 780+ sites including Cloudflare, Vercel)
-- **PPR via cacheComponents**: Enable Partial Prerendering for faster mobile loads (static shell + streamed dynamic content)
-- **ISR with conditional revalidation**: Replace force-dynamic with smart caching (60s for scheduled matches, 30s for live, 3600s for finished)
+**Configuration changes (next.config.ts):**
+```typescript
+cacheComponents: true,  // Enables PPR + Cache Components
+experimental: { viewTransition: true }  // Native page transitions
+```
+
+**Remove (optional):**
+- **next-sitemap**: Replace with native `src/app/sitemap.ts` for ISR-compatible dynamic sitemaps
 
 **What NOT to add:**
-- React Native/Nativecn UI (building web app, not native mobile)
-- External animation libraries (mobile performance overhead, CSS sufficient)
-- New state management (React 19 useActionState + Server Components handle it)
-- Mobile detection libraries (CSS media queries are the modern approach)
+- Animation libraries (View Transitions API handles page transitions, tw-animate-css handles micro-interactions)
+- State management (React 19 + Server Components sufficient)
+- Headless CMS (blog content in PostgreSQL works fine)
 
 ### Expected Features
 
 **Must have (table stakes):**
-- **Persistent Sticky Header**: Score stays visible during scroll, appears ONCE on entire page (eliminates current 3× duplication)
-- **Tabbed Navigation**: Standard tabs (Summary | Stats | Predictions | Odds) as single-source-of-truth for each domain
-- **Progressive Disclosure**: Show essentials, hide advanced features behind "Show More" expansions
-- **Consolidated Prediction Panel**: Single location for all AI predictions (dedicated tab, not scattered across page)
-- **Match Timeline**: Chronological events (goals, cards, substitutions) for live/finished matches
-- **Mobile-First Layout**: Touch targets ≥48px, thumb-zone navigation, stacked layouts on <768px
+- **Bottom navigation bar** — 21% faster mobile navigation, thumb-zone optimized (4-5 items max)
+- **Mobile-first responsive design** — 64.95% of sports fans on mobile, 5x abandonment if broken
+- **Fast page loads (<2.5s LCP)** — Google CWV threshold, enables PPR for static shell
+- **Sticky header with score** — Score visible while scrolling stats (already have, preserve)
+- **Tabbed content organization** — Already validated in v1.3, reduces scroll fatigue
+- **Blog readable line width** — 600-700px optimal (currently full-width)
 
 **Should have (competitive advantage):**
-- **AI Narrative Content**: Pre-match storylines and post-match roundups (150-200 words, expandable) — **Currently broken, content exists but not rendering**
-- **Model Performance Tracking**: Show which models are hot/cold ("Model X has predicted 8 of last 10 correctly")
-- **Confidence Levels with Context**: Not just percentages, but explanations ("82% confidence - High: Both teams' last 5 meetings produced BTTS")
-- **Smart Default Tab**: Context-aware (pre-match → Summary, live → Timeline, post-match → Predictions)
-- **Thumb-Friendly Tab Bar**: Sticky tabs at thumb zone (not top), swipeable for quick switching
+- **FAQ sections on all major pages** — 3.2x more likely AI Overview appearances, 28% more AI citations
+- **Question-answer format content** — Matches how AI platforms present information
+- **Contextual internal links** — Auto-link team names, model names, competitions in text
+- **Time-based leaderboards** — Weekly/monthly fresh start increases engagement
+- **Model performance trends** — Line charts showing improvement/decline over time
 
 **Defer (v2+):**
-- **Real-Time Prediction Updates**: Live match model re-computation (high complexity, requires live data integration)
-- **Player Heatmaps on Match Page**: Belongs on player pages, dilutes match-level focus
-- **Social Features**: Real-time chat, user comments (moderation burden, focus on prediction accuracy first)
+- **Predictive preloading** — Requires analytics + ML, high complexity
+- **Model comparison tables** — Valuable but scope creep risk
+- **Pull-to-refresh** — Nice-to-have mobile pattern
+- **Reading progress indicator** — Minor enhancement
 
 ### Architecture Approach
 
-The match page must transition from a 545-line monolithic component to a server-first, component-based architecture with strategic client boundaries. The core issue is not technical limitations but structural organization: data exists in two tables (`matchContent` and `matchRoundups`) with components querying inconsistently, duplicate displays lack coordination, and no progressive disclosure patterns exist for mobile.
+The architecture transitions from monolithic page components (387 lines) to a server-first composition model with strategic client boundaries. Key pattern: **Static Shell + Dynamic Holes** via PPR where navigation, layout, and schema render at build time while scores, predictions, and related content stream in at request time.
 
 **Major components:**
-1. **MatchHeader (Server Component)** — Consolidates scoreboard + metadata + status badge into single 80-100 line component. Renders team logos, score/VS indicator, status badge (Live/Upcoming/Full Time), competition + round. Mobile-first with stacked layout <768px
-2. **MatchContentTabs (Client Component)** — Organizes dense content into tabs to reduce scroll depth by 60%. Contains Overview (default), Predictions, Analysis, Stats tabs. Requires useState for active tab, hence client component
-3. **MatchOverviewTab (Server Component)** — Mobile-optimized summary for quick consumption. Renders narrative content (150-200 word snippet), key match stats (3-column grid), top 3 AI predictions with CTA to Predictions tab
-4. **MatchNarrative (Server Component)** — Renamed from MatchContentSection, accepts unified content type handling both matchContent and matchRoundups sources. Single narrative block with "Read full roundup" link if available
-5. **RoundupViewer (Modified Server Component)** — Remove redundant scoreboard section (already in MatchHeader). Keep events timeline, stats grid, model predictions table. Add compact prop for tab embedding
 
-**Data flow consolidation:**
-- Create `getMatchContentUnified()` query function that resolves matchContent vs matchRoundups priority
-- Modify `generatePostMatchRoundup()` to write ONLY to matchRoundups (single source of truth)
-- Deprecate `matchContent.postMatchContent` field after backfill migration
-- Use parallel data fetching with Promise.all for 6 queries (match, analysis, predictions, content, standings, next matches)
+1. **MatchShell (Server)** — PPR static shell wrapping entire match page, renders at build time
+2. **MatchScore (Server + Suspense)** — Single source of truth for score, streams in with live data
+3. **MatchContentAI (Server)** — GEO-optimized content with answer-first structure and FAQ schema
+4. **MatchInternalLinks (Server)** — Systematic link generation for related matches, models, competitions
+5. **ArticleShell (Server)** — Blog layout wrapper with table of contents and structured markdown
+6. **BottomNavigation (Client)** — Mobile navigation in thumb zone, 4-5 primary actions
 
-**Key patterns:**
-- Server-First Rendering: Server Components by default, Client Components only for interactivity (tabs, expand/collapse state)
-- Streaming with Suspense: Progressive rendering for slow data sources (predictions query with 35 models)
-- Mobile-First Component Design: Design for smallest screen (375px), progressively enhance
-- Progressive Disclosure: Show essential content first, details on demand (reduces cognitive load)
+**Data flow optimization:**
+- Create `getMatchComplete()` query consolidating 4+ overlapping queries into single optimized fetch
+- Add Suspense boundaries for heavy widgets (PredictionsFull, RelatedMatches)
+- Push client boundaries down: extract only interactive bits (animations, state) into tiny client components
 
 ### Critical Pitfalls
 
-1. **Duplicate Data Display Creating Cognitive Overload** — Current code shows score 3 times (header, roundup scoreboard, stats), predictions 2-3 times (table, roundup HTML, top performers). Mobile users require >3 scrolls to reach predictions. **Prevention:** Single source of truth for each data type, sticky header with minimal info, target 2-3 screen heights on mobile (750-1125px total)
+1. **Client Component Creep** — Adding `'use client'` cascades to children, bloating bundle 30-60%. **Prevention:** Audit every directive, server for data, client for interaction only. Detection: `grep -r "'use client'" src/components | wc -l`
 
-2. **React Hydration Mismatch from Dynamic Timestamps** — MatchContentSection line 40-43 uses `new Date().toLocaleString()` producing different output on server vs client due to timezones. **Prevention:** Use relative time on server ("Generated 2 hours ago"), absolute time on client upgrade, or ISO format with client-side formatting library (date-fns)
+2. **LCP Regression** — New hero/above-fold changes without `priority` attribute cause 2-4s delay. **Prevention:** Identify LCP element per page type before redesign, add PageSpeed Insights to CI, test on 3G throttled connection
 
-3. **force-dynamic Killing Performance** — `/src/app/matches/[id]/page.tsx` line 18 forces server rendering on every request. TTFB >800ms, server costs scale linearly with traffic. **Prevention:** Remove force-dynamic, use ISR with conditional revalidation (60s scheduled, 30s live, 3600s finished), implement on-demand revalidation after prediction completion. Expected impact: TTFB reduces from 800ms to <200ms, cuts server costs 60-80%
+3. **Breaking Existing URLs** — Route changes cause 25-80% SEO traffic loss. **Prevention:** Document all URLs before redesign, keep existing routes or implement 301 redirects, test all old URLs post-deployment
 
-4. **AI Search Engines Missing Content Due to Schema Fragmentation** — Duplicate/conflicting schema.org data across SportsEventSchema, WebPageSchema, MatchFAQSchema confuses AI crawlers. **Prevention:** Consolidate into single JSON-LD @graph array, use canonical entity IDs with consistent URLs, implement citation tracking for Perplexity API monitoring
+4. **ISR Cache Staleness** — Two caching layers (Next.js + CDN) create 2x stale time. **Prevention:** For live data use `dynamic = 'force-dynamic'`, configure CDN for `must-revalidate`, use on-demand revalidation for critical updates
 
-5. **Suspense Boundary Placement Causing Waterfall Requests** — Match page fetches related data sequentially (match → analysis → predictions → events), causing 4× single query time. **Prevention:** Parallel data fetching with Promise.all, granular Suspense boundaries per section, preload patterns for critical data
+5. **Structured Data Breaks** — Schema.org JSON-LD removed during component refactoring. **Prevention:** Keep schema in dedicated `/lib/seo/` module (already done), add schema validation to test suite, monitor Search Console enhancements report
 
 ## Implications for Roadmap
 
 Based on research, suggested phase structure:
 
-### Phase 1: Mobile Layout Consolidation & Data De-duplication
-**Rationale:** This addresses the most user-visible problems (duplicate displays, excessive scrolling) and is a prerequisite for all other phases. Quick wins with high impact.
-
+### Phase 1: Design System Foundation
+**Rationale:** Establishes component patterns and boundaries before any visual changes. Quick wins with no user-visible risk.
 **Delivers:**
-- Single sticky header replacing 3 duplicate score displays
-- Tabbed navigation interface (Summary | Stats | Predictions | Odds)
-- Mobile-first responsive components (stacked <768px, side-by-side ≥768px)
-- Touch targets ≥48px for all interactive elements
+- Enable PPR in next.config.ts
+- Semantic design tokens (status, confidence, outcome colors)
+- Component pattern library (DataCard, StreamedSection, ResponsiveLayout)
+- Server/client boundary documentation
+**Addresses:** Mobile-first design (table stakes), design consistency
+**Avoids:** Client component creep (P1), over-engineering design system (P10)
 
-**Addresses Features:**
-- Persistent sticky header (table stakes)
-- Tabbed navigation (table stakes)
-- Progressive disclosure (table stakes)
-- Mobile-first layout (table stakes)
-
-**Avoids Pitfalls:**
-- P1: Duplicate data cognitive overload
-- P2: React hydration mismatch (fix timestamp rendering)
-- P5: Touch target sizes <48px
-- P6: Typography unreadable on mobile
-
-**Components to create:**
-- MatchHeader.tsx (Server Component, 80-100 lines)
-- MatchContentTabs.tsx (Client Component with tab state)
-- MatchOverviewTab.tsx (Server Component, mobile-optimized summary)
-
-**Estimated effort:** 12-16 hours
-
-### Phase 2: Content Pipeline Fixes & Rendering
-**Rationale:** Content exists but doesn't display due to dual-table writes and query misalignment. Fixing this unlocks competitive advantage (AI narrative content).
-
+### Phase 2: Match Page Rebuild
+**Rationale:** Highest traffic pages, most user-visible impact. Depends on Phase 1 patterns.
 **Delivers:**
-- Unified content query system (`getMatchContentUnified()`)
-- MatchNarrative component handling both matchContent and matchRoundups
-- Modified `generatePostMatchRoundup()` writing only to matchRoundups
-- Display of pre-match storylines and post-match roundups
+- MatchShell static wrapper for PPR
+- Single MatchScore component replacing 3 duplicate displays
+- Condensed stats display eliminating duplication
+- Suspense boundaries for streaming
+- MatchCard converted to server component
+**Uses:** PPR (STACK), DataCard pattern (Phase 1)
+**Implements:** Static Shell + Dynamic Holes architecture
+**Addresses:** Sticky header (table stakes), tabbed navigation (table stakes), progressive disclosure
+**Avoids:** Duplicate data display (P1), LCP regression (P2)
 
-**Addresses Features:**
-- AI narrative content (competitive advantage - currently broken)
-- Narrative prediction summary (table stakes)
-- Post-match AI roundup (competitive advantage)
-
-**Avoids Pitfalls:**
-- P16: LLM hallucination validation missing
-- P17: Content deduplication over-aggressive
-- P18: Queue worker retry causing duplicate content
-- P14: Defensive error handling hiding real issues
-
-**Components to modify:**
-- Rename MatchContentSection → MatchNarrative
-- Update RoundupViewer (remove scoreboard duplication)
-- Create validation functions for LLM output
-
-**Estimated effort:** 8-12 hours (code) + 4-6 hours (testing all match states)
-
-### Phase 3: Performance Optimization & Caching
-**Rationale:** After layout and content work, performance is critical before traffic scales. ISR reduces costs and improves user experience.
-
+### Phase 3: Blog/Content System Rebuild
+**Rationale:** Second major page type, enables GEO optimization. Independent of match pages.
 **Delivers:**
-- ISR with conditional revalidation (replace force-dynamic)
-- Parallel data fetching with Promise.all
-- Granular Suspense boundaries for streaming
-- Optional PPR enablement with cacheComponents flag
+- ArticleShell with consistent blog layout
+- Structured markdown parser with heading extraction
+- Table of contents for long posts
+- GEO content structure (answer-first, FAQ format)
+- Readable line width (max-w-prose)
+**Addresses:** Blog readability (table stakes), FAQ sections (competitive), Q&A format content (competitive)
+**Avoids:** Structured data breaks (P5)
 
-**Uses Stack Elements:**
-- Next.js 16 ISR (revalidate per match state)
-- React 19 Suspense (progressive rendering)
-- Next.js revalidatePath (on-demand cache clearing)
-
-**Avoids Pitfalls:**
-- P3: force-dynamic killing performance
-- P7: Slow mobile load times during live matches
-- P12: Suspense boundary waterfall requests
-- P13: Missing generateStaticParams for competition pages
-
-**Performance targets:**
-- TTFB <200ms (currently 800ms)
-- Mobile LCP <1.8s (currently >2.5s)
-- Cache hit rate >70%
-- Mobile page weight <500KB
-
-**Estimated effort:** 6-8 hours
-
-### Phase 4: AI Search Optimization
-**Rationale:** After core functionality works, optimize for discovery. AI search (ChatGPT, Perplexity) is massive traffic channel (ChatGPT: 800M weekly users).
-
+### Phase 4: Navigation & Internal Linking
+**Rationale:** Cross-cutting concern affecting all pages. Depends on Phase 2-3 component structure.
 **Delivers:**
-- robots.txt with AI crawler user-agents
-- llms.txt with key URLs (markdown format)
-- Consolidated Schema.org JSON-LD @graph
-- Entity relationships in structured data
-- Semantic HTML with clear H2/H3 hierarchy
+- Bottom navigation bar for mobile
+- Centralized `getMatchLinks()` / `getLeagueLinks()` generation
+- MatchInternalLinks component for systematic linking
+- Prefetch optimization on hover/focus
+- Related content widgets (matches, models, posts)
+**Uses:** Native Link prefetch (STACK)
+**Addresses:** Bottom nav (table stakes), internal linking excellence (competitive)
+**Avoids:** Broken internal links (P7), navigation state loss (P6)
 
-**Addresses Features:**
-- None directly (infrastructure for discoverability)
-
-**Avoids Pitfalls:**
-- P4: AI search engines missing content
-- P9: Missing entity relationships in structured data
-- P10: Content structure not LLM-optimized
-- P11: Schema.org validation errors
-
-**Files to create:**
-- /public/robots.txt
-- /public/llms.txt
-- Updated metadata generation in page.tsx
-- Enhanced FAQPage schema in MatchFAQSchema
-
-**Estimated effort:** 4-6 hours
-
-### Phase 5: Content Generation Pipeline Cleanup
-**Rationale:** After new rendering system is proven, clean up technical debt. Migrate to single-table writes.
-
+### Phase 5: GEO & SEO Optimization
+**Rationale:** After content structure is solid, optimize for discovery. Independent of other phases.
 **Delivers:**
-- Backfill script: matchContent.postMatchContent → matchRoundups.narrative
-- Drop deprecated matchContent.postMatchContent column
-- Idempotent content generation with database locks
-- Enhanced validation for entity mentions
+- FAQPage schema on match, league, model pages
+- Native sitemap.ts replacing next-sitemap
+- Consolidated JSON-LD @graph structure
+- Answer-first content templates
+- Entity consistency across pages
+**Uses:** schema-dts (STACK), native sitemap (STACK)
+**Addresses:** FAQ sections (competitive), AI citation optimization
+**Avoids:** Schema fragmentation (P5)
 
-**Avoids Pitfalls:**
-- P16: LLM hallucination (entity validation)
-- P17: Over-aggressive deduplication
-- P18: Duplicate content from retry logic
-
-**Risk level:** HIGH (data migration requires backup/rollback plan)
-
-**Estimated effort:** 8-10 hours (includes migration testing on staging)
+### Phase 6: Performance & Polish
+**Rationale:** Final optimization after all components are built. Validates PPR and streaming benefits.
+**Delivers:**
+- Client boundary audit (minimize JS bundle)
+- loading.tsx files for streaming UX
+- Core Web Vitals validation (LCP <2.5s, INP <200ms, CLS <0.1)
+- View Transitions polish
+**Targets:** TTFB <200ms, mobile LCP <1.8s, bundle size reduction 30%+
+**Avoids:** LCP regression (P2), ISR staleness (P4)
 
 ### Phase Ordering Rationale
 
-**Why Phase 1 first:**
-- User-visible impact (mobile UX immediately better)
-- Foundation for other phases (components must exist before caching optimization)
-- Quick wins build momentum
-- No data migration risk
-
-**Why Phase 2 before Phase 3:**
-- Performance optimization depends on knowing what content will render
-- Can't optimize cache strategy until content pipeline is deterministic
-- Content fixes have higher user value than performance gains
-
-**Why Phase 4 separate from Phase 1-2:**
-- AI search optimization is infrastructure, not user-facing
-- Can be done in parallel with Phase 5 if needed
-- Low risk, independent of other phases
-
-**Why Phase 5 last:**
-- Requires proven new rendering system (Phases 1-2 must be stable)
-- Data migration has rollback complexity
-- Content generation can function with dual-table writes until cleanup
+- **Phase 1 first:** Foundation patterns prevent technical debt accumulation in later phases
+- **Phase 2-3 parallel possible:** Match and blog rebuilds are independent page types
+- **Phase 4 after 2-3:** Navigation and linking depend on final component structure
+- **Phase 5 independent:** GEO optimization can run parallel with Phase 4 or after
+- **Phase 6 last:** Performance audit requires all components to be complete
 
 **Dependency chain:**
 ```
-Phase 1 (Mobile Layout)
-  ↓
-Phase 2 (Content Pipeline) ← Must happen before Phase 5
-  ↓
-Phase 3 (Performance) ← Depends on knowing final component structure
-  ↓ (parallel possible)
-Phase 4 (AI Search) + Phase 5 (Cleanup)
+Phase 1 (Foundation)
+  |
+  +---> Phase 2 (Match) --+
+  |                       |
+  +---> Phase 3 (Blog) ---+--> Phase 4 (Navigation)
+                          |
+                          +--> Phase 5 (GEO)
+                               |
+                               v
+                          Phase 6 (Performance)
 ```
 
 ### Research Flags
 
-**Phases needing deeper research during planning:**
-- **Phase 3 (Performance):** Need load testing data to determine optimal revalidation intervals per match state. Current suggestion (60s/30s/3600s) is hypothesis.
-- **Phase 5 (Cleanup):** Database migration strategy needs detailed planning with rollback procedures. May need DBA review.
+Phases likely needing deeper research during planning:
+- **Phase 2:** Match page refactoring touches 387 lines of complex JSX with parallel data fetching. Verify current data query patterns before splitting components.
+- **Phase 4:** Internal linking automation needs entity recognition strategy. Determine which entities to auto-link (teams, models, competitions) and link validation approach.
 
-**Phases with standard patterns (skip research-phase):**
-- **Phase 1 (Mobile Layout):** Well-documented React/Next.js patterns, tabbed interfaces are standard
-- **Phase 2 (Content Pipeline):** Internal architecture refactor, no external research needed
-- **Phase 4 (AI Search):** Clear documentation for robots.txt, llms.txt, Schema.org patterns
+Phases with standard patterns (skip research-phase):
+- **Phase 1:** Design tokens and PPR configuration are well-documented Next.js 16 patterns
+- **Phase 3:** Blog layout and TOC generation are standard patterns
+- **Phase 5:** Schema.org FAQPage and sitemap.ts are documented standards
+- **Phase 6:** Performance auditing has established Lighthouse/CWV tooling
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Next.js 16 + React 19 + Tailwind v4 is current best practice, no changes needed |
-| Features | MEDIUM | Mobile UX patterns verified across multiple sources, AI prediction display patterns limited to 2-3 platforms |
-| Architecture | HIGH | Next.js App Router patterns well-documented, Server Components + Suspense are established 2026 patterns |
-| Pitfalls | HIGH | Hydration issues, force-dynamic performance, Schema.org fragmentation all verified with codebase analysis |
+| Stack | HIGH | Next.js 16 docs verified, no new packages needed, configuration changes only |
+| Features | HIGH | Cross-referenced sports betting UX, mobile navigation, GEO optimization across 15+ sources |
+| Architecture | HIGH | Next.js App Router + PPR patterns well-documented, codebase analysis confirms feasibility |
+| Pitfalls | HIGH | Verified via official docs, GitHub issues, and current codebase observation |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-**Performance baselines missing:**
-- Current TTFB, LCP, mobile page weight not measured
-- Need baseline metrics before Phase 3 to validate improvements
-- **Action:** Add RUM (Real User Monitoring) or Vercel Analytics before Phase 3 work begins
-
-**LLM validation specifics:**
-- Entity validation logic exists for blog posts (`validateLeagueRoundupOutput`) but unclear if applicable to match content
-- Need to determine which entities are "allowed" per match (player rosters not in current database)
-- **Action:** Define validation schema during Phase 2 planning, may need to fetch player data from API-Football
-
-**AI search citation tracking:**
-- No way to measure if Schema.org consolidation improves AI citations
-- **Action:** Implement manual tracking (weekly searches in Perplexity/ChatGPT for "kroam.xyz") or wait for GEO tools to mature
-
-**Mobile device testing:**
-- Research identifies touch target requirements but no testing plan
-- **Action:** Define device matrix (iOS Safari, Android Chrome minimum) for Phase 1 acceptance criteria
+- **Performance baselines:** Current TTFB, LCP, mobile page weight not measured. Need baseline before Phase 6 to validate improvements.
+- **Entity auto-linking scope:** Research identifies contextual links as high-value but implementation details (which entities, validation) need Phase 4 planning.
+- **AI citation tracking:** No way to measure if GEO changes improve AI citations. Consider manual tracking (weekly Perplexity/ChatGPT searches) or wait for GEO analytics tools.
+- **Mobile device testing matrix:** Touch target requirements identified but no testing plan. Define device matrix (iOS Safari, Android Chrome minimum) for Phase 2 acceptance.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- **Next.js 16 Official Docs** — ISR, PPR, Server Components, data fetching patterns
-- **React 19 Official Docs** — useActionState, useOptimistic, Suspense streaming
-- **Tailwind CSS v4 Official Docs** — Mobile-first breakpoints, CSS-first configuration
-- **shadcn/ui Official Patterns** — Mobile navigation with Sheet component
-- **Project codebase** — `/src/app/leagues/[slug]/[match]/page.tsx` (current implementation), `/src/lib/content/generator.ts` (content pipeline), component analysis
+- [Next.js 16 Blog](https://nextjs.org/blog/next-16) — PPR, Cache Components, View Transitions
+- [Next.js Cache Components Guide](https://nextjs.org/docs/app/getting-started/cache-components) — PPR implementation
+- [Next.js View Transitions Config](https://nextjs.org/docs/app/api-reference/config/next-config-js/viewTransition) — Native transitions
+- [Next.js Sitemap](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap) — Native sitemap generation
+- [Tailwind CSS v4 Theme](https://tailwindcss.com/docs/theme) — Design token architecture
 
 ### Secondary (MEDIUM confidence)
-- **FlashScore Redesign Case Study** — Tabbed navigation pattern for match details
-- **Nielsen Norman Group** — Progressive disclosure, duplicate content research
-- **Mobile Sportsbook UX 2026** — Touch target sizes, thumb-zone navigation
-- **GEO Optimization Guides** — AI search requirements for ChatGPT, Perplexity, Claude
-- **llms.txt Complete Guide** — 780+ site adoption, markdown format standards
+- [FAQ Schema for GEO](https://www.frase.io/blog/faq-schema-ai-search-geo-aeo) — 3.2x AI Overview appearances
+- [AI Citation Patterns](https://www.tryprofound.com/blog/ai-platform-citation-patterns) — ChatGPT vs Perplexity citation behaviors
+- [Internal Linking Best Practices](https://trafficthinktank.com/internal-linking-best-practices/) — Contextual link value
+- [Mobile Navigation UX 2026](https://www.designstudiouiux.com/blog/mobile-navigation-ux/) — Bottom nav patterns
+- [Sports Betting App UX 2026](https://prometteursolutions.com/blog/user-experience-and-interface-in-sports-betting-apps/) — Mobile-first sports UX
 
 ### Tertiary (LOW confidence)
-- **Real-time prediction updates** — Emerging feature, limited implementation data (Sports-AI.dev reference)
-- **AI citation tracking tools** — Market immature, manual tracking required for now
+- [GEO Will Replace SEO](https://statuslabs.com/blog/how-geo-will-replace-traditional-seo-in-2026) — Emerging GEO patterns
+- [Predictive preloading](https://medium.com/@beenakumawat002/next-js-app-router-advanced-patterns-for-2026-server-actions-ppr-streaming-edge-first-b76b1b3dcac7) — Advanced ML-based preloading (defer to v2+)
 
 ---
 *Research completed: 2026-02-02*
