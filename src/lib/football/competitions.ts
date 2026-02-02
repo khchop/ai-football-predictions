@@ -9,6 +9,7 @@ export interface CompetitionConfig {
   category: 'club-europe' | 'club-domestic' | 'international';
   icon?: string;
   color?: string;
+  aliases?: string[];
 }
 
 // Current season (auto-calculated: season starts in August)
@@ -29,6 +30,7 @@ export const COMPETITIONS: CompetitionConfig[] = [
     category: 'club-europe',
     icon: '🏆',
     color: '#00447F',
+    aliases: ['champions-league'],
   },
   {
     id: 'uel',
@@ -38,6 +40,7 @@ export const COMPETITIONS: CompetitionConfig[] = [
     category: 'club-europe',
     icon: '🏅',
     color: '#FF6B00',
+    aliases: ['europa-league'],
   },
   {
     id: 'uecl',
@@ -58,6 +61,7 @@ export const COMPETITIONS: CompetitionConfig[] = [
     category: 'club-domestic',
     icon: '🦁',
     color: '#3D195B',
+    aliases: ['premier-league'],
   },
   {
     id: 'laliga',
@@ -67,6 +71,7 @@ export const COMPETITIONS: CompetitionConfig[] = [
     category: 'club-domestic',
     icon: '🐂',
     color: '#A50044',
+    aliases: ['la-liga'],
   },
   {
     id: 'bundesliga',
@@ -85,6 +90,7 @@ export const COMPETITIONS: CompetitionConfig[] = [
     category: 'club-domestic',
     icon: '⚽',
     color: '#004080',
+    aliases: ['serie-a'],
   },
   {
     id: 'ligue1',
@@ -94,6 +100,7 @@ export const COMPETITIONS: CompetitionConfig[] = [
     category: 'club-domestic',
     icon: '🥖',
     color: '#091C3E',
+    aliases: ['ligue-1'],
   },
   {
     id: 'eredivisie',
@@ -183,6 +190,15 @@ export const COMPETITIONS: CompetitionConfig[] = [
 // Helper functions
 export function getCompetitionById(id: string): CompetitionConfig | undefined {
   return COMPETITIONS.find(c => c.id === id);
+}
+
+export function getCompetitionByIdOrAlias(slug: string): CompetitionConfig | undefined {
+  // First try exact ID match
+  const byId = COMPETITIONS.find(c => c.id === slug);
+  if (byId) return byId;
+
+  // Then search aliases
+  return COMPETITIONS.find(c => c.aliases?.includes(slug));
 }
 
 export function getCompetitionByApiId(apiId: number): CompetitionConfig | undefined {
