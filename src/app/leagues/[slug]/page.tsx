@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
-import { notFound, redirect } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getCompetitionById, COMPETITIONS } from '@/lib/football/competitions';
+import { getCompetitionByIdOrAlias, COMPETITIONS } from '@/lib/football/competitions';
 import { LeagueHubContent } from './league-hub-content';
 import { Skeleton } from '@/components/ui/skeleton';
 import { buildCompetitionSchema } from '@/lib/seo/schema/competition';
@@ -17,7 +17,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const competition = getCompetitionById(slug);
+  const competition = getCompetitionByIdOrAlias(slug);
 
   if (!competition) {
     return {
@@ -27,7 +27,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const title = `${competition.name} Predictions | AI Models Compete | kroam.xyz`;
   const description = `AI predictions for ${competition.name} from 35 models. Track accuracy, compare predictions, and see which AI performs best.`;
-  const url = `${BASE_URL}/leagues/${slug}`;
+  // Use canonical ID in URL, not the slug
+  const url = `${BASE_URL}/leagues/${competition.id}`;
 
   // OG image for competition
   const ogImageUrl = new URL(`${BASE_URL}/api/og/league`);
@@ -97,10 +98,15 @@ function LoadingSkeleton() {
 
 export default async function LeaguePage({ params }: PageProps) {
   const { slug } = await params;
-  const competition = getCompetitionById(slug);
+  const competition = getCompetitionByIdOrAlias(slug);
 
   if (!competition) {
     notFound();
+  }
+
+  // Redirect to canonical URL if slug is an alias
+  if (slug !== competition.id) {
+    permanentRedirect(`/leagues/${competition.id}`);
   }
 
   // Build schema.org structured data
@@ -108,7 +114,7 @@ export default async function LeaguePage({ params }: PageProps) {
   const breadcrumbs = buildBreadcrumbSchema([
     { name: 'Home', url: BASE_URL },
     { name: 'Leagues', url: `${BASE_URL}/leagues` },
-    { name: competition.name, url: `${BASE_URL}/leagues/${slug}` },
+    { name: competition.name, url: `${BASE_URL}/leagues/${competition.id}` },
   ]);
 
   const schema = {
@@ -124,7 +130,7 @@ export default async function LeaguePage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
       <Suspense fallback={<LoadingSkeleton />}>
-        <LeagueHubContent competitionId={slug} />
+        <LeagueHubContent competitionId={competition.id} />
       </Suspense>
     </>
   );
