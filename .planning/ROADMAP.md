@@ -143,6 +143,12 @@ Plans:
 **Goal**: LLM-generated content displays correctly on all match pages
 **Requirements**: CONT-01, CONT-02, CONT-03, CONT-04, CONT-05
 **Dependencies**: None
+**Plans**: 3 plans
+
+Plans:
+- [ ] 13-01-PLAN.md — Create unified content query (getMatchContentUnified) with COALESCE
+- [ ] 13-02-PLAN.md — Create ReadMoreText client component with accessibility
+- [ ] 13-03-PLAN.md — Update MatchContentSection with state logic and ReadMoreText integration
 
 **Success Criteria:**
 1. User sees pre-match AI narrative on upcoming match pages (150-200 word preview with "Read More")
@@ -226,10 +232,10 @@ v1.0, v1.1, and v1.2 complete. v1.3 in progress starting Phase 13.
 | 10. Page Structure | v1.2 | 2/2 | Complete | 2026-02-02 |
 | 11. Redirect Optimization | v1.2 | 2/2 | Complete | 2026-02-02 |
 | 12. Internal Linking | v1.2 | 2/2 | Complete | 2026-02-02 |
-| **13. Content Pipeline Fixes** | **v1.3** | **0/0** | **Pending** | — |
+| **13. Content Pipeline Fixes** | **v1.3** | **0/3** | **Planned** | — |
 | **14. Mobile Layout Consolidation** | **v1.3** | **0/0** | **Pending** | — |
 | **15. Performance Optimization** | **v1.3** | **0/0** | **Pending** | — |
 | **16. AI Search Optimization** | **v1.3** | **0/0** | **Pending** | — |
 
 ---
-*Last updated: 2026-02-02 (v1.3 milestone started)*
+*Last updated: 2026-02-02 (Phase 13 planned)*
