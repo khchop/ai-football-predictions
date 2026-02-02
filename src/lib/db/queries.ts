@@ -270,9 +270,9 @@ export async function getTopModelsByCompetition(competitionId: string, limit: nu
       totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
       totalPredictions: sql<number>`COUNT(${predictions.id})`,
       exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
-      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`,
+      correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)`,
       avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
-      accuracy: sql<number>`COALESCE(ROUND(100.0 * SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END) / NULLIF(COUNT(${predictions.id}), 0)::numeric, 1), 0)`,
+      accuracy: sql<number>`COALESCE(ROUND(100.0 * SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN ${predictions.status} = 'scored' THEN 1 ELSE 0 END), 0)::numeric, 1), 0)`,
     })
     .from(models)
     .leftJoin(predictions, and(
