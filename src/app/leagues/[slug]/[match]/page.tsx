@@ -57,8 +57,8 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
 
   const { match: matchData, competition } = result;
 
-  // Get analysis for predicted scores
-  const analysisData = await getMatchWithAnalysis(matchData.id);
+  // Get analysis for predicted scores (with graceful degradation)
+  const analysisData = await getMatchWithAnalysis(matchData.id).catch(() => null);
   const analysis = analysisData?.analysis;
 
   // Map to SEO data
