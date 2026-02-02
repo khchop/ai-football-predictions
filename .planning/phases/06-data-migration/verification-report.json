@@ -1,0 +1,273 @@
+{
+  "migrationDate": "2026-02-02T10:27:28.660Z",
+  "totalModels": 29,
+  "flaggedModels": 28,
+  "summary": {
+    "avgDelta": -47.8,
+    "maxDelta": 0,
+    "minDelta": -60.1
+  },
+  "models": [
+    {
+      "modelId": "cogito-109b-moe",
+      "displayName": "Cogito v2 109B MoE (Deep Cogito)",
+      "oldAccuracy": 93.7,
+      "newAccuracy": 44.3,
+      "delta": -49.4,
+      "scoredPredictions": 158,
+      "flagged": true
+    },
+    {
+      "modelId": "cogito-405b",
+      "displayName": "Cogito v2 405B (Deep Cogito)",
+      "oldAccuracy": 93.1,
+      "newAccuracy": 42.1,
+      "delta": -51,
+      "scoredPredictions": 159,
+      "flagged": true
+    },
+    {
+      "modelId": "cogito-70b",
+      "displayName": "Cogito v2 70B (Deep Cogito)",
+      "oldAccuracy": 91.9,
+      "newAccuracy": 46.9,
+      "delta": -45,
+      "scoredPredictions": 160,
+      "flagged": true
+    },
+    {
+      "modelId": "cogito-671b",
+      "displayName": "Cogito v2.1 671B (Deep Cogito)",
+      "oldAccuracy": 91.8,
+      "newAccuracy": 36.3,
+      "delta": -55.5,
+      "scoredPredictions": 146,
+      "flagged": true
+    },
+    {
+      "modelId": "deepseek-r1",
+      "displayName": "DeepSeek R1 (Reasoning)",
+      "oldAccuracy": 94.2,
+      "newAccuracy": 43.5,
+      "delta": -50.7,
+      "scoredPredictions": 138,
+      "flagged": true
+    },
+    {
+      "modelId": "deepseek-v3.1",
+      "displayName": "DeepSeek V3.1",
+      "oldAccuracy": 94,
+      "newAccuracy": 39.3,
+      "delta": -54.7,
+      "scoredPredictions": 150,
+      "flagged": true
+    },
+    {
+      "modelId": "gpt-oss-20b",
+      "displayName": "GPT-OSS 20B (OpenAI)",
+      "oldAccuracy": 83.9,
+      "newAccuracy": 42.9,
+      "delta": -41,
+      "scoredPredictions": 56,
+      "flagged": true
+    },
+    {
+      "modelId": "gemma-3n-e4b",
+      "displayName": "Gemma 3n E4B (Google)",
+      "oldAccuracy": 91.6,
+      "newAccuracy": 44.5,
+      "delta": -47.1,
+      "scoredPredictions": 155,
+      "flagged": true
+    },
+    {
+      "modelId": "kimi-k2-0905",
+      "displayName": "Kimi K2 0905 (Moonshot)",
+      "oldAccuracy": 91.9,
+      "newAccuracy": 39,
+      "delta": -52.9,
+      "scoredPredictions": 123,
+      "flagged": true
+    },
+    {
+      "modelId": "kimi-k2-instruct",
+      "displayName": "Kimi K2 Instruct (Moonshot)",
+      "oldAccuracy": 90.7,
+      "newAccuracy": 37.2,
+      "delta": -53.5,
+      "scoredPredictions": 129,
+      "flagged": true
+    },
+    {
+      "modelId": "llama-3-70b-reference",
+      "displayName": "Llama 3 70B Reference (Meta)",
+      "oldAccuracy": 0,
+      "newAccuracy": 0,
+      "delta": 0,
+      "scoredPredictions": 0,
+      "flagged": false
+    },
+    {
+      "modelId": "llama-3-8b-lite",
+      "displayName": "Llama 3 8B Lite (Meta)",
+      "oldAccuracy": 93.1,
+      "newAccuracy": 50.6,
+      "delta": -42.5,
+      "scoredPredictions": 160,
+      "flagged": true
+    },
+    {
+      "modelId": "llama-3.1-405b-turbo",
+      "displayName": "Llama 3.1 405B Turbo (Meta)",
+      "oldAccuracy": 96,
+      "newAccuracy": 47,
+      "delta": -49,
+      "scoredPredictions": 149,
+      "flagged": true
+    },
+    {
+      "modelId": "llama-3.1-8b-turbo",
+      "displayName": "Llama 3.1 8B Turbo (Meta)",
+      "oldAccuracy": 93.1,
+      "newAccuracy": 50.3,
+      "delta": -42.8,
+      "scoredPredictions": 159,
+      "flagged": true
+    },
+    {
+      "modelId": "llama-3.2-3b-turbo",
+      "displayName": "Llama 3.2 3B Turbo (Meta)",
+      "oldAccuracy": 93.8,
+      "newAccuracy": 50.6,
+      "delta": -43.2,
+      "scoredPredictions": 160,
+      "flagged": true
+    },
+    {
+      "modelId": "llama-3.3-70b-turbo",
+      "displayName": "Llama 3.3 70B Turbo (Meta)",
+      "oldAccuracy": 93.1,
+      "newAccuracy": 41.9,
+      "delta": -51.2,
+      "scoredPredictions": 160,
+      "flagged": true
+    },
+    {
+      "modelId": "llama-4-maverick",
+      "displayName": "Llama 4 Maverick (Meta)",
+      "oldAccuracy": 92.4,
+      "newAccuracy": 47.5,
+      "delta": -44.9,
+      "scoredPredictions": 158,
+      "flagged": true
+    },
+    {
+      "modelId": "llama-4-scout",
+      "displayName": "Llama 4 Scout (Meta)",
+      "oldAccuracy": 93.7,
+      "newAccuracy": 48.7,
+      "delta": -45,
+      "scoredPredictions": 158,
+      "flagged": true
+    },
+    {
+      "modelId": "marin-8b-instruct",
+      "displayName": "Marin 8B Instruct (Marin Community)",
+      "oldAccuracy": 91.1,
+      "newAccuracy": 43.9,
+      "delta": -47.2,
+      "scoredPredictions": 157,
+      "flagged": true
+    },
+    {
+      "modelId": "ministral-3-14b",
+      "displayName": "Ministral 3 14B (Mistral)",
+      "oldAccuracy": 94.3,
+      "newAccuracy": 39.9,
+      "delta": -54.4,
+      "scoredPredictions": 158,
+      "flagged": true
+    },
+    {
+      "modelId": "mistral-7b-v0.2",
+      "displayName": "Mistral 7B v0.2 (Mistral)",
+      "oldAccuracy": 94.5,
+      "newAccuracy": 43.8,
+      "delta": -50.7,
+      "scoredPredictions": 146,
+      "flagged": true
+    },
+    {
+      "modelId": "mistral-7b-v0.3",
+      "displayName": "Mistral 7B v0.3 (Mistral)",
+      "oldAccuracy": 94,
+      "newAccuracy": 43.7,
+      "delta": -50.3,
+      "scoredPredictions": 151,
+      "flagged": true
+    },
+    {
+      "modelId": "mistral-small-3-24b",
+      "displayName": "Mistral Small 3 24B (Mistral)",
+      "oldAccuracy": 94.3,
+      "newAccuracy": 34.2,
+      "delta": -60.1,
+      "scoredPredictions": 158,
+      "flagged": true
+    },
+    {
+      "modelId": "nemotron-nano-9b-v2",
+      "displayName": "Nemotron Nano 9B v2 (NVIDIA)",
+      "oldAccuracy": 93.2,
+      "newAccuracy": 44.7,
+      "delta": -48.5,
+      "scoredPredictions": 132,
+      "flagged": true
+    },
+    {
+      "modelId": "qwen2.5-72b-turbo",
+      "displayName": "Qwen 2.5 72B Turbo (Alibaba)",
+      "oldAccuracy": 99.3,
+      "newAccuracy": 50.7,
+      "delta": -48.6,
+      "scoredPredictions": 140,
+      "flagged": true
+    },
+    {
+      "modelId": "qwen2.5-7b-turbo",
+      "displayName": "Qwen 2.5 7B Turbo (Alibaba)",
+      "oldAccuracy": 93.8,
+      "newAccuracy": 50.6,
+      "delta": -43.2,
+      "scoredPredictions": 160,
+      "flagged": true
+    },
+    {
+      "modelId": "qwen3-235b-instruct",
+      "displayName": "Qwen3 235B Instruct (Alibaba)",
+      "oldAccuracy": 98.3,
+      "newAccuracy": 42.4,
+      "delta": -55.9,
+      "scoredPredictions": 59,
+      "flagged": true
+    },
+    {
+      "modelId": "qwen3-next-80b-instruct",
+      "displayName": "Qwen3 Next 80B (Alibaba)",
+      "oldAccuracy": 92.4,
+      "newAccuracy": 33.8,
+      "delta": -58.6,
+      "scoredPredictions": 157,
+      "flagged": true
+    },
+    {
+      "modelId": "rnj-1-instruct",
+      "displayName": "Rnj-1 Instruct (Essential AI)",
+      "oldAccuracy": 93,
+      "newAccuracy": 44.6,
+      "delta": -48.4,
+      "scoredPredictions": 157,
+      "flagged": true
+    }
+  ]
+}
