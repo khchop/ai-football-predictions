@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Calendar, Trophy, Home, FileText, Sparkles } from 'lucide-react';
+import { Calendar, Trophy, Home, FileText, Sparkles, Calculator } from 'lucide-react';
 import { COMPETITIONS } from '@/lib/football/competitions';
 
 export function Footer() {
@@ -31,6 +31,10 @@ export function Footer() {
               <Link href="/leaderboard" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                 <Trophy className="h-4 w-4" />
                 Leaderboard
+              </Link>
+              <Link href="/methodology" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Calculator className="h-4 w-4" />
+                Methodology
               </Link>
               <Link href="/blog" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                 <FileText className="h-4 w-4" />
