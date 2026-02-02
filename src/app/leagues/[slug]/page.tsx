@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { buildCompetitionSchema } from '@/lib/seo/schema/competition';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { BASE_URL } from '@/lib/seo/constants';
+import { abbreviateCompetition } from '@/lib/seo/abbreviations';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -25,7 +26,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const title = `${competition.name} Predictions | AI Models Compete | kroam.xyz`;
+  const shortName = abbreviateCompetition(competition.name);
+  const title = `${shortName} Predictions | kroam.xyz`;
   const description = `AI predictions for ${competition.name} from 35 models. Track accuracy, compare predictions, and see which AI performs best.`;
   // Use canonical ID in URL, not the slug
   const url = `${BASE_URL}/leagues/${competition.id}`;
