@@ -22,6 +22,7 @@ import { WebPageSchema } from '@/components/WebPageSchema';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { BASE_URL } from '@/lib/seo/constants';
 import { AccuracyDisplay } from '@/components/accuracy-display';
+import { RelatedModelsWidget } from '@/components/model/related-models-widget';
 
 // Memoize queries to avoid duplication between generateMetadata and page component
 const getModelStatsData = cache((modelId: string) => getModelPredictionStats(modelId));
@@ -404,6 +405,11 @@ export default async function ModelPage({ params }: ModelPageProps) {
              </Suspense>
            </CardContent>
          </Card>
+       </section>
+
+       {/* Related Models - SEO Internal Linking */}
+       <section>
+         <RelatedModelsWidget currentModelId={id} />
        </section>
      </div>
    );
