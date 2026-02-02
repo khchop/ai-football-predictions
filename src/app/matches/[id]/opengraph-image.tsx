@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { getMatchWithAnalysis } from '@/lib/db/queries';
+import { getLeaderboard } from '@/lib/db/queries/stats';
 import { getTemplateForMatch, getScoreDisplay, getStatusText } from '@/lib/seo/og/templates';
 import { mapMatchToSeoData } from '@/lib/seo/types';
 
@@ -56,6 +57,17 @@ export default async function Image({ params }: Props) {
   const template = getTemplateForMatch(seoData);
   const scoreDisplay = getScoreDisplay(seoData.homeScore, seoData.awayScore, seoData.status);
   const statusText = getStatusText(seoData);
+
+  // Get top model accuracy for the accuracy badge
+  let topModelAccuracy: number | null = null;
+  try {
+    const leaderboard = await getLeaderboard(1);
+    if (leaderboard[0]?.accuracy) {
+      topModelAccuracy = Math.round(leaderboard[0].accuracy * 10) / 10;
+    }
+  } catch {
+    // Silently fail - accuracy badge is optional enhancement
+  }
 
   return new ImageResponse(
     (
@@ -253,6 +265,25 @@ export default async function Image({ params }: Props) {
               </span>
             </div>
           </div>
+
+          {/* Accuracy badge - shown when accuracy data available */}
+          {topModelAccuracy !== null && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(34, 197, 94, 0.9)',
+                padding: '12px 32px',
+                borderRadius: '12px',
+                fontSize: '24px',
+                fontWeight: 'bold',
+                marginTop: '20px',
+              }}
+            >
+              Top Model Accuracy: {topModelAccuracy}%
+            </div>
+          )}
         </div>
 
         {/* Footer */}
