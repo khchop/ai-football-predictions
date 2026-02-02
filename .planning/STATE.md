@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 16 (AI Search Optimization) - IN PROGRESS
-Plan: 2 of 4 complete
+Plan: 3 of 4 complete
 Status: In progress
-Last activity: 2026-02-02 - Completed 16-02-PLAN.md (Schema.org Consolidation)
+Last activity: 2026-02-02 - Completed 16-03-PLAN.md (Match Page Integration)
 
-Progress: [█████████████░░░░░░░░░░░] 57.5% (23/40 plans complete)
+Progress: [██████████████░░░░░░░░░░] 60% (24/40 plans complete)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [█████████████░░░░░░░░░░
 - +4,147 / -42 lines
 
 **Velocity (v1.3):**
-- Total plans completed: 14 plans (Phase 13, Phase 14, Phase 15 complete, Phase 16 in progress)
+- Total plans completed: 15 plans (Phase 13, Phase 14, Phase 15 complete, Phase 16 in progress)
 - Phases: 13-16 (Content Pipeline, Mobile Layout, Performance, AI Search)
-- Status: Phase 13 complete, Phase 14 complete, Phase 15 complete, Phase 16 plans 1-2 complete
+- Status: Phase 13 complete, Phase 14 complete, Phase 15 complete, Phase 16 plans 1-3 complete
 
 ## Accumulated Context
 
@@ -87,6 +87,8 @@ Full decision history available in phase SUMMARY.md files.
 - 16-02: @id URL fragment pattern for entity cross-references (url#webpage, url#organization)
 - 16-02: Single @graph consolidation eliminates multiple JSON-LD validation warnings
 - 16-02: kroam.xyz as canonical domain for Organization/WebSite entities
+- 16-03: Remove SportsEventSchema + WebPageSchema in favor of single MatchPageSchema
+- 16-03: SSR content via async server components verified (MatchContentSection, RoundupViewer)
 
 ### Pending Todos
 
@@ -99,5 +101,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 16-02-PLAN.md (Schema.org Consolidation)
-Resume with: Continue to 16-03-PLAN.md (Match Page Integration)
+Stopped at: Completed 16-03-PLAN.md (Match Page Integration)
+Resume with: Continue to 16-04-PLAN.md (Documentation & Cleanup)
