@@ -6,6 +6,7 @@ import { Footer } from "@/components/footer";
 import { Analytics } from "@/components/analytics";
 import { ErrorBoundaryProvider } from "@/components/error-boundary-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Providers } from "./providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -100,7 +101,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased min-h-screen bg-background flex flex-col`}>
         {/* Organization Schema */}
         <script
@@ -119,23 +120,26 @@ export default function RootLayout({
          />
           {/* Umami Analytics */}
         <Analytics />
-        {/* Background gradient effect */}
-        <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl" />
-          <div className="absolute top-1/3 -left-40 h-80 w-80 rounded-full bg-indigo-500/10 blur-3xl" />
-        </div>
 
-        <TooltipProvider delayDuration={300} skipDelayDuration={100}>
-          <Navigation />
+        <Providers>
+          {/* Background gradient effect */}
+          <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+            <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
+            <div className="absolute top-1/3 -left-40 h-80 w-80 rounded-full bg-muted/10 blur-3xl" />
+          </div>
 
-          <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
-            <ErrorBoundaryProvider>
-              {children}
-            </ErrorBoundaryProvider>
-          </main>
+          <TooltipProvider delayDuration={300} skipDelayDuration={100}>
+            <Navigation />
 
-          <Footer />
-        </TooltipProvider>
+            <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
+              <ErrorBoundaryProvider>
+                {children}
+              </ErrorBoundaryProvider>
+            </main>
+
+            <Footer />
+          </TooltipProvider>
+        </Providers>
       </body>
     </html>
   );
