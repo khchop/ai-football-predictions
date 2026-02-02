@@ -114,12 +114,12 @@ Plans:
   4. Social shares display correct accuracy metric with specific label (not generic "Accurate")
   5. All pages pass Google Rich Results Test without errors or warnings
 
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
-- [ ] 07-03: TBD
+- [ ] 07-01-PLAN.md - Enhance match page structured data and metadata
+- [ ] 07-02-PLAN.md - Add structured data to blog and competition pages
+- [ ] 07-03-PLAN.md - Sitemap updates and validation sweep
 
 ### Phase 8: UX Transparency
 
@@ -152,8 +152,8 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8
 | 4. Frontend Performance | v1.0 | 4/4 | Complete | 2026-02-01 |
 | 5. Stats Foundation | v1.1 | 3/3 | Complete | 2026-02-02 |
 | 6. Data Migration | v1.1 | 2/2 | Complete | 2026-02-02 |
-| 7. SEO Enhancement | v1.1 | 0/3 | Not started | - |
+| 7. SEO Enhancement | v1.1 | 0/3 | Planned | - |
 | 8. UX Transparency | v1.1 | 0/1 | Not started | - |
 
 ---
-*Last updated: 2026-02-02 (Phase 6 complete with 2 plans)*
+*Last updated: 2026-02-02 (Phase 7 planned with 3 plans)*
