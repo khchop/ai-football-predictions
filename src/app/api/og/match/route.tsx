@@ -4,13 +4,24 @@ export const runtime = 'edge';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  
+
   const homeTeam = searchParams.get('homeTeam') || 'Home Team';
   const awayTeam = searchParams.get('awayTeam') || 'Away Team';
   const competition = searchParams.get('competition') || 'Match';
+  const accuracyParam = searchParams.get('accuracy');
+
+  // Parse and validate accuracy parameter
+  let accuracy: number | null = null;
+  if (accuracyParam) {
+    const parsed = parseFloat(accuracyParam);
+    if (!isNaN(parsed)) {
+      // Cap at 100%, floor at 0%, round to nearest integer
+      accuracy = Math.max(0, Math.min(100, Math.round(parsed)));
+    }
+  }
 
   // Helper to truncate long strings
-  const truncate = (str: string, max: number) => 
+  const truncate = (str: string, max: number) =>
     str.length > max ? str.slice(0, max - 1) + '…' : str;
 
   const displayHomeTeam = truncate(homeTeam, 25);
@@ -56,7 +67,7 @@ export async function GET(request: Request) {
             display: 'flex',
             gap: '40px',
             alignItems: 'center',
-            marginBottom: '30px',
+            marginBottom: accuracy ? '20px' : '30px',
             textAlign: 'center',
           }}
         >
@@ -72,6 +83,25 @@ export async function GET(request: Request) {
             </div>
           </div>
         </div>
+
+        {/* Accuracy badge - displayed prominently below match when provided */}
+        {accuracy !== null && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(34, 197, 94, 0.9)',
+              padding: '12px 32px',
+              borderRadius: '12px',
+              fontSize: '28px',
+              fontWeight: 'bold',
+              marginTop: '10px',
+            }}
+          >
+            Prediction Accuracy: {accuracy}%
+          </div>
+        )}
 
         {/* AI Predictions badge */}
         <div
