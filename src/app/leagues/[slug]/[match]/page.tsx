@@ -22,6 +22,12 @@ import { RoundupViewer } from '@/components/match/roundup-viewer';
 import { buildMatchMetadata } from '@/lib/seo/metadata';
 import { mapMatchToSeoData } from '@/lib/seo/types';
 import { MatchH1 } from '@/components/match/match-h1';
+import { MatchHeaderSticky } from '@/components/match/match-header-sticky';
+import { MatchTabsMobile } from '@/components/match/match-tabs-mobile';
+import { SummaryTab } from '@/components/match/tab-content/summary-tab';
+import { StatsTab } from '@/components/match/tab-content/stats-tab';
+import { PredictionsTab } from '@/components/match/tab-content/predictions-tab';
+import { AnalysisTab } from '@/components/match/tab-content/analysis-tab';
 
 export const dynamic = 'force-dynamic';
 
@@ -195,139 +201,85 @@ export default async function MatchPage({ params }: MatchPageProps) {
         Back to league
       </Link>
 
-      <Card className={cn(
-        "bg-card/50 border-border/50 overflow-hidden",
-        isLive && "border-red-500/50"
-      )}>
-        {isLive && (
-          <div className="h-1 bg-gradient-to-r from-red-500 to-orange-500 animate-pulse" />
-        )}
-        
-        <CardContent className="p-6 md:p-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">{competition.name}</span>
-              {matchData.round && (
-                <>
-                  <span className="text-muted-foreground/50">·</span>
-                  <span className="text-sm text-muted-foreground">{matchData.round}</span>
-                </>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {isFinished && matchData.isUpset && (
-                <span className="px-3 py-1.5 rounded-full text-sm font-semibold bg-orange-500/20 text-orange-400">
-                  UPSET
-                </span>
-              )}
-              <span className={cn(
-                "px-3 py-1.5 rounded-full text-sm font-semibold",
-                isLive && "status-live text-white",
-                matchData.status === 'scheduled' && "status-upcoming text-white",
-                isFinished && "status-finished text-muted-foreground"
-              )}>
-                {isLive ? 'LIVE' : isFinished ? 'Full Time' : 'Upcoming'}
-              </span>
-            </div>
-          </div>
+      {/* Sticky Header - Single source of truth for score (MOBL-01) */}
+      <MatchHeaderSticky
+        match={matchData}
+        competition={competition}
+        isLive={isLive}
+        isFinished={isFinished}
+      />
 
-          <div className="flex items-center justify-between gap-4 md:gap-8">
-            <div className="flex-1 text-center">
-              <div className="h-20 w-20 md:h-24 md:w-24 mx-auto mb-3 rounded-xl bg-muted/50 flex items-center justify-center">
-                {matchData.homeTeamLogo ? (
-                  <Image
-                    src={matchData.homeTeamLogo}
-                    alt={`${matchData.homeTeam} team logo`}
-                    width={64}
-                    height={64}
-                    className="object-contain"
-                  />
-                ) : (
-                  <span className="text-3xl font-bold text-muted-foreground">
-                    {matchData.homeTeam.charAt(0)}
-                  </span>
-                )}
-              </div>
-              <p className={cn(
-                "font-bold text-lg md:text-xl",
-                isFinished && matchData.homeScore !== null && matchData.awayScore !== null &&
-                matchData.homeScore > matchData.awayScore && "text-green-400"
-              )}>
-                {matchData.homeTeam}
-              </p>
-              <p className="text-sm text-muted-foreground">Home</p>
-            </div>
+      {/* Mobile: Tabbed Layout */}
+      <div className="md:hidden">
+        <MatchTabsMobile>
+          {{
+            summary: (
+              <SummaryTab
+                match={{
+                  homeTeam: matchData.homeTeam,
+                  awayTeam: matchData.awayTeam,
+                  competition: competition.name,
+                  venue: matchData.venue || undefined,
+                  kickoff: matchData.kickoffTime,
+                }}
+                competition={competition}
+                isLive={isLive}
+                isFinished={isFinished}
+                matchEvents={matchEvents.map(e => ({
+                  minute: e.time?.elapsed || 0,
+                  type: e.type || 'event',
+                  description: e.detail || '',
+                  team: e.team?.name,
+                }))}
+              />
+            ),
+            stats: (
+              <StatsTab
+                analysis={analysis || null}
+                homeStanding={homeStanding}
+                awayStanding={awayStanding}
+                homeTeam={matchData.homeTeam}
+                awayTeam={matchData.awayTeam}
+              />
+            ),
+            predictions: (
+              <PredictionsTab
+                predictions={predictions.map(p => ({
+                  id: p.predictionId,
+                  modelId: p.modelId,
+                  modelDisplayName: p.modelDisplayName,
+                  provider: p.provider,
+                  predictedHomeScore: p.predictedHome,
+                  predictedAwayScore: p.predictedAway,
+                  confidence: null,
+                  points: p.totalPoints,
+                  isExact: p.exactScoreBonus !== null && p.exactScoreBonus > 0,
+                  isCorrectResult: p.tendencyPoints !== null && p.tendencyPoints > 0,
+                }))}
+                homeTeam={matchData.homeTeam}
+                awayTeam={matchData.awayTeam}
+                isFinished={isFinished}
+              />
+            ),
+            analysis: (
+              <AnalysisTab
+                matchId={matchData.id}
+                matchStatus={matchData.status}
+                roundup={roundup ? {
+                  title: roundup.title,
+                  narrative: roundup.narrative,
+                  events: roundup.events ? JSON.parse(roundup.events) : undefined,
+                  stats: roundup.stats ? JSON.parse(roundup.stats) : undefined,
+                  topPerformers: roundup.topPerformers ? JSON.parse(roundup.topPerformers) : undefined,
+                } : null}
+              />
+            ),
+          }}
+        </MatchTabsMobile>
+      </div>
 
-            <div className="text-center px-4 md:px-8">
-              {isFinished || isLive ? (
-                <div className="flex items-center gap-4">
-                  <span className={cn(
-                    "text-5xl md:text-6xl font-bold tabular-nums",
-                    isFinished && matchData.homeScore !== null && matchData.awayScore !== null &&
-                    matchData.homeScore > matchData.awayScore && "text-green-400"
-                  )}>
-                    {matchData.homeScore}
-                  </span>
-                  <span className="text-3xl text-muted-foreground">-</span>
-                  <span className={cn(
-                    "text-5xl md:text-6xl font-bold tabular-nums",
-                    isFinished && matchData.homeScore !== null && matchData.awayScore !== null &&
-                    matchData.awayScore > matchData.homeScore && "text-green-400"
-                  )}>
-                    {matchData.awayScore}
-                  </span>
-                </div>
-              ) : (
-                <p className="text-4xl md:text-5xl font-bold gradient-text">VS</p>
-              )}
-            </div>
-
-            <div className="flex-1 text-center">
-              <div className="h-20 w-20 md:h-24 md:w-24 mx-auto mb-3 rounded-xl bg-muted/50 flex items-center justify-center">
-                {matchData.awayTeamLogo ? (
-                  <Image
-                    src={matchData.awayTeamLogo}
-                    alt={`${matchData.awayTeam} team logo`}
-                    width={64}
-                    height={64}
-                    className="object-contain"
-                  />
-                ) : (
-                  <span className="text-3xl font-bold text-muted-foreground">
-                    {matchData.awayTeam.charAt(0)}
-                  </span>
-                )}
-              </div>
-              <p className={cn(
-                "font-bold text-lg md:text-xl",
-                isFinished && matchData.homeScore !== null && matchData.awayScore !== null &&
-                matchData.awayScore > matchData.homeScore && "text-green-400"
-              )}>
-                {matchData.awayTeam}
-              </p>
-              <p className="text-sm text-muted-foreground">Away</p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-6 mt-6 pt-6 border-t border-border/50 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              {format(kickoff, 'EEEE, MMMM d, yyyy')}
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              {format(kickoff, 'HH:mm')}
-            </div>
-            {matchData.venue && (
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                {matchData.venue}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Desktop: Stacked Layout (existing) */}
+      <div className="hidden md:block space-y-8">
 
       {(isFinished || isLive) && matchEvents.length > 0 && (
         <Card className="bg-card/50 border-border/50">
@@ -539,6 +491,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
       {/* Related Matches - SEO Internal Linking */}
       <RelatedMatchesWidget matchId={matchData.id} competitionSlug={competitionSlug} />
+      </div>
     </div>
   );
 }
