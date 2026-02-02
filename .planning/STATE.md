@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 6 of 8 in progress (Data Migration)
-Plan: 1 of 2 complete
-Status: In progress
-Last activity: 2026-02-02 — Completed plan 06-01-PLAN.md (Accuracy Recalculation Migration)
+Phase: 6 of 8 (Data Migration)
+Plan: 2 of 2 complete
+Status: Phase complete
+Last activity: 2026-02-02 — Completed plan 06-02-PLAN.md (User Communication)
 
-Progress: [████████████████░░░░] 68% (21/31 total planned plans)
+Progress: [█████████████████░░░] 71% (22/31 total planned plans)
 
 ## Performance Metrics
 
@@ -46,6 +46,8 @@ Progress: [████████████████░░░░] 68% (21
 | Plan | Duration | Description |
 |------|----------|-------------|
 | 06-01 | ~3 min | Accuracy Recalculation Migration |
+| 06-02 | ~4 min | User Communication (Methodology + Changelog) |
+| Total | ~7 min | 2 plans |
 
 ## Accumulated Context
 
@@ -63,6 +65,9 @@ Recent decisions affecting current work:
 - 06-01: Snapshot-before-modify pattern — stats_pre_migration table preserves rollback capability
 - 06-01: JSON verification report format — machine-readable for blog post, human-readable for review
 - 06-01: Bug severity revealed — actual impact -48% not -7% (IS NOT NULL counted 0-point predictions)
+- 06-02: /methodology route — top-level URL for permanent accuracy calculation reference
+- 06-02: Keep a Changelog format — industry standard for documenting changes
+- 06-02: Three diverse examples in changelog — shows impact range without overwhelming
 
 ### Pending Todos
 
@@ -70,19 +75,23 @@ None.
 
 ### Blockers/Concerns
 
-**Phase 6 (Data Migration) - UPDATED:**
-- User communication CRITICAL: Accuracy drops from ~93% to ~44% (not 87% as estimated)
-- Bug was 7x worse than expected: IS NOT NULL counted 0-point predictions as correct
-- Mitigation: Blog post must emphasize bug fix, not model degradation
-- Context needed: 44% accuracy is realistic for football prediction difficulty
-- Verification report ready: .planning/phases/06-data-migration/verification-report.json
+**Phase 6 (Data Migration) - COMPLETE:**
+- ✅ User communication addressed: /methodology page and CHANGELOG.md created
+- ✅ Bug fix emphasis: Documentation clearly explains IS NOT NULL error
+- ✅ Context provided: 50-55% is professional bookmaker range
+- ✅ Transparency achieved: Real before/after data from 29 models shown
 
-**Phase 7 (SEO Enhancement):**
+**Phase 7 (Documentation Cleanup):**
+- Cross-linking opportunity: Link /methodology from about page, model pages
+- Sitemap update: Add /methodology to sitemap.xml for SEO discoverability
+
+**Phase 8 (SEO Enhancement):**
 - Google takes 2-4 weeks to re-crawl and update rich snippets after structured data added
 - Monitoring: Google Search Console structured data detection + rich snippet impressions
 
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed plan 06-01 (Accuracy Recalculation Migration)
-Resume with: Plan 06-02 (User Communication) - use verification report to generate blog post
+Stopped at: Completed Phase 6 (Data Migration)
+Resume with: Phase 7 (Documentation Cleanup) - cross-link methodology page, update sitemap
+Continue file: None (phase complete)
