@@ -21,6 +21,7 @@ import { ModelCompetitionBreakdown } from '@/components/model-competition-breakd
 import { WebPageSchema } from '@/components/WebPageSchema';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { BASE_URL } from '@/lib/seo/constants';
+import { AccuracyDisplay } from '@/components/accuracy-display';
 
 // Memoize queries to avoid duplication between generateMetadata and page component
 const getModelStatsData = cache((modelId: string) => getModelPredictionStats(modelId));
@@ -254,7 +255,12 @@ export default async function ModelPage({ params }: ModelPageProps) {
                  <Sparkles className="h-4 w-4 text-primary" />
                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Accuracy</p>
                </div>
-               <p className="text-4xl font-bold font-mono">{tendencyAccuracy}%</p>
+               <AccuracyDisplay
+                 correct={predictionStats?.correctTendencies || 0}
+                 total={scoredPredictions}
+                 size="lg"
+                 className="text-4xl"
+               />
                <p className="text-xs text-muted-foreground mt-1">tendency</p>
              </CardContent>
            </Card>
