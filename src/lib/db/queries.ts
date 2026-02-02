@@ -2460,3 +2460,86 @@ export async function getMatchRoundupBySlug(competitionSlug: string, matchSlug: 
     throw error;
   }
 }
+
+// ============= INTERNAL LINKING QUERIES =============
+
+/**
+ * Get related matches for SEO internal linking widget.
+ * Returns matches from same competition OR involving same teams.
+ * Used on match detail pages to reduce crawl depth and improve topic clustering.
+ */
+export async function getRelatedMatches(matchId: string, limit: number = 5) {
+  const db = getDb();
+
+  // First get the current match to extract competitionId and teams
+  const currentMatch = await db
+    .select({
+      competitionId: matches.competitionId,
+      homeTeam: matches.homeTeam,
+      awayTeam: matches.awayTeam,
+    })
+    .from(matches)
+    .where(eq(matches.id, matchId))
+    .limit(1);
+
+  if (!currentMatch[0]) {
+    return [];
+  }
+
+  const { competitionId, homeTeam, awayTeam } = currentMatch[0];
+
+  // Query related matches: same competition OR involves same teams
+  const relatedMatches = await db
+    .select({
+      match: matches,
+      competition: competitions,
+    })
+    .from(matches)
+    .innerJoin(competitions, eq(matches.competitionId, competitions.id))
+    .where(
+      and(
+        ne(matches.id, matchId), // Exclude current match
+        or(
+          eq(matches.competitionId, competitionId), // Same competition
+          eq(matches.homeTeam, homeTeam), // Home team playing at home
+          eq(matches.awayTeam, homeTeam), // Home team playing away
+          eq(matches.homeTeam, awayTeam), // Away team playing at home
+          eq(matches.awayTeam, awayTeam) // Away team playing away
+        )
+      )
+    )
+    .orderBy(desc(matches.kickoffTime))
+    .limit(limit);
+
+  return relatedMatches;
+}
+
+/**
+ * Get top performing models for SEO internal linking widget.
+ * Returns models ranked by total points with prediction counts.
+ * Used on model detail pages to cross-link to other top models.
+ */
+export async function getTopModelsForWidget(excludeModelId: string | null, limit: number = 5) {
+  const db = getDb();
+
+  // Build where clause - always filter active, optionally exclude current model
+  const whereClause = excludeModelId
+    ? and(eq(models.active, true), ne(models.id, excludeModelId))
+    : eq(models.active, true);
+
+  const topModels = await db
+    .select({
+      id: models.id,
+      displayName: models.displayName,
+      totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
+      scoredPredictions: sql<number>`COUNT(CASE WHEN ${predictions.status} = 'scored' THEN 1 END)`,
+    })
+    .from(models)
+    .leftJoin(predictions, eq(predictions.modelId, models.id))
+    .where(whereClause)
+    .groupBy(models.id, models.displayName)
+    .orderBy(desc(sql`COALESCE(SUM(${predictions.totalPoints}), 0)`))
+    .limit(limit);
+
+  return topModels;
+}
