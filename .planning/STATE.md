@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 11 of 12 (v1.2 milestone) — Redirect Optimization COMPLETE
+Phase: 12 of 12 (v1.2 milestone) — Internal Linking COMPLETE
 Plan: 2/2 complete
-Status: Phase 11 verified, ready for Phase 12
-Last activity: 2026-02-02 — Phase 11 executed and verified
+Status: Phase 12 verified, v1.2 milestone complete
+Last activity: 2026-02-02 — Completed 12-02-PLAN.md (RecentPredictionsWidget)
 
-Progress: [█████████████████████░] 92% (11/12 phases complete)
+Progress: [██████████████████████] 100% (12/12 phases complete)
 
 ## Performance Metrics
 
@@ -33,8 +33,9 @@ Progress: [█████████████████████░] 9
 - Phase 9 plans completed: 3 plans
 - Phase 10 plans completed: 2 plans
 - Phase 11 plans completed: 2 plans
-- Total v1.2 commits: 17
-- Phase 11-02 duration: 3 min
+- Phase 12 plans completed: 2 plans
+- Total v1.2 commits: 19
+- Phase 12-02 duration: 1.4 min
 
 ## Accumulated Context
 
@@ -64,6 +65,10 @@ Full decision history available in phase SUMMARY.md files.
 - Match pages >30 days old intentionally noindexed (correct SEO practice)
 - Orphan page resolution deferred to Phase 12 with detailed strategy
 
+**Phase 12 Decisions:**
+- Widget placement in left column below CompetitionTopModels for consistent layout
+- Reuse existing getMatchesByCompetitionId query (no new database queries needed)
+
 ### Pending Todos
 
 None.
@@ -74,6 +79,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-02 15:34
-Stopped at: Completed Phase 11 (Redirect Optimization)
-Resume with: `/gsd:discuss-phase 12` to gather context for Internal Linking phase
+Last session: 2026-02-02 15:49
+Stopped at: Completed Phase 12 (Internal Linking) - v1.2 milestone complete
+Resume with: New milestone planning or deployment
