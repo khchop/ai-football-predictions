@@ -3,7 +3,7 @@
 ## Milestones
 
 - [x] **v1.0 Bug Fix Stabilization** - Phases 1-4 (shipped 2026-02-01)
-- [ ] **v1.1 Stats Accuracy & SEO** - Phases 5-8 (in progress)
+- [x] **v1.1 Stats Accuracy & SEO** - Phases 5-8 (shipped 2026-02-02)
 
 ## Phases
 
@@ -137,8 +137,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md - Create tooltip infrastructure and AccuracyDisplay component
-- [ ] 08-02-PLAN.md - Integrate AccuracyDisplay across leaderboard and model pages
+- [x] 08-01-PLAN.md - Create tooltip infrastructure and AccuracyDisplay component
+- [x] 08-02-PLAN.md - Integrate AccuracyDisplay across leaderboard and model pages
 
 ## Progress
 
@@ -154,7 +154,7 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8
 | 5. Stats Foundation | v1.1 | 3/3 | Complete | 2026-02-02 |
 | 6. Data Migration | v1.1 | 2/2 | Complete | 2026-02-02 |
 | 7. SEO Enhancement | v1.1 | 3/3 | Complete | 2026-02-02 |
-| 8. UX Transparency | v1.1 | 0/2 | Not started | - |
+| 8. UX Transparency | v1.1 | 2/2 | Complete | 2026-02-02 |
 
 ---
-*Last updated: 2026-02-02 (Phase 8 planned)*
+*Last updated: 2026-02-02 (v1.1 milestone complete)*

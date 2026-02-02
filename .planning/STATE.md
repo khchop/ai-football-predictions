@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Prediction pipeline reliably generates scores from 35 LLMs ~30 minutes before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** Phase 8 - UX Transparency (next)
+**Current focus:** v1.1 Milestone complete — ready for audit
 
 ## Current Position
 
-Phase: 8 of 8 in progress (UX Transparency)
-Plan: 2/3 complete
-Status: Phase in progress
-Last activity: 2026-02-02 — Completed 08-02-PLAN.md (Accuracy Display Integration)
+Phase: 8 of 8 complete (UX Transparency)
+Plan: 2/2 complete
+Status: Milestone complete
+Last activity: 2026-02-02 — Completed Phase 8 (UX Transparency)
 
-Progress: [████████████████████░] 87% (27/31 total planned plans)
+Progress: [████████████████████] 100% (27/27 v1.1 plans)
 
 ## Performance Metrics
 
@@ -49,7 +49,7 @@ Progress: [████████████████████░] 87% 
 | 06-02 | ~4 min | User Communication (Methodology + Changelog) |
 | Total | ~7 min | 2 plans |
 
-**v1.2 Phase 7:**
+**v1.1 Phase 7:**
 
 | Plan | Duration | Description |
 |------|----------|-------------|
@@ -58,13 +58,13 @@ Progress: [████████████████████░] 87% 
 | 07-03 | ~5 min | SEO Finalization |
 | Total | ~15 min | 3 plans |
 
-**v1.3 Phase 8:**
+**v1.1 Phase 8:**
 
 | Plan | Duration | Description |
 |------|----------|-------------|
 | 08-01 | ~2.1 min | Tooltip Infrastructure |
 | 08-02 | ~3 min | Accuracy Display Integration |
-| Total | ~5.1 min | 2/3 plans |
+| Total | ~5.1 min | 2 plans |
 
 ## Accumulated Context
 
@@ -97,6 +97,7 @@ Recent decisions affecting current work:
 - 08-01: TooltipProvider placement — Single provider in layout.tsx wrapping Navigation/main/Footer avoids nesting
 - 08-01: Denominator format — Show "X/Y (Z%)" to reveal sample size, monospace font for number readability
 - 08-01: Tooltip delays — 300ms initial, 100ms skip between tooltips balances responsiveness vs accidental triggers
+- 08-02: Data source verified — totalPredictions in leaderboard query equals scored predictions (status='scored' filter)
 
 ### Pending Todos
 
@@ -104,23 +105,21 @@ None.
 
 ### Blockers/Concerns
 
-**Phase 6 (Data Migration) - COMPLETE:**
-- ✅ User communication addressed: /methodology page and CHANGELOG.md created
-- ✅ Bug fix emphasis: Documentation clearly explains IS NOT NULL error
-- ✅ Context provided: 50-55% is professional bookmaker range
-- ✅ Transparency achieved: Real before/after data from 29 models shown
+**Phase 8 (UX Transparency) - COMPLETE:**
+- ✅ AccuracyDisplay component shows "X/Y (Z%)" format across all accuracy displays
+- ✅ Tooltip infrastructure with methodology explanation and /methodology link
+- ✅ Data correctness verified: totalPredictions = scoredPredictions (query filters status='scored')
+- ✅ Consistent format across leaderboard, model page, stats grid, competition breakdown
+- Human testing recommended: visual formatting, tooltip interactions, mobile responsiveness
 
-**Phase 7 (SEO Enhancement) - COMPLETE:**
-- ✅ All structured data and metadata implemented
-- ✅ Methodology page in sitemap for search engine discovery
-- ✅ OG images display accuracy labels in social shares
-- ✅ All metadata enforces length limits (60/155/200 chars)
-- Monitor: Google takes 2-4 weeks to re-crawl and update rich snippets after structured data added
-- Monitoring: Google Search Console structured data detection + rich snippet impressions
-- Test with Google Rich Results Test tool after deployment
+**v1.1 Milestone - COMPLETE:**
+- ✅ Phase 5: Stats foundation with canonical accuracy formula
+- ✅ Phase 6: Data migration with methodology page
+- ✅ Phase 7: SEO enhancement with structured data
+- ✅ Phase 8: UX transparency with denominator display
 
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Phase 8 Plan 2 (Accuracy Display Integration) complete - all accuracy displays now show "X/Y (Z%)" format
-Resume with: `/gsd:execute-phase 08-03` to continue UX Transparency phase
+Stopped at: v1.1 Milestone complete - all 4 phases executed and verified
+Resume with: `/gsd:audit-milestone` to verify cross-phase integration before archiving
