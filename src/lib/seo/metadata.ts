@@ -225,3 +225,53 @@ export function generateHomeMetadata(): Metadata {
     },
   };
 }
+
+export interface Competition {
+  id: string;
+  name: string;
+}
+
+export function generateCompetitionMetadata(competition: Competition): Metadata {
+  const title = `${competition.name} Predictions | AI Models Compete | kroam.xyz`;
+  const description = `AI predictions for ${competition.name} from 35 models. Track accuracy, compare predictions, and see which AI performs best.`;
+  const url = `${BASE_URL}/leagues/${competition.id}`;
+
+  const ogImageUrl = new URL(`${BASE_URL}/api/og/league`);
+  ogImageUrl.searchParams.set('leagueName', competition.name);
+  ogImageUrl.searchParams.set('matchCount', '0');
+  ogImageUrl.searchParams.set('upcomingCount', '0');
+
+  return {
+    title,
+    description,
+    keywords: [competition.name, 'football predictions', 'AI predictions'],
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: 'website',
+      siteName: SITE_NAME,
+      images: [
+        {
+          url: ogImageUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: `${competition.name} AI Predictions`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImageUrl.toString()],
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}

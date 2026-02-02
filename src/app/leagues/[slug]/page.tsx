@@ -4,6 +4,9 @@ import type { Metadata } from 'next';
 import { getCompetitionById, COMPETITIONS } from '@/lib/football/competitions';
 import { LeagueHubContent } from './league-hub-content';
 import { Skeleton } from '@/components/ui/skeleton';
+import { buildCompetitionSchema } from '@/lib/seo/schema/competition';
+import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
+import { BASE_URL } from '@/lib/seo/constants';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -22,26 +25,46 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
+  const title = `${competition.name} Predictions | AI Models Compete | kroam.xyz`;
+  const description = `AI predictions for ${competition.name} from 35 models. Track accuracy, compare predictions, and see which AI performs best.`;
+  const url = `${BASE_URL}/leagues/${slug}`;
+
+  // OG image for competition
+  const ogImageUrl = new URL(`${BASE_URL}/api/og/league`);
+  ogImageUrl.searchParams.set('leagueName', competition.name);
+  ogImageUrl.searchParams.set('matchCount', '0');
+  ogImageUrl.searchParams.set('upcomingCount', '0');
+
   return {
-    title: `${competition.name} | AI Football Predictions`,
-    description: `Browse ${competition.name} matches with AI predictions from 35+ models. Track fixtures, results, and analysis.`,
+    title,
+    description,
+    keywords: [competition.name, 'football predictions', 'AI predictions'],
     alternates: {
-      canonical: `https://kroam.xyz/leagues/${slug}`,
+      canonical: url,
     },
     openGraph: {
-      title: competition.name,
-      description: `${competition.name} matches with AI predictions`,
-      url: `https://kroam.xyz/leagues/${slug}`,
+      title,
+      description,
+      url,
       type: 'website' as const,
       siteName: 'kroam.xyz',
+      images: [
+        {
+          url: ogImageUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: `${competition.name} AI Predictions`,
+        },
+      ],
     },
     twitter: {
-      card: 'summary',
-      title: competition.name,
-      description: `${competition.name} with AI predictions`,
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImageUrl.toString()],
     },
     robots: {
-      index: false,
+      index: true,
       follow: true,
     },
   };
@@ -80,9 +103,29 @@ export default async function LeaguePage({ params }: PageProps) {
     notFound();
   }
 
+  // Build schema.org structured data
+  const competitionSchema = buildCompetitionSchema(competition);
+  const breadcrumbs = buildBreadcrumbSchema([
+    { name: 'Home', url: BASE_URL },
+    { name: 'Leagues', url: `${BASE_URL}/leagues` },
+    { name: competition.name, url: `${BASE_URL}/leagues/${slug}` },
+  ]);
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@graph': [competitionSchema, breadcrumbs],
+  };
+
   return (
-    <Suspense fallback={<LoadingSkeleton />}>
-      <LeagueHubContent competitionId={slug} />
-    </Suspense>
+    <>
+      {/* Structured data for search engines */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
+      <Suspense fallback={<LoadingSkeleton />}>
+        <LeagueHubContent competitionId={slug} />
+      </Suspense>
+    </>
   );
 }
