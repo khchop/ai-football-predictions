@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 17 - Design System Foundation
-Plan: 03 of 3 complete (Phase complete)
+Plan: 04 of 4 complete (Phase complete)
 Status: Phase complete
-Last activity: 2026-02-02 - Completed 17-03-PLAN.md (Component Variants)
+Last activity: 2026-02-02 - Completed 17-04-PLAN.md (View Transitions)
 
-Progress: [███░░░░░░░░░░░░░░░░░░░░░] 9% (v2.0: 3/? plans, 6/33 requirements)
+Progress: [████░░░░░░░░░░░░░░░░░░░░] 12% (v2.0: 4/? plans, 6/33 requirements)
 
 ## Milestone History
 
@@ -41,7 +41,7 @@ Progress: [███░░░░░░░░░░░░░░░░░░░░
 
 **Phase Dependencies:**
 ```
-Phase 17 (Foundation) [IN PROGRESS]
+Phase 17 (Foundation) [COMPLETE]
   |
   +---> Phase 18 (Match) --+
   |                        |
@@ -69,6 +69,8 @@ Full decision history available in phase SUMMARY.md files.
 - 4px/8px spacing rhythm for consistent component spacing
 - MatchBadge for structured outcome/status props, Badge variants for simple usage
 - AccuracyBadge thresholds: <40% red, 40-70% amber, >70% green
+- 150ms view transition duration for snappy navigation feel
+- prefers-reduced-motion fully disables view transitions
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -109,5 +111,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 17-03-PLAN.md (Component Variants) - Phase 17 complete
+Stopped at: Completed 17-04-PLAN.md (View Transitions) - Phase 17 complete
 Resume with: Begin Phase 18 (Match Page Rebuild)
