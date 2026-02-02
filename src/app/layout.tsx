@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { ViewTransition } from "react";
 import "./globals.css";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
@@ -131,11 +132,13 @@ export default function RootLayout({
           <TooltipProvider delayDuration={300} skipDelayDuration={100}>
             <Navigation />
 
-            <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
-              <ErrorBoundaryProvider>
-                {children}
-              </ErrorBoundaryProvider>
-            </main>
+            <ViewTransition>
+              <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
+                <ErrorBoundaryProvider>
+                  {children}
+                </ErrorBoundaryProvider>
+              </main>
+            </ViewTransition>
 
             <Footer />
           </TooltipProvider>
