@@ -53,97 +53,49 @@ Plans:
 
 </details>
 
-## v1.1 Stats Accuracy & SEO (In Progress)
-
-**Milestone Goal:** Fix inconsistent accuracy calculations and optimize for search engines.
+<details>
+<summary>v1.1 Stats Accuracy & SEO (Phases 5-8) - SHIPPED 2026-02-02</summary>
 
 ### Phase 5: Stats Foundation
-
-**Goal**: Single source of truth for accuracy calculations that produces consistent numbers everywhere
-
-**Depends on**: Phase 4 (v1.0)
-
-**Requirements**: STAT-01, STAT-02, STAT-03, STAT-04, STAT-05, STAT-06
-
-**Success Criteria** (what must be TRUE):
-  1. User sees identical accuracy numbers for same model across leaderboard, model detail page, and competition pages (no more 94% vs 87% confusion)
-  2. Model detail page displays correct tendency accuracy in hero section, not exact score percentage
-  3. All stats queries use standardized formula with `tendencyPoints > 0` denominator
-  4. Zero-prediction edge cases handled gracefully without division-by-zero errors
-  5. Stats service layer provides single entry point for all accuracy calculations
-
+**Goal**: Single source of truth for accuracy calculations
 **Plans**: 3 plans
 
 Plans:
-- [x] 05-01-PLAN.md - Create stats service layer with canonical accuracy formula
-- [x] 05-02-PLAN.md - Fix queries.ts functions with incorrect formulas
-- [x] 05-03-PLAN.md - Fix model detail page metadata accuracy bug
+- [x] 05-01: Create stats service layer with canonical accuracy formula
+- [x] 05-02: Fix queries.ts functions with incorrect formulas
+- [x] 05-03: Fix model detail page metadata accuracy bug
 
 ### Phase 6: Data Migration
-
-**Goal**: Historical stats recalculated with corrected formula, preserving audit trail
-
-**Depends on**: Phase 5
-
-**Requirements**: MIGR-01, MIGR-02, MIGR-03
-
-**Success Criteria** (what must be TRUE):
-  1. All 160 models across 17 leagues show recalculated accuracy using corrected formula
-  2. Leaderboard rankings reflect corrected calculations without cache serving stale data
-  3. User can view explanation of why accuracy numbers changed (changelog, methodology page)
-  4. Historical data preserved for 30-day rollback window in case of issues
-
+**Goal**: Historical stats recalculated with audit trail
 **Plans**: 2 plans
 
 Plans:
-- [x] 06-01-PLAN.md - Execute migration with snapshot and verification report
-- [x] 06-02-PLAN.md - Create methodology page and changelog entry
+- [x] 06-01: Execute migration with snapshot and verification report
+- [x] 06-02: Create methodology page and changelog entry
 
 ### Phase 7: SEO Enhancement
-
-**Goal**: Search engines understand and surface predictions through structured data and optimized metadata
-
-**Depends on**: Phase 6
-
-**Requirements**: SEO-01, SEO-02, SEO-03, SEO-04, SEO-05, SEO-06, SEO-07
-
-**Success Criteria** (what must be TRUE):
-  1. Match pages render Schema.org SportsEvent structured data in Google Rich Results Test
-  2. Blog roundup pages render Schema.org Article structured data with correct metadata
-  3. Competition pages have complete metadata (title, description, OG tags) and structured data
-  4. Social shares display correct accuracy metric with specific label (not generic "Accurate")
-  5. All pages pass Google Rich Results Test without errors or warnings
-
+**Goal**: Structured data and optimized metadata for Google Rich Results
 **Plans**: 3 plans
 
 Plans:
-- [x] 07-01-PLAN.md - Enhance match page structured data and metadata
-- [x] 07-02-PLAN.md - Add structured data to blog and competition pages
-- [x] 07-03-PLAN.md - Sitemap updates and validation sweep
+- [x] 07-01: Enhance match page structured data and metadata
+- [x] 07-02: Add structured data to blog and competition pages
+- [x] 07-03: Sitemap updates and validation sweep
 
 ### Phase 8: UX Transparency
-
-**Goal**: Users understand what accuracy metrics mean and trust the numbers
-
-**Depends on**: Phase 7
-
-**Requirements**: UX-01, UX-02, UX-03
-
-**Success Criteria** (what must be TRUE):
-  1. User sees denominator alongside percentage (e.g., "81/160 (50.6%)") for all accuracy displays
-  2. User can hover/tap on metric to see tooltip explaining calculation methodology
-  3. Leaderboard displays trustworthy numbers that match user's manual spot-checks of predictions
-
+**Goal**: Users understand and trust accuracy metrics
 **Plans**: 2 plans
 
 Plans:
-- [x] 08-01-PLAN.md - Create tooltip infrastructure and AccuracyDisplay component
-- [x] 08-02-PLAN.md - Integrate AccuracyDisplay across leaderboard and model pages
+- [x] 08-01: Create tooltip infrastructure and AccuracyDisplay component
+- [x] 08-02: Integrate AccuracyDisplay across leaderboard and model pages
+
+</details>
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 5 -> 6 -> 7 -> 8
+All v1.0 and v1.1 phases complete. Next milestone planning required.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -157,4 +109,4 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8
 | 8. UX Transparency | v1.1 | 2/2 | Complete | 2026-02-02 |
 
 ---
-*Last updated: 2026-02-02 (v1.1 milestone complete)*
+*Last updated: 2026-02-02 (v1.1 milestone archived)*

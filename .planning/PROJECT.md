@@ -21,7 +21,31 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 
 ## Current State
 
-**Brownfield project with v1.0 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. v1.0 stabilization milestone completed 2026-02-01 with all 18 bug fixes shipped.
+**Brownfield project with v1.1 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. v1.1 Stats Accuracy & SEO milestone completed 2026-02-02 with all 19 requirements shipped.
+
+### Validated (v1.1)
+
+The following requirements were validated in v1.1:
+
+- ✓ **STAT-01**: All accuracy calculations use single standardized formula — v1.1
+- ✓ **STAT-02**: Fixed IS NOT NULL vs > 0 mismatch in accuracy queries — v1.1
+- ✓ **STAT-03**: Added NULLIF() protection to all division operations — v1.1
+- ✓ **STAT-04**: Consistent denominators across all queries — v1.1
+- ✓ **STAT-05**: Created canonical stats service layer — v1.1
+- ✓ **STAT-06**: Model detail page shows correct tendency accuracy — v1.1
+- ✓ **MIGR-01**: Recalculated historical accuracy for all models — v1.1
+- ✓ **MIGR-02**: Invalidated all stats-related caches atomically — v1.1
+- ✓ **MIGR-03**: Verified leaderboard rankings match corrected calculations — v1.1
+- ✓ **SEO-01**: Added Schema.org SportsEvent structured data — v1.1
+- ✓ **SEO-02**: Added Schema.org Article structured data — v1.1
+- ✓ **SEO-03**: Added BreadcrumbList structured data — v1.1
+- ✓ **SEO-04**: Fixed OG image to show correct metric — v1.1
+- ✓ **SEO-05**: Added metadata to competition pages — v1.1
+- ✓ **SEO-06**: Optimized meta descriptions to < 160 characters — v1.1
+- ✓ **SEO-07**: Ensured all pages have unique titles — v1.1
+- ✓ **UX-01**: Display accuracy with denominator visible — v1.1
+- ✓ **UX-02**: Added tooltips explaining metrics — v1.1
+- ✓ **UX-03**: Leaderboard shows correct, trustworthy numbers — v1.1
 
 ### Validated (v1.0)
 
@@ -63,9 +87,9 @@ The following capabilities are built and operational:
 
 ### Context
 
-Shipped v1.0 with 38,470 LOC TypeScript.
+Shipped v1.1 with 80,334 LOC TypeScript.
 Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI.
-All 18 v1 requirements validated and shipped.
+All 37 requirements validated across v1.0 and v1.1 milestones.
 
 ## Constraints
 
@@ -110,26 +134,17 @@ All 18 v1 requirements validated and shipped.
 - Real-time prediction updates during match (post-kickoff is settled)
 - Model fine-tuning or custom training
 
-## Current Milestone: v1.1 Stats Accuracy & SEO
+## Next Milestone Goals
 
-**Goal:** Complete overhaul of model statistics calculation for consistency and trust, with SEO/GEO optimization for discoverability.
-
-**Target features:**
-- Standardized accuracy metrics across all queries (fix 6 inconsistent definitions)
-- Trustworthy leaderboard with correct numbers
-- Model detail pages with accurate, well-presented stats
-- SEO optimization (structured data, meta tags, page structure)
-- GEO optimization for international football audience
-
-**Known issues to fix:**
-- `IS NOT NULL` vs `> 0` mismatch in tendency accuracy (causes 94% bug)
-- Missing NULLIF() protection in weekly/breakdown queries
-- OG image showing exact score % labeled as "accuracy"
-- Inconsistent denominators (all predictions vs scored only)
+Planning next milestone. Consider:
+- GEO/i18n optimization (Spanish translations for largest football market)
+- Advanced metrics (Brier score, calibration)
+- Visual performance comparison charts
+- Model personality profiles
 
 ## Open Questions
 
 None currently.
 
 ---
-*Last updated: 2026-02-02 after v1.1 milestone start*
+*Last updated: 2026-02-02 after v1.1 milestone*
