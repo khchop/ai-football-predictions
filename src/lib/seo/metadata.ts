@@ -37,16 +37,16 @@ export function createDescription(match: MatchSeoData): string {
     if (match.predictedHomeScore !== undefined && match.predictedAwayScore !== undefined) {
       const baseMsg = `AI predicts ${match.predictedHomeScore}-${match.predictedAwayScore} for ${match.homeTeam} vs ${match.awayTeam}.`;
       const modelsMsg = ` 35 models compete - see who's most accurate.`;
-      // Keep under 155 chars
-      return (baseMsg + modelsMsg).length > 155
-        ? baseMsg + modelsMsg.substring(0, 155 - baseMsg.length - 3) + '...'
-        : baseMsg + modelsMsg;
+      const full = baseMsg + modelsMsg;
+      return truncateWithEllipsis(full, MAX_META_DESCRIPTION_LENGTH);
     }
-    return `Get AI predictions for ${match.homeTeam} vs ${match.awayTeam}. See which models forecast the winner before kickoff on ${formatDate(match.startDate)}.`;
+    const full = `Get AI predictions for ${match.homeTeam} vs ${match.awayTeam}. See which models forecast the winner before kickoff on ${formatDate(match.startDate)}.`;
+    return truncateWithEllipsis(full, MAX_META_DESCRIPTION_LENGTH);
   }
 
   if (isMatchLive(match.status)) {
-    return `Follow ${match.homeTeam} vs ${match.awayTeam} live. Track AI predictions in real-time and see how models perform as the action unfolds.`;
+    const full = `Follow ${match.homeTeam} vs ${match.awayTeam} live. Track AI predictions in real-time and see how models perform as the action unfolds.`;
+    return truncateWithEllipsis(full, MAX_META_DESCRIPTION_LENGTH);
   }
 
   // Finished match
@@ -54,15 +54,15 @@ export function createDescription(match: MatchSeoData): string {
     ? `${match.homeTeam} ${match.homeScore}-${match.awayScore} ${match.awayTeam} match analysis.`
     : `${match.homeTeam} vs ${match.awayTeam} match analysis.`;
   const modelsMsg = ` AI predictions from 35 models with accuracy tracking.`;
+  const full = scoreInfo + modelsMsg;
 
-  return (scoreInfo + modelsMsg).length > 155
-    ? scoreInfo + modelsMsg.substring(0, 155 - scoreInfo.length - 3) + '...'
-    : scoreInfo + modelsMsg;
+  return truncateWithEllipsis(full, MAX_META_DESCRIPTION_LENGTH);
 }
 
 export function buildMatchMetadata(match: MatchSeoData): Metadata {
-  const title = createTitle(match);
-  const description = createDescription(match);
+  const title = truncateWithEllipsis(createTitle(match), MAX_TITLE_LENGTH);
+  const description = createDescription(match); // Already truncated in createDescription
+
   const url = `/matches/${match.id}`;
   const ogImageUrl = `${BASE_URL}${url}/opengraph-image`;
 
@@ -72,8 +72,7 @@ export function buildMatchMetadata(match: MatchSeoData): Metadata {
     const predictedScore = `AI predicts ${match.predictedHomeScore}-${match.predictedAwayScore} for ${match.homeTeam} vs ${match.awayTeam}`;
     const accuracyInfo = match.modelAccuracy ? ` - Prediction Accuracy: ${match.modelAccuracy}%` : '';
     const fullOg = predictedScore + accuracyInfo;
-    // Keep under 200 chars
-    ogDescription = fullOg.length > 200 ? fullOg.substring(0, 197) + '...' : fullOg;
+    ogDescription = truncateWithEllipsis(fullOg, MAX_OG_DESCRIPTION_LENGTH);
   }
 
   // Determine if match should be noindex (finished matches >30 days old)
@@ -154,12 +153,16 @@ export function generateArticleMetadata(
   updatedAt?: string,
   image?: string
 ): Metadata {
+  const truncatedTitle = truncateWithEllipsis(headline, MAX_TITLE_LENGTH);
+  const truncatedDescription = truncateWithEllipsis(description, MAX_META_DESCRIPTION_LENGTH);
+  const truncatedOgDescription = truncateWithEllipsis(description, MAX_OG_DESCRIPTION_LENGTH);
+
   return {
-    title: headline,
-    description,
+    title: truncatedTitle,
+    description: truncatedDescription,
     openGraph: {
-      title: headline,
-      description,
+      title: truncatedTitle,
+      description: truncatedOgDescription,
       type: 'article',
       url: `${BASE_URL}/${slug}`,
       siteName: SITE_NAME,
@@ -172,8 +175,8 @@ export function generateArticleMetadata(
     },
     twitter: {
       card: 'summary_large_image',
-      title: headline,
-      description,
+      title: truncatedTitle,
+      description: truncatedOgDescription,
       images: image ? [image] : [],
     },
     alternates: {
@@ -193,20 +196,23 @@ export function generateLeaderboardMetadata(
     ? `Compare ${competition} predictions across all AI models. See which model performs best with real-time accuracy tracking.`
     : `Compare AI model accuracy across 17 football competitions. See which models predict best in Champions League, Premier League, and more.`;
 
+  const truncatedTitle = truncateWithEllipsis(title, MAX_TITLE_LENGTH);
+  const truncatedDescription = truncateWithEllipsis(description, MAX_META_DESCRIPTION_LENGTH);
+
   return {
-    title,
-    description,
+    title: truncatedTitle,
+    description: truncatedDescription,
     openGraph: {
-      title,
-      description,
+      title: truncatedTitle,
+      description: truncatedDescription,
       type: 'website',
       url: competition ? `/leaderboard/${competition.toLowerCase().replace(/\s+/g, '-')}` : '/leaderboard',
       siteName: SITE_NAME,
     },
     twitter: {
       card: 'summary',
-      title,
-      description,
+      title: truncatedTitle,
+      description: truncatedDescription,
     },
     alternates: {
       canonical: competition
@@ -217,12 +223,19 @@ export function generateLeaderboardMetadata(
 }
 
 export function generateHomeMetadata(): Metadata {
+  const title = `${SITE_NAME} | AI-Powered Football Match Predictions`;
+  const description = `Get accurate football predictions from multiple AI models. Track model performance, analyze predictions, and see which models beat the odds.`;
+
+  const truncatedTitle = truncateWithEllipsis(title, MAX_TITLE_LENGTH);
+  const truncatedDescription = truncateWithEllipsis(description, MAX_META_DESCRIPTION_LENGTH);
+  const truncatedOgDescription = truncateWithEllipsis(description, MAX_OG_DESCRIPTION_LENGTH);
+
   return {
-    title: `${SITE_NAME} | AI-Powered Football Match Predictions`,
-    description: `Get accurate football predictions from multiple AI models. Track model performance, analyze predictions, and see which models beat the odds.`,
+    title: truncatedTitle,
+    description: truncatedDescription,
     openGraph: {
-      title: `${SITE_NAME} | AI-Powered Football Match Predictions`,
-      description: `Get accurate football predictions from multiple AI models. Track model performance, analyze predictions, and see which models beat the odds.`,
+      title: truncatedTitle,
+      description: truncatedOgDescription,
       type: 'website',
       url: BASE_URL,
       siteName: SITE_NAME,
@@ -237,8 +250,8 @@ export function generateHomeMetadata(): Metadata {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${SITE_NAME} | AI-Powered Football Match Predictions`,
-      description: `Get accurate football predictions from multiple AI models.`,
+      title: truncatedTitle,
+      description: truncatedOgDescription,
       images: [`${BASE_URL}/og-home.png`],
     },
     alternates: {

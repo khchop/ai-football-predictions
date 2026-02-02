@@ -37,3 +37,8 @@ export const ROBOTS_DEFAULTS = {
     follow: true,
   },
 } as const;
+
+// SEO length constraints for optimal display in search results
+export const MAX_TITLE_LENGTH = 60;
+export const MAX_META_DESCRIPTION_LENGTH = 155;
+export const MAX_OG_DESCRIPTION_LENGTH = 200;
