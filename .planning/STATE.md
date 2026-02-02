@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 5 of 8 (Stats Foundation)
-Plan: None yet (ready to plan phase)
-Status: Ready to plan
-Last activity: 2026-02-02 — v1.1 roadmap created with 4 phases covering 19 requirements
+Plan: 1 of 3 complete
+Status: In progress
+Last activity: 2026-02-02 - Completed 05-01-PLAN.md (Stats Service Layer)
 
-Progress: [████████████░░░░░░░░] 58% (v1.0 complete: 17/29 total planned plans)
+Progress: [████████████░░░░░░░░] 60% (18/30 total planned plans)
 
 ## Performance Metrics
 
@@ -32,11 +32,11 @@ Progress: [████████████░░░░░░░░] 58% (v1
 | 3 - Scoring & Caching | 6 | 16.8 min | 2.8 min |
 | 4 - Frontend Performance | 4 | 10.4 min | 2.6 min |
 
-**Recent Trend:**
-- Last 5 plans: 2.9, 2.7, 2.5, 2.6, 2.4 min
-- Trend: Improving (faster execution over time)
+**v1.1 Phase 5:**
 
-*v1.1 metrics will be tracked starting with Phase 5*
+| Plan | Duration | Description |
+|------|----------|-------------|
+| 05-01 | ~2 min | Stats Service Layer |
 
 ## Accumulated Context
 
@@ -45,8 +45,10 @@ Progress: [████████████░░░░░░░░] 58% (v1
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- v1.0: Bug fixes only scope — existing platform has fundamental value, stability is priority
-- v1.1: Stats accuracy before SEO — incorrect stats in structured data damage SEO more than missing structured data
+- v1.0: Bug fixes only scope - existing platform has fundamental value, stability is priority
+- v1.1: Stats accuracy before SEO - incorrect stats in structured data damage SEO more than missing structured data
+- 05-01: Use `tendencyPoints > 0` formula (not IS NOT NULL) - prevents ~7% accuracy inflation
+- 05-01: NULLIF division protection - prevents errors on models with no scored predictions
 
 ### Pending Todos
 
@@ -65,5 +67,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Roadmap created for v1.1 with 4 phases (5-8) covering 19 requirements
-Resume with: `/gsd:plan-phase 5` to begin Stats Foundation phase
+Stopped at: Completed 05-01-PLAN.md (Stats Service Layer)
+Resume with: `/gsd:execute-plan 05-02` to migrate API endpoints to stats service
