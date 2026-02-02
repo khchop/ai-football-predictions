@@ -1,23 +1,18 @@
 import { BASE_URL } from '@/lib/seo/constants';
-import { getDb, competitions } from '@/lib/db';
-import { eq } from 'drizzle-orm';
+import { COMPETITIONS } from '@/lib/football/competitions';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
 
 export async function GET(): Promise<Response> {
-  const db = getDb();
   const today = new Date().toISOString().split('T')[0];
 
-  const activeCompetitions = await db
-    .select({ slug: competitions.slug })
-    .from(competitions)
-    .where(eq(competitions.active, true));
-
-  const urls = activeCompetitions
-    .filter(comp => comp.slug)
+  // Generate sitemap from static config to ensure all URLs are valid
+  // Only include club competitions (domestic + european)
+  const urls = COMPETITIONS
+    .filter(comp => comp.category === 'club-domestic' || comp.category === 'club-europe')
     .map(comp => ({
-      url: `${BASE_URL}/leagues/${comp.slug}`,
+      url: `${BASE_URL}/leagues/${comp.id}`,
       lastmod: today,
       changefreq: 'hourly',
       priority: 0.9,
