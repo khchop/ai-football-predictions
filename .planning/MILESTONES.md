@@ -1,5 +1,37 @@
 # Project Milestones: AI Football Predictions Platform
 
+## v1.2 Technical SEO Fixes (Shipped: 2026-02-02)
+
+**Delivered:** Fixed ~1,083 SEO issues from Ahrefs audit including 500 errors, 404s in sitemap, redirect chains, missing H1 tags, long titles, and orphan pages with new internal linking widgets.
+
+**Phases completed:** 9-12 (9 plans total)
+
+**Key accomplishments:**
+
+- Competition alias system with 308 redirects enabling both short IDs and long-form slugs
+- Edge-level redirects in next.config.ts for faster redirect resolution
+- Defensive error handling on match pages (404 instead of 500)
+- MatchH1 component with sr-only class for SEO without visual changes
+- Abbreviation utilities for team/competition names keeping titles under 60 chars
+- permanentRedirect() for all SEO-critical redirects (308 status)
+- RelatedMatchesWidget showing related matches from same competition/teams
+- RelatedModelsWidget showing top performers on model pages
+- RecentPredictionsWidget on competition hub pages
+
+**Stats:**
+
+- 40,129 lines of TypeScript
+- 4 phases, 9 plans
+- 22 commits, 34 files changed
+- +4,147 / -42 lines
+- 1 day from start to ship
+
+**Git range:** `feat(09-01)` → `docs(12)`
+
+**What's next:** New milestone planning with `/gsd:new-milestone`
+
+---
+
 ## v1.1 Stats Accuracy & SEO (Shipped: 2026-02-02)
 
 **Delivered:** Fixed critical 48% accuracy inflation bug, added SEO structured data for Google Rich Results, and improved UX transparency with visible denominators and methodology tooltips.
@@ -60,4 +92,4 @@
 
 ---
 
-*Last updated: 2026-02-01*
+*Last updated: 2026-02-02*

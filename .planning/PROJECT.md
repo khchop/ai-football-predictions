@@ -21,7 +21,25 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 
 ## Current State
 
-**Brownfield project with v1.1 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. v1.1 Stats Accuracy & SEO milestone completed 2026-02-02 with all 19 requirements shipped.
+**Brownfield project with v1.2 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. v1.2 Technical SEO Fixes milestone completed 2026-02-02 with all 13 requirements shipped.
+
+### Validated (v1.2)
+
+The following requirements were validated in v1.2:
+
+- ✓ **SEO-T01**: Fix 500 error on Genoa vs Bologna match page — v1.2
+- ✓ **SEO-T02**: Fix broken redirect chain that leads to 500 error — v1.2
+- ✓ **SEO-T03**: Create league index pages for long-form slugs — v1.2
+- ✓ **SEO-T04**: Update internal links to use correct league slugs — v1.2
+- ✓ **SEO-T05**: Add H1 tag to match detail pages — v1.2
+- ✓ **SEO-T06**: Shorten match page title template to <60 characters — v1.2
+- ✓ **SEO-T07**: Shorten league page title template for long names — v1.2
+- ✓ **SEO-T08**: Convert 307 temporary redirects to 308 permanent — v1.2
+- ✓ **SEO-T09**: Remove noindex from league hub pages — v1.2
+- ✓ **SEO-T10**: Add internal linking to orphan pages — v1.2
+- ✓ **SEO-T11**: Add cross-links between related matches — v1.2
+- ✓ **SEO-T12**: Add "Related models" section to model pages — v1.2
+- ✓ **SEO-T13**: Add recent predictions widget to competition pages — v1.2
 
 ### Validated (v1.1)
 
@@ -87,9 +105,9 @@ The following capabilities are built and operational:
 
 ### Context
 
-Shipped v1.1 with 80,334 LOC TypeScript.
+Shipped v1.2 with 40,129 LOC TypeScript.
 Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI.
-All 37 requirements validated across v1.0 and v1.1 milestones.
+All 50 requirements validated across v1.0, v1.1, and v1.2 milestones.
 
 ## Constraints
 
@@ -136,15 +154,16 @@ All 37 requirements validated across v1.0 and v1.1 milestones.
 
 ## Next Milestone Goals
 
-Planning next milestone. Consider:
-- GEO/i18n optimization (Spanish translations for largest football market)
-- Advanced metrics (Brier score, calibration)
-- Visual performance comparison charts
-- Model personality profiles
+To be defined with `/gsd:new-milestone`.
+
+Potential areas:
+- v1.3+ Advanced Metrics (calibration, Brier score)
+- v1.3+ GEO/Internationalization (Spanish translations, hreflang)
+- v1.3+ Advanced UX (visual charts, model profiles)
 
 ## Open Questions
 
 None currently.
 
 ---
-*Last updated: 2026-02-02 after v1.1 milestone*
+*Last updated: 2026-02-02 after v1.2 milestone*
