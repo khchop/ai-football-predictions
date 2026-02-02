@@ -15,9 +15,8 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 import { PredictionTable } from '@/components/prediction-table';
-import { SportsEventSchema } from '@/components/SportsEventSchema';
+import { MatchPageSchema } from '@/components/MatchPageSchema';
 import { MatchStats } from '@/components/match/MatchStats';
-import { WebPageSchema } from '@/components/WebPageSchema';
 import { RoundupViewer } from '@/components/match/roundup-viewer';
 import { buildMatchMetadata } from '@/lib/seo/metadata';
 import { mapMatchToSeoData } from '@/lib/seo/types';
@@ -166,17 +165,10 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      <SportsEventSchema match={matchData} />
-      <WebPageSchema
-        name={`${matchData.homeTeam} vs ${matchData.awayTeam} Prediction`}
-        description={`AI predictions for ${matchData.homeTeam} vs ${matchData.awayTeam} (${competition.name}). Compare forecasts from 35+ AI models.`}
+      <MatchPageSchema
+        match={matchData}
+        competition={{ name: competition.name, slug: competitionSlug }}
         url={`https://kroam.xyz/leagues/${competitionSlug}/${matchData.slug}`}
-        breadcrumb={[
-          { name: 'Home', url: 'https://kroam.xyz' },
-          { name: 'Leagues', url: 'https://kroam.xyz/leagues' },
-          { name: competition.name, url: `https://kroam.xyz/leagues/${competitionSlug}` },
-          { name: `${matchData.homeTeam} vs ${matchData.awayTeam}`, url: `https://kroam.xyz/leagues/${competitionSlug}/${matchData.slug}` },
-        ]}
       />
       <MatchH1
         homeTeam={matchData.homeTeam}
