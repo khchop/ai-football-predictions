@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { BASE_URL, SITE_NAME, MAX_TITLE_LENGTH, MAX_META_DESCRIPTION_LENGTH, MAX_OG_DESCRIPTION_LENGTH } from './constants';
 import type { MatchSeoData, MatchStatus } from './types';
 import { isMatchFinished, isMatchLive, isMatchUpcoming } from './types';
+import { abbreviateTeam, abbreviateCompetition } from './abbreviations';
 
 /**
  * Truncate text to maximum length at last word boundary
@@ -25,10 +26,15 @@ export function truncateWithEllipsis(text: string, maxLength: number): string {
 }
 
 export function createTitle(match: MatchSeoData): string {
+  const home = abbreviateTeam(match.homeTeam);
+  const away = abbreviateTeam(match.awayTeam);
+
   if (isMatchFinished(match.status) && match.homeScore !== null && match.awayScore !== null) {
-    return `${match.homeTeam} ${match.homeScore}-${match.awayScore} ${match.awayTeam} | Match Analysis & Predictions`;
+    // Format: "Man Utd 2-1 Liverpool | kroam.xyz" (~30-40 chars)
+    return `${home} ${match.homeScore}-${match.awayScore} ${away} | kroam.xyz`;
   }
-  return `${match.homeTeam} vs ${match.awayTeam} | Match Analysis & Predictions`;
+  // Format: "Man Utd vs Liverpool Prediction" (~30-40 chars)
+  return `${home} vs ${away} Prediction`;
 }
 
 export function createDescription(match: MatchSeoData): string {
