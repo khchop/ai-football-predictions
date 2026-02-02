@@ -25,7 +25,7 @@ export async function GET(
   const matchData = await db
     .select({
       matchSlug: matches.slug,
-      competitionSlug: competitions.slug,
+      competitionId: competitions.id,
       updatedAt: matches.updatedAt,
       status: matches.status,
     })
@@ -37,9 +37,9 @@ export async function GET(
     .offset(offset);
 
   const urls = matchData
-    .filter(match => match.matchSlug && match.competitionSlug)
+    .filter(match => match.matchSlug && match.competitionId)
     .map(match => ({
-      url: `${BASE_URL}/leagues/${match.competitionSlug}/${match.matchSlug}`,
+      url: `${BASE_URL}/leagues/${match.competitionId}/${match.matchSlug}`,
       lastmod: match.updatedAt
         ? new Date(match.updatedAt).toISOString().split('T')[0]
         : new Date().toISOString().split('T')[0],
