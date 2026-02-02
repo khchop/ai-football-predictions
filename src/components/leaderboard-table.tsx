@@ -17,6 +17,7 @@ import { ArrowUp, ArrowDown, ArrowUpDown, Trophy, Medal, Award, Flame, Snowflake
 import { CompareModal } from '@/components/leaderboard/compare-modal';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AccuracyDisplay } from '@/components/accuracy-display';
 
 export interface LeaderboardEntry {
   modelId: string;
@@ -126,7 +127,7 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
     if (streak >= 3) {
       // Hot streak: 3+ correct in a row
       return (
-        <div className="flex items-center gap-1" title={`${streak} correct in a row`}>
+        <div className="flex items-center gap-1">
           <Flame className="h-4 w-4 text-orange-500" />
           <span className="text-xs font-bold text-orange-500">+{streak}</span>
         </div>
@@ -134,7 +135,7 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
     } else if (streak <= -3) {
       // Cold streak: 3+ wrong in a row
       return (
-        <div className="flex items-center gap-1" title={`${Math.abs(streak)} wrong in a row`}>
+        <div className="flex items-center gap-1">
           <Snowflake className="h-4 w-4 text-blue-400" />
           <span className="text-xs font-bold text-blue-400">{streak}</span>
         </div>
@@ -142,14 +143,14 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
     } else if (streak > 0) {
       // Small winning streak
       return (
-        <span className="text-xs font-medium text-green-500" title={`${streak} correct in a row`}>
+        <span className="text-xs font-medium text-green-500">
           +{streak}
         </span>
       );
     } else if (streak < 0) {
       // Small losing streak
       return (
-        <span className="text-xs font-medium text-red-400" title={`${Math.abs(streak)} wrong in a row`}>
+        <span className="text-xs font-medium text-red-400">
           {streak}
         </span>
       );
@@ -296,8 +297,11 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
       id: 'accuracy',
       accessorFn: (row) => getAccuracy(row),
       header: 'Accuracy',
-      cell: ({ getValue }) => {
-        const accuracy = getValue() as number;
+      cell: ({ row }) => {
+        const entry = row.original;
+        const correct = entry.correctTendencies ?? entry.correctResults ?? 0;
+        const total = entry.totalPredictions; // This IS scoredPredictions (verified: query filters status='scored')
+        const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
         return (
           <div className="flex items-center gap-2">
             <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden min-w-[50px]">
@@ -311,9 +315,12 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
                 style={{ width: `${accuracy}%` }}
               />
             </div>
-            <span className="text-xs text-muted-foreground font-mono w-10 text-right">
-              {accuracy}%
-            </span>
+            <AccuracyDisplay
+              correct={correct}
+              total={total}
+              size="sm"
+              className="min-w-[80px]"
+            />
           </div>
         );
       },
@@ -456,9 +463,11 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
               style={{ width: `${accuracy}%` }}
             />
           </div>
-          <span className="text-xs text-muted-foreground font-mono w-10 text-right">
-            {accuracy}%
-          </span>
+          <AccuracyDisplay
+            correct={correctCount}
+            total={entry.totalPredictions}
+            size="sm"
+          />
         </div>
       </div>
     );
