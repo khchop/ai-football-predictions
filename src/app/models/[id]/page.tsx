@@ -19,6 +19,8 @@ import type { Metadata } from 'next';
 import { ModelPerformanceChart } from '@/components/model-performance-chart';
 import { ModelCompetitionBreakdown } from '@/components/model-competition-breakdown';
 import { WebPageSchema } from '@/components/WebPageSchema';
+import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
+import { BASE_URL } from '@/lib/seo/constants';
 
 // Memoize queries to avoid duplication between generateMetadata and page component
 const getModelStatsData = cache((modelId: string) => getModelPredictionStats(modelId));
@@ -62,14 +64,14 @@ export async function generateMetadata({ params }: ModelPageProps): Promise<Meta
   ogImageUrl.searchParams.set('rank', rank.toString());
 
   return {
-    title: `${model.displayName} AI Prediction Accuracy & Stats | Kroam`,
-    description: `Track the football prediction performance of ${model.displayName}. View ROI, win rate, recent streak, and league-by-league accuracy analysis.`,
+    title: `${model.displayName} Predictions | AI Football Model | kroam.xyz`,
+    description: `${model.displayName} football predictions and accuracy stats. See performance across competitions with Prediction Accuracy: ${accuracy}%.`,
     alternates: {
       canonical: url,
     },
     openGraph: {
       title: `${model.displayName} AI Model`,
-      description: `${accuracy}% tendency accuracy in football predictions - Rank #${rank}`,
+      description: `${accuracy}% tendency accuracy in football predictions - Rank #${rank}. Prediction Accuracy: ${accuracy}%`,
       url: url,
       type: 'website',
       images: [
@@ -139,16 +141,33 @@ export default async function ModelPage({ params }: ModelPageProps) {
      ? Math.round((predictionStats.correctTendencies / scoredPredictions) * 100)
      : 0;
 
+    // Build BreadcrumbList schema
+    const breadcrumbs = buildBreadcrumbSchema([
+      { name: 'Home', url: BASE_URL },
+      { name: 'Models', url: `${BASE_URL}/leaderboard` },
+      { name: model.displayName, url: `${BASE_URL}/models/${id}` },
+    ]);
+
+    const schema = {
+      '@context': 'https://schema.org',
+      '@graph': [breadcrumbs],
+    };
+
     return (
       <div className="space-y-8">
-        <WebPageSchema 
+        {/* Structured data for search engines */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+        <WebPageSchema
           name={`${model.displayName} - AI Football Prediction Model`}
           description={`${model.displayName} AI model performance and statistics. Ranked #${modelRank || '—'} with ${scoredPredictions} predictions scored.`}
-          url={`https://kroam.xyz/models/${id}`}
+          url={`${BASE_URL}/models/${id}`}
           breadcrumb={[
-            { name: 'Home', url: 'https://kroam.xyz' },
-            { name: 'Leaderboard', url: 'https://kroam.xyz/leaderboard' },
-            { name: model.displayName, url: `https://kroam.xyz/models/${id}` },
+            { name: 'Home', url: BASE_URL },
+            { name: 'Leaderboard', url: `${BASE_URL}/leaderboard` },
+            { name: model.displayName, url: `${BASE_URL}/models/${id}` },
           ]}
         />
        {/* Model Header */}

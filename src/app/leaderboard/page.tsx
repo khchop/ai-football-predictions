@@ -11,6 +11,8 @@ import type { Metadata } from 'next';
 import type { FAQItem } from '@/lib/seo/schemas';
 import { LiveTabRefresher } from '@/app/matches/live-refresher';
 import { getLeaderboard } from '@/lib/db/queries/stats';
+import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
+import { BASE_URL } from '@/lib/seo/constants';
 
 // FAQ data for model ranking questions
 const leaderboardFaqs: FAQItem[] = [
@@ -37,22 +39,22 @@ const leaderboardFaqs: FAQItem[] = [
 ];
 
 export const metadata: Metadata = {
-  title: 'AI Football Prediction Leaderboard | kroam Rankings',
-  description: 'Compare 29 open-source AI models\' football prediction accuracy. See rankings by competition, ROI, win rate, and prediction streaks using the Kicktipp scoring system.',
+  title: 'AI Model Leaderboard | Compare 35 Models | kroam.xyz',
+  description: 'Compare AI model accuracy across 17 football competitions. See which models predict best in Champions League, Premier League, and more.',
   alternates: {
     canonical: 'https://kroam.xyz/leaderboard',
   },
   openGraph: {
-    title: 'AI Football Prediction Leaderboard',
-    description: 'Compare 29 open-source AI models\' football prediction accuracy across 17 competitions',
+    title: 'AI Model Leaderboard | Compare 35 Models',
+    description: 'Compare AI model accuracy across 17 football competitions. See which models predict best in Champions League, Premier League, and more.',
     url: 'https://kroam.xyz/leaderboard',
     type: 'website',
     siteName: 'kroam.xyz',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI Football Prediction Leaderboard',
-    description: 'Compare 29 AI models\' football prediction accuracy',
+    title: 'AI Model Leaderboard | Compare 35 Models',
+    description: 'Compare AI model accuracy across 17 football competitions',
   },
 };
 
@@ -117,8 +119,24 @@ async function LeaderboardContent({ searchParams }: { searchParams: { [key: stri
 export default async function LeaderboardPage({ searchParams }: PageProps) {
   const resolvedParams = await searchParams;
 
+  // Build BreadcrumbList schema
+  const breadcrumbs = buildBreadcrumbSchema([
+    { name: 'Home', url: BASE_URL },
+    { name: 'Leaderboard', url: `${BASE_URL}/leaderboard` },
+  ]);
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@graph': [breadcrumbs],
+  };
+
   return (
     <LiveTabRefresher refreshInterval={30000}>
+      {/* Structured data for search engines */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
       <div className="space-y-8">
         {/* Header */}
         <div className="flex items-center gap-4">

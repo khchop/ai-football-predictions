@@ -1,7 +1,28 @@
 import type { Metadata } from 'next';
-import { BASE_URL, SITE_NAME } from './constants';
+import { BASE_URL, SITE_NAME, MAX_TITLE_LENGTH, MAX_META_DESCRIPTION_LENGTH, MAX_OG_DESCRIPTION_LENGTH } from './constants';
 import type { MatchSeoData, MatchStatus } from './types';
 import { isMatchFinished, isMatchLive, isMatchUpcoming } from './types';
+
+/**
+ * Truncate text to maximum length at last word boundary
+ * Adds ellipsis only if actually truncated
+ */
+export function truncateWithEllipsis(text: string, maxLength: number): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  // Find last space before maxLength (account for "..." = 3 chars)
+  const truncateAt = maxLength - 3;
+  const lastSpace = text.lastIndexOf(' ', truncateAt);
+
+  // If no space found or too close to start, just hard truncate
+  if (lastSpace === -1 || lastSpace < maxLength * 0.5) {
+    return text.substring(0, truncateAt) + '...';
+  }
+
+  return text.substring(0, lastSpace) + '...';
+}
 
 export function createTitle(match: MatchSeoData): string {
   if (isMatchFinished(match.status) && match.homeScore !== null && match.awayScore !== null) {
@@ -164,14 +185,14 @@ export function generateArticleMetadata(
 export function generateLeaderboardMetadata(
   competition?: string
 ): Metadata {
-  const title = competition 
-    ? `${competition} Leaderboard | BettingSoccer`
-    : `Model Leaderboard | BettingSoccer`;
-    
+  const title = competition
+    ? `${competition} Leaderboard | AI Model Rankings | kroam.xyz`
+    : `AI Model Leaderboard | Compare 35 Models | kroam.xyz`;
+
   const description = competition
     ? `Compare ${competition} predictions across all AI models. See which model performs best with real-time accuracy tracking.`
-    : `Compare AI model predictions across all competitions. Track accuracy, streaks, and performance metrics in real-time.`;
-  
+    : `Compare AI model accuracy across 17 football competitions. See which models predict best in Champions League, Premier League, and more.`;
+
   return {
     title,
     description,
@@ -188,7 +209,7 @@ export function generateLeaderboardMetadata(
       description,
     },
     alternates: {
-      canonical: competition 
+      canonical: competition
         ? `${BASE_URL}/leaderboard/${competition.toLowerCase().replace(/\s+/g, '-')}`
         : `${BASE_URL}/leaderboard`,
     },
