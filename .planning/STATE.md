@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 16 (AI Search Optimization) - IN PROGRESS
-Plan: 1 of 4 complete
+Plan: 2 of 4 complete
 Status: In progress
-Last activity: 2026-02-02 - Completed 16-01-PLAN.md (AI Crawler Configuration)
+Last activity: 2026-02-02 - Completed 16-02-PLAN.md (Schema.org Consolidation)
 
-Progress: [████████████░░░░░░░░░░░░] 55% (22/40 plans complete)
+Progress: [█████████████░░░░░░░░░░░] 57.5% (23/40 plans complete)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [████████████░░░░░░░░░░░
 - +4,147 / -42 lines
 
 **Velocity (v1.3):**
-- Total plans completed: 13 plans (Phase 13, Phase 14, Phase 15 complete, Phase 16 in progress)
+- Total plans completed: 14 plans (Phase 13, Phase 14, Phase 15 complete, Phase 16 in progress)
 - Phases: 13-16 (Content Pipeline, Mobile Layout, Performance, AI Search)
-- Status: Phase 13 complete, Phase 14 complete, Phase 15 complete, Phase 16 plan 1 complete
+- Status: Phase 13 complete, Phase 14 complete, Phase 15 complete, Phase 16 plans 1-2 complete
 
 ## Accumulated Context
 
@@ -84,6 +84,9 @@ Full decision history available in phase SUMMARY.md files.
 **Phase 16 Decisions:**
 - 16-01: Group AI crawlers by company in robots.ts (maintainability)
 - 16-01: Descriptive text in llms.txt markdown links (AI parser compatibility)
+- 16-02: @id URL fragment pattern for entity cross-references (url#webpage, url#organization)
+- 16-02: Single @graph consolidation eliminates multiple JSON-LD validation warnings
+- 16-02: kroam.xyz as canonical domain for Organization/WebSite entities
 
 ### Pending Todos
 
@@ -96,5 +99,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 16-01-PLAN.md (AI Crawler Configuration)
-Resume with: Continue to 16-02-PLAN.md (Schema.org Consolidation)
+Stopped at: Completed 16-02-PLAN.md (Schema.org Consolidation)
+Resume with: Continue to 16-03-PLAN.md (Match Page Integration)
