@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils';
 import { Trophy, Target, Flame, Snowflake, Zap, TrendingUp, Award, BarChart3 } from 'lucide-react';
 import type { Model } from '@/lib/db/schema';
+import { AccuracyDisplay } from '@/components/accuracy-display';
 
 interface ModelStats {
   totalPredictions: number;
@@ -137,7 +138,16 @@ export function ModelStatsGrid({ model, stats, tier }: ModelStatsGridProps) {
             className="rounded-xl bg-card/50 border border-border/50 p-4 text-center"
           >
             <stat.icon className={cn("h-5 w-5 mx-auto mb-2", stat.color)} />
-            <p className={cn("text-2xl font-bold", stat.color)}>{stat.value}</p>
+            {stat.label === 'Accuracy' ? (
+              <AccuracyDisplay
+                correct={stats.correctTendencies}
+                total={stats.totalPredictions}
+                size="md"
+                className="justify-center"
+              />
+            ) : (
+              <p className={cn("text-2xl font-bold", stat.color)}>{stat.value}</p>
+            )}
             <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
           </div>
         ))}

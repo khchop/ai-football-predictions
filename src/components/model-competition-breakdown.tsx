@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Star, ArrowUpDown, ArrowUp, ArrowDown, Trophy, Medal } from 'lucide-react';
+import { AccuracyDisplay } from '@/components/accuracy-display';
 
 export interface CompetitionStats {
   competitionId: string;
@@ -246,12 +247,11 @@ export function ModelCompetitionBreakdown({
                   </span>
                 </td>
                 <td className="py-3 px-3 text-center">
-                  <span className={cn(
-                    "text-sm",
-                    row.accuracy >= 50 ? "text-green-400" : row.accuracy >= 30 ? "text-yellow-400" : "text-muted-foreground"
-                  )}>
-                    {row.accuracy}%
-                  </span>
+                  <AccuracyDisplay
+                    correct={row.correctTendencies}
+                    total={row.totalPredictions}
+                    size="sm"
+                  />
                 </td>
                 <td className="py-3 px-3 text-center">
                   <span className={cn(
