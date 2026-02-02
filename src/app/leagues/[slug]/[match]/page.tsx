@@ -29,7 +29,7 @@ import { StatsTab } from '@/components/match/tab-content/stats-tab';
 import { PredictionsTab } from '@/components/match/tab-content/predictions-tab';
 import { AnalysisTab } from '@/components/match/tab-content/analysis-tab';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60; // ISR: 60s for scheduled/live matches
 
 interface MatchPageProps {
   params: Promise<{ 
