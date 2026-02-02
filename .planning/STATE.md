@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 17 - Design System Foundation
 Plan: —
-Status: Defining requirements
-Last activity: 2026-02-02 — Milestone v2.0 started
+Status: Phase planning required
+Last activity: 2026-02-02 — v2.0 roadmap created
 
-Progress: [░░░░░░░░░░░░░░░░░░░░░░░░] 0% (v2.0: 0/? plans, 0/? requirements)
+Progress: [░░░░░░░░░░░░░░░░░░░░░░░░] 0% (v2.0: 0/? plans, 0/33 requirements)
 
 ## Milestone History
 
@@ -26,6 +26,31 @@ Progress: [░░░░░░░░░░░░░░░░░░░░░░░
 | v1.3 Match Page Refresh | 13-16 | 13 | 18 | 2026-02-02 |
 
 **Total:** 16 phases, 46 plans, 68 requirements shipped
+
+## v2.0 Phase Structure
+
+| Phase | Goal | Requirements | Status |
+|-------|------|--------------|--------|
+| 17. Design System Foundation | Design tokens, dark mode, PPR infrastructure | DSGN-01 to DSGN-06 (6) | Pending |
+| 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | Pending |
+| 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Pending |
+| 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Pending |
+| 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Pending |
+| 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | Pending |
+| 23. Performance & Polish | PPR validation, client audit, transitions | PERF-01 to PERF-04 (4) | Pending |
+
+**Phase Dependencies:**
+```
+Phase 17 (Foundation)
+  |
+  +---> Phase 18 (Match) --+
+  |                        |
+  +---> Phase 19 (Blog) ---+--> Phase 22 (Navigation)
+  |                        |
+  +---> Phase 20 (League)--+
+  |                        |
+  +---> Phase 21 (Leader)--+--> Phase 23 (Performance)
+```
 
 ## Accumulated Context
 
@@ -42,6 +67,26 @@ Full decision history available in phase SUMMARY.md files.
 - position:sticky instead of position:fixed for headers
 - 44px minimum touch targets (WCAG 2.5.5 AAA)
 
+### Research Findings (v2.0)
+
+From research/SUMMARY.md:
+
+**Key patterns identified:**
+- Bottom navigation bar: 21% faster mobile navigation
+- FAQ schema: 3.2x more likely AI Overview appearances
+- Answer-first content: Optimized for AI citation
+- PPR + View Transitions: Native Next.js 16 features, no new packages
+
+**Critical pitfalls to avoid:**
+- Client component creep (audit 71+ component files)
+- LCP regression during redesign (priority attribute required)
+- Breaking existing URLs (preserve route structure)
+- ISR cache staleness (two-layer caching awareness)
+
+**Phases needing deeper research:**
+- Phase 18: Match page 387 lines complex JSX
+- Phase 22: Entity linking automation strategy
+
 ### Pending Todos
 
 None.
@@ -53,5 +98,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: v2.0 milestone initialized
-Resume with: Run `/gsd:discuss-phase 17` to start planning
+Stopped at: v2.0 roadmap created
+Resume with: Run `/gsd:plan-phase 17` to start planning Design System Foundation

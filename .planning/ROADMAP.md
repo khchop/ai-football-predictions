@@ -6,6 +6,7 @@
 - [x] **v1.1 Stats Accuracy & SEO** - Phases 5-8 (shipped 2026-02-02)
 - [x] **v1.2 Technical SEO Fixes** - Phases 9-12 (shipped 2026-02-02)
 - [x] **v1.3 Match Page Refresh** - Phases 13-16 (shipped 2026-02-02)
+- [ ] **v2.0 UI/UX Overhaul** - Phases 17-23 (current)
 
 ## Phases
 
@@ -232,10 +233,137 @@ AI search optimization is infrastructure work that depends on content being visi
 
 </details>
 
+<details open>
+<summary>v2.0 UI/UX Overhaul (Phases 17-23) - CURRENT</summary>
+
+### Phase 17: Design System Foundation
+**Goal**: Establish design tokens, component patterns, and infrastructure for all subsequent visual work
+**Requirements**: DSGN-01, DSGN-02, DSGN-03, DSGN-04, DSGN-05, DSGN-06
+**Dependencies**: None
+**Plans**: TBD
+
+**Success Criteria:**
+1. User sees consistent win/loss/draw colors across all match states (semantic tokens applied)
+2. User experiences readable typography at all breakpoints from mobile to desktop (responsive scale active)
+3. User toggles dark mode and all UI elements reflect the change immediately
+4. User navigates between pages with smooth visual transitions (View Transitions API enabled)
+5. Developer can compose new match state variants using documented token patterns
+
+**Why This Phase:**
+Foundation patterns prevent technical debt accumulation in later phases. Design tokens must exist before page rebuilds can use them. PPR configuration and View Transitions are infrastructure that all pages depend on.
+
+---
+
+### Phase 18: Match Page Rebuild
+**Goal**: Match pages display content clearly without duplication, optimized for speed and AI citations
+**Requirements**: MTCH-01, MTCH-02, MTCH-03, MTCH-04, MTCH-05, MTCH-06
+**Dependencies**: Phase 17 (design tokens and PPR infrastructure)
+**Plans**: TBD
+
+**Success Criteria:**
+1. User sees match score exactly once on the page (no duplication in header, stats, or other sections)
+2. User reads pre-match AI narrative on upcoming match pages (content visible, not hidden)
+3. User reads prediction explanations on pages with active predictions (content visible above fold)
+4. User reads post-match roundup on finished match pages (complete narrative visible)
+5. User experiences fast initial load with static shell while dynamic content streams in (PPR active)
+6. AI search engines cite match page content in responses (answer-first GEO structure)
+
+**Why This Phase:**
+Highest traffic pages. Research indicates 387 lines of complex JSX with data appearing 3+ times per page. Fixing duplication and enabling PPR provides immediate UX and performance improvement. Depends on Phase 17 tokens for consistent styling.
+
+---
+
+### Phase 19: Blog Page Rebuild
+**Goal**: Blog posts readable and optimized for GEO with proper typography and navigation
+**Requirements**: BLOG-01, BLOG-02, BLOG-03, BLOG-04, BLOG-05
+**Dependencies**: Phase 17 (typography scale)
+**Plans**: TBD
+
+**Success Criteria:**
+1. User reads blog content at comfortable line width (600-700px max, not full screen)
+2. User distinguishes heading hierarchy visually (H1, H2, H3 have clear size/weight differences)
+3. User jumps to specific sections via table of contents on long articles (500+ words)
+4. User finds FAQ section at bottom of relevant posts (FAQPage schema present)
+5. User discovers related articles via contextual widget at post end
+
+**Why This Phase:**
+Second major page type. Blog readability is table stakes - currently full-width which makes long-form content hard to read. FAQ sections with schema are competitive advantage for AI citations (3.2x improvement in AI Overview appearances per research).
+
+---
+
+### Phase 20: League Page Rebuild
+**Goal**: League pages SEO-optimized with rich structured data and stats dashboard
+**Requirements**: LEAG-01, LEAG-02, LEAG-03, LEAG-04, LEAG-05
+**Dependencies**: Phase 17 (design tokens for data visualization)
+**Plans**: TBD
+
+**Success Criteria:**
+1. User finds league pages via search engines with rich snippets (SEO metadata optimized)
+2. AI search engines understand league structure (SportsOrganization/SportsLeague schema present)
+3. User finds FAQ section answering common league questions (FAQPage schema present)
+4. User views competition stats at a glance (total matches, predictions, accuracy displayed)
+5. User explores historical performance trends via visualization (charts showing model accuracy over time)
+
+**Why This Phase:**
+League pages are entry points for organic traffic. SEO optimization and schema markup enable rich search results. Stats dashboard differentiates from competitors and provides unique value for returning users.
+
+---
+
+### Phase 21: Leaderboard Page Rebuild
+**Goal**: Leaderboard pages SEO-optimized with time filtering and trend indicators
+**Requirements**: LEAD-01, LEAD-02, LEAD-03
+**Dependencies**: Phase 17 (design tokens for trend indicators)
+**Plans**: TBD
+
+**Success Criteria:**
+1. User finds leaderboard pages via search with FAQ rich snippets (SEO and schema optimized)
+2. User filters leaderboard by time period (weekly, monthly, all-time views available)
+3. User identifies rising/falling models via visual trend indicators (up/down arrows or colors)
+
+**Why This Phase:**
+Leaderboard is core differentiator - shows which AI models perform best. Time-based filtering increases engagement (weekly fresh start). Trend indicators add value beyond raw rankings. Smaller scope (3 requirements) makes this a natural boundary.
+
+---
+
+### Phase 22: Navigation & Internal Linking
+**Goal**: Seamless navigation across all pages with systematic internal linking
+**Requirements**: NAVL-01, NAVL-02, NAVL-03, NAVL-04, NAVL-05
+**Dependencies**: Phases 18-21 (navigation must link to rebuilt pages)
+**Plans**: TBD
+
+**Success Criteria:**
+1. Mobile user navigates via thumb-friendly bottom navigation bar (4-5 primary destinations)
+2. User orients via breadcrumbs on all pages (shows current position in site hierarchy)
+3. User discovers related content via widgets (related matches, models, articles shown contextually)
+4. User follows inline links to teams, competitions, and models within content (auto-linked entities)
+5. User experiences instant navigation via prefetch on hover/touch (no loading delay)
+
+**Why This Phase:**
+Cross-cutting concern affecting all pages. Depends on page rebuilds completing first so navigation can link to final component structure. Bottom nav bar validated by research as 21% faster for mobile navigation.
+
+---
+
+### Phase 23: Performance & Polish
+**Goal**: Validate PPR benefits, optimize bundle size, ensure smooth transitions
+**Requirements**: PERF-01, PERF-02, PERF-03, PERF-04
+**Dependencies**: Phases 17-22 (all components must exist for performance audit)
+**Plans**: TBD
+
+**Success Criteria:**
+1. User experiences static shell rendering instantly with dynamic content streaming (PPR validated)
+2. Developer confirms cache configuration works without dynamic/revalidate conflicts
+3. Developer confirms unnecessary 'use client' directives removed (client component audit complete)
+4. User experiences smooth animated transitions between pages (View Transitions polished)
+
+**Why This Phase:**
+Final optimization phase requires all components to exist. Client boundary audit can only happen after all pages rebuilt. View Transitions polish depends on final navigation structure. Performance validation confirms PPR investment pays off.
+
+</details>
+
 ## Progress
 
 **Execution Order:**
-v1.0, v1.1, v1.2, and v1.3 complete.
+v1.0, v1.1, v1.2, and v1.3 complete. v2.0 in progress.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -251,10 +379,17 @@ v1.0, v1.1, v1.2, and v1.3 complete.
 | 10. Page Structure | v1.2 | 2/2 | Complete | 2026-02-02 |
 | 11. Redirect Optimization | v1.2 | 2/2 | Complete | 2026-02-02 |
 | 12. Internal Linking | v1.2 | 2/2 | Complete | 2026-02-02 |
-| **13. Content Pipeline Fixes** | **v1.3** | **3/3** | **Complete** | 2026-02-02 |
-| **14. Mobile Layout Consolidation** | **v1.3** | **4/4** | **Complete** | 2026-02-02 |
-| **15. Performance Optimization** | **v1.3** | **3/3** | **Complete** | 2026-02-02 |
-| **16. AI Search Optimization** | **v1.3** | **3/3** | **Complete** | 2026-02-02 |
+| 13. Content Pipeline Fixes | v1.3 | 3/3 | Complete | 2026-02-02 |
+| 14. Mobile Layout Consolidation | v1.3 | 4/4 | Complete | 2026-02-02 |
+| 15. Performance Optimization | v1.3 | 3/3 | Complete | 2026-02-02 |
+| 16. AI Search Optimization | v1.3 | 3/3 | Complete | 2026-02-02 |
+| **17. Design System Foundation** | **v2.0** | **0/?** | **Pending** | — |
+| **18. Match Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
+| **19. Blog Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
+| **20. League Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
+| **21. Leaderboard Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
+| **22. Navigation & Internal Linking** | **v2.0** | **0/?** | **Pending** | — |
+| **23. Performance & Polish** | **v2.0** | **0/?** | **Pending** | — |
 
 ---
-*Last updated: 2026-02-02 (v1.3 complete)*
+*Last updated: 2026-02-02 (v2.0 roadmap created)*

@@ -100,46 +100,46 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DSGN-01 | — | Pending |
-| DSGN-02 | — | Pending |
-| DSGN-03 | — | Pending |
-| DSGN-04 | — | Pending |
-| DSGN-05 | — | Pending |
-| DSGN-06 | — | Pending |
-| MTCH-01 | — | Pending |
-| MTCH-02 | — | Pending |
-| MTCH-03 | — | Pending |
-| MTCH-04 | — | Pending |
-| MTCH-05 | — | Pending |
-| MTCH-06 | — | Pending |
-| BLOG-01 | — | Pending |
-| BLOG-02 | — | Pending |
-| BLOG-03 | — | Pending |
-| BLOG-04 | — | Pending |
-| BLOG-05 | — | Pending |
-| LEAG-01 | — | Pending |
-| LEAG-02 | — | Pending |
-| LEAG-03 | — | Pending |
-| LEAG-04 | — | Pending |
-| LEAG-05 | — | Pending |
-| LEAD-01 | — | Pending |
-| LEAD-02 | — | Pending |
-| LEAD-03 | — | Pending |
-| NAVL-01 | — | Pending |
-| NAVL-02 | — | Pending |
-| NAVL-03 | — | Pending |
-| NAVL-04 | — | Pending |
-| NAVL-05 | — | Pending |
-| PERF-01 | — | Pending |
-| PERF-02 | — | Pending |
-| PERF-03 | — | Pending |
-| PERF-04 | — | Pending |
+| DSGN-01 | Phase 17 | Pending |
+| DSGN-02 | Phase 17 | Pending |
+| DSGN-03 | Phase 17 | Pending |
+| DSGN-04 | Phase 17 | Pending |
+| DSGN-05 | Phase 17 | Pending |
+| DSGN-06 | Phase 17 | Pending |
+| MTCH-01 | Phase 18 | Pending |
+| MTCH-02 | Phase 18 | Pending |
+| MTCH-03 | Phase 18 | Pending |
+| MTCH-04 | Phase 18 | Pending |
+| MTCH-05 | Phase 18 | Pending |
+| MTCH-06 | Phase 18 | Pending |
+| BLOG-01 | Phase 19 | Pending |
+| BLOG-02 | Phase 19 | Pending |
+| BLOG-03 | Phase 19 | Pending |
+| BLOG-04 | Phase 19 | Pending |
+| BLOG-05 | Phase 19 | Pending |
+| LEAG-01 | Phase 20 | Pending |
+| LEAG-02 | Phase 20 | Pending |
+| LEAG-03 | Phase 20 | Pending |
+| LEAG-04 | Phase 20 | Pending |
+| LEAG-05 | Phase 20 | Pending |
+| LEAD-01 | Phase 21 | Pending |
+| LEAD-02 | Phase 21 | Pending |
+| LEAD-03 | Phase 21 | Pending |
+| NAVL-01 | Phase 22 | Pending |
+| NAVL-02 | Phase 22 | Pending |
+| NAVL-03 | Phase 22 | Pending |
+| NAVL-04 | Phase 22 | Pending |
+| NAVL-05 | Phase 22 | Pending |
+| PERF-01 | Phase 23 | Pending |
+| PERF-02 | Phase 23 | Pending |
+| PERF-03 | Phase 23 | Pending |
+| PERF-04 | Phase 23 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 33 total
-- Mapped to phases: 0
-- Unmapped: 33 (pending roadmap)
+- Mapped to phases: 33
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-02 after initial definition*
+*Last updated: 2026-02-02 after roadmap creation*
