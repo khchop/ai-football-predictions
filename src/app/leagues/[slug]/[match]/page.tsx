@@ -103,7 +103,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
   // Use competition ID for database query (either canonical or original slug)
   const competitionSlug = competitionConfig?.id || slug;
 
-  // Defensive error handling to prevent 500 errors from database issues
+  // Stage 1: Critical path - match data (needed for conditionals and existence check)
   let result;
   try {
     result = await getMatchBySlug(competitionSlug, match);
@@ -117,60 +117,52 @@ export default async function MatchPage({ params }: MatchPageProps) {
   }
 
   const { match: matchData, competition } = result;
-
-  // Additional defensive error handling for related queries
-  let analysisData;
-  let predictions: Awaited<ReturnType<typeof getPredictionsForMatchWithDetails>> = [];
-  try {
-    analysisData = await getMatchWithAnalysis(matchData.id);
-    predictions = await getPredictionsForMatchWithDetails(matchData.id);
-  } catch (error) {
-    console.error('Match page data loading error:', error);
-    // Continue with null data rather than failing completely
-    analysisData = null;
-    predictions = [];
-  }
-
-  const analysis = analysisData?.analysis;
-  const kickoff = parseISO(matchData.kickoffTime);
   const isFinished = matchData.status === 'finished';
   const isLive = matchData.status === 'live';
 
-  // Defensive error handling for external API and supplementary data
-  let matchEvents: Awaited<ReturnType<typeof getMatchEvents>> = [];
-  let teamStandings: Awaited<ReturnType<typeof getStandingsForTeams>> = [];
-  let nextMatches: Awaited<ReturnType<typeof getNextMatchesForTeams>> = [];
-  let roundup: Awaited<ReturnType<typeof getMatchRoundup>> | null = null;
+  // Stage 2: Parallel fetch all remaining data (eliminates waterfall)
+  const [
+    analysisData,
+    predictions,
+    matchEvents,
+    teamStandings,
+    nextMatches,
+    roundup
+  ] = await Promise.all([
+    getMatchWithAnalysis(matchData.id).catch(err => {
+      console.error('Failed to fetch analysis:', err);
+      return null;
+    }),
+    getPredictionsForMatchWithDetails(matchData.id).catch(err => {
+      console.error('Failed to fetch predictions:', err);
+      return [] as Awaited<ReturnType<typeof getPredictionsForMatchWithDetails>>;
+    }),
+    (isFinished || isLive) && matchData.externalId
+      ? getMatchEvents(parseInt(matchData.externalId, 10)).catch(err => {
+          console.error('Failed to fetch match events:', err);
+          return [] as Awaited<ReturnType<typeof getMatchEvents>>;
+        })
+      : Promise.resolve([] as Awaited<ReturnType<typeof getMatchEvents>>),
+    getStandingsForTeams(competition.apiFootballId, [matchData.homeTeam, matchData.awayTeam], competition.season).catch(err => {
+      console.error('Failed to fetch team standings:', err);
+      return [] as Awaited<ReturnType<typeof getStandingsForTeams>>;
+    }),
+    getNextMatchesForTeams([matchData.homeTeam, matchData.awayTeam], 4).catch(err => {
+      console.error('Failed to fetch next matches:', err);
+      return [] as Awaited<ReturnType<typeof getNextMatchesForTeams>>;
+    }),
+    isFinished
+      ? getMatchRoundup(matchData.id).catch(err => {
+          console.error('Failed to fetch match roundup:', err);
+          return null;
+        })
+      : Promise.resolve(null)
+  ]);
 
-  try {
-    matchEvents = (isFinished || isLive) && matchData.externalId
-      ? await getMatchEvents(parseInt(matchData.externalId, 10))
-      : [];
-  } catch (error) {
-    console.error('Failed to fetch match events:', error);
-  }
-
-  try {
-    teamStandings = await getStandingsForTeams(competition.apiFootballId, [matchData.homeTeam, matchData.awayTeam], competition.season);
-  } catch (error) {
-    console.error('Failed to fetch team standings:', error);
-  }
-
+  const analysis = analysisData?.analysis;
+  const kickoff = parseISO(matchData.kickoffTime);
   const homeStanding = teamStandings.find(s => s.teamName === matchData.homeTeam) || null;
   const awayStanding = teamStandings.find(s => s.teamName === matchData.awayTeam) || null;
-
-  try {
-    nextMatches = await getNextMatchesForTeams([matchData.homeTeam, matchData.awayTeam], 4);
-  } catch (error) {
-    console.error('Failed to fetch next matches:', error);
-  }
-
-  // Fetch roundup data (only for finished matches)
-  try {
-    roundup = isFinished ? await getMatchRoundup(matchData.id) : null;
-  } catch (error) {
-    console.error('Failed to fetch match roundup:', error);
-  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
