@@ -116,12 +116,13 @@ Plans:
 - [x] 10-02-PLAN.md — Create abbreviation utilities and optimize title templates
 
 ### Phase 11: Redirect Optimization
-**Goal**: Clean redirect configuration and noindex handling
+**Goal**: Fix 307 temporary redirects to 308 permanent, verify noindex configuration, document orphan page strategy
 **Requirements**: SEO-T08, SEO-T09, SEO-T10
+**Plans**: 2 plans
 
 Plans:
-- [ ] 11-01: Convert 307 redirects to 301 permanent
-- [ ] 11-02: Fix noindex pages and orphan page strategy
+- [ ] 11-01-PLAN.md — Replace redirect with permanentRedirect in legacy match page
+- [ ] 11-02-PLAN.md — Verify noindex configuration and document orphan page strategy
 
 ### Phase 12: Internal Linking
 **Goal**: Strong internal link structure for crawl depth optimization
@@ -150,8 +151,8 @@ v1.0 and v1.1 complete. v1.2 in progress.
 | 8. UX Transparency | v1.1 | 2/2 | Complete | 2026-02-02 |
 | 9. Critical SEO Errors | v1.2 | 3/3 | Complete | 2026-02-02 |
 | 10. Page Structure | v1.2 | 2/2 | Complete | 2026-02-02 |
-| 11. Redirect Optimization | v1.2 | 0/? | Pending | — |
+| 11. Redirect Optimization | v1.2 | 0/2 | Pending | — |
 | 12. Internal Linking | v1.2 | 0/? | Pending | — |
 
 ---
-*Last updated: 2026-02-02 (Phase 10 complete)*
+*Last updated: 2026-02-02 (Phase 11 planned)*
