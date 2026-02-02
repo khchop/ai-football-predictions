@@ -111,7 +111,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const { match: matchData, competition } = result;
 
   // Additional defensive error handling for related queries
-  let analysisData, predictions;
+  let analysisData;
+  let predictions: Awaited<ReturnType<typeof getPredictionsForMatchWithDetails>> = [];
   try {
     analysisData = await getMatchWithAnalysis(matchData.id);
     predictions = await getPredictionsForMatchWithDetails(matchData.id);
@@ -128,10 +129,10 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const isLive = matchData.status === 'live';
 
   // Defensive error handling for external API and supplementary data
-  let matchEvents = [];
-  let teamStandings = [];
-  let nextMatches = [];
-  let roundup = null;
+  let matchEvents: Awaited<ReturnType<typeof getMatchEvents>> = [];
+  let teamStandings: Awaited<ReturnType<typeof getStandingsForTeams>> = [];
+  let nextMatches: Awaited<ReturnType<typeof getNextMatchesForTeams>> = [];
+  let roundup: Awaited<ReturnType<typeof getMatchRoundup>> | null = null;
 
   try {
     matchEvents = (isFinished || isLive) && matchData.externalId
