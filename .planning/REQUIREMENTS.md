@@ -9,20 +9,20 @@ Requirements for match page refresh. Each maps to roadmap phases.
 
 ### Mobile Layout & De-duplication
 
-- [ ] **MOBL-01**: Match score displays exactly once in sticky header (remove from roundup viewer, stats)
-- [ ] **MOBL-02**: AI predictions consolidated into single expandable section (merge table, roundup predictions, top performers)
-- [ ] **MOBL-03**: Advanced match stats collapsed behind "View More" progressive disclosure
-- [ ] **MOBL-04**: Tabbed navigation implemented (Summary/Stats/Predictions/Analysis)
-- [ ] **MOBL-05**: Swipe gestures work between tabs on mobile devices
-- [ ] **MOBL-06**: Touch targets meet 44x44px minimum for mobile accessibility
+- [x] **MOBL-01**: Match score displays exactly once in sticky header (remove from roundup viewer, stats)
+- [x] **MOBL-02**: AI predictions consolidated into single expandable section (merge table, roundup predictions, top performers)
+- [x] **MOBL-03**: Advanced match stats collapsed behind "View More" progressive disclosure
+- [x] **MOBL-04**: Tabbed navigation implemented (Summary/Stats/Predictions/Analysis)
+- [x] **MOBL-05**: Swipe gestures work between tabs on mobile devices
+- [x] **MOBL-06**: Touch targets meet 44x44px minimum for mobile accessibility
 
 ### Content Generation Pipeline
 
-- [ ] **CONT-01**: Pre-match LLM content renders on upcoming match pages
-- [ ] **CONT-02**: Prediction content renders on match pages with predictions
-- [ ] **CONT-03**: Post-match LLM content renders on finished match pages
-- [ ] **CONT-04**: Unified content query fetches from both matchContent and matchRoundups tables
-- [ ] **CONT-05**: Long narrative content chunked with "Read More" expansion (150-200 word preview)
+- [x] **CONT-01**: Pre-match LLM content renders on upcoming match pages
+- [x] **CONT-02**: Prediction content renders on match pages with predictions
+- [x] **CONT-03**: Post-match LLM content renders on finished match pages
+- [x] **CONT-04**: Unified content query fetches from both matchContent and matchRoundups tables
+- [x] **CONT-05**: Long narrative content chunked with "Read More" expansion (150-200 word preview)
 
 ### Performance & Caching
 
@@ -72,17 +72,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CONT-01 | Phase 13 | Pending |
-| CONT-02 | Phase 13 | Pending |
-| CONT-03 | Phase 13 | Pending |
-| CONT-04 | Phase 13 | Pending |
-| CONT-05 | Phase 13 | Pending |
-| MOBL-01 | Phase 14 | Pending |
-| MOBL-02 | Phase 14 | Pending |
-| MOBL-03 | Phase 14 | Pending |
-| MOBL-04 | Phase 14 | Pending |
-| MOBL-05 | Phase 14 | Pending |
-| MOBL-06 | Phase 14 | Pending |
+| CONT-01 | Phase 13 | Complete |
+| CONT-02 | Phase 13 | Complete |
+| CONT-03 | Phase 13 | Complete |
+| CONT-04 | Phase 13 | Complete |
+| CONT-05 | Phase 13 | Complete |
+| MOBL-01 | Phase 14 | Complete |
+| MOBL-02 | Phase 14 | Complete |
+| MOBL-03 | Phase 14 | Complete |
+| MOBL-04 | Phase 14 | Complete |
+| MOBL-05 | Phase 14 | Complete |
+| MOBL-06 | Phase 14 | Complete |
 | PERF-01 | Phase 15 | Pending |
 | PERF-02 | Phase 15 | Pending |
 | PERF-03 | Phase 15 | Pending |
@@ -98,4 +98,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-02 after roadmap creation*
+*Last updated: 2026-02-02 after Phase 14 complete*
