@@ -134,10 +134,11 @@ Plans:
   2. User can hover/tap on metric to see tooltip explaining calculation methodology
   3. Leaderboard displays trustworthy numbers that match user's manual spot-checks of predictions
 
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: TBD
+- [ ] 08-01-PLAN.md - Create tooltip infrastructure and AccuracyDisplay component
+- [ ] 08-02-PLAN.md - Integrate AccuracyDisplay across leaderboard and model pages
 
 ## Progress
 
@@ -153,7 +154,7 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8
 | 5. Stats Foundation | v1.1 | 3/3 | Complete | 2026-02-02 |
 | 6. Data Migration | v1.1 | 2/2 | Complete | 2026-02-02 |
 | 7. SEO Enhancement | v1.1 | 3/3 | Complete | 2026-02-02 |
-| 8. UX Transparency | v1.1 | 0/1 | Not started | - |
+| 8. UX Transparency | v1.1 | 0/2 | Not started | - |
 
 ---
-*Last updated: 2026-02-02 (Phase 7 complete)*
+*Last updated: 2026-02-02 (Phase 8 planned)*
