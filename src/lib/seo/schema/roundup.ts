@@ -9,7 +9,7 @@ interface Match {
   awayTeam: string;
   kickoffTime: string;
   competitionId: string;
-  slug: string;
+  slug: string | null;
 }
 
 /**

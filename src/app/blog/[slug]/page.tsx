@@ -123,7 +123,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   if (post.contentType === 'league_roundup') {
     // For roundups, try to extract match data
-    let matchData: Array<{ id: string; homeTeam: string; awayTeam: string; kickoffTime: string; competitionId: string; slug: string }> = [];
+    let matchData: Array<{ id: string; homeTeam: string; awayTeam: string; kickoffTime: string; competitionId: string; slug: string | null }> = [];
 
     // Primary path: Check if matchId field contains a match ID (single match)
     if (post.matchId) {
