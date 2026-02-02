@@ -1,5 +1,36 @@
 # Project Milestones: AI Football Predictions Platform
 
+## v1.3 Match Page Refresh (Shipped: 2026-02-02)
+
+**Delivered:** Mobile-first match pages with unified content query, tabbed navigation with swipe gestures, ISR caching, and AI search optimization (robots.txt, llms.txt, consolidated Schema.org @graph).
+
+**Phases completed:** 13-16 (13 plans total)
+
+**Key accomplishments:**
+
+- Unified content query (`getMatchContentUnified`) merging dual-table content with COALESCE prioritization
+- Mobile tabbed navigation (Summary/Stats/Predictions/Analysis) with react-swipeable swipe gestures
+- Sticky header with de-duplicated score display (position:sticky avoids CLS)
+- 44px touch targets meeting WCAG 2.5.5 AAA accessibility standards
+- ISR caching enabled with 60-second revalidation (removed force-dynamic)
+- Parallel data fetching with two-stage Promise.all pattern
+- Consolidated Schema.org JSON-LD @graph with 5 entities for AI search engines
+- AI crawler configuration (GPTBot, ClaudeBot, PerplexityBot) and llms.txt structured paths
+
+**Stats:**
+
+- 82,942 lines of TypeScript (+2,608 from v1.2)
+- 4 phases, 13 plans, 18 requirements
+- 48 commits, 58 files changed
+- +9,124 / -382 lines (net +8,742)
+- 13 days from start to ship
+
+**Git range:** `feat(13-01)` → `docs(16)`
+
+**What's next:** New milestone planning with `/gsd:new-milestone`
+
+---
+
 ## v1.2 Technical SEO Fixes (Shipped: 2026-02-02)
 
 **Delivered:** Fixed ~1,083 SEO issues from Ahrefs audit including 500 errors, 404s in sitemap, redirect chains, missing H1 tags, long titles, and orphan pages with new internal linking widgets.
@@ -92,4 +123,4 @@
 
 ---
 
-*Last updated: 2026-02-02*
+*Last updated: 2026-02-02 after v1.3 milestone*

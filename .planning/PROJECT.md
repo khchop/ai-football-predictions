@@ -21,7 +21,30 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 
 ## Current State
 
-**Brownfield project with v1.2 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. v1.2 Technical SEO Fixes milestone completed 2026-02-02 with all 13 requirements shipped.
+**Brownfield project with v1.3 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. v1.3 Match Page Refresh milestone completed 2026-02-02 with all 18 requirements shipped.
+
+### Validated (v1.3)
+
+The following requirements were validated in v1.3:
+
+- ✓ **CONT-01**: Pre-match LLM content renders on upcoming match pages — v1.3
+- ✓ **CONT-02**: Prediction content renders on match pages with predictions — v1.3
+- ✓ **CONT-03**: Post-match LLM content renders on finished match pages — v1.3
+- ✓ **CONT-04**: Unified content query fetches from both tables — v1.3
+- ✓ **CONT-05**: Long narrative content chunked with "Read More" expansion — v1.3
+- ✓ **MOBL-01**: Match score displays exactly once in sticky header — v1.3
+- ✓ **MOBL-02**: AI predictions consolidated into single expandable section — v1.3
+- ✓ **MOBL-03**: Advanced match stats collapsed behind progressive disclosure — v1.3
+- ✓ **MOBL-04**: Tabbed navigation (Summary/Stats/Predictions/Analysis) — v1.3
+- ✓ **MOBL-05**: Swipe gestures work between tabs on mobile — v1.3
+- ✓ **MOBL-06**: Touch targets meet 44x44px minimum for accessibility — v1.3
+- ✓ **PERF-01**: Match pages use ISR with 60s revalidation — v1.3
+- ✓ **PERF-02**: Parallel data fetching with Promise.all — v1.3
+- ✓ **PERF-03**: TTFB optimization infrastructure in place — v1.3
+- ✓ **SRCH-01**: robots.txt allows AI crawlers — v1.3
+- ✓ **SRCH-02**: llms.txt provides structured content paths — v1.3
+- ✓ **SRCH-03**: Single consolidated Schema.org JSON-LD graph — v1.3
+- ✓ **SRCH-04**: AI-generated content visible to crawlers (SSR) — v1.3
 
 ### Validated (v1.2)
 
@@ -105,9 +128,9 @@ The following capabilities are built and operational:
 
 ### Context
 
-Shipped v1.2 with 40,129 LOC TypeScript.
-Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI.
-All 50 requirements validated across v1.0, v1.1, and v1.2 milestones.
+Shipped v1.3 with 82,942 LOC TypeScript.
+Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, react-swipeable.
+All 68 requirements validated across v1.0, v1.1, v1.2, and v1.3 milestones.
 
 ## Constraints
 
@@ -152,20 +175,13 @@ All 50 requirements validated across v1.0, v1.1, and v1.2 milestones.
 - Real-time prediction updates during match (post-kickoff is settled)
 - Model fine-tuning or custom training
 
-## Current Milestone: v1.3 Match Page Refresh
+## Current Milestone: None (Planning Next)
 
-**Goal:** Redesign match detail pages for mobile-first UX with consolidated content, fix LLM content generation pipeline, and optimize for AI search engines.
-
-**Target features:**
-- Consolidated match page layout removing duplicate data (score, predictions shown once)
-- Working LLM content generation (pre-match, prediction, post-match text)
-- Mobile-first responsive design with minimal scrolling
-- AI search optimization (Perplexity, ChatGPT, Claude) with clean structured content
-- GEO/SEO optimized metadata and structured data
+v1.3 Match Page Refresh completed 2026-02-02. Run `/gsd:new-milestone` to plan the next milestone.
 
 ## Open Questions
 
 None currently.
 
 ---
-*Last updated: 2026-02-02 after v1.3 milestone started*
+*Last updated: 2026-02-02 after v1.3 milestone complete*

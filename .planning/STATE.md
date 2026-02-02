@@ -5,40 +5,27 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Prediction pipeline reliably generates scores from 35 LLMs ~30 minutes before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** v1.3 Match Page Refresh - COMPLETE
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 16 (AI Search Optimization) - COMPLETE
-Plan: 3 of 3 complete
-Status: Milestone v1.3 complete
-Last activity: 2026-02-02 — Completed Phase 16, v1.3 milestone complete
+Phase: None (milestone complete)
+Plan: None
+Status: v1.3 shipped, ready for next milestone
+Last activity: 2026-02-02 — v1.3 milestone complete
 
-Progress: [████████████████████████] 100% (v1.3: 15/15 plans)
+Progress: [████████████████████████] 100% (v1.3: 13/13 plans, 18/18 requirements)
 
-## Performance Metrics
+## Milestone History
 
-**Velocity (v1.0):**
-- Total plans completed: 17 plans
-- Average duration: 2.8 min per plan
-- Total execution time: 47.9 minutes
+| Milestone | Phases | Plans | Requirements | Shipped |
+|-----------|--------|-------|--------------|---------|
+| v1.0 Bug Fix Stabilization | 1-4 | 14 | 18 | 2026-02-01 |
+| v1.1 Stats Accuracy & SEO | 5-8 | 10 | 19 | 2026-02-02 |
+| v1.2 Technical SEO Fixes | 9-12 | 9 | 13 | 2026-02-02 |
+| v1.3 Match Page Refresh | 13-16 | 13 | 18 | 2026-02-02 |
 
-**Velocity (v1.1):**
-- Total plans completed: 10 plans
-- Phases: 5-8 (Stats Foundation, Data Migration, SEO Enhancement, UX Transparency)
-- 79 commits, 218 files changed
-- +36,895 / -8,161 lines
-
-**Velocity (v1.2):**
-- Total plans completed: 9 plans
-- Phases: 9-12 (Critical SEO Errors, Page Structure, Redirect Optimization, Internal Linking)
-- 22 commits, 34 files changed
-- +4,147 / -42 lines
-
-**Velocity (v1.3):**
-- Total plans completed: 15 plans (Phases 13-16 complete)
-- Phases: 13-16 (Content Pipeline, Mobile Layout, Performance, AI Search)
-- Status: All phases complete, milestone shipped 2026-02-02
+**Total:** 16 phases, 46 plans, 68 requirements shipped
 
 ## Accumulated Context
 
@@ -47,48 +34,13 @@ Progress: [███████████████████████
 Decisions are logged in PROJECT.md Key Decisions table.
 Full decision history available in phase SUMMARY.md files.
 
-**Key v1.3 Decisions:**
-- Content Pipeline fixes before Mobile Layout (can't optimize layout for broken content)
-- Unified content query system (`getMatchContentUnified()`) to resolve dual-table writes
-- ISR with conditional revalidation (60s scheduled, 30s live, 3600s finished) replacing force-dynamic
-- Consolidated Schema.org JSON-LD @graph for AI search engines
-- 4 phases derived from 18 requirements (comprehensive depth, natural clustering)
-
-**Phase 13 Decisions:**
-- 13-01: COALESCE prefers roundup narrative over short-form post-match content
-- 13-01: Two-query fallback for roundup-only matches (edge case support)
-- 13-02: ReadMoreText: Dynamic line-clamp class via previewLines prop for flexibility
-- 13-02: ReadMoreText: 600 char threshold for truncation (approx 150-200 words)
-- 13-02: ReadMoreText: focus-visible ring instead of focus for better keyboard UX
-- 13-03: Nullable matchStatus defaults to 'scheduled' behavior for graceful degradation
-
-**Phase 14 Decisions:**
-- 14-01: position:sticky instead of position:fixed for header (avoids CLS penalties)
-- 14-01: 44px minimum touch targets for WCAG 2.5.5 AAA compliance
-- 14-01: Separate mobile/desktop render paths (sticky vs full header)
-- 14-02: Controlled Radix Tabs with external state for swipe gesture integration
-- 14-02: Progressive disclosure for H2H stats on mobile only (desktop always visible)
-- 14-02: Four separate tab content components for clear separation of concerns
-- 14-03: Inline data mapping at page layer keeps tab components generic and reusable
-- 14-03: Transform matchEvents from API-Football format at page level for API-agnostic tabs
-- 14-03: Parse roundup JSON in server component for clean tab interfaces
-- 14-04: Human verification checkpoint validates mobile UX beyond automated tests
-
-**Phase 15 Decisions:**
-- 15-01: revalidate=60 for all match statuses (Next.js doesn't support conditional static exports)
-- 15-02: Two-stage parallel fetch (critical path + Promise.all) for match page data
-- 15-02: Individual .catch() per promise for graceful degradation
-- 15-03: 70% threshold for 'healthy' cache status (Phase 15 success criteria)
-- 15-03: force-dynamic for monitoring endpoints (always fresh stats)
-
-**Phase 16 Decisions:**
-- 16-01: Group AI crawlers by company in robots.ts (maintainability)
-- 16-01: Descriptive text in llms.txt markdown links (AI parser compatibility)
-- 16-02: @id URL fragment pattern for entity cross-references (url#webpage, url#organization)
-- 16-02: Single @graph consolidation eliminates multiple JSON-LD validation warnings
-- 16-02: kroam.xyz as canonical domain for Organization/WebSite entities
-- 16-03: Remove SportsEventSchema + WebPageSchema in favor of single MatchPageSchema
-- 16-03: SSR content via async server components verified (MatchContentSection, RoundupViewer)
+**Key v1.3 Decisions (archived):**
+- Content Pipeline fixes before Mobile Layout
+- Unified content query system (`getMatchContentUnified()`)
+- ISR with 60s revalidation replacing force-dynamic
+- Consolidated Schema.org JSON-LD @graph
+- position:sticky instead of position:fixed for headers
+- 44px minimum touch targets (WCAG 2.5.5 AAA)
 
 ### Pending Todos
 
@@ -101,5 +53,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed Phase 16 and v1.3 milestone
-Resume with: Run `/gsd:audit-milestone` to audit v1.3 before archiving
+Stopped at: v1.3 milestone complete
+Resume with: Run `/gsd:new-milestone` to start next milestone
