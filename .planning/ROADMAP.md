@@ -4,6 +4,7 @@
 
 - [x] **v1.0 Bug Fix Stabilization** - Phases 1-4 (shipped 2026-02-01)
 - [x] **v1.1 Stats Accuracy & SEO** - Phases 5-8 (shipped 2026-02-02)
+- [ ] **v1.2 Technical SEO Fixes** - Phases 9-12 (in progress)
 
 ## Phases
 
@@ -92,10 +93,49 @@ Plans:
 
 </details>
 
+<details open>
+<summary>v1.2 Technical SEO Fixes (Phases 9-12) - IN PROGRESS</summary>
+
+### Phase 9: Critical SEO Errors
+**Goal**: Eliminate 500 errors, 404s in sitemap, and broken redirects
+**Requirements**: SEO-T01, SEO-T02, SEO-T03, SEO-T04
+**Plans**: 3 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Add slug alias system to competition config with canonical redirects
+- [ ] 09-02-PLAN.md — Fix sitemap generation and internal links to use canonical URLs
+- [ ] 09-03-PLAN.md — Fix redirect chains and investigate 500 error
+
+### Phase 10: Page Structure
+**Goal**: All pages have proper H1 tags and titles under character limits
+**Requirements**: SEO-T05, SEO-T06, SEO-T07
+
+Plans:
+- [ ] 10-01: Add H1 component to match pages
+- [ ] 10-02: Optimize title templates for character limits
+
+### Phase 11: Redirect Optimization
+**Goal**: Clean redirect configuration and noindex handling
+**Requirements**: SEO-T08, SEO-T09, SEO-T10
+
+Plans:
+- [ ] 11-01: Convert 307 redirects to 301 permanent
+- [ ] 11-02: Fix noindex pages and orphan page strategy
+
+### Phase 12: Internal Linking
+**Goal**: Strong internal link structure for crawl depth optimization
+**Requirements**: SEO-T11, SEO-T12, SEO-T13
+
+Plans:
+- [ ] 12-01: Add related content sections to match and model pages
+- [ ] 12-02: Add recent predictions widget to competition pages
+
+</details>
+
 ## Progress
 
 **Execution Order:**
-All v1.0 and v1.1 phases complete. Next milestone planning required.
+v1.0 and v1.1 complete. v1.2 in progress.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -107,6 +147,10 @@ All v1.0 and v1.1 phases complete. Next milestone planning required.
 | 6. Data Migration | v1.1 | 2/2 | Complete | 2026-02-02 |
 | 7. SEO Enhancement | v1.1 | 3/3 | Complete | 2026-02-02 |
 | 8. UX Transparency | v1.1 | 2/2 | Complete | 2026-02-02 |
+| 9. Critical SEO Errors | v1.2 | 0/3 | Planned | — |
+| 10. Page Structure | v1.2 | 0/? | Pending | — |
+| 11. Redirect Optimization | v1.2 | 0/? | Pending | — |
+| 12. Internal Linking | v1.2 | 0/? | Pending | — |
 
 ---
-*Last updated: 2026-02-02 (v1.1 milestone archived)*
+*Last updated: 2026-02-02 (Phase 9 planned)*
