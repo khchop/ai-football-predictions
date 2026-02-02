@@ -12,22 +12,31 @@ export function createTitle(match: MatchSeoData): string {
 
 export function createDescription(match: MatchSeoData): string {
   if (isMatchUpcoming(match.status)) {
+    // Include predicted score when available
+    if (match.predictedHomeScore !== undefined && match.predictedAwayScore !== undefined) {
+      const baseMsg = `AI predicts ${match.predictedHomeScore}-${match.predictedAwayScore} for ${match.homeTeam} vs ${match.awayTeam}.`;
+      const modelsMsg = ` 35 models compete - see who's most accurate.`;
+      // Keep under 155 chars
+      return (baseMsg + modelsMsg).length > 155
+        ? baseMsg + modelsMsg.substring(0, 155 - baseMsg.length - 3) + '...'
+        : baseMsg + modelsMsg;
+    }
     return `Get AI predictions for ${match.homeTeam} vs ${match.awayTeam}. See which models forecast the winner before kickoff on ${formatDate(match.startDate)}.`;
   }
-  
+
   if (isMatchLive(match.status)) {
     return `Follow ${match.homeTeam} vs ${match.awayTeam} live. Track AI predictions in real-time and see how models perform as the action unfolds.`;
   }
-  
+
   // Finished match
-  const predictionsInfo = match.predictionsCount 
-    ? ` AI predictions from ${match.predictionsCount} models`
-    : '';
-  const modelInfo = match.topModelName && match.topModelAccuracy
-    ? ` with top model ${match.topModelName} achieving ${match.topModelAccuracy}% accuracy`
-    : '';
-  
-  return `Comprehensive coverage of ${match.homeTeam} vs ${match.awayTeam} in ${match.competition}.${predictionsInfo}${modelInfo}. Match stats, model leaderboard rankings, and detailed performance analysis.`;
+  const scoreInfo = match.homeScore !== null && match.awayScore !== null
+    ? `${match.homeTeam} ${match.homeScore}-${match.awayScore} ${match.awayTeam} match analysis.`
+    : `${match.homeTeam} vs ${match.awayTeam} match analysis.`;
+  const modelsMsg = ` AI predictions from 35 models with accuracy tracking.`;
+
+  return (scoreInfo + modelsMsg).length > 155
+    ? scoreInfo + modelsMsg.substring(0, 155 - scoreInfo.length - 3) + '...'
+    : scoreInfo + modelsMsg;
 }
 
 export function buildMatchMetadata(match: MatchSeoData): Metadata {
@@ -35,13 +44,31 @@ export function buildMatchMetadata(match: MatchSeoData): Metadata {
   const description = createDescription(match);
   const url = `/matches/${match.id}`;
   const ogImageUrl = `${BASE_URL}${url}/opengraph-image`;
-  
+
+  // Build OG description with predicted score and optional accuracy
+  let ogDescription = description;
+  if (isMatchUpcoming(match.status) && match.predictedHomeScore !== undefined && match.predictedAwayScore !== undefined) {
+    const predictedScore = `AI predicts ${match.predictedHomeScore}-${match.predictedAwayScore} for ${match.homeTeam} vs ${match.awayTeam}`;
+    const accuracyInfo = match.modelAccuracy ? ` - Prediction Accuracy: ${match.modelAccuracy}%` : '';
+    const fullOg = predictedScore + accuracyInfo;
+    // Keep under 200 chars
+    ogDescription = fullOg.length > 200 ? fullOg.substring(0, 197) + '...' : fullOg;
+  }
+
+  // Determine if match should be noindex (finished matches >30 days old)
+  let shouldNoIndex = false;
+  if (match.status === 'finished') {
+    const matchDate = new Date(match.startDate);
+    const daysSinceMatch = (Date.now() - matchDate.getTime()) / (1000 * 60 * 60 * 24);
+    shouldNoIndex = daysSinceMatch > 30;
+  }
+
   return {
     title,
     description,
     openGraph: {
       title,
-      description,
+      description: ogDescription,
       url: `${BASE_URL}${url}`,
       type: 'article',
       siteName: SITE_NAME,
@@ -68,7 +95,7 @@ export function buildMatchMetadata(match: MatchSeoData): Metadata {
     twitter: {
       card: 'summary_large_image',
       title,
-      description,
+      description: ogDescription,
       images: [ogImageUrl],
       site: '@bettingsoccer',
     },
@@ -76,7 +103,7 @@ export function buildMatchMetadata(match: MatchSeoData): Metadata {
       canonical: `${BASE_URL}${url}`,
     },
     robots: {
-      index: true,
+      index: !shouldNoIndex,
       follow: true,
     },
   };

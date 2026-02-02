@@ -14,29 +14,32 @@ export interface MatchSeoData {
   id: string;
   homeTeam: string;
   awayTeam: string;
-  
+
   // Scores (null for upcoming)
   homeScore: number | null;
   awayScore: number | null;
-  
+
   // State
   status: MatchStatus;
-  
+
   // Context
   competition: string;
   startDate: string;
   venue: string | null;
   homeTeamLogo: string | null;
   awayTeamLogo: string | null;
-  
+
   // Additional match info
   round: string | null;
   matchMinute?: string | null;
-  
+
   // SEO-specific derived data
   predictionsCount?: number;
   topModelName?: string;
   topModelAccuracy?: number;
+  modelAccuracy?: number;
+  predictedHomeScore?: number;
+  predictedAwayScore?: number;
 }
 
 export function mapMatchToSeoData(match: Match): MatchSeoData {
