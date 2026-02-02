@@ -33,12 +33,12 @@ interface Event {
 }
 
 interface Stats {
-  possession: number;
-  shots: number;
-  shotsOnTarget: number;
-  corners: number;
-  xG: number;
-  [key: string]: number;
+  possession?: number;
+  shots?: number;
+  shotsOnTarget?: number;
+  corners?: number;
+  xG?: number;
+  [key: string]: number | undefined;
 }
 
 interface TopPerformer {
@@ -212,7 +212,7 @@ export function RoundupViewer({
                       event.type === 'yellow_card' && "text-yellow-400",
                       event.type === 'red_card' && "text-red-400"
                     )}>
-                      {event.minute}'
+                      {event.minute}&apos;
                     </span>
                     <span className="flex-1">{event.description}</span>
                     <span className="text-xs text-muted-foreground uppercase">{event.type}</span>
@@ -236,31 +236,31 @@ export function RoundupViewer({
             {/* Possession */}
             <div className="p-4 rounded-lg bg-muted/30 text-center">
               <p className="text-sm text-muted-foreground mb-1">Possession</p>
-              <p className="text-2xl font-bold">{stats.possession}%</p>
+              <p className="text-2xl font-bold">{stats.possession ?? '-'}%</p>
             </div>
-            
+
             {/* Shots */}
             <div className="p-4 rounded-lg bg-muted/30 text-center">
               <p className="text-sm text-muted-foreground mb-1">Shots</p>
-              <p className="text-2xl font-bold">{stats.shots}</p>
+              <p className="text-2xl font-bold">{stats.shots ?? '-'}</p>
             </div>
-            
+
             {/* Shots on Target */}
             <div className="p-4 rounded-lg bg-muted/30 text-center">
               <p className="text-sm text-muted-foreground mb-1">On Target</p>
-              <p className="text-2xl font-bold">{stats.shotsOnTarget}</p>
+              <p className="text-2xl font-bold">{stats.shotsOnTarget ?? '-'}</p>
             </div>
-            
+
             {/* Corners */}
             <div className="p-4 rounded-lg bg-muted/30 text-center">
               <p className="text-sm text-muted-foreground mb-1">Corners</p>
-              <p className="text-2xl font-bold">{stats.corners}</p>
+              <p className="text-2xl font-bold">{stats.corners ?? '-'}</p>
             </div>
-            
+
             {/* xG */}
             <div className="p-4 rounded-lg bg-muted/30 text-center">
               <p className="text-sm text-muted-foreground mb-1">xG</p>
-              <p className="text-2xl font-bold">{stats.xG.toFixed(2)}</p>
+              <p className="text-2xl font-bold">{stats.xG?.toFixed(2) ?? '-'}</p>
             </div>
           </div>
         </CardContent>
