@@ -48,9 +48,10 @@ export async function generateMetadata({ params }: ModelPageProps): Promise<Meta
   const predictionStats = await getModelStatsData(id);
   const modelRank = await getModelRankData(id);
   
-  // Calculate accuracy from stats (exactScores / scoredPredictions * 100)
+  // Calculate tendency accuracy from stats (correctTendencies / scoredPredictions * 100)
+  // This matches the hero section's "Accuracy" display
   const accuracy = predictionStats?.scoredPredictions && predictionStats.scoredPredictions > 0
-    ? Math.round((predictionStats.exactScores / predictionStats.scoredPredictions) * 100)
+    ? Math.round((predictionStats.correctTendencies / predictionStats.scoredPredictions) * 100)
     : 0;
   const rank = modelRank || 999;
 
@@ -68,7 +69,7 @@ export async function generateMetadata({ params }: ModelPageProps): Promise<Meta
     },
     openGraph: {
       title: `${model.displayName} AI Model`,
-      description: `${accuracy}% accurate football predictions - Rank #${rank}`,
+      description: `${accuracy}% tendency accuracy in football predictions - Rank #${rank}`,
       url: url,
       type: 'website',
       images: [
@@ -83,7 +84,7 @@ export async function generateMetadata({ params }: ModelPageProps): Promise<Meta
     twitter: {
       card: 'summary_large_image',
       title: `${model.displayName} AI Model`,
-      description: `${accuracy}% accurate football predictions`,
+      description: `${accuracy}% tendency accuracy in football predictions`,
       images: [ogImageUrl.toString()],
     },
   };
