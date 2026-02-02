@@ -94,34 +94,74 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
   // Use competition ID for database query (either canonical or original slug)
   const competitionSlug = competitionConfig?.id || slug;
-  const result = await getMatchBySlug(competitionSlug, match);
+
+  // Defensive error handling to prevent 500 errors from database issues
+  let result;
+  try {
+    result = await getMatchBySlug(competitionSlug, match);
+  } catch (error) {
+    console.error('Match page database error:', error);
+    notFound(); // Graceful degradation to 404 instead of 500
+  }
 
   if (!result) {
     notFound();
   }
 
   const { match: matchData, competition } = result;
-  
-  const analysisData = await getMatchWithAnalysis(matchData.id);
+
+  // Additional defensive error handling for related queries
+  let analysisData, predictions;
+  try {
+    analysisData = await getMatchWithAnalysis(matchData.id);
+    predictions = await getPredictionsForMatchWithDetails(matchData.id);
+  } catch (error) {
+    console.error('Match page data loading error:', error);
+    // Continue with null data rather than failing completely
+    analysisData = null;
+    predictions = [];
+  }
+
   const analysis = analysisData?.analysis;
-  
-  const predictions = await getPredictionsForMatchWithDetails(matchData.id);
   const kickoff = parseISO(matchData.kickoffTime);
   const isFinished = matchData.status === 'finished';
   const isLive = matchData.status === 'live';
 
-  const matchEvents = (isFinished || isLive) && matchData.externalId 
-    ? await getMatchEvents(parseInt(matchData.externalId, 10))
-    : [];
+  // Defensive error handling for external API and supplementary data
+  let matchEvents = [];
+  let teamStandings = [];
+  let nextMatches = [];
+  let roundup = null;
 
-  const teamStandings = await getStandingsForTeams(competition.apiFootballId, [matchData.homeTeam, matchData.awayTeam], competition.season);
+  try {
+    matchEvents = (isFinished || isLive) && matchData.externalId
+      ? await getMatchEvents(parseInt(matchData.externalId, 10))
+      : [];
+  } catch (error) {
+    console.error('Failed to fetch match events:', error);
+  }
+
+  try {
+    teamStandings = await getStandingsForTeams(competition.apiFootballId, [matchData.homeTeam, matchData.awayTeam], competition.season);
+  } catch (error) {
+    console.error('Failed to fetch team standings:', error);
+  }
+
   const homeStanding = teamStandings.find(s => s.teamName === matchData.homeTeam) || null;
   const awayStanding = teamStandings.find(s => s.teamName === matchData.awayTeam) || null;
 
-  const nextMatches = await getNextMatchesForTeams([matchData.homeTeam, matchData.awayTeam], 4);
-  
+  try {
+    nextMatches = await getNextMatchesForTeams([matchData.homeTeam, matchData.awayTeam], 4);
+  } catch (error) {
+    console.error('Failed to fetch next matches:', error);
+  }
+
   // Fetch roundup data (only for finished matches)
-  const roundup = isFinished ? await getMatchRoundup(matchData.id) : null;
+  try {
+    roundup = isFinished ? await getMatchRoundup(matchData.id) : null;
+  } catch (error) {
+    console.error('Failed to fetch match roundup:', error);
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
