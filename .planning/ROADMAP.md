@@ -166,6 +166,13 @@ Content exists in database but doesn't display due to dual-table writes (`matchC
 **Goal**: Match pages display data exactly once with minimal scrolling on mobile
 **Requirements**: MOBL-01, MOBL-02, MOBL-03, MOBL-04, MOBL-05, MOBL-06
 **Dependencies**: Phase 13 (content must render before layout optimization)
+**Plans**: 4 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — Install react-swipeable, create sticky header and collapsible section components
+- [ ] 14-02-PLAN.md — Create tabbed navigation with swipe gestures and tab content wrappers
+- [ ] 14-03-PLAN.md — Wire tabbed layout into match page, hide duplicate scores on mobile
+- [ ] 14-04-PLAN.md — Touch target audit and human verification checkpoint
 
 **Success Criteria:**
 1. User sees match score exactly once in sticky header (not duplicated in stats, roundup, or other sections)
@@ -233,9 +240,9 @@ v1.0, v1.1, and v1.2 complete. v1.3 in progress starting Phase 13.
 | 11. Redirect Optimization | v1.2 | 2/2 | Complete | 2026-02-02 |
 | 12. Internal Linking | v1.2 | 2/2 | Complete | 2026-02-02 |
 | **13. Content Pipeline Fixes** | **v1.3** | **3/3** | **Complete** | 2026-02-02 |
-| **14. Mobile Layout Consolidation** | **v1.3** | **0/0** | **Pending** | — |
+| **14. Mobile Layout Consolidation** | **v1.3** | **0/4** | **Planned** | — |
 | **15. Performance Optimization** | **v1.3** | **0/0** | **Pending** | — |
 | **16. AI Search Optimization** | **v1.3** | **0/0** | **Pending** | — |
 
 ---
-*Last updated: 2026-02-02 (Phase 13 complete)*
+*Last updated: 2026-02-02 (Phase 14 planned)*
