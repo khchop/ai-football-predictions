@@ -34,7 +34,8 @@ Progress: [██████████████████████] 1
 - Phase 10 plans completed: 2 plans
 - Phase 11 plans completed: 2 plans
 - Phase 12 plans completed: 2 plans
-- Total v1.2 commits: 19
+- Total v1.2 commits: 22
+- Phase 12-01 duration: 4 min
 - Phase 12-02 duration: 1.4 min
 
 ## Accumulated Context
@@ -66,6 +67,8 @@ Full decision history available in phase SUMMARY.md files.
 - Orphan page resolution deferred to Phase 12 with detailed strategy
 
 **Phase 12 Decisions:**
+- Related match criteria: same competition OR same teams (maximizes relevance)
+- No Redis caching for widget queries (fast enough with existing indexes)
 - Widget placement in left column below CompetitionTopModels for consistent layout
 - Reuse existing getMatchesByCompetitionId query (no new database queries needed)
 
