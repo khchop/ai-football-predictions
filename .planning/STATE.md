@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Prediction pipeline reliably generates scores from 35 LLMs ~30 minutes before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** Phase 7 - SEO Enhancement (next)
+**Current focus:** Phase 7 - SEO Enhancement (in progress)
 
 ## Current Position
 
-Phase: 6 of 8 complete (Data Migration)
-Plan: 2/2 complete
-Status: Phase verified ✓
-Last activity: 2026-02-02 — Phase 6 completed with 2 plans, all 4 success criteria verified
+Phase: 7 of 8 in progress (SEO Enhancement)
+Plan: 1/3 complete
+Status: In progress
+Last activity: 2026-02-02 — Completed 07-01-PLAN.md (Match Page Schema & Metadata)
 
-Progress: [█████████████████░░░] 71% (22/31 total planned plans)
+Progress: [█████████████████░░░] 74% (23/31 total planned plans)
 
 ## Performance Metrics
 
@@ -49,6 +49,13 @@ Progress: [█████████████████░░░] 71% (22
 | 06-02 | ~4 min | User Communication (Methodology + Changelog) |
 | Total | ~7 min | 2 plans |
 
+**v1.2 Phase 7:**
+
+| Plan | Duration | Description |
+|------|----------|-------------|
+| 07-01 | ~4 min | Match Page Schema & Metadata |
+| Total | ~4 min | 1 plan |
+
 ## Accumulated Context
 
 ### Decisions
@@ -68,6 +75,9 @@ Recent decisions affecting current work:
 - 06-02: /methodology route — top-level URL for permanent accuracy calculation reference
 - 06-02: Keep a Changelog format — industry standard for documenting changes
 - 06-02: Three diverse examples in changelog — shows impact range without overwhelming
+- 07-01: Use EventScheduled for all matches — schema.org has no EventCompleted, signal completion via homeTeamScore/awayTeamScore
+- 07-01: Dynamic noindex at 30 days for finished matches — balances crawl budget vs. historical value
+- 07-01: Predicted score from likelyScores[0] — most probable outcome per bookmaker odds
 
 ### Pending Todos
 
@@ -81,16 +91,14 @@ None.
 - ✅ Context provided: 50-55% is professional bookmaker range
 - ✅ Transparency achieved: Real before/after data from 29 models shown
 
-**Phase 7 (Documentation Cleanup):**
-- Cross-linking opportunity: Link /methodology from about page, model pages
-- Sitemap update: Add /methodology to sitemap.xml for SEO discoverability
-
-**Phase 8 (SEO Enhancement):**
+**Phase 7 (SEO Enhancement) - IN PROGRESS:**
 - Google takes 2-4 weeks to re-crawl and update rich snippets after structured data added
 - Monitoring: Google Search Console structured data detection + rich snippet impressions
+- Test with Google Rich Results Test tool after deployment
 
 ## Session Continuity
 
-Last session: 2026-02-02
-Stopped at: Phase 6 (Data Migration) complete - all 2 plans executed, verified
-Resume with: `/gsd:plan-phase 7` to begin SEO Enhancement phase
+Last session: 2026-02-02 11:14 UTC
+Stopped at: Completed 07-01-PLAN.md (Match Page Schema & Metadata)
+Resume file: None
+Next step: Execute 07-02-PLAN.md or continue with remaining phase 7 plans
