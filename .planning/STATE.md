@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 5 of 8 complete (Stats Foundation)
-Plan: 3/3 complete
-Status: Phase verified ✓
-Last activity: 2026-02-02 — Phase 5 completed with 3 plans, all 5 success criteria verified
+Phase: 6 of 8 in progress (Data Migration)
+Plan: 1 of 2 complete
+Status: In progress
+Last activity: 2026-02-02 — Completed plan 06-01-PLAN.md (Accuracy Recalculation Migration)
 
-Progress: [████████████████░░░░] 65% (20/31 total planned plans)
+Progress: [████████████████░░░░] 68% (21/31 total planned plans)
 
 ## Performance Metrics
 
@@ -41,6 +41,12 @@ Progress: [████████████████░░░░] 65% (20
 | 05-03 | ~2 min | Model Page Metadata |
 | Total | ~7 min | 3 plans |
 
+**v1.1 Phase 6:**
+
+| Plan | Duration | Description |
+|------|----------|-------------|
+| 06-01 | ~3 min | Accuracy Recalculation Migration |
+
 ## Accumulated Context
 
 ### Decisions
@@ -54,6 +60,9 @@ Recent decisions affecting current work:
 - 05-01: NULLIF division protection — prevents errors on models with no scored predictions
 - 05-02: Also fixed getModelStatsByCompetitionWithRank — same bug pattern discovered during execution
 - 05-03: Label accuracy as "tendency accuracy" in metadata — explicit about what metric means
+- 06-01: Snapshot-before-modify pattern — stats_pre_migration table preserves rollback capability
+- 06-01: JSON verification report format — machine-readable for blog post, human-readable for review
+- 06-01: Bug severity revealed — actual impact -48% not -7% (IS NOT NULL counted 0-point predictions)
 
 ### Pending Todos
 
@@ -61,10 +70,12 @@ None.
 
 ### Blockers/Concerns
 
-**Phase 6 (Data Migration):**
-- User communication strategy needed: Models showing 94% will drop to realistic 87% after fix
-- Mitigation: Blog post explaining correction before deployment, changelog entry, side-by-side comparison
-- Note: Phase 5 established the formula; Phase 6 will handle the actual historical recalculation
+**Phase 6 (Data Migration) - UPDATED:**
+- User communication CRITICAL: Accuracy drops from ~93% to ~44% (not 87% as estimated)
+- Bug was 7x worse than expected: IS NOT NULL counted 0-point predictions as correct
+- Mitigation: Blog post must emphasize bug fix, not model degradation
+- Context needed: 44% accuracy is realistic for football prediction difficulty
+- Verification report ready: .planning/phases/06-data-migration/verification-report.json
 
 **Phase 7 (SEO Enhancement):**
 - Google takes 2-4 weeks to re-crawl and update rich snippets after structured data added
@@ -73,5 +84,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Phase 5 (Stats Foundation) complete - all 3 plans executed, verified
-Resume with: `/gsd:plan-phase 6` to begin Data Migration phase
+Stopped at: Completed plan 06-01 (Accuracy Recalculation Migration)
+Resume with: Plan 06-02 (User Communication) - use verification report to generate blog post
