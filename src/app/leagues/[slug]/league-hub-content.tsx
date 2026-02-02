@@ -21,6 +21,7 @@ import { CompetitionHeader } from '@/components/competition/competition-header';
 import { CompetitionTopModels } from '@/components/competition/competition-top-models';
 import { CompetitionStats } from '@/components/competition/competition-stats';
 import { CompetitionPredictionSummary } from '@/components/competition/competition-prediction-summary';
+import { RecentPredictionsWidget } from '@/components/competition/recent-predictions-widget';
 
 interface LeagueHubContentProps {
   competitionId: string;
@@ -260,12 +261,13 @@ async function LeagueInsights({ competitionId }: { competitionId: string }) {
       />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column - Top Models */}
-        <div className="lg:col-span-1">
-          <CompetitionTopModels 
-            models={topModels} 
+        {/* Left column - Top Models and Recent Predictions */}
+        <div className="lg:col-span-1 space-y-6">
+          <CompetitionTopModels
+            models={topModels}
             competitionId={competitionId}
           />
+          <RecentPredictionsWidget competitionId={competitionId} />
         </div>
         
         {/* Right column - Stats and Predictions */}
