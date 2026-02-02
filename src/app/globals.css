@@ -53,8 +53,30 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* Fonts */
-  --font-sans: var(--font-geist-sans);
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   --font-mono: var(--font-geist-mono);
+  --font-geist-sans: var(--font-geist-sans);
+
+  /* Typography Scale (1.2 ratio - Minor Third, 16px base) */
+  --text-xs: 0.694rem;    /* 11.11px - 16 / 1.2^2 */
+  --text-sm: 0.833rem;    /* 13.33px - 16 / 1.2 */
+  --text-base: 1rem;      /* 16px - base */
+  --text-lg: 1.2rem;      /* 19.2px - 16 * 1.2 */
+  --text-xl: 1.44rem;     /* 23.04px - 16 * 1.2^2 */
+  --text-2xl: 1.728rem;   /* 27.65px - 16 * 1.2^3 */
+  --text-3xl: 2.074rem;   /* 33.18px - 16 * 1.2^4 */
+  --text-4xl: 2.488rem;   /* 39.81px - 16 * 1.2^5 */
+
+  /* Line Heights */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
 
   /* Radius */
   --radius-sm: calc(var(--radius) - 4px);
@@ -184,6 +206,9 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
   }
 }
 
