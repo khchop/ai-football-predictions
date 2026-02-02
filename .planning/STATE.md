@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 17 - Design System Foundation
-Plan: —
-Status: Phase planning required
-Last activity: 2026-02-02 — v2.0 roadmap created
+Plan: 01 of ? complete
+Status: In progress
+Last activity: 2026-02-02 - Completed 17-01-PLAN.md (Color Tokens & Dark Mode)
 
-Progress: [░░░░░░░░░░░░░░░░░░░░░░░░] 0% (v2.0: 0/? plans, 0/33 requirements)
+Progress: [█░░░░░░░░░░░░░░░░░░░░░░░] 3% (v2.0: 1/? plans, 0/33 requirements)
 
 ## Milestone History
 
@@ -31,7 +31,7 @@ Progress: [░░░░░░░░░░░░░░░░░░░░░░░
 
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
-| 17. Design System Foundation | Design tokens, dark mode, PPR infrastructure | DSGN-01 to DSGN-06 (6) | Pending |
+| 17. Design System Foundation | Design tokens, dark mode, PPR infrastructure | DSGN-01 to DSGN-06 (6) | Plan 01 complete |
 | 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | Pending |
 | 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Pending |
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Pending |
@@ -41,7 +41,7 @@ Progress: [░░░░░░░░░░░░░░░░░░░░░░░
 
 **Phase Dependencies:**
 ```
-Phase 17 (Foundation)
+Phase 17 (Foundation) [IN PROGRESS]
   |
   +---> Phase 18 (Match) --+
   |                        |
@@ -58,6 +58,12 @@ Phase 17 (Foundation)
 
 Decisions are logged in PROJECT.md Key Decisions table.
 Full decision history available in phase SUMMARY.md files.
+
+**Key v2.0 Decisions (Phase 17):**
+- OKLCH color space for perceptual uniformity across light/dark modes
+- Dark mode uses dark grays (L=0.14), not pure black, for eye comfort
+- System preference as default theme via next-themes
+- ThemeToggle deferred to Phase 22 navigation integration
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -98,5 +104,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: v2.0 roadmap created
-Resume with: Run `/gsd:plan-phase 17` to start planning Design System Foundation
+Stopped at: Completed 17-01-PLAN.md (Color Tokens & Dark Mode)
+Resume with: Continue with next plan in Phase 17 or run `/gsd:execute-phase 17` for remaining plans
