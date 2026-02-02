@@ -175,9 +175,16 @@ All 68 requirements validated across v1.0, v1.1, v1.2, and v1.3 milestones.
 - Real-time prediction updates during match (post-kickoff is settled)
 - Model fine-tuning or custom training
 
-## Current Milestone: None (Planning Next)
+## Current Milestone: v1.4 SEO Canonical Fixes
 
-v1.3 Match Page Refresh completed 2026-02-02. Run `/gsd:new-milestone` to plan the next milestone.
+**Goal:** Fix canonical URL issues, broken pages, and remaining SEO errors identified in Sitebulb audit.
+
+**Target features:**
+- Fix canonical URLs pointing to redirecting `/matches/{uuid}` URLs
+- Fix 500 error on Genoa vs Bologna match page
+- Fix 404 on Turkish Super Lig league page
+- Add missing H1 tags to league index pages
+- Shorten model page titles to under 60 characters
 
 ## Open Questions
 
