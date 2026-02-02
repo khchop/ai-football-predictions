@@ -267,18 +267,17 @@ export async function getMatchPreview(matchId: string) {
 
 /**
  * Get match content (3-section narrative for match pages)
+ *
+ * Uses unified query to merge matchContent and matchRoundups tables:
+ * - Pre-match and betting content from matchContent table
+ * - Post-match content prefers matchRoundups.narrative (long-form) over matchContent.postMatchContent (short)
+ *
+ * @param matchId - The match UUID
+ * @returns Unified content object or null if no content exists
  */
 export async function getMatchContent(matchId: string) {
-  const db = getDb();
-  const { matchContent: mc } = await import('@/lib/db/schema');
-  
-  const result = await db
-    .select()
-    .from(mc)
-    .where(eq(mc.matchId, matchId))
-    .limit(1);
-
-  return result[0] || null;
+  const { getMatchContentUnified } = await import('@/lib/db/queries');
+  return getMatchContentUnified(matchId);
 }
 
 /**
