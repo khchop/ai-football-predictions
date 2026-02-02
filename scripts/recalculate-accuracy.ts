@@ -100,7 +100,7 @@ async function invalidateCaches(): Promise<void> {
       cacheDeletePattern('db:model:*:stats'),
     ]);
 
-    const totalDeleted = results.reduce((sum, count) => sum + count, 0);
+    const totalDeleted = results.reduce((sum: number, count) => sum + (typeof count === 'number' ? count : (count ? 1 : 0)), 0);
     console.log(`   ✅ Invalidated ${totalDeleted} cache keys`);
     console.log('   - db:leaderboard:* (all filter combinations)');
     console.log('   - db:stats:overall');
