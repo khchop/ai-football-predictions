@@ -90,96 +90,98 @@ export function RoundupViewer({
           </p>
         )}
       </div>
-      
-      {/* Scoreboard Header */}
-      <Card className="bg-card/80 border-border/60">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">{scoreboard.competition}</span>
+
+      {/* Scoreboard Header - Hidden on mobile (shown in sticky header) */}
+      <div className="hidden md:block">
+        <Card className="bg-card/80 border-border/60">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">{scoreboard.competition}</span>
+              </div>
+              {isFinished && (
+                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-500/20 text-green-400">
+                  Full Time
+                </span>
+              )}
             </div>
-            {isFinished && (
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-500/20 text-green-400">
-                Full Time
-              </span>
+
+            <div className="flex items-center justify-between gap-4 md:gap-8">
+              {/* Home Team */}
+              <div className="flex-1 text-center">
+                <div className="h-16 w-16 md:h-20 md:w-20 mx-auto mb-3 rounded-xl bg-muted/50 flex items-center justify-center">
+                  <span className="text-2xl md:text-3xl font-bold text-muted-foreground">
+                    {scoreboard.homeTeam.charAt(0)}
+                  </span>
+                </div>
+                <p className={cn(
+                  "font-bold text-lg md:text-xl",
+                  isFinished && scoreboard.homeScore > scoreboard.awayScore && "text-green-400"
+                )}>
+                  {scoreboard.homeTeam}
+                </p>
+              </div>
+
+              {/* Score */}
+              <div className="text-center px-4">
+                {isFinished ? (
+                  <div className="flex items-center gap-3">
+                    <span className={cn(
+                      "text-4xl md:text-5xl font-bold tabular-nums",
+                      scoreboard.homeScore > scoreboard.awayScore && "text-green-400"
+                    )}>
+                      {scoreboard.homeScore}
+                    </span>
+                    <span className="text-2xl text-muted-foreground">-</span>
+                    <span className={cn(
+                      "text-4xl md:text-5xl font-bold tabular-nums",
+                      scoreboard.awayScore > scoreboard.homeScore && "text-green-400"
+                    )}>
+                      {scoreboard.awayScore}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-3xl md:text-4xl font-bold gradient-text">VS</p>
+                )}
+              </div>
+
+              {/* Away Team */}
+              <div className="flex-1 text-center">
+                <div className="h-16 w-16 md:h-20 md:w-20 mx-auto mb-3 rounded-xl bg-muted/50 flex items-center justify-center">
+                  <span className="text-2xl md:text-3xl font-bold text-muted-foreground">
+                    {scoreboard.awayTeam.charAt(0)}
+                  </span>
+                </div>
+                <p className={cn(
+                  "font-bold text-lg md:text-xl",
+                  isFinished && scoreboard.awayScore > scoreboard.homeScore && "text-green-400"
+                )}>
+                  {scoreboard.awayTeam}
+                </p>
+              </div>
+            </div>
+
+            {/* Venue & Time */}
+            {(scoreboard.venue || scoreboard.kickoff) && (
+              <div className="flex flex-wrap justify-center gap-4 mt-6 pt-4 border-t border-border/50 text-sm text-muted-foreground">
+                {scoreboard.kickoff && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span>{format(parseISO(scoreboard.kickoff), 'MMM d, yyyy HH:mm')}</span>
+                  </div>
+                )}
+                {scoreboard.venue && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    <span>{scoreboard.venue}</span>
+                  </div>
+                )}
+              </div>
             )}
-          </div>
-          
-          <div className="flex items-center justify-between gap-4 md:gap-8">
-            {/* Home Team */}
-            <div className="flex-1 text-center">
-              <div className="h-16 w-16 md:h-20 md:w-20 mx-auto mb-3 rounded-xl bg-muted/50 flex items-center justify-center">
-                <span className="text-2xl md:text-3xl font-bold text-muted-foreground">
-                  {scoreboard.homeTeam.charAt(0)}
-                </span>
-              </div>
-              <p className={cn(
-                "font-bold text-lg md:text-xl",
-                isFinished && scoreboard.homeScore > scoreboard.awayScore && "text-green-400"
-              )}>
-                {scoreboard.homeTeam}
-              </p>
-            </div>
-            
-            {/* Score */}
-            <div className="text-center px-4">
-              {isFinished ? (
-                <div className="flex items-center gap-3">
-                  <span className={cn(
-                    "text-4xl md:text-5xl font-bold tabular-nums",
-                    scoreboard.homeScore > scoreboard.awayScore && "text-green-400"
-                  )}>
-                    {scoreboard.homeScore}
-                  </span>
-                  <span className="text-2xl text-muted-foreground">-</span>
-                  <span className={cn(
-                    "text-4xl md:text-5xl font-bold tabular-nums",
-                    scoreboard.awayScore > scoreboard.homeScore && "text-green-400"
-                  )}>
-                    {scoreboard.awayScore}
-                  </span>
-                </div>
-              ) : (
-                <p className="text-3xl md:text-4xl font-bold gradient-text">VS</p>
-              )}
-            </div>
-            
-            {/* Away Team */}
-            <div className="flex-1 text-center">
-              <div className="h-16 w-16 md:h-20 md:w-20 mx-auto mb-3 rounded-xl bg-muted/50 flex items-center justify-center">
-                <span className="text-2xl md:text-3xl font-bold text-muted-foreground">
-                  {scoreboard.awayTeam.charAt(0)}
-                </span>
-              </div>
-              <p className={cn(
-                "font-bold text-lg md:text-xl",
-                isFinished && scoreboard.awayScore > scoreboard.homeScore && "text-green-400"
-              )}>
-                {scoreboard.awayTeam}
-              </p>
-            </div>
-          </div>
-          
-          {/* Venue & Time */}
-          {(scoreboard.venue || scoreboard.kickoff) && (
-            <div className="flex flex-wrap justify-center gap-4 mt-6 pt-4 border-t border-border/50 text-sm text-muted-foreground">
-              {scoreboard.kickoff && (
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span>{format(parseISO(scoreboard.kickoff), 'MMM d, yyyy HH:mm')}</span>
-                </div>
-              )}
-              {scoreboard.venue && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  <span>{scoreboard.venue}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
       
       {/* Events Timeline */}
       {events.length > 0 && (
