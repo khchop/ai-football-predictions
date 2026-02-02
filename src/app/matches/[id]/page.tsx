@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound, redirect, RedirectType } from 'next/navigation';
 import { Suspense } from 'react';
 import { parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
@@ -78,8 +78,9 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const { match, competition, analysis } = result;
 
   // Redirect to new slug-based URL if slugs exist (permanent redirect for SEO)
-  if (match.slug && competition.slug) {
-    redirect(`/leagues/${competition.slug}/${match.slug}`);
+  // Use competition.id directly to avoid redirect chain through long-form slug
+  if (match.slug && competition.id) {
+    redirect(`/leagues/${competition.id}/${match.slug}`, RedirectType.replace);
   }
 
   const kickoff = parseISO(match.kickoffTime);
