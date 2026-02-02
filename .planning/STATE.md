@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 14 (Mobile Layout Consolidation)
-Plan: 4 of 4 complete
-Status: Phase 14 complete - Ready for Phase 15
-Last activity: 2026-02-02 — Completed 14-04-PLAN.md (Touch Target Audit & Human Verification)
+Phase: 15 (Performance Optimization)
+Plan: 1 of 3 complete
+Status: In progress
+Last activity: 2026-02-02 — Completed 15-01-PLAN.md (Enable Match Page ISR)
 
-Progress: [█████████░░░░░░░░░░░░░░░] 45% (18/40 plans complete)
+Progress: [█████████░░░░░░░░░░░░░░░] 48% (19/40 plans complete)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [█████████░░░░░░░░░░░░░░
 - +4,147 / -42 lines
 
 **Velocity (v1.3):**
-- Total plans completed: 10 plans (Phase 13, Phase 14)
+- Total plans completed: 11 plans (Phase 13, Phase 14, Phase 15 in progress)
 - Phases: 13-16 (Content Pipeline, Mobile Layout, Performance, AI Search)
-- Status: Phase 13 complete, Phase 14 complete, Phase 15 ready
+- Status: Phase 13 complete, Phase 14 complete, Phase 15 in progress (1/3)
 
 ## Accumulated Context
 
@@ -74,6 +74,9 @@ Full decision history available in phase SUMMARY.md files.
 - 14-03: Parse roundup JSON in server component for clean tab interfaces
 - 14-04: Human verification checkpoint validates mobile UX beyond automated tests
 
+**Phase 15 Decisions:**
+- 15-01: revalidate=60 for all match statuses (Next.js doesn't support conditional static exports)
+
 ### Pending Todos
 
 None.
@@ -85,5 +88,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 14-04-PLAN.md (Touch Target Audit & Human Verification)
-Resume with: Phase 14 complete. Begin Phase 15 (Performance Optimization) with `/gsd:execute-phase 15`
+Stopped at: Completed 15-01-PLAN.md (Enable Match Page ISR)
+Resume with: Continue Phase 15 with 15-02 (Static Params Breadth Expansion) or 15-03 (Competition Page ISR)
