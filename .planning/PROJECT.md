@@ -110,9 +110,26 @@ All 18 v1 requirements validated and shipped.
 - Real-time prediction updates during match (post-kickoff is settled)
 - Model fine-tuning or custom training
 
+## Current Milestone: v1.1 Stats Accuracy & SEO
+
+**Goal:** Complete overhaul of model statistics calculation for consistency and trust, with SEO/GEO optimization for discoverability.
+
+**Target features:**
+- Standardized accuracy metrics across all queries (fix 6 inconsistent definitions)
+- Trustworthy leaderboard with correct numbers
+- Model detail pages with accurate, well-presented stats
+- SEO optimization (structured data, meta tags, page structure)
+- GEO optimization for international football audience
+
+**Known issues to fix:**
+- `IS NOT NULL` vs `> 0` mismatch in tendency accuracy (causes 94% bug)
+- Missing NULLIF() protection in weekly/breakdown queries
+- OG image showing exact score % labeled as "accuracy"
+- Inconsistent denominators (all predictions vs scored only)
+
 ## Open Questions
 
-None currently. Ready for next milestone planning.
+None currently.
 
 ---
-*Last updated: 2026-02-01 after v1.0 milestone*
+*Last updated: 2026-02-02 after v1.1 milestone start*
