@@ -1,252 +1,327 @@
 # Project Research Summary
 
-**Project:** v1.1 Stats Accuracy & SEO Optimization
-**Domain:** Sports prediction platform with AI model leaderboard
+**Project:** v1.3 Match Page Refresh
+**Domain:** Mobile-first sports prediction platform with AI search optimization
 **Researched:** 2026-02-02
 **Confidence:** HIGH
 
 ## Executive Summary
 
-This milestone fixes a critical trust issue in an existing sports prediction platform: six different accuracy calculation formulas scattered across the codebase produce conflicting numbers (94% on one page, 87% on another). The root cause is an `IS NOT NULL` vs `> 0` mismatch where wrong predictions (0 points) are counted as correct in some queries. This bug erodes user trust and damages SEO through conflicting structured data.
+The match page redesign for kroam.xyz requires fixing architectural bloat and duplicate data rendering rather than adopting new technologies. The existing stack (Next.js 16, React 19, Tailwind v4, shadcn/ui) already provides the foundation needed - the problems are structural. The 545-line monolithic match page component renders match metadata 3 times, predictions 2-3 times, and suffers from a broken content pipeline where LLM-generated narratives exist in the database but don't display due to query misalignment between `matchContent` and `matchRoundups` tables.
 
-The recommended approach is a **three-phase standardization** using PostgreSQL views as single source of truth, followed by SEO enhancement through Schema.org structured data. The platform is production-ready with 35 AI models, 160+ matches, and existing Next.js 16 App Router architecture. No new dependencies are needed — this is pure consolidation and metadata enhancement.
+Industry research shows best-in-class mobile sports experiences follow a tabbed navigation pattern with persistent sticky headers and progressive disclosure. Users expect single-source-of-truth for each data point - score appears once in the sticky header, predictions appear once in a dedicated tab, not scattered across 10+ cards requiring excessive vertical scrolling. AI search engines (ChatGPT, Perplexity, Claude) require consolidated structured data and hierarchical content with clear entity relationships to provide accurate citations.
 
-The critical risk is **cache invalidation timing**: invalidating caches before recalculation completes will show wrong numbers. The mitigation is a dual-column migration strategy: calculate new formula in parallel column, validate results, then atomic switchover. Historical data must be preserved for rollback and audit trails.
+The critical path forward: (1) Fix content rendering pipeline by unifying dual-table writes, (2) Consolidate duplicate displays into tabbed interface reducing mobile scroll depth by 60%, (3) Optimize for AI search with robots.txt, llms.txt, and consolidated Schema.org entities, (4) Implement ISR caching to reduce server costs by 60-80% while maintaining data freshness. The main risks are React hydration mismatches from timezone-dependent content, performance regression from improper Suspense boundaries, and LLM hallucination in generated match content requiring validation.
 
 ## Key Findings
 
 ### Recommended Stack
 
-**Current stack is correct** — no new dependencies needed. The platform runs Next.js 16.1.4 with PostgreSQL, Drizzle ORM, Redis caching, and BullMQ job queues. The issue is not missing technology, it's inconsistent application of existing tools.
+**No major additions needed.** The existing Next.js 16 + React 19 + Tailwind v4 stack is optimal for mobile-first redesign and AI search optimization. The focus should be on configuration additions and utilizing existing but underused features.
 
-**Core technologies:**
-- **PostgreSQL Views**: Single source of truth for stats calculations — ensures all queries use identical formula
-- **Next.js 16 Metadata API**: Already implemented for some pages, needs extension to all page types
-- **Schema.org JSON-LD**: Standard for sports structured data — required for rich snippets and AI crawler visibility
-- **Redis with versioned cache keys**: Existing cache layer works, needs version suffix for safe invalidation during migrations
+**Core technologies (existing):**
+- **Next.js 16.1.4**: Latest with Partial Prerendering (PPR), React Compiler support, and Turbopack — Enables static shell with dynamic content streaming for faster mobile loads
+- **React 19.2.3**: Latest with useActionState and useOptimistic hooks — Simplifies form state management and provides instant UI feedback critical for mobile UX
+- **Tailwind CSS v4**: CSS-first configuration with mobile-first breakpoints — Responsive design without JavaScript device detection
+- **shadcn/ui**: Mobile-first Radix UI primitives with Sheet component — Touch-friendly slide-out menus and dialogs
+
+**Configuration additions (required):**
+- **robots.txt**: Allow AI crawlers (GPTBot, ClaudeBot, PerplexityBot) for visibility in ChatGPT, Claude, Perplexity search results
+- **llms.txt**: Guide AI systems to authoritative content (emerging standard, 780+ sites including Cloudflare, Vercel)
+- **PPR via cacheComponents**: Enable Partial Prerendering for faster mobile loads (static shell + streamed dynamic content)
+- **ISR with conditional revalidation**: Replace force-dynamic with smart caching (60s for scheduled matches, 30s for live, 3600s for finished)
 
 **What NOT to add:**
-- GraphQL (adds complexity over already-complex aggregations)
-- Separate caching layer (Redis sufficient)
-- Heavy ORM (Drizzle SQL-first approach correct for custom stats queries)
-- Real-time WebSockets (stats update infrequently, polling sufficient)
+- React Native/Nativecn UI (building web app, not native mobile)
+- External animation libraries (mobile performance overhead, CSS sufficient)
+- New state management (React 19 useActionState + Server Components handle it)
+- Mobile detection libraries (CSS media queries are the modern approach)
 
 ### Expected Features
 
-Research shows sports prediction platforms live or die by **transparency and verifiable accuracy**. Users audit predictions manually when suspicious — platforms that hide methodology or cherry-pick stats lose trust immediately.
-
 **Must have (table stakes):**
-- **Consistent accuracy definitions** — one formula used everywhere, with visible denominators (24/40 not just 60%)
-- **Transparent methodology page** — explain exactly how every metric is calculated
-- **Performance breakdown tables** — by competition, by time period, with drill-down capability
-- **Model detail pages with full history** — scrollable prediction history with outcomes
-- **Mobile-responsive tables** — 90% of sports fans access on mobile
-- **Honest baseline comparisons** — show that 60% win rate is good (baseline is 50%)
+- **Persistent Sticky Header**: Score stays visible during scroll, appears ONCE on entire page (eliminates current 3× duplication)
+- **Tabbed Navigation**: Standard tabs (Summary | Stats | Predictions | Odds) as single-source-of-truth for each domain
+- **Progressive Disclosure**: Show essentials, hide advanced features behind "Show More" expansions
+- **Consolidated Prediction Panel**: Single location for all AI predictions (dedicated tab, not scattered across page)
+- **Match Timeline**: Chronological events (goals, cards, substitutions) for live/finished matches
+- **Mobile-First Layout**: Touch targets ≥48px, thumb-zone navigation, stacked layouts on <768px
 
-**Should have (differentiators):**
-- **Schema.org structured data** — enables rich snippets in Google search (58% of clicks)
-- **Open Graph optimization** — social shares drive traffic, rich previews increase CTR 2-3x
-- **Visual performance comparisons** — radar charts, sparklines showing trends
-- **Model calibration metrics** — Brier score, confidence intervals (advanced, differentiates platform)
+**Should have (competitive advantage):**
+- **AI Narrative Content**: Pre-match storylines and post-match roundups (150-200 words, expandable) — **Currently broken, content exists but not rendering**
+- **Model Performance Tracking**: Show which models are hot/cold ("Model X has predicted 8 of last 10 correctly")
+- **Confidence Levels with Context**: Not just percentages, but explanations ("82% confidence - High: Both teams' last 5 meetings produced BTTS")
+- **Smart Default Tab**: Context-aware (pre-match → Summary, live → Timeline, post-match → Predictions)
+- **Thumb-Friendly Tab Bar**: Sticky tabs at thumb zone (not top), swipeable for quick switching
 
 **Defer (v2+):**
-- Real-time auto-refresh polling (v1.0 fixed cache invalidation, manual refresh acceptable)
-- Downloadable prediction CSV (power user feature, small audience)
-- Programmatic model × competition pages (595 pages is large scope)
-- Historical "what if" scenarios (requires simulation engine)
+- **Real-Time Prediction Updates**: Live match model re-computation (high complexity, requires live data integration)
+- **Player Heatmaps on Match Page**: Belongs on player pages, dilutes match-level focus
+- **Social Features**: Real-time chat, user comments (moderation burden, focus on prediction accuracy first)
 
 ### Architecture Approach
 
-**Service Layer Pattern** — Centralize stats logic in `src/lib/stats/service.ts` without refactoring page components. The service layer sits between pages and database queries, providing single source of truth for calculations while existing query functions remain as data fetchers.
+The match page must transition from a 545-line monolithic component to a server-first, component-based architecture with strategic client boundaries. The core issue is not technical limitations but structural organization: data exists in two tables (`matchContent` and `matchRoundups`) with components querying inconsistently, duplicate displays lack coordination, and no progressive disclosure patterns exist for mobile.
 
 **Major components:**
-1. **Stats Definitions** (`definitions.ts`) — Single accuracy formula as TypeScript constant and SQL fragment generator
-2. **Stats Service** (`service.ts`) — High-level interface wrapping database queries with standardized calculations and caching
-3. **Database Views** (PostgreSQL) — Optional: canonical stats views for complex aggregations, though not required if service layer implemented correctly
-4. **SEO Schema Components** — React components rendering JSON-LD structured data, injected at page level without refactoring
+1. **MatchHeader (Server Component)** — Consolidates scoreboard + metadata + status badge into single 80-100 line component. Renders team logos, score/VS indicator, status badge (Live/Upcoming/Full Time), competition + round. Mobile-first with stacked layout <768px
+2. **MatchContentTabs (Client Component)** — Organizes dense content into tabs to reduce scroll depth by 60%. Contains Overview (default), Predictions, Analysis, Stats tabs. Requires useState for active tab, hence client component
+3. **MatchOverviewTab (Server Component)** — Mobile-optimized summary for quick consumption. Renders narrative content (150-200 word snippet), key match stats (3-column grid), top 3 AI predictions with CTA to Predictions tab
+4. **MatchNarrative (Server Component)** — Renamed from MatchContentSection, accepts unified content type handling both matchContent and matchRoundups sources. Single narrative block with "Read full roundup" link if available
+5. **RoundupViewer (Modified Server Component)** — Remove redundant scoreboard section (already in MatchHeader). Keep events timeline, stats grid, model predictions table. Add compact prop for tab embedding
 
-**Migration strategy is incremental:**
-- Phase 1: Create service layer (unused, zero risk)
-- Phase 2: Update database queries to use service
-- Phase 3: Update frontend calculations
-- Phase 4: Cleanup duplicate code
+**Data flow consolidation:**
+- Create `getMatchContentUnified()` query function that resolves matchContent vs matchRoundups priority
+- Modify `generatePostMatchRoundup()` to write ONLY to matchRoundups (single source of truth)
+- Deprecate `matchContent.postMatchContent` field after backfill migration
+- Use parallel data fetching with Promise.all for 6 queries (match, analysis, predictions, content, standings, next matches)
 
-Each phase is independently deployable with rollback safety.
+**Key patterns:**
+- Server-First Rendering: Server Components by default, Client Components only for interactivity (tabs, expand/collapse state)
+- Streaming with Suspense: Progressive rendering for slow data sources (predictions query with 35 models)
+- Mobile-First Component Design: Design for smallest screen (375px), progressively enhance
+- Progressive Disclosure: Show essential content first, details on demand (reduces cognitive load)
 
 ### Critical Pitfalls
 
-1. **Inconsistent accuracy denominators causing "94% bug"** — Six different formulas use different denominators (all predictions vs scored only). Prevention: Single SQL fragment imported everywhere. Detection: Automated test comparing same model's accuracy across endpoints.
+1. **Duplicate Data Display Creating Cognitive Overload** — Current code shows score 3 times (header, roundup scoreboard, stats), predictions 2-3 times (table, roundup HTML, top performers). Mobile users require >3 scrolls to reach predictions. **Prevention:** Single source of truth for each data type, sticky header with minimal info, target 2-3 screen heights on mobile (750-1125px total)
 
-2. **`IS NOT NULL` vs `> 0` mismatch** — Treating `tendencyPoints = 0` (wrong prediction) as correct inflates accuracy. Prevention: Change all checks to `> 0`. Validation: Run query comparing both formulas to quantify inflation.
+2. **React Hydration Mismatch from Dynamic Timestamps** — MatchContentSection line 40-43 uses `new Date().toLocaleString()` producing different output on server vs client due to timezones. **Prevention:** Use relative time on server ("Generated 2 hours ago"), absolute time on client upgrade, or ISO format with client-side formatting library (date-fns)
 
-3. **Cache invalidation before recalculation completes** — Invalidating caches immediately after deploy causes wrong numbers (new formula + old data). Prevention: Dual-column migration (calculate in parallel, validate, atomic switchover). Keep old column 30 days for rollback.
+3. **force-dynamic Killing Performance** — `/src/app/matches/[id]/page.tsx` line 18 forces server rendering on every request. TTFB >800ms, server costs scale linearly with traffic. **Prevention:** Remove force-dynamic, use ISR with conditional revalidation (60s scheduled, 30s live, 3600s finished), implement on-demand revalidation after prediction completion. Expected impact: TTFB reduces from 800ms to <200ms, cuts server costs 60-80%
 
-4. **Missing NULLIF() protection in weekly breakdowns** — Division by zero crashes when new model has 0 scored predictions. Prevention: Wrap all division operations in `COALESCE(... / NULLIF(denominator, 0), 0)`.
+4. **AI Search Engines Missing Content Due to Schema Fragmentation** — Duplicate/conflicting schema.org data across SportsEventSchema, WebPageSchema, MatchFAQSchema confuses AI crawlers. **Prevention:** Consolidate into single JSON-LD @graph array, use canonical entity IDs with consistent URLs, implement citation tracking for Perplexity API monitoring
 
-5. **OG image showing wrong metric with generic label** — Social shares display exact score percentage (14%) labeled as "Accurate" when users expect tendency accuracy (87%). Prevention: Add `metricType` parameter to OG image route, show specific label.
+5. **Suspense Boundary Placement Causing Waterfall Requests** — Match page fetches related data sequentially (match → analysis → predictions → events), causing 4× single query time. **Prevention:** Parallel data fetching with Promise.all, granular Suspense boundaries per section, preload patterns for critical data
 
 ## Implications for Roadmap
 
-Based on research, the milestone should be executed in **three sequential phases** to minimize risk and maintain production stability:
+Based on research, suggested phase structure:
 
-### Phase 1: Stats Foundation (Week 1)
-**Rationale:** Fix data accuracy before adding SEO — building SEO on wrong numbers amplifies the damage.
-
-**Delivers:**
-- Single source of truth for accuracy calculations
-- Fixed `IS NOT NULL` vs `> 0` bug across all queries
-- NULLIF() protection preventing division by zero
-- Model detail page showing correct accuracy (matches leaderboard)
-
-**Addresses:**
-- Table stakes feature: Consistent accuracy definitions
-- Table stakes feature: Transparent methodology
-
-**Avoids:**
-- Pitfall 1: Inconsistent denominators
-- Pitfall 2: IS NOT NULL vs > 0 mismatch
-- Pitfall 3: Missing NULLIF protection
-
-**Implementation:**
-1. Create `src/lib/stats/definitions.ts` with canonical formula
-2. Update all queries in `queries/stats.ts` to use formula
-3. Fix frontend calculation in `models/[id]/page.tsx` line 52-54
-4. Add methodology page explaining calculations
-
-**Risk level:** MEDIUM (changes production queries, but incremental with rollback)
-
-### Phase 2: Migration Execution (Week 1-2)
-**Rationale:** Recalculate historical stats using corrected formula, with audit trail for rollback.
+### Phase 1: Mobile Layout Consolidation & Data De-duplication
+**Rationale:** This addresses the most user-visible problems (duplicate displays, excessive scrolling) and is a prerequisite for all other phases. Quick wins with high impact.
 
 **Delivers:**
-- All 160 models × 17 leagues recalculated with correct formula
-- Historical comparison showing old vs new accuracy
-- Preserved old values for 30-day rollback window
-- Cache keys with version suffix for safe invalidation
+- Single sticky header replacing 3 duplicate score displays
+- Tabbed navigation interface (Summary | Stats | Predictions | Odds)
+- Mobile-first responsive components (stacked <768px, side-by-side ≥768px)
+- Touch targets ≥48px for all interactive elements
 
-**Addresses:**
-- Avoiding pitfall of destroying historical data
-- Enabling user trust through transparency
+**Addresses Features:**
+- Persistent sticky header (table stakes)
+- Tabbed navigation (table stakes)
+- Progressive disclosure (table stakes)
+- Mobile-first layout (table stakes)
 
-**Avoids:**
-- Pitfall 4: Cache invalidation timing issues
-- Pitfall 8: Recalculating without audit trail
+**Avoids Pitfalls:**
+- P1: Duplicate data cognitive overload
+- P2: React hydration mismatch (fix timestamp rendering)
+- P5: Touch target sizes <48px
+- P6: Typography unreadable on mobile
 
-**Implementation:**
-1. Add `accuracy_v2` column alongside existing `accuracy`
-2. Backfill v2 with corrected formula
-3. Validation query comparing v1 vs v2 (flag >10% changes)
-4. Atomic switchover in transaction
-5. Publish changelog explaining correction
+**Components to create:**
+- MatchHeader.tsx (Server Component, 80-100 lines)
+- MatchContentTabs.tsx (Client Component with tab state)
+- MatchOverviewTab.tsx (Server Component, mobile-optimized summary)
 
-**Risk level:** HIGH (modifies production data, requires careful validation)
+**Estimated effort:** 12-16 hours
 
-### Phase 3: SEO Enhancement (Week 2)
-**Rationale:** After stats are correct, amplify visibility through structured data and metadata optimization.
+### Phase 2: Content Pipeline Fixes & Rendering
+**Rationale:** Content exists but doesn't display due to dual-table writes and query misalignment. Fixing this unlocks competitive advantage (AI narrative content).
 
 **Delivers:**
-- Schema.org SportsEvent structured data on match pages
-- Fixed OG images showing correct accuracy with specific labels
-- Competition pages with full metadata and structured data
-- Rich snippet eligibility for Google search results
+- Unified content query system (`getMatchContentUnified()`)
+- MatchNarrative component handling both matchContent and matchRoundups
+- Modified `generatePostMatchRoundup()` writing only to matchRoundups
+- Display of pre-match storylines and post-match roundups
 
-**Addresses:**
-- Differentiator: Schema.org structured data (58% of clicks)
-- Differentiator: Open Graph optimization (2-3x CTR increase)
+**Addresses Features:**
+- AI narrative content (competitive advantage - currently broken)
+- Narrative prediction summary (table stakes)
+- Post-match AI roundup (competitive advantage)
 
-**Avoids:**
-- Pitfall 5: OG image showing wrong metric
-- Pitfall 6: Structured data accuracy mismatch with page display
-- Pitfall 10: Meta description length exceeds 160 chars
+**Avoids Pitfalls:**
+- P16: LLM hallucination validation missing
+- P17: Content deduplication over-aggressive
+- P18: Queue worker retry causing duplicate content
+- P14: Defensive error handling hiding real issues
 
-**Implementation:**
-1. Add `metricType` parameter to OG image route
-2. Create `CompetitionSchema.tsx` component
-3. Add `generateMetadata()` to competition pages
-4. Validate structured data with Google Rich Results Test
-5. Submit updated sitemap to Search Console
+**Components to modify:**
+- Rename MatchContentSection → MatchNarrative
+- Update RoundupViewer (remove scoreboard duplication)
+- Create validation functions for LLM output
 
-**Risk level:** LOW (additive changes, doesn't affect existing functionality)
+**Estimated effort:** 8-12 hours (code) + 4-6 hours (testing all match states)
+
+### Phase 3: Performance Optimization & Caching
+**Rationale:** After layout and content work, performance is critical before traffic scales. ISR reduces costs and improves user experience.
+
+**Delivers:**
+- ISR with conditional revalidation (replace force-dynamic)
+- Parallel data fetching with Promise.all
+- Granular Suspense boundaries for streaming
+- Optional PPR enablement with cacheComponents flag
+
+**Uses Stack Elements:**
+- Next.js 16 ISR (revalidate per match state)
+- React 19 Suspense (progressive rendering)
+- Next.js revalidatePath (on-demand cache clearing)
+
+**Avoids Pitfalls:**
+- P3: force-dynamic killing performance
+- P7: Slow mobile load times during live matches
+- P12: Suspense boundary waterfall requests
+- P13: Missing generateStaticParams for competition pages
+
+**Performance targets:**
+- TTFB <200ms (currently 800ms)
+- Mobile LCP <1.8s (currently >2.5s)
+- Cache hit rate >70%
+- Mobile page weight <500KB
+
+**Estimated effort:** 6-8 hours
+
+### Phase 4: AI Search Optimization
+**Rationale:** After core functionality works, optimize for discovery. AI search (ChatGPT, Perplexity) is massive traffic channel (ChatGPT: 800M weekly users).
+
+**Delivers:**
+- robots.txt with AI crawler user-agents
+- llms.txt with key URLs (markdown format)
+- Consolidated Schema.org JSON-LD @graph
+- Entity relationships in structured data
+- Semantic HTML with clear H2/H3 hierarchy
+
+**Addresses Features:**
+- None directly (infrastructure for discoverability)
+
+**Avoids Pitfalls:**
+- P4: AI search engines missing content
+- P9: Missing entity relationships in structured data
+- P10: Content structure not LLM-optimized
+- P11: Schema.org validation errors
+
+**Files to create:**
+- /public/robots.txt
+- /public/llms.txt
+- Updated metadata generation in page.tsx
+- Enhanced FAQPage schema in MatchFAQSchema
+
+**Estimated effort:** 4-6 hours
+
+### Phase 5: Content Generation Pipeline Cleanup
+**Rationale:** After new rendering system is proven, clean up technical debt. Migrate to single-table writes.
+
+**Delivers:**
+- Backfill script: matchContent.postMatchContent → matchRoundups.narrative
+- Drop deprecated matchContent.postMatchContent column
+- Idempotent content generation with database locks
+- Enhanced validation for entity mentions
+
+**Avoids Pitfalls:**
+- P16: LLM hallucination (entity validation)
+- P17: Over-aggressive deduplication
+- P18: Duplicate content from retry logic
+
+**Risk level:** HIGH (data migration requires backup/rollback plan)
+
+**Estimated effort:** 8-10 hours (includes migration testing on staging)
 
 ### Phase Ordering Rationale
 
-- **Stats before SEO**: Incorrect stats in structured data damage SEO more than missing structured data. Fix data first.
-- **Validation before migration**: Dual-column approach enables side-by-side comparison, catching formula bugs before they go live.
-- **Incremental rollout**: Each phase is independently deployable. If Phase 2 fails, Phase 1 service layer remains working. If Phase 3 fails, stats are already fixed.
-- **Cache optimization deferred**: Not in scope for this milestone. Cache invalidation works, just needs cleanup for efficiency (can be Phase 4 later).
+**Why Phase 1 first:**
+- User-visible impact (mobile UX immediately better)
+- Foundation for other phases (components must exist before caching optimization)
+- Quick wins build momentum
+- No data migration risk
+
+**Why Phase 2 before Phase 3:**
+- Performance optimization depends on knowing what content will render
+- Can't optimize cache strategy until content pipeline is deterministic
+- Content fixes have higher user value than performance gains
+
+**Why Phase 4 separate from Phase 1-2:**
+- AI search optimization is infrastructure, not user-facing
+- Can be done in parallel with Phase 5 if needed
+- Low risk, independent of other phases
+
+**Why Phase 5 last:**
+- Requires proven new rendering system (Phases 1-2 must be stable)
+- Data migration has rollback complexity
+- Content generation can function with dual-table writes until cleanup
+
+**Dependency chain:**
+```
+Phase 1 (Mobile Layout)
+  ↓
+Phase 2 (Content Pipeline) ← Must happen before Phase 5
+  ↓
+Phase 3 (Performance) ← Depends on knowing final component structure
+  ↓ (parallel possible)
+Phase 4 (AI Search) + Phase 5 (Cleanup)
+```
 
 ### Research Flags
 
-**Phases NOT needing deeper research** (patterns well-documented):
-- **Phase 1:** Stats standardization uses standard PostgreSQL patterns, well-documented
-- **Phase 3:** Next.js SEO patterns are official framework features, high confidence
+**Phases needing deeper research during planning:**
+- **Phase 3 (Performance):** Need load testing data to determine optimal revalidation intervals per match state. Current suggestion (60s/30s/3600s) is hypothesis.
+- **Phase 5 (Cleanup):** Database migration strategy needs detailed planning with rollback procedures. May need DBA review.
 
-**Phases needing careful validation** (but not additional research):
-- **Phase 2:** Migration requires production database testing, but approach is clear
-- **Phase 2:** User communication strategy for accuracy drop (blog post, changelog, badge)
-
-**No `/gsd:research-phase` needed** — domain and implementation patterns are well-understood. Focus effort on careful validation testing.
+**Phases with standard patterns (skip research-phase):**
+- **Phase 1 (Mobile Layout):** Well-documented React/Next.js patterns, tabbed interfaces are standard
+- **Phase 2 (Content Pipeline):** Internal architecture refactor, no external research needed
+- **Phase 4 (AI Search):** Clear documentation for robots.txt, llms.txt, Schema.org patterns
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Verified with official Next.js 16 docs, PostgreSQL docs, current codebase analysis |
-| Features | HIGH | Multiple sports prediction platform reviews, academic research on calibration, FBref/ESPN case studies |
-| Architecture | HIGH | Service layer pattern is industry standard, codebase structure analyzed directly |
-| Pitfalls | HIGH | All pitfalls identified from actual codebase grep results showing 6 different formulas |
+| Stack | HIGH | Next.js 16 + React 19 + Tailwind v4 is current best practice, no changes needed |
+| Features | MEDIUM | Mobile UX patterns verified across multiple sources, AI prediction display patterns limited to 2-3 platforms |
+| Architecture | HIGH | Next.js App Router patterns well-documented, Server Components + Suspense are established 2026 patterns |
+| Pitfalls | HIGH | Hydration issues, force-dynamic performance, Schema.org fragmentation all verified with codebase analysis |
 
 **Overall confidence:** HIGH
 
-Research is based on direct codebase analysis (grep results showing exact line numbers of inconsistencies) combined with official documentation and industry case studies. No speculative recommendations — all suggestions verified against current code.
-
 ### Gaps to Address
 
-**User communication about accuracy drop:**
-- Models showing 94% will drop to realistic 87% after fix
-- Users may perceive this as "nerf" rather than correction
-- **Mitigation:** Publish blog post explaining fix BEFORE deployment, add changelog entry, show side-by-side comparison with "corrected formula" badge
+**Performance baselines missing:**
+- Current TTFB, LCP, mobile page weight not measured
+- Need baseline metrics before Phase 3 to validate improvements
+- **Action:** Add RUM (Real User Monitoring) or Vercel Analytics before Phase 3 work begins
 
-**Performance impact of service layer:**
-- Adding abstraction layer could slow queries
-- **Validation:** Load test stats endpoints before/after service layer integration
-- **Target:** <100ms for leaderboard (30 models), <50ms for model detail
+**LLM validation specifics:**
+- Entity validation logic exists for blog posts (`validateLeagueRoundupOutput`) but unclear if applicable to match content
+- Need to determine which entities are "allowed" per match (player rosters not in current database)
+- **Action:** Define validation schema during Phase 2 planning, may need to fetch player data from API-Football
 
-**SEO crawl timing:**
-- Google takes 2-4 weeks to re-crawl and update rich snippets
-- **Monitoring:** Google Search Console structured data detection + rich snippet impressions
+**AI search citation tracking:**
+- No way to measure if Schema.org consolidation improves AI citations
+- **Action:** Implement manual tracking (weekly searches in Perplexity/ChatGPT for "kroam.xyz") or wait for GEO tools to mature
 
-**Cache key proliferation:**
-- Versioned cache keys could increase Redis memory usage
-- **Monitoring:** Track Redis memory before/after, set up alerts for >20% increase
-- **Mitigation:** TTL on all stats caches (5 minutes) as safety net
+**Mobile device testing:**
+- Research identifies touch target requirements but no testing plan
+- **Action:** Define device matrix (iOS Safari, Android Chrome minimum) for Phase 1 acceptance criteria
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- **Next.js 16 Documentation**: generateMetadata API, App Router patterns
-- **PostgreSQL Official Docs**: Aggregate functions, NULLIF, COALESCE, view performance
-- **Schema.org**: SportsEvent type definition, structured data requirements
-- **Current Codebase**: Direct analysis of `src/lib/db/queries/stats.ts` (6 accuracy definitions), `src/lib/db/queries.ts` (IS NOT NULL pattern), `src/app/models/[id]/page.tsx` (frontend bug)
+- **Next.js 16 Official Docs** — ISR, PPR, Server Components, data fetching patterns
+- **React 19 Official Docs** — useActionState, useOptimistic, Suspense streaming
+- **Tailwind CSS v4 Official Docs** — Mobile-first breakpoints, CSS-first configuration
+- **shadcn/ui Official Patterns** — Mobile navigation with Sheet component
+- **Project codebase** — `/src/app/leagues/[slug]/[match]/page.tsx` (current implementation), `/src/lib/content/generator.ts` (content pipeline), component analysis
 
 ### Secondary (MEDIUM confidence)
-- **Sports Prediction Platform Reviews**: Ruthless Reviews analysis of transparency requirements
-- **Sports Statistics UX Studies**: FBref case study, leaderboard design best practices
-- **SEO Research 2026**: Rich snippets capturing 58% of clicks, structured data as baseline requirement
-- **Calibration Research**: Academic papers on sports betting model evaluation (Brier score, expected value)
+- **FlashScore Redesign Case Study** — Tabbed navigation pattern for match details
+- **Nielsen Norman Group** — Progressive disclosure, duplicate content research
+- **Mobile Sportsbook UX 2026** — Touch target sizes, thumb-zone navigation
+- **GEO Optimization Guides** — AI search requirements for ChatGPT, Perplexity, Claude
+- **llms.txt Complete Guide** — 780+ site adoption, markdown format standards
 
-### Tertiary (LOW confidence, for context only)
-- **International SEO**: Football vs soccer terminology (validated against Sitebulb guide)
-- **Gamification Research**: Leaderboard engagement patterns (informative but not critical for this milestone)
-
-### Codebase Analysis (HIGH confidence)
-Direct evidence from grep results:
-- `queries.ts` lines 273, 275, 352, 1483, 2022, 2150: Inconsistent IS NOT NULL usage
-- `stats.ts` lines 100, 156, 215, 275: Accuracy calculation variations
-- `models/[id]/page.tsx` line 52-54: Wrong metric calculation for OG images
-- `api/og/model/route.tsx` line 64: Generic "Accurate" label
+### Tertiary (LOW confidence)
+- **Real-time prediction updates** — Emerging feature, limited implementation data (Sports-AI.dev reference)
+- **AI citation tracking tools** — Market immature, manual tracking required for now
 
 ---
 *Research completed: 2026-02-02*
 *Ready for roadmap: yes*
-*Next step: Requirements definition → Phase planning*

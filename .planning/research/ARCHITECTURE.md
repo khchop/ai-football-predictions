@@ -1,957 +1,627 @@
-# Architecture Integration: Stats Standardization & SEO
+# Architecture Research: Match Page Refresh
 
-**Project:** BettingSoccer Platform
-**Research Date:** 2026-02-02
-**Focus:** Integration patterns for stats accuracy fixes and SEO enhancement without breaking existing functionality
+**Researched:** 2026-02-02
+**Confidence:** HIGH
 
----
+## Summary
 
-## Executive Summary
-
-The platform has **6 different accuracy calculation definitions** scattered across:
-- `src/lib/db/queries/stats.ts` (4 definitions)
-- `src/lib/db/queries.ts` (2 definitions)
-- Frontend calculations in page components
-
-**Architecture Goal:** Centralize stats logic without breaking 14 existing page routes, maintain cache invalidation patterns, and layer SEO without refactoring component structure.
-
-**Key Constraint:** This is a **SUBSEQUENT MILESTONE** — the platform is live in production. Changes must be incremental, backward-compatible, and verifiable.
+The match page suffers from architectural bloat (545-line monolithic component), duplicate data rendering, and a broken content pipeline. Content exists in `matchContent` and `matchRoundups` tables but isn't displaying due to query misalignment and component structure. The architecture should follow Next.js 15 server-first patterns with strategic component boundaries, mobile-first layout hierarchy, and clean data flow from database → RSC → rendering.
 
 ---
 
-## Problem: Stats Calculation Inconsistencies
+## Current Pain Points
 
-### Current State (6 Accuracy Definitions)
+### 1. Monolithic Page Component
+**File:** `/src/app/leagues/[slug]/[match]/page.tsx` (545 lines)
+- **Issue:** Inline JSX mixing layout, data fetching, and presentation
+- **Consequence:** Hard to maintain, test, or reuse components
+- **Location:** Lines 169-544 contain massive inline JSX with duplicated logic
 
-**Definition 1: `getModelOverallStats` (line 100)**
-```sql
-accuracy: ROUND(100.0 * SUM(CASE WHEN tendencyPoints > 0 THEN 1 ELSE 0 END)
-          / NULLIF(SUM(CASE WHEN status = 'scored' THEN 1 ELSE 0 END), 0), 1)
-```
-- **Denominator:** Scored predictions only
-- **Numerator:** Tendency points > 0
+### 2. Broken Content Rendering
+**Component:** `MatchContentSection` (`src/components/match/MatchContent.tsx`)
+- **Issue:** Queries `matchContent` table but content generation writes to both `matchContent` AND `matchRoundups`
+- **Root cause:** Dual-table architecture created confusion — `generatePostMatchRoundup()` writes HTML to `matchContent.postMatchContent` but main narrative to `matchRoundups.narrative`
+- **Evidence:** Line 353 renders `<MatchContentSection matchId={matchData.id} />` which queries `getMatchContent(matchId)`, but this only returns 3-section text fields, not the rich roundup data
 
-**Definition 2: `getModelCompetitionStats` (line 156)**
-```sql
-accuracy: ROUND(100.0 * SUM(CASE WHEN tendencyPoints > 0 THEN 1 ELSE 0 END)
-          / NULLIF(SUM(CASE WHEN status = 'scored' THEN 1 ELSE 0 END), 0), 1)
-```
-- **Same as Definition 1** (consistent)
+### 3. Duplicate Data Sections
+**Problem:** Match metadata rendered THREE times:
+1. **Lines 198-330:** Main match card (team logos, score, venue, time)
+2. **Lines 356-370:** RoundupViewer scoreboard (if roundup exists)
+3. **Lines 332-343:** MatchEvents section (if finished/live)
 
-**Definition 3: `getModelClubStats` (line 215)**
-```sql
-accuracy: ROUND(100.0 * SUM(CASE WHEN tendencyPoints > 0 THEN 1 ELSE 0 END)
-          / NULLIF(SUM(CASE WHEN status = 'scored' THEN 1 ELSE 0 END), 0), 1)
-```
-- **Same as Definition 1** (consistent)
+**Consequence:** Mobile users scroll through repetitive information
 
-**Definition 4: `getLeaderboard` (line 275)**
-```sql
-accuracy: ROUND(100.0 * SUM(CASE WHEN tendencyPoints > 0 THEN 1 ELSE 0 END)
-          / NULLIF(SUM(CASE WHEN status = 'scored' THEN 1 ELSE 0 END), 0), 1)
-```
-- **Same as Definition 1** (consistent)
+### 4. Content Generation Pipeline Confusion
+**Files:** `src/lib/content/generator.ts` (lines 904-950)
+- **Issue:** Post-match roundup writes to TWO tables:
+  - `matchRoundups` table: Structured JSON (scoreboard, events, stats, narrative)
+  - `matchContent` table: Legacy HTML blob for backward compatibility
+- **Result:** Components don't know which source to use
 
-**Definition 5: `getTopModelsByCompetition` (line 276)**
-```sql
-accuracy: ROUND(100.0 * SUM(CASE WHEN tendencyPoints IS NOT NULL THEN 1 ELSE 0 END)
-          / NULLIF(COUNT(predictions.id), 0), 1)
-```
-- **INCONSISTENT:** Uses `tendencyPoints IS NOT NULL` instead of `> 0`
-- **INCONSISTENT:** Denominator is total predictions (including pending), not scored
+### 5. Inconsistent Component Boundaries
+**Components that overlap:**
+- `MatchStats` (league context, H2H, predictions)
+- `MatchContentSection` (3-section narrative)
+- `RoundupViewer` (full post-match analysis)
+- `PredictionTable` (AI model predictions)
 
-**Definition 6: Frontend Calculation (models/[id]/page.tsx line 52)**
-```typescript
-const accuracy = predictionStats?.scoredPredictions && predictionStats.scoredPredictions > 0
-  ? Math.round((predictionStats.exactScores / predictionStats.scoredPredictions) * 100)
-  : 0;
-```
-- **CRITICAL BUG:** Calculates exact score accuracy, not tendency accuracy
-- Used for OG image metadata (line 53-61)
+No clear ownership of "who renders what when"
 
-### Impact Analysis
-
-**User-Facing:**
-- Leaderboard shows 65.3% accuracy
-- Model detail page shows 58.1% accuracy (for same model)
-- OG image shows 12.5% accuracy (exact scores only)
-
-**Technical Debt:**
-- 6 different SQL fragments to maintain
-- Copy-paste errors likely (Definition 5 already wrong)
-- Frontend calculation completely wrong
-- Cache keys coupled to query logic
+### 6. Mobile Layout Issues
+- Match card optimized for desktop (team logos side-by-side)
+- No progressive disclosure patterns
+- Stats grids force horizontal scroll on narrow screens
+- Related content widgets placed at bottom (lost in scroll depth)
 
 ---
 
-## Solution: Centralized Stats Service
+## Proposed Structure
 
-### Architecture Pattern: Service Layer
+### Page Hierarchy (Server Components First)
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Application Layer                        │
-│  (pages, API routes, components)                            │
-└─────────────┬───────────────────────────────────────────────┘
-              │
-              │ calls
-              ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Stats Service (NEW)                            │
-│  src/lib/stats/service.ts                                   │
-│                                                             │
-│  - Single source of truth for calculations                 │
-│  - Type-safe interfaces                                     │
-│  - Cache-aware                                              │
-└─────────────┬───────────────────────────────────────────────┘
-              │
-              │ uses
-              ▼
-┌─────────────────────────────────────────────────────────────┐
-│         Database Queries (EXISTING)                         │
-│  src/lib/db/queries.ts & queries/stats.ts                  │
-│                                                             │
-│  - Raw data fetching only                                   │
-│  - No calculation logic                                     │
-└─────────────────────────────────────────────────────────────┘
+src/app/leagues/[slug]/[match]/page.tsx (150 lines max)
+├── Metadata generation
+├── Data fetching layer (6 queries → parallel)
+│   ├── getMatchBySlug()
+│   ├── getMatchWithAnalysis()
+│   ├── getPredictionsForMatchWithDetails()
+│   ├── getMatchContent() + getMatchRoundup() → UNIFIED
+│   ├── getStandingsForTeams()
+│   └── getNextMatchesForTeams()
+└── Layout composition
+    ├── <MatchHeader /> — New consolidated component
+    ├── <MatchContentTabs /> — New tabbed interface
+    │   ├── Tab: Overview (default, mobile-first)
+    │   ├── Tab: Predictions
+    │   ├── Tab: Analysis
+    │   └── Tab: Stats
+    └── <MatchRelatedContent /> — Sidebar/bottom module
 ```
 
-### Service Layer Design
+### New Components to Create
 
-**Location:** `src/lib/stats/service.ts` (NEW FILE)
-
-**Responsibilities:**
-1. Define accuracy calculation once
-2. Apply consistently across all contexts
-3. Handle edge cases (division by zero, null values)
-4. Provide type-safe interfaces
-5. Integration point for caching
-
-**Non-Responsibilities:**
-- Database access (delegates to existing queries)
-- UI rendering (that's component layer)
-- Cache management (uses existing redis.ts)
-
-### Implementation Structure
-
+#### 1. `MatchHeader.tsx` (Server Component)
+**Purpose:** Consolidate scoreboard + metadata + status badge
+**Props:**
 ```typescript
-// src/lib/stats/definitions.ts (NEW)
-// Single source of truth for stat calculations
-
-export type AccuracyDefinition = {
-  numerator: 'tendency_correct' | 'exact_scores';
-  denominator: 'scored_predictions' | 'total_predictions';
-};
-
-export const ACCURACY_DEFINITION: AccuracyDefinition = {
-  numerator: 'tendency_correct',      // Predictions with tendencyPoints > 0
-  denominator: 'scored_predictions',  // Only finished, scored predictions
-};
-
-// SQL fragment generator (for use in existing queries)
-export function getAccuracySql(): string {
-  return `
-    COALESCE(
-      ROUND(
-        100.0 * SUM(CASE WHEN tendencyPoints > 0 THEN 1 ELSE 0 END)
-        / NULLIF(SUM(CASE WHEN status = 'scored' THEN 1 ELSE 0 END), 0)::numeric,
-        1
-      ),
-      0
-    )
-  `;
-}
-
-// Application-level calculation (for frontend)
-export function calculateAccuracy(
-  correctTendencies: number,
-  scoredPredictions: number
-): number {
-  if (scoredPredictions === 0) return 0;
-  return Math.round((correctTendencies / scoredPredictions) * 100 * 10) / 10;
+interface MatchHeaderProps {
+  match: Match;
+  competition: Competition;
+  isLive: boolean;
+  isFinished: boolean;
 }
 ```
+**Renders:**
+- Team logos + names
+- Score/VS indicator
+- Status badge (Live/Upcoming/Full Time)
+- Competition + round
+- Venue + kickoff time
+- Back to league link
 
+**Mobile-first:** Stacked layout on <768px, side-by-side on desktop
+
+#### 2. `MatchContentTabs.tsx` (Client Component)
+**Purpose:** Organize dense content into tabs to reduce scroll depth
+**Props:**
 ```typescript
-// src/lib/stats/service.ts (NEW)
-// High-level stats interface
-
-import { getModelPredictionStats, getModelRank } from '@/lib/db/queries';
-import { calculateAccuracy } from './definitions';
-import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
-
-export interface ModelStatsResponse {
-  modelId: string;
-  displayName: string;
-
-  // Core metrics
-  totalPredictions: number;
-  scoredPredictions: number;
-  pendingPredictions: number;
-
-  // Accuracy (standardized)
-  tendencyAccuracy: number;  // Always calculated using ACCURACY_DEFINITION
-  exactScoreRate: number;
-
-  // Performance
-  avgPoints: number;
-  totalPoints: number;
-
-  // Rankings
-  globalRank: number | null;
-
-  // Streaks
-  currentStreak: number;
-  bestStreak: number;
+interface MatchContentTabsProps {
+  match: Match;
+  predictions: Prediction[];
+  content: MatchContentUnified | null; // NEW unified type
+  analysis: MatchAnalysis | null;
+  standings: { home: Standing | null; away: Standing | null };
+  h2h: H2HMatch[];
 }
+```
+**Tabs:**
+1. **Overview** (default)
+   - Match narrative (from `matchContent` or `matchRoundups`)
+   - Key stats summary
+   - Top 3 predictions
+2. **Predictions**
+   - Full PredictionTable
+   - Model accuracy comparison
+3. **Analysis**
+   - RoundupViewer (if finished)
+   - MatchStats (league context, H2H, odds)
+4. **Stats**
+   - MatchEvents timeline
+   - Extended statistics
 
-export async function getModelStats(modelId: string): Promise<ModelStatsResponse | null> {
-  // Cache key includes version to invalidate on definition changes
-  const cacheKey = cacheKeys.modelStats(modelId, 'v1');
+**Why client component:** Tab state requires `useState` for active tab
 
-  return withCache(cacheKey, CACHE_TTL.STATS, async () => {
-    const [predictionStats, rank] = await Promise.all([
-      getModelPredictionStats(modelId),
-      getModelRank(modelId),
-    ]);
+#### 3. `MatchOverviewTab.tsx` (Server Component)
+**Purpose:** Mobile-optimized summary for quick consumption
+**Renders:**
+- Narrative content (150-200 word snippet)
+- Key match stats (possession, shots, xG) — 3-column grid
+- Top 3 AI predictions — compact card layout
+- Call-to-action: "View all predictions" → switches to Predictions tab
 
-    if (!predictionStats) return null;
+#### 4. `MatchRelatedContent.tsx` (Server Component)
+**Purpose:** SEO internal linking + user navigation
+**Renders:**
+- Related matches widget (already exists)
+- Upcoming fixtures
+- Popular models
+- Competition link
 
-    const scoredPredictions = Number(predictionStats.scoredPredictions) || 0;
-    const correctTendencies = Number(predictionStats.correctTendencies) || 0;
-    const exactScores = Number(predictionStats.exactScores) || 0;
+**Desktop:** Sidebar (sticky positioned)
+**Mobile:** Bottom section (after main content)
 
-    return {
-      modelId,
-      displayName: '', // Fetch from model table if needed
+### Components to Modify
 
-      totalPredictions: Number(predictionStats.totalPredictions) || 0,
-      scoredPredictions,
-      pendingPredictions: Number(predictionStats.totalPredictions) - scoredPredictions,
+#### 1. `MatchContentSection.tsx` → `MatchNarrative.tsx`
+**Changes:**
+- Rename for clarity
+- Accept unified content type (handles both `matchContent` and `matchRoundups`)
+- Simplify to single narrative block (no 3-section layout)
+- Add "Read full roundup" link if `matchRoundups` exists
 
-      // Standardized calculation
-      tendencyAccuracy: calculateAccuracy(correctTendencies, scoredPredictions),
-      exactScoreRate: calculateAccuracy(exactScores, scoredPredictions),
-
-      avgPoints: Number(predictionStats.avgPoints) || 0,
-      totalPoints: Number(predictionStats.totalPoints) || 0,
-
-      globalRank: rank,
-
-      currentStreak: 0, // Fetch from model table
-      bestStreak: 0,
-    };
-  });
+**New interface:**
+```typescript
+interface MatchNarrativeProps {
+  content: {
+    narrative: string; // Unified from either source
+    generatedAt: Date;
+    source: 'matchContent' | 'matchRoundup';
+  } | null;
+  isFinished: boolean;
 }
 ```
 
-### Migration Strategy (Zero Downtime)
+#### 2. `RoundupViewer.tsx`
+**Changes:**
+- Remove redundant scoreboard section (already in MatchHeader)
+- Keep: Events timeline, Stats grid, Model predictions table, Top performers, Narrative
+- Add prop: `compact?: boolean` for embedding in tabs vs standalone
 
-**Phase 1: Create Service Layer (No Breaking Changes)**
-```
-1. Create src/lib/stats/definitions.ts
-2. Create src/lib/stats/service.ts
-3. Write tests for calculateAccuracy()
-4. Deploy (service exists but unused)
-```
+#### 3. `MatchStats.tsx`
+**Changes:**
+- Move to Analysis tab (not Overview)
+- Keep: League context, H2H, Predictions percentages
+- Remove: Odds section (move to new BettingInsights component if needed)
 
-**Phase 2: Migrate Database Queries (Update SQL)**
-```
-1. Update queries/stats.ts to use getAccuracySql() helper
-2. Update queries.ts getTopModelsByCompetition (fix Definition 5)
-3. Verify query results unchanged (existing tests should pass)
-4. Deploy
-```
+### Components to Remove/Consolidate
 
-**Phase 3: Migrate Frontend Calculations**
-```
-1. Update models/[id]/page.tsx to use getModelStats()
-2. Fix accuracy calculation for OG images (line 52-54)
-3. Update other pages incrementally
-4. Deploy
-```
+**Remove:**
+- `match-header.tsx` — superseded by new MatchHeader
+- `match-odds.tsx` — integrate into MatchStats or separate BettingInsights
+- `predictions-skeleton.tsx` — use Suspense boundaries instead
+- `predictions-section.tsx` — fold into PredictionTable
 
-**Phase 4: Cleanup**
-```
-1. Remove duplicate SQL fragments
-2. Add eslint rule: ban direct accuracy calculations
-3. Document stats service as canonical source
-```
-
-**Rollback Safety:** Each phase independently deployable. If Phase 2 breaks, Phase 1 code is unused so no revert needed.
+**Keep:**
+- `PredictionTable` (used in Predictions tab)
+- `match-h1.tsx` (SEO H1 component)
+- `MatchFAQSchema.tsx` (structured data)
+- `PredictionInsightsBlockquote.tsx` (AI summary)
+- `related-matches-widget.tsx` (SEO linking)
 
 ---
 
-## Problem: SEO Metadata Gaps
+## Data Flow
 
-### Current State
-
-**What Exists:**
-- `src/lib/seo/metadata.ts` — Helper functions for building Next.js Metadata
-- `src/components/WebPageSchema.tsx` — JSON-LD for WebPage
-- `src/components/SportsEventSchema.tsx` — JSON-LD for matches
-- Model pages already have `generateMetadata()` (line 34-90 in models/[id]/page.tsx)
-
-**What's Missing:**
-1. **Competition pages** — No metadata, no structured data
-2. **Leaderboard pages** — Generic metadata only
-3. **Match pages** — Basic metadata, missing prediction context
-4. **Model pages** — Metadata exists but accuracy calculation is WRONG
-
-**Gap Analysis:**
-| Page Type | Metadata | Structured Data | Status |
-|-----------|----------|-----------------|--------|
-| Model detail | ✅ (but wrong accuracy) | ✅ WebPageSchema | Needs fix |
-| Competition page | ❌ | ❌ | Needs both |
-| Leaderboard | ✅ Generic | ❌ | Needs structured data |
-| Match detail | ✅ Basic | ✅ SportsEventSchema | Needs enhancement |
-| Match roundup | ❌ | ❌ | Needs both |
-
----
-
-## Solution: Layered SEO Enhancement
-
-### Architecture Pattern: Decorator Layer
-
+### Current Flow (Broken)
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Page Component                           │
-│  (e.g., leagues/[slug]/page.tsx)                           │
-│                                                             │
-│  export async function generateMetadata() { ... }          │
-│  <CompetitionPageSchema ... />                             │
-└─────────────────────────────────────────────────────────────┘
-              │                            │
-              │ uses                       │ renders
-              ▼                            ▼
-┌──────────────────────────┐   ┌──────────────────────────────┐
-│  SEO Metadata Helpers    │   │  Structured Data Components  │
-│  (EXISTING)              │   │  (EXTEND EXISTING)           │
-│  src/lib/seo/metadata.ts │   │  src/components/*Schema.tsx  │
-└──────────────────────────┘   └──────────────────────────────┘
+Match finished
+  ↓
+Settlement worker → generatePostMatchRoundup()
+  ↓
+Writes to TWO tables:
+  1. matchRoundups (structured JSON + narrative)
+  2. matchContent.postMatchContent (HTML blob)
+  ↓
+Page component renders:
+  - MatchContentSection queries matchContent (shows HTML blob)
+  - RoundupViewer queries matchRoundups (shows structured data)
+  ↓
+RESULT: Duplicate rendering OR missing content (if only one table populated)
 ```
 
-**Key Insight:** Don't refactor page structure. Add metadata generation and schema components to existing pages.
+### Proposed Flow (Fixed)
+```
+Match finished
+  ↓
+Settlement worker → generatePostMatchRoundup()
+  ↓
+Writes to matchRoundups ONLY (single source of truth)
+  ↓
+Deprecate matchContent.postMatchContent field
+Keep matchContent for pre-match + betting sections only
+  ↓
+Page component:
+  - Queries getMatchRoundup(matchId) for finished matches
+  - Queries getMatchContent(matchId) for pre-match/betting text
+  ↓
+Unified in MatchNarrative component:
+  if (roundup) display roundup.narrative
+  else if (content.postMatchContent) display legacy HTML
+  else display content.preMatchContent || content.bettingContent
+  ↓
+RESULT: Single content source, no duplication
+```
 
-### Implementation: Competition Pages
-
-**Step 1: Create metadata helper** (extend existing `metadata.ts`)
-
+### Query Consolidation
+**New utility function:** `src/lib/content/queries.ts`
 ```typescript
-// src/lib/seo/metadata.ts (ADD)
-
-export function generateCompetitionMetadata(
-  competition: Competition,
-  stats: CompetitionStats
-): Metadata {
-  const title = `${competition.name} Predictions & AI Model Leaderboard | Kroam`;
-  const description = `Track ${competition.name} match predictions from ${stats.activeModels} AI models. Current accuracy: ${stats.avgAccuracy}%. Live scores, model rankings, and prediction analysis.`;
+export async function getMatchContentUnified(matchId: string) {
+  const [content, roundup] = await Promise.all([
+    getMatchContent(matchId),
+    getMatchRoundup(matchId),
+  ]);
 
   return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-      url: `${BASE_URL}/leagues/${competition.slug}`,
-      images: [
-        {
-          url: `${BASE_URL}/api/og/league?id=${competition.id}`,
-          width: 1200,
-          height: 630,
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-    },
-    alternates: {
-      canonical: `${BASE_URL}/leagues/${competition.slug}`,
-    },
+    // Pre-match and betting from matchContent
+    preMatch: content?.preMatchContent,
+    betting: content?.bettingContent,
+
+    // Post-match: prefer roundup, fallback to legacy
+    postMatch: roundup
+      ? { source: 'roundup', data: roundup }
+      : content?.postMatchContent
+        ? { source: 'legacy', html: content.postMatchContent }
+        : null,
   };
 }
 ```
 
-**Step 2: Create structured data component**
+---
 
+## Content Generation Pipeline
+
+### Current Issue
+**Problem:** `generatePostMatchRoundup()` writes to both tables (lines 904-973 in `generator.ts`)
+
+### Fix Strategy
+**Phase 1: Deprecate Dual Writes (Immediate)**
+1. Modify `generatePostMatchRoundup()`:
+   - Write ONLY to `matchRoundups` table
+   - Remove lines 952-973 (matchContent insert)
+   - Keep backward compatibility read path in UI
+
+**Phase 2: Migration (Follow-up milestone)**
+1. Backfill script: Copy `matchContent.postMatchContent` → `matchRoundups.narrative`
+2. Add database migration: `ALTER TABLE match_content DROP COLUMN post_match_content`
+3. Update all queries to use `matchRoundups` only
+
+### Content Generation Triggers
+**Keep existing:**
+- T-6h: Pre-match analysis → `matchContent.preMatchContent`
+- T-30m: Betting insights → `matchContent.bettingContent`
+- Match finished + settled: Post-match → `matchRoundups` (new single source)
+
+---
+
+## Component Consolidation
+
+### What to Merge
+**Before:** 12 components in `src/components/match/`
+**After:** 8 components (33% reduction)
+
+| Old Component | Action | New Home |
+|---------------|--------|----------|
+| `match-header.tsx` | Replace | New `MatchHeader.tsx` |
+| `match-odds.tsx` | Merge | Into `MatchStats.tsx` |
+| `predictions-skeleton.tsx` | Remove | Use Suspense |
+| `predictions-section.tsx` | Merge | Into `PredictionTable` |
+| `MatchContent.tsx` | Rename | `MatchNarrative.tsx` |
+| `MatchStats.tsx` | Keep | Move to Analysis tab |
+| `RoundupViewer.tsx` | Modify | Remove scoreboard duplication |
+| `PredictionInsightsBlockquote.tsx` | Keep | Use in Overview tab |
+| `MatchFAQSchema.tsx` | Keep | SEO structured data |
+| `match-h1.tsx` | Keep | SEO H1 |
+| `related-matches-widget.tsx` | Keep | SEO internal linking |
+| `MatchRoundup.tsx` | Audit | May be unused duplicate |
+
+---
+
+## Build Order
+
+### Phase 1: Data Layer (Foundation)
+**Goal:** Fix content retrieval without touching UI
+**Tasks:**
+1. Create `getMatchContentUnified()` query function
+2. Add unit tests for query logic
+3. Verify data flow with existing components
+
+**Estimated effort:** 4 hours
+**Complexity:** Low
+**Risk:** Low (read-only changes)
+
+### Phase 2: Component Refactor (Core)
+**Goal:** New components + consolidation
+**Tasks:**
+1. Create `MatchHeader.tsx` (extract from page.tsx lines 198-330)
+2. Create `MatchContentTabs.tsx` (client component with tab state)
+3. Create `MatchOverviewTab.tsx` (server component)
+4. Rename `MatchContent.tsx` → `MatchNarrative.tsx` with unified content support
+
+**Estimated effort:** 12 hours
+**Complexity:** Medium
+**Risk:** Medium (requires testing all match states)
+
+### Phase 3: Page Restructure (Integration)
+**Goal:** Slim page.tsx and wire new components
+**Tasks:**
+1. Rewrite page.tsx using new components (target: <150 lines)
+2. Update data fetching to use `getMatchContentUnified()`
+3. Add Suspense boundaries for streaming
+4. Test all match states (scheduled, live, finished)
+
+**Estimated effort:** 8 hours
+**Complexity:** Medium
+**Risk:** High (user-facing changes)
+
+### Phase 4: Mobile Optimization (Polish)
+**Goal:** Responsive design + progressive disclosure
+**Tasks:**
+1. Mobile-first CSS for MatchHeader (stacked layout)
+2. Tab interface optimized for touch (min 44px tap targets)
+3. Related content sidebar → bottom on mobile
+4. Test on real devices (iOS Safari, Android Chrome)
+
+**Estimated effort:** 6 hours
+**Complexity:** Low
+**Risk:** Low (CSS-only changes)
+
+### Phase 5: Content Pipeline Fix (Cleanup)
+**Goal:** Eliminate dual-table writes
+**Tasks:**
+1. Modify `generatePostMatchRoundup()` to write only to `matchRoundups`
+2. Deploy and monitor for 48 hours
+3. Backfill legacy data (migration script)
+4. Drop `matchContent.postMatchContent` column
+
+**Estimated effort:** 8 hours
+**Complexity:** Low
+**Risk:** High (data migration requires backup/rollback plan)
+
+---
+
+## AI Search Optimization
+
+### Current Issues
+1. **Unstructured HTML blobs:** `matchContent.postMatchContent` contains raw HTML (lines 904-950 in generator.ts)
+2. **Buried narrative:** Key insights hidden in 545-line component
+3. **No progressive disclosure:** Mobile users hit wall of text
+
+### Recommendations
+
+#### 1. Structured Content Format
+**For AI crawlers (Perplexity, ChatGPT):**
 ```typescript
-// src/components/CompetitionSchema.tsx (NEW)
-
-export function CompetitionSchema({
-  competition,
-  nextMatch,
-  topModel,
-}: CompetitionSchemaProps) {
-  const schema = {
-    '@context': 'https://schema.org',
-    '@type': 'SportsOrganization',
-    'name': competition.name,
-    'sport': 'Football',
-    'url': `https://kroam.xyz/leagues/${competition.slug}`,
+interface AIOptimizedContent {
+  summary: string; // 2-3 sentences (50 words max)
+  keyInsights: string[]; // 3-5 bullet points
+  mainNarrative: string; // Full analysis (500-1000 words)
+  metadata: {
+    matchScore: string;
+    topPerformers: string[];
+    consensusPrediction: string;
   };
-
-  // Enrich with upcoming event
-  if (nextMatch) {
-    schema.event = {
-      '@type': 'SportsEvent',
-      'name': `${nextMatch.homeTeam} vs ${nextMatch.awayTeam}`,
-      'startDate': nextMatch.kickoffTime,
-    };
-  }
-
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
-  );
 }
 ```
 
-**Step 3: Integrate into existing page** (minimal changes)
+**Why:** AI search engines prefer structured, scannable content with clear hierarchy
 
+#### 2. Schema.org Enhancements
+**Already have:** `SportsEventSchema`, `WebPageSchema`
+**Add:** `FAQPage` schema to MatchFAQSchema component (line 437)
+
+**Example:**
 ```typescript
-// src/app/leagues/[slug]/page.tsx (MODIFY EXISTING)
-
-// ADD metadata generation
-export async function generateMetadata({ params }): Promise<Metadata> {
-  const { slug } = await params;
-  const competition = await getCompetitionBySlug(slug);
-  if (!competition) return { title: 'Competition Not Found' };
-
-  const stats = await getCompetitionStats(competition.id);
-  return generateCompetitionMetadata(competition, stats);
-}
-
-export default async function CompetitionPage({ params }) {
-  // Existing data fetching...
-
-  return (
-    <div>
-      {/* ADD structured data */}
-      <CompetitionSchema
-        competition={competition}
-        nextMatch={nextMatch}
-        topModel={topModel}
-      />
-
-      {/* Existing UI components unchanged */}
-      <CompetitionStats ... />
-      <MatchList ... />
-    </div>
-  );
+{
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is the predicted score for {home} vs {away}?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{consensus prediction from AI models}"
+      }
+    }
+  ]
 }
 ```
 
-**Impact:** Page component grows by ~15 lines. No refactoring. No risk to existing functionality.
+#### 3. Content Hierarchy for AI
+**Update MatchNarrative to use semantic HTML:**
+```html
+<article itemscope itemtype="https://schema.org/SportsEvent">
+  <h2 itemprop="name">Match Analysis: {home} vs {away}</h2>
 
-### Implementation: Fix Model Page Accuracy
+  <section itemprop="description">
+    <h3>Summary</h3>
+    <p>{50-word summary}</p>
+  </section>
 
-**Problem:** Line 52-54 calculates exact score accuracy instead of tendency accuracy.
+  <section>
+    <h3>Key Insights</h3>
+    <ul>
+      <li>{insight 1}</li>
+      <li>{insight 2}</li>
+    </ul>
+  </section>
 
-**Fix:**
+  <section>
+    <h3>Detailed Analysis</h3>
+    <p>{full narrative}</p>
+  </section>
+</article>
+```
+
+**Why:** Semantic HTML helps AI understand content structure
+
+---
+
+## Architecture Patterns Followed
+
+### Server-First Rendering (Next.js 15)
+**Pattern:** Server Components by default, Client Components only for interactivity
+**Application:**
+- Page component: Server Component (data fetching)
+- MatchHeader, MatchNarrative, MatchRelatedContent: Server Components (static)
+- MatchContentTabs: Client Component (tab state)
+- PredictionTable: Server Component with Suspense
+
+**Source:** [Next.js App Router Advanced Patterns for 2026](https://medium.com/@beenakumawat002/next-js-app-router-advanced-patterns-for-2026-server-actions-ppr-streaming-edge-first-b76b1b3dcac7)
+
+### Streaming with Suspense
+**Pattern:** Progressive rendering for slow data sources
+**Application:**
+```tsx
+<Suspense fallback={<PredictionSkeleton />}>
+  <PredictionTable predictions={predictions} />
+</Suspense>
+```
+
+**Why:** Predictions query can be slow (35+ models), stream them separately
+
+**Source:** [Next.js Data Fetching Patterns](https://nextjs.org/docs/14/app/building-your-application/data-fetching/patterns)
+
+### Mobile-First Component Design
+**Pattern:** Design for smallest screen, progressively enhance
+**Application:**
+- MatchHeader: Vertical stack → horizontal on ≥768px
+- MatchContentTabs: Full-width tabs → sidebar on ≥1024px
+- Stats grids: 2-column → 3-column → 5-column responsive
+
+**Source:** [React Stack Patterns 2026](https://www.patterns.dev/react/react-2026/)
+
+### Progressive Disclosure
+**Pattern:** Show essential content first, details on demand
+**Application:**
+- Overview tab: Summary + top 3 predictions (visible immediately)
+- Analysis tab: Full stats + H2H (one click away)
+- Related content: Bottom section (low priority)
+
+**Why:** Mobile users need core info within first 2 seconds
+
+**Source:** [React.js 2026 Performance Revolution](https://medium.com/@expertappdevs/react-js-2026-performance-secure-architecture-84f78ad650ab)
+
+### Component Composition over Props Drilling
+**Pattern:** Children pattern for flexible layouts
+**Application:**
+```tsx
+<MatchContentTabs>
+  <Tab label="Overview">
+    <MatchOverviewTab content={content} predictions={predictions.slice(0, 3)} />
+  </Tab>
+  <Tab label="Predictions">
+    <PredictionTable predictions={predictions} />
+  </Tab>
+</MatchContentTabs>
+```
+
+**Why:** Avoids passing 10+ props through intermediate components
+
+---
+
+## Integration Points with Existing System
+
+### 1. Data Layer
+**Interfaces with:**
+- `src/lib/db/queries.ts` — Match, prediction, analysis queries
+- `src/lib/content/queries.ts` — Content generation queries
+
+**New function needed:**
 ```typescript
-// src/app/models/[id]/page.tsx (CHANGE LINES 52-54)
-
-// BEFORE (WRONG):
-const accuracy = predictionStats?.scoredPredictions && predictionStats.scoredPredictions > 0
-  ? Math.round((predictionStats.exactScores / predictionStats.scoredPredictions) * 100)
-  : 0;
-
-// AFTER (CORRECT):
-const accuracy = predictionStats?.scoredPredictions && predictionStats.scoredPredictions > 0
-  ? Math.round((predictionStats.correctTendencies / predictionStats.scoredPredictions) * 100)
-  : 0;
+// src/lib/content/queries.ts
+export async function getMatchContentUnified(matchId: string)
 ```
 
-**Alternative (Better):** Use stats service for consistency.
+### 2. Content Generation
+**Interfaces with:**
+- `src/lib/queue/workers/content.worker.ts` — BullMQ job handler
+- `src/lib/content/generator.ts` — AI generation logic
 
+**Modified function:**
 ```typescript
-// AFTER (BEST):
-import { calculateAccuracy } from '@/lib/stats/definitions';
-
-const accuracy = calculateAccuracy(
-  predictionStats?.correctTendencies || 0,
-  predictionStats?.scoredPredictions || 0
-);
+// src/lib/content/generator.ts (line 487)
+export async function generatePostMatchRoundup(matchId: string)
+// Remove matchContent write, keep only matchRoundups write
 ```
 
-**Verification:**
-1. Check model page accuracy matches leaderboard
-2. Check OG image accuracy matches page display
-3. Regenerate OG images to update cached versions
+### 3. Component Tree
+**Parent:** `/src/app/leagues/[slug]/[match]/page.tsx`
+**Children:**
+- `MatchHeader` (new)
+- `MatchContentTabs` (new)
+  - `MatchOverviewTab` (new)
+  - `PredictionTable` (existing)
+  - `RoundupViewer` (modified)
+  - `MatchStats` (modified)
+- `MatchRelatedContent` (new)
+
+**Removed dependencies:**
+- `match-header.tsx` (replaced)
+- `match-odds.tsx` (merged)
+- `predictions-section.tsx` (merged)
+
+### 4. Schema/Database
+**Tables affected:**
+- `matchContent` — Only pre-match + betting fields used
+- `matchRoundups` — Primary source for post-match content
+
+**Migration needed:**
+```sql
+-- Phase 5: After verifying new flow works
+ALTER TABLE match_content DROP COLUMN post_match_content;
+ALTER TABLE match_content DROP COLUMN post_match_generated_at;
+```
+
+### 5. API Routes
+**Cron job:** `/src/app/api/cron/generate-content/route.ts`
+**Change required:** Update to call modified `generatePostMatchRoundup()` (no breaking changes to interface)
 
 ---
 
-## Cache Integration Strategy
+## Risk Mitigation
 
-### Current Cache Architecture
+### High-Risk Areas
+1. **Data migration (Phase 5):** Dropping `matchContent.postMatchContent` column
+   - **Mitigation:** Full database backup, deploy in maintenance window, rollback plan tested
+   - **Validation:** Run backfill script on staging, verify 100% data coverage
 
-**Cache Keys (from redis.ts):**
-```typescript
-cacheKeys = {
-  activeCompetitions: () => 'db:competitions:active',
-  activeModels: () => 'db:models:active',
-  overallStats: () => 'db:stats:overall',
-  topPerformingModel: () => 'db:stats:top-model',
-  leaderboard: (metric, filters) => `db:leaderboard:${metric}:${hash}`,
-  predictions: (matchId) => `db:predictions:${matchId}`,
-  // ... etc
-};
-```
+2. **Page restructure (Phase 3):** User-facing layout changes
+   - **Mitigation:** Feature flag for new layout, A/B test on 10% traffic
+   - **Validation:** Visual regression tests, mobile device testing
 
-**Invalidation Pattern (from redis.ts line 342-358):**
-```typescript
-export async function invalidateMatchCaches(matchId: string) {
-  await Promise.all([
-    cacheDeletePattern('db:leaderboard:*'),
-    cacheDelete(cacheKeys.overallStats()),
-    cacheDelete(cacheKeys.predictions(matchId)),
-  ]);
-}
-```
+3. **Content rendering logic:** Unified query may miss edge cases
+   - **Mitigation:** Write comprehensive tests for all match states
+   - **Validation:** Smoke test on 100 matches (scheduled, live, finished, with/without roundup)
 
-**Problem Identified:** Leaderboard invalidation uses `KEYS` command (line 288) which blocks Redis.
+### Medium-Risk Areas
+1. **Mobile performance:** New tab component may increase JS bundle
+   - **Mitigation:** Code-split tabs, lazy load non-default tabs
+   - **Validation:** Lighthouse audit, target <200KB initial JS
 
-### Stats Service Cache Integration
-
-**Add cache key with version:**
-```typescript
-// src/lib/cache/redis.ts (ADD)
-
-export const cacheKeys = {
-  // ... existing keys ...
-
-  // Stats service keys (versioned for definition changes)
-  modelStats: (modelId: string, version: string) =>
-    `stats:model:${modelId}:${version}`,
-  competitionStats: (competitionId: string, version: string) =>
-    `stats:competition:${competitionId}:${version}`,
-};
-```
-
-**Invalidation strategy:**
-1. **On stats definition change:** Bump version (`v1` → `v2`), old caches automatically ignored
-2. **On data change (match settlement):** Invalidate specific model/competition keys
-3. **No pattern matching:** Use explicit keys for fast invalidation
-
-**Implementation:**
-```typescript
-// src/lib/stats/service.ts
-
-export async function invalidateModelStats(modelId: string): Promise<void> {
-  const keys = [
-    cacheKeys.modelStats(modelId, 'v1'),
-    cacheKeys.leaderboard('avgPoints', {}),  // Model appears in leaderboard
-  ];
-
-  await Promise.all(keys.map(key => cacheDelete(key)));
-}
-```
-
-**Call from settlement worker:**
-```typescript
-// src/lib/queue/workers/scoring.worker.ts (MODIFY EXISTING)
-
-// After scorePredictionsTransactional succeeds:
-await invalidateMatchCaches(matchId);
-
-// ADD: Invalidate affected model stats
-const modelIds = predictions.map(p => p.modelId);
-await Promise.all(modelIds.map(id => invalidateModelStats(id)));
-```
-
-**Performance Impact:**
-- Before: Pattern match `db:leaderboard:*` scans 10K+ keys (slow)
-- After: Delete 5-10 specific keys (fast)
+2. **SEO impact:** Layout changes may affect rankings
+   - **Mitigation:** Keep URL structure, preserve H1, maintain schema.org
+   - **Validation:** Google Search Console monitoring for 2 weeks post-deploy
 
 ---
 
-## Migration Validation Checkpoints
-
-### Stats Centralization
-
-**Checkpoint 1: Service Layer Created**
-- [ ] `src/lib/stats/definitions.ts` exists
-- [ ] `calculateAccuracy()` has unit tests
-- [ ] No existing code uses the service yet (safe to deploy)
-
-**Checkpoint 2: Database Queries Updated**
-- [ ] All SQL queries use `getAccuracySql()` helper
-- [ ] Query results match previous output (regression test)
-- [ ] Definition 5 bug in `getTopModelsByCompetition` fixed
-- [ ] Leaderboard accuracy matches model detail page accuracy
-
-**Checkpoint 3: Frontend Migrated**
-- [ ] Model page accuracy calculation fixed (line 52-54)
-- [ ] OG images show correct accuracy
-- [ ] No pages directly calculate accuracy anymore
-- [ ] Grep codebase for direct `exactScores / scoredPredictions` calculations
-
-**Checkpoint 4: Cleanup**
-- [ ] Duplicate SQL fragments removed
-- [ ] Stats service is sole source of truth
-- [ ] Documentation updated
-
-### SEO Enhancement
-
-**Checkpoint 1: Metadata Helpers Extended**
-- [ ] `generateCompetitionMetadata()` added to `metadata.ts`
-- [ ] `generateLeaderboardMetadata()` already exists (line 137-169)
-- [ ] Model page metadata helper uses correct accuracy
-
-**Checkpoint 2: Structured Data Components**
-- [ ] `CompetitionSchema.tsx` created
-- [ ] Existing schema components (`WebPageSchema`, `SportsEventSchema`) working
-- [ ] Schema validation passes (use schema.org validator)
-
-**Checkpoint 3: Page Integration**
-- [ ] Competition pages: `generateMetadata()` + schema component added
-- [ ] Model pages: accuracy calculation fixed
-- [ ] Match pages: prediction context added to metadata
-- [ ] Leaderboard pages: structured data added
-
-**Checkpoint 4: Verification**
-- [ ] Google Search Console shows structured data detected
-- [ ] OG images display correctly on Twitter/Slack
-- [ ] Page titles and descriptions accurate
-- [ ] No console errors from malformed JSON-LD
-
----
-
-## Build Order (Risk Minimization)
-
-### Phase 1: Stats Centralization (Week 1)
-**Goal:** Fix inconsistent accuracy calculations without breaking existing UI
-
-```
-Day 1-2: Create service layer
-  - definitions.ts with calculateAccuracy()
-  - Unit tests
-  - Deploy (unused code, zero risk)
-
-Day 3-4: Update database queries
-  - Migrate queries/stats.ts
-  - Fix getTopModelsByCompetition bug
-  - Regression tests
-  - Deploy
-
-Day 5: Update frontend
-  - Fix model page accuracy (critical bug)
-  - Deploy
-  - Monitor OG image generation
-
-Day 6-7: Incremental migration
-  - Update remaining pages to use service
-  - Remove duplicate calculations
-  - Deploy
-```
-
-**Why this order:** Database queries are leaf nodes (no dependencies). Frontend depends on queries. Fix data layer first, then UI.
-
-**Rollback triggers:**
-- Leaderboard shows different numbers after query update
-- Model page accuracy goes to 0% or >100%
-- Cache invalidation breaks (stats don't update)
-
-### Phase 2: SEO Enhancement (Week 2)
-**Goal:** Add metadata and structured data without refactoring pages
-
-```
-Day 1-2: Competition pages
-  - generateCompetitionMetadata()
-  - CompetitionSchema component
-  - Integrate into leagues/[slug]/page.tsx
-  - Deploy
-
-Day 3-4: Match pages
-  - Enhance match metadata with prediction context
-  - Add PredictionSchema if needed
-  - Deploy
-
-Day 5: Leaderboard structured data
-  - Create LeaderboardSchema component
-  - Integrate into leaderboard pages
-  - Deploy
-
-Day 6-7: Verification
-  - Submit sitemap to Google Search Console
-  - Check structured data detection
-  - Monitor search appearance
-```
-
-**Why this order:** Each page type is independent. Competition pages have most SEO value (high-traffic landing pages). Match pages second. Leaderboard is niche.
-
-**Rollback triggers:**
-- JSON-LD validation errors
-- Page load time increases >200ms (schema generation too slow)
-- Hydration mismatches (server/client schema differences)
-
-### Phase 3: Cache Optimization (Week 3)
-**Goal:** Improve cache invalidation performance
-
-```
-Day 1-2: Add versioned cache keys
-  - cacheKeys.modelStats()
-  - cacheKeys.competitionStats()
-  - Deploy (keys added but unused)
-
-Day 3-4: Integrate with stats service
-  - withCache() wrapping in service.ts
-  - Explicit key invalidation (no patterns)
-  - Deploy
-
-Day 5: Remove pattern matching
-  - Replace cacheDeletePattern('db:leaderboard:*')
-  - Use explicit key lists
-  - Deploy
-
-Day 6-7: Monitor
-  - Cache hit rate
-  - Invalidation latency
-  - Redis memory usage
-```
-
-**Why this order:** Stats service must exist first. Cache optimization is a performance improvement, not a correctness fix. Do last when stats logic is stable.
-
-**Rollback triggers:**
-- Cache hit rate drops below 50% (keys too specific)
-- Stats don't update after match settlement (invalidation broke)
-- Redis memory usage increases >20% (key proliferation)
-
----
-
-## Integration Points & Dependencies
-
-### Where Stats Service Integrates
-
-**Database Layer (queries.ts, queries/stats.ts):**
-- Current: 6 different accuracy calculations
-- After: All use `getAccuracySql()` helper
-- Change: SQL string replacement only, query structure unchanged
-
-**API Routes (if any):**
-- Current: Likely call queries directly
-- After: Call stats service for computed stats
-- Change: Import path changes, no logic changes
-
-**Page Components:**
-- Current: Direct database queries or props from parent
-- After: Call `getModelStats()` for standardized data
-- Change: Replace query calls with service calls
-
-**Cache Layer:**
-- Current: Direct query result caching
-- After: Service layer caching
-- Change: Cache keys gain version suffix
-
-**Worker Jobs:**
-- Current: Cache invalidation via `invalidateMatchCaches()`
-- After: Add `invalidateModelStats()` calls
-- Change: Additional invalidation, not replacement
-
-### Where SEO Integrates
-
-**Page Components:**
-- Current: Some have `generateMetadata()`, some don't
-- After: All pages have metadata generation
-- Change: Add export function, no refactoring
-
-**Layout:**
-- Current: Provides default metadata
-- After: Page-specific metadata overrides defaults
-- Change: None (Next.js handles merging)
-
-**Component Tree:**
-- Current: Renders UI components
-- After: Adds `<Schema>` components at top level
-- Change: Minimal (1-2 lines per page)
-
-**OG Image Generation:**
-- Current: Uses dynamic metadata for og:image URLs
-- After: Same, but accuracy calculation fixed
-- Change: Calculation fix, not architecture change
-
-### Dependency Graph
-
-```
-┌──────────────────────────────────────────────────┐
-│  Phase 1: Stats Centralization                   │
-│  (Week 1)                                        │
-│                                                  │
-│  1. definitions.ts ─────────────┐               │
-│  2. service.ts (uses 1)         │               │
-│  3. queries (use 1)             │               │
-│  4. pages (use 2, which uses 3) │               │
-└──────────────────────────────────┼───────────────┘
-                                   │
-                    Independent of │
-                                   │
-┌──────────────────────────────────┼───────────────┐
-│  Phase 2: SEO Enhancement        ▼               │
-│  (Week 2)                                        │
-│                                                  │
-│  1. metadata.ts (helpers)       Uses stats      │
-│  2. Schema components           service for     │
-│  3. Page integration            accuracy in     │
-│                                 descriptions    │
-└──────────────────────────────────┬───────────────┘
-                                   │
-                    Optimizes both │
-                                   │
-┌──────────────────────────────────▼───────────────┐
-│  Phase 3: Cache Optimization                     │
-│  (Week 3)                                        │
-│                                                  │
-│  1. Versioned cache keys                         │
-│  2. Explicit invalidation                        │
-│  3. Remove pattern matching                      │
-└──────────────────────────────────────────────────┘
-```
-
-**Critical Path:** Phases 1 and 2 are independent. Phase 3 optimizes both.
-
-**Parallelization Opportunity:** If 2 developers available:
-- Dev 1: Phase 1 (stats)
-- Dev 2: Phase 2 (SEO)
-- Merge both, then Dev 1 or 2 does Phase 3
-
----
-
-## Risk Analysis & Mitigation
-
-### High Risk: Database Query Changes
-
-**Risk:** Changing SQL in `queries/stats.ts` breaks leaderboard display.
-
-**Mitigation:**
-1. **Snapshot testing:** Capture current query results before changes
-2. **Parallel queries:** Run old and new queries side-by-side, compare results
-3. **Gradual rollout:** Use feature flag to toggle new queries
-4. **Rollback plan:** Keep old queries commented in code for 1 week
-
-**Detection:**
-- Monitor: Leaderboard accuracy % before and after
-- Alert: If any model's accuracy changes by >5% (indicates calculation change)
-
-### Medium Risk: Cache Invalidation Breaks
-
-**Risk:** Stats service caching breaks existing invalidation, showing stale data.
-
-**Mitigation:**
-1. **Invalidation tests:** Verify cache clears after match settlement
-2. **TTL safety net:** Set 5-minute TTL on all stats caches (even if explicit invalidation)
-3. **Monitoring:** Track cache age vs expected freshness
-
-**Detection:**
-- Monitor: Time between match settlement and leaderboard update
-- Alert: If cache age > 5 minutes after settlement
-
-### Medium Risk: SEO Schema Validation Errors
-
-**Risk:** Malformed JSON-LD causes Google to ignore structured data.
-
-**Mitigation:**
-1. **Schema validation:** Use schema.org validator in tests
-2. **Error boundaries:** Catch JSON-LD generation errors, log but don't break page
-3. **Gradual rollout:** Add schemas to one page type at a time
-
-**Detection:**
-- Monitor: Google Search Console structured data errors
-- Alert: If error count increases
-
-### Low Risk: Model Page Accuracy Fix
-
-**Risk:** Fixing line 52-54 changes OG image accuracy, cached images show old value.
-
-**Mitigation:**
-1. **Cache bust:** Change OG image URL parameter after fix (`?v=2`)
-2. **Or:** Clear CDN cache for `/api/og/model` route
-3. **Verify:** Check OG image preview in Slack/Twitter after deploy
-
-**Detection:**
-- Visual inspection of OG images
-- Compare displayed accuracy to leaderboard value
-
----
-
-## Success Criteria
-
-### Stats Centralization Complete
-
-**Quantitative:**
-- [ ] 1 accuracy definition (down from 6)
-- [ ] 0 SQL accuracy calculations outside `definitions.ts`
-- [ ] 0 frontend accuracy calculations outside service layer
-- [ ] 100% of pages use stats service
-
-**Qualitative:**
-- [ ] Leaderboard and model detail show same accuracy (within 0.1%)
-- [ ] OG images display correct tendency accuracy
-- [ ] Definition 5 bug in `getTopModelsByCompetition` fixed
-- [ ] Developers reference service as source of truth
-
-### SEO Enhancement Complete
-
-**Quantitative:**
-- [ ] 14 page types have `generateMetadata()` (all routes)
-- [ ] 5+ structured data types implemented (WebPage, SportsEvent, SportsOrganization, etc.)
-- [ ] 0 Google Search Console schema validation errors
-- [ ] <200ms metadata generation latency (95th percentile)
-
-**Qualitative:**
-- [ ] Search result snippets display rich data (stars, dates, scores)
-- [ ] Social media shares show accurate OG images
-- [ ] Breadcrumbs appear in Google search results
-- [ ] Schema.org validator shows no warnings
-
-### Cache Optimization Complete
-
-**Quantitative:**
-- [ ] <100ms cache invalidation latency (down from ~500ms with pattern matching)
-- [ ] >70% cache hit rate for stats queries
-- [ ] 0 KEYS commands in production (replaced with explicit deletes)
-- [ ] <5 second staleness window (settlement → leaderboard update)
-
-**Qualitative:**
-- [ ] Stats update immediately after match settlement
-- [ ] No user reports of stale leaderboard data
-- [ ] Redis memory usage stable (no key proliferation)
-
----
-
-## Sources & References
-
-**Existing Architecture:**
-- `src/lib/db/queries/stats.ts` — Current stats queries
-- `src/lib/db/queries.ts` — Additional query definitions
-- `src/app/models/[id]/page.tsx` — Frontend calculation example
-- `src/lib/cache/redis.ts` — Cache invalidation patterns
-
-**Next.js Patterns:**
-- Next.js 16 App Router metadata API (generateMetadata)
-- Server Components (async components, data fetching)
-- Streaming (Suspense for slow queries)
-
-**SEO Standards:**
-- Schema.org structured data (SportsEvent, WebPage, etc.)
-- Open Graph Protocol (OG images, meta tags)
-- JSON-LD format (embedded in `<script type="application/ld+json">`)
-
-**Database Patterns:**
-- Drizzle ORM (type-safe queries)
-- PostgreSQL query optimization (avoid N+1, use aggregates)
-- Connection pooling (pg library)
-
-**Confidence Levels:**
-- High: Architecture patterns (server components, service layer, schema components)
-- High: Database query consolidation (single SQL fragment)
-- Medium: Cache optimization impact (depends on key distribution)
-- Medium: SEO enhancement visibility (depends on Google crawl timing)
-
----
-
-*Architecture research complete. Document provides integration patterns for stats standardization and SEO enhancement without breaking existing functionality. All recommendations based on production codebase analysis.*
+## Sources
+
+**Next.js Architecture:**
+- [Next.js App Router Advanced Patterns for 2026](https://medium.com/@beenakumawat002/next-js-app-router-advanced-patterns-for-2026-server-actions-ppr-streaming-edge-first-b76b1b3dcac7)
+- [Data Fetching Patterns | Next.js](https://nextjs.org/docs/14/app/building-your-application/data-fetching/patterns)
+- [Server and Client Components | Next.js](https://nextjs.org/docs/app/getting-started/server-and-client-components)
+
+**React Patterns:**
+- [React Stack Patterns 2026](https://www.patterns.dev/react/react-2026/)
+- [React.js 2026 Performance Revolution](https://medium.com/@expertappdevs/react-js-2026-performance-secure-architecture-84f78ad650ab)
+- [React Server Components Explained 2026](https://www.grapestechsolutions.com/blog/react-server-components-explained/)
+
+**Mobile-First Design:**
+- [The New Architecture of React: Reusability and UX in Next.js Era](https://www.bitcot.com/new-architecture-of-react/)
+
+**Project Source Code:**
+- `/src/app/leagues/[slug]/[match]/page.tsx` (current implementation)
+- `/src/lib/content/generator.ts` (content generation pipeline)
+- `/src/components/match/*.tsx` (existing components)
+- `/src/lib/db/schema.ts` (database schema)

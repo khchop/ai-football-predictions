@@ -1,833 +1,689 @@
-# Domain Pitfalls: Stats Standardization & SEO Migration
+# Pitfalls Research: Match Page Refresh
 
-**Domain:** Sports statistics platform with AI predictions
-**Researched:** 2026-02-02
-**Confidence:** HIGH (based on codebase analysis + industry research)
+## Summary
 
----
-
-## Critical Pitfalls (System-Breaking)
-
-### Pitfall 1: Inconsistent Accuracy Denominators Creating "94% Bug"
-
-**What goes wrong:**
-Six different accuracy calculation formulas exist across the codebase, using different denominators:
-- Some use `COUNT(*)` (all predictions including unscored)
-- Others use `COUNT(predictions.id)` (same as above)
-- Some use `SUM(CASE WHEN status='scored' THEN 1 ELSE 0 END)` (scored only)
-- Some use `NULLIF()` protection, others don't
-
-Result: Model shows 94% accuracy on one page, 87% on another, 91% in OG image.
-
-**Why it happens:**
-Statistics queries evolved organically over 6 implementations without standardization document. Copy-paste with slight modifications created drift.
-
-**Consequences:**
-- User trust erosion ("these numbers don't add up")
-- Models appear better/worse depending on which page user visits
-- Leaderboard rankings change between overall and competition views
-- SEO damaged by conflicting structured data
-- Support requests: "Why does my model show different accuracy?"
-
-**Prevention:**
-
-```typescript
-// WRONG: Six different formulas
-// queries.ts line 275
-accuracy: sql`... / NULLIF(COUNT(${predictions.id}), 0)`  // All predictions
-// queries.ts line 2150
-accuracy: sql`... / COUNT(*)`  // All predictions, no NULLIF
-// stats.ts line 100
-accuracy: sql`... / NULLIF(SUM(CASE WHEN status='scored' THEN 1), 0)`  // Scored only
-
-// RIGHT: Single source of truth
-// Create: src/lib/db/queries/accuracy-standard.ts
-export const ACCURACY_FORMULA = sql<number>`
-  COALESCE(
-    ROUND(
-      100.0 * SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)
-      / NULLIF(SUM(CASE WHEN ${predictions.status} = 'scored' THEN 1 ELSE 0 END), 0)::numeric,
-      1
-    ),
-    0
-  )
-`;
-
-// Use everywhere:
-import { ACCURACY_FORMULA } from './accuracy-standard';
-const stats = await db.select({ accuracy: ACCURACY_FORMULA }).from(predictions);
-```
-
-**Detection:**
-- Run comparison query across all stats endpoints
-- Alert if same model returns different accuracy values
-- Automated test: "accuracy from /api/stats/overall === accuracy from /api/leaderboard for modelId=X"
-
-**Applies to milestone phase:** Phase 1 (Stats Foundation) - must fix before any other work
+Redesigning sports match pages for mobile-first UX while maintaining AI search optimization and fixing content generation pipelines presents several critical challenges. The primary risks include React Server Component hydration errors from dynamic content, performance degradation from improper caching strategies, mobile UX failures from information overload, and AI search visibility loss from poor structured data consolidation. This research identifies 18 specific pitfalls across mobile UX, AI search optimization, React/Next.js architecture, and content generation pipelines, with actionable prevention strategies for each.
 
 ---
 
-### Pitfall 2: `IS NOT NULL` vs `> 0` Mismatch in Tendency Logic
+## Critical Pitfalls (Project-Breaking)
 
-**What goes wrong:**
-Two definitions of "correct prediction" exist:
-- `tendencyPoints IS NOT NULL` (line 273, 275, 2022 in queries.ts)
-- `tendencyPoints > 0` (line 352, 1483, 2150 in queries.ts)
+### P1: Duplicate Data Display Creating Cognitive Overload on Mobile
 
-Problem: `tendencyPoints = 0` (wrong prediction) counts as "correct" with first formula.
+**Risk:** Showing the same information multiple times (score in header, predictions section, odds panel) creates visual clutter on small screens. Your codebase shows this pattern in `/src/app/leagues/[slug]/[match]/page.tsx` where match score, team names, and competition data repeat across MatchHeader, MatchOddsPanel, and PredictionsSection.
 
-**Why it happens:**
-NULL checking pattern from old database schema where NULL meant "not scored yet" and 0 didn't exist. After scoring system update, 0 became valid value for wrong predictions, but old NULL checks remained.
-
-**Consequences:**
-- Inflated accuracy percentages (94% instead of 87%)
-- Models ranked higher than they deserve
-- User discovers discrepancy, loses trust in all platform data
-- Historical data shows impossibly high accuracy (everyone >90%)
+**Warning Signs:**
+- Mobile viewport requires >3 scrolls to reach predictions
+- Bounce rate >60% on mobile match pages
+- Average session duration <30 seconds on mobile
+- Heatmaps show users scrolling past duplicate data without engaging
 
 **Prevention:**
+1. Single source of truth for each data type (score, predictions, odds)
+2. Progressive disclosure pattern - show summary cards with expand/collapse for details
+3. Sticky header with minimal info (teams + score) that persists during scroll
+4. Mobile-first component audit: measure rendered height of each section at 375px width
+5. Target: Match page fits in 2-3 screen heights on mobile (750px-1125px total)
 
-```typescript
-// WRONG: Treats 0 as correct
-correctCount: sql`SUM(CASE WHEN ${predictions.tendencyPoints} IS NOT NULL THEN 1 ELSE 0 END)`
-
-// RIGHT: Only counts positive points
-correctCount: sql`SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)`
-
-// WHY: In Kicktipp scoring:
-// - Correct tendency (wrong score): 2-6 points (> 0) ✓
-// - Exact score: +3 bonus, total 5-10 points (> 0) ✓
-// - Wrong prediction: 0 points (not NULL, but = 0) ✗
-// - Not scored yet: NULL ✗
-
-// VALIDATION QUERY:
-SELECT
-  modelId,
-  SUM(CASE WHEN tendencyPoints IS NOT NULL THEN 1 ELSE 0 END) as old_formula,
-  SUM(CASE WHEN tendencyPoints > 0 THEN 1 ELSE 0 END) as new_formula,
-  SUM(CASE WHEN tendencyPoints IS NOT NULL THEN 1 ELSE 0 END) -
-  SUM(CASE WHEN tendencyPoints > 0 THEN 1 ELSE 0 END) as inflation_count
-FROM predictions
-WHERE status = 'scored'
-GROUP BY modelId
-HAVING SUM(CASE WHEN tendencyPoints IS NOT NULL THEN 1 ELSE 0 END) !=
-       SUM(CASE WHEN tendencyPoints > 0 THEN 1 ELSE 0 END);
-```
-
-**Detection:**
-- Check for `tendencyPoints = 0` rows in production (should exist for wrong predictions)
-- Compare accuracy using both formulas, should show systematic inflation with IS NOT NULL
-- Warning flag: If accuracy drop >5% after standardization, shows data was inflated
-
-**Applies to milestone phase:** Phase 1 (Stats Foundation) - blocks all accuracy displays
+**Phase:** Phase 1 (Mobile Layout Consolidation) - First milestone, highest impact
 
 ---
 
-### Pitfall 3: Missing NULLIF() Protection in Weekly Breakdown Queries
+### P2: React Server Component Hydration Mismatch from Dynamic Timestamps
 
-**What goes wrong:**
-Division by zero crashes when:
-- New model with 0 scored predictions this week
-- Competition had no matches this week (international break)
-- Filter results in empty dataset (club with no matches in date range)
+**Risk:** Your `MatchContentSection` component at line 40-43 uses `new Date(content.preMatchGeneratedAt).toLocaleString()` which will produce different output on server vs client due to timezone differences. This causes React hydration errors that break interactivity.
 
-Error: `ERROR: division by zero` crashes entire stats API endpoint.
-
-**Why it happens:**
-Primary queries (overall stats) have NULLIF protection. Weekly/breakdown queries copied from early version without protection.
-
-**Consequences:**
-- API endpoint returns 500 error instead of empty stats
-- Frontend shows error boundary instead of "No data yet" message
-- Monitoring alerts flood during international breaks (all weekly endpoints fail)
-- SEO damaged: crawlers see 500 errors, reduce crawl frequency
+**Warning Signs:**
+```
+Warning: Text content did not match. Server: "1/15/2026, 2:30:00 PM" Client: "1/15/2026, 3:30:00 PM"
+Error: Hydration failed because the initial UI does not match what was rendered on the server
+```
+- Console shows hydration warnings in development
+- Interactive elements (buttons, links) don't respond to clicks immediately after page load
+- Flash of incorrect content before correction
 
 **Prevention:**
+1. **Never render user-timezone dates in RSC** - Use `suppressHydrationWarning={true}` only as last resort
+2. **Two-pass rendering pattern for timestamps:**
+   ```typescript
+   const [isClient, setIsClient] = useState(false);
+   useEffect(() => setIsClient(true), []);
+   return isClient ? new Date().toLocaleString() : null;
+   ```
+3. **Better: Use relative time on server, absolute time on client:**
+   - Server: "Generated 2 hours ago"
+   - Client upgrade: "Generated at 14:30 CET"
+4. **Best: ISO format with client-side formatting library (date-fns)**
 
-```typescript
-// DANGEROUS LOCATIONS (from grep results):
-// queries.ts line 2150: COUNT(*) without NULLIF
-// queries.ts line 1483: count without NULLIF in weekly breakdown
+**Phase:** Phase 1 (Mobile Layout Consolidation) - Must fix before launch to avoid broken interactions
 
-// WRONG: Crashes on empty result
-avgPoints: sql`AVG(${predictions.totalPoints})`  // NULL if no predictions
-accuracy: sql`ROUND(100.0 * correct / COUNT(*), 1)`  // Division by zero
-
-// RIGHT: Graceful degradation
-avgPoints: sql`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`
-accuracy: sql`COALESCE(
-  ROUND(100.0 * SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)
-  / NULLIF(COUNT(*), 0)::numeric, 1),
-  0
-)`
-
-// VALIDATION:
-// Test with model that has zero predictions in date range
-const emptyStats = await getWeeklyBreakdown('new-model', '2026-01-01', '2026-01-07');
-assert(emptyStats.accuracy === 0);  // Should not crash
-```
-
-**Detection:**
-- Automated test: Query stats for impossible filters (future dates, non-existent competitions)
-- Monitor: 500 error rate on stats endpoints during international breaks
-- Load test: Create model with 0 predictions, query all stats endpoints
-
-**Applies to milestone phase:** Phase 1 (Stats Foundation) - prevents production crashes
+**Sources:** [Next.js Hydration Error Docs](https://nextjs.org/docs/messages/react-hydration-error), [Debugging Hydration Issues](https://blog.somewhatabstract.com/2022/01/03/debugging-and-fixing-hydration-issues/)
 
 ---
 
-### Pitfall 4: Cache Invalidation BEFORE Recalculation Completes
+### P3: force-dynamic on Match Pages Killing Performance
 
-**What goes wrong:**
-Timeline during stats standardization migration:
-1. Deploy new accuracy formula code
-2. Invalidate all `db:stats:*` cache keys (force recalculation)
-3. First user request hits endpoint → calculates with NEW formula → caches result
-4. BUT: Historical data still has old `tendencyPoints IS NOT NULL` counts in materialized views
-5. Cached "new" calculation shows wrong numbers from old data
+**Risk:** Your `/src/app/matches/[id]/page.tsx` uses `export const dynamic = 'force-dynamic'` (line 18) which disables all caching and forces server rendering on every request. For a sports site with thousands of match pages, this will cause slow TTFB (Time To First Byte) and increased server costs.
 
-Result: Accuracy changes by 1-2% for hours until background recalculation completes.
-
-**Why it happens:**
-Cache invalidation is synchronous (instant), data recalculation is async (minutes to hours for 160+ models × 17 leagues).
-
-**Consequences:**
-- Users see brief accuracy spike/drop immediately after deployment
-- Twitter complaints: "My model dropped 5% overnight, what happened?"
-- Rollback triggered incorrectly (looks like bug, but is migration lag)
-- Trust damage: numbers appear unstable
+**Warning Signs:**
+- TTFB >800ms on match pages
+- Server CPU usage spikes during peak traffic (match days)
+- Vercel/hosting costs scale linearly with traffic
+- Google PageSpeed Insights shows "Reduce server response time" warning
 
 **Prevention:**
+1. **Remove force-dynamic**, use ISR with smart revalidation:
+   ```typescript
+   export const revalidate = 60; // 1-minute cache for upcoming matches
+   export const dynamic = 'force-static'; // Static with ISR
+   ```
+2. **Conditional caching based on match state:**
+   - Scheduled matches: 60s revalidate (predictions change)
+   - Live matches: 30s revalidate (scores update frequently)
+   - Finished matches: 3600s revalidate (rarely change)
+3. **Use on-demand revalidation when predictions complete:**
+   ```typescript
+   // In prediction worker after generation
+   await revalidatePath(`/leagues/${competitionId}/${matchSlug}`);
+   ```
+4. **Monitor cache hit rates** - Target >70% cache hits on match pages
 
-```typescript
-// WRONG: Invalidate immediately after deploy
-await invalidateStatsCache();  // Cache cleared
-// Users hit endpoint → new formula + old data = wrong numbers
+**Performance Impact:** ISR reduces TTFB from 800ms to <200ms, cuts server costs by 60-80%.
 
-// RIGHT: Dual-track migration strategy
+**Phase:** Phase 2 (Performance Optimization) - After mobile layout works, before traffic scales
 
-// PHASE 1: Add new column without changing displays
-await db.execute(sql`
-  ALTER TABLE model_stats_cache
-  ADD COLUMN accuracy_v2 DECIMAL;
-`);
-
-// PHASE 2: Backfill new column with corrected formula
-await db.execute(sql`
-  UPDATE model_stats_cache
-  SET accuracy_v2 = (
-    SELECT COALESCE(
-      ROUND(100.0 * SUM(CASE WHEN tendencyPoints > 0 THEN 1 ELSE 0 END)
-      / NULLIF(SUM(CASE WHEN status='scored' THEN 1), 0)::numeric, 1),
-      0
-    )
-    FROM predictions
-    WHERE modelId = model_stats_cache.model_id
-  );
-`);
-
-// PHASE 3: Verify new column accuracy
-const verification = await db.execute(sql`
-  SELECT COUNT(*) FROM model_stats_cache
-  WHERE accuracy_v2 IS NULL OR ABS(accuracy - accuracy_v2) > 20;
-`);
-if (verification.rows[0].count > 0) {
-  throw new Error('Migration verification failed');
-}
-
-// PHASE 4: Swap columns atomically
-await db.transaction(async (tx) => {
-  await tx.execute(sql`ALTER TABLE model_stats_cache RENAME COLUMN accuracy TO accuracy_old;`);
-  await tx.execute(sql`ALTER TABLE model_stats_cache RENAME COLUMN accuracy_v2 TO accuracy;`);
-  await invalidateStatsCache();  // Now safe to invalidate
-});
-
-// PHASE 5: Drop old column after 24h monitoring
-```
-
-**Detection:**
-- Monitor: Accuracy standard deviation across models before/after deployment
-- Alert: If >10% of models show >3% accuracy change in 1 hour
-- Validation query: Compare cached accuracy vs live recalculation
-
-**Applies to milestone phase:** Phase 2 (Migration Execution) - prevents user-facing inconsistency
+**Sources:** [Next.js ISR Guide](https://nextjs.org/docs/app/guides/incremental-static-regeneration), [Next.js Caching 2026 Guide](https://dev.to/md_marufrahman_3552855e/nextjs-caching-and-rendering-a-complete-guide-for-2026-21lh)
 
 ---
 
-## Moderate Pitfalls (Data Quality Issues)
+### P4: AI Search Engines Missing Your Content Due to Structured Data Fragmentation
 
-### Pitfall 5: OG Image Showing Wrong Metric with Generic Label
+**Risk:** AI search engines (ChatGPT, Perplexity, Claude) rely on clean, consolidated structured data. Your match pages have duplicate/conflicting schema.org data across multiple components (SportsEventSchema, WebPageSchema, MatchFAQSchema) which confuses AI crawlers and reduces citation probability.
 
-**What goes wrong:**
-`/api/og/model/route.tsx` line 64 shows `{accuracy}% Accurate` but the `accuracy` parameter could be:
-- Tendency accuracy (correct winner prediction)
-- Exact score percentage (much lower, 10-20%)
-- Total points average (not even a percentage)
-
-Label "Accurate" is ambiguous. Social media shares show misleading stats.
-
-**Why it happens:**
-OG image route is generic template. Caller can pass any number as "accuracy". No validation of metric type.
-
-**Consequences:**
-- Tweet shows "87% Accurate" but it's actually 87% tendency, only 14% exact scores
-- User clicks through expecting 87% exact score predictions, disappointed
-- Brand damage: appears deceptive ("they inflated their stats in social cards")
-- Competitor screenshots misleading OG image for criticism
+**Warning Signs:**
+- Zero citations in ChatGPT/Perplexity search results
+- Google Rich Results Test shows multiple conflicting entities
+- Schema.org validation shows duplicate `@id` properties
+- Search Console reports "Duplicate structured data" warnings
 
 **Prevention:**
+1. **Single JSON-LD graph per page** - Consolidate all schemas into one `@graph` array
+2. **Canonical entity IDs** - Use consistent URLs for `@id`:
+   ```json
+   {
+     "@context": "https://schema.org",
+     "@graph": [
+       {
+         "@type": "SportsEvent",
+         "@id": "https://kroam.xyz/leagues/premier-league/match-slug#event"
+       },
+       {
+         "@type": "WebPage",
+         "@id": "https://kroam.xyz/leagues/premier-league/match-slug",
+         "mainEntity": { "@id": "https://kroam.xyz/leagues/premier-league/match-slug#event" }
+       }
+     ]
+   }
+   ```
+3. **AI-optimized content structure:**
+   - Clear H2/H3 hierarchy (no skipped levels)
+   - "Answer capsules" at start of each section (2-3 sentence summary)
+   - Explicit relationships: "The match between X and Y" not just "The match"
+4. **Implement citation tracking** - Monitor Perplexity API for your domain mentions
 
-```typescript
-// WRONG: Generic label
-<div>{accuracy}% Accurate</div>
+**Why This Matters:** ChatGPT has 800M weekly users. Perplexity Reddit mentions: 3.2M. If AI search can't cite your predictions, you lose massive discovery channel.
 
-// RIGHT: Specific label based on metric type
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const metricType = searchParams.get('metricType') || 'tendency';
-  const metricValue = searchParams.get('value') || '0';
+**Phase:** Phase 2 (AI Search Optimization) - After mobile works, critical for growth
 
-  const labels = {
-    tendency: 'Tendency Accuracy',
-    exact: 'Exact Score Rate',
-    avgPoints: 'Avg Points',
-  };
-
-  const label = labels[metricType] || 'Performance';
-
-  return new ImageResponse(
-    <div>{metricValue}% {label}</div>
-  );
-}
-
-// CALLER UPDATE:
-const ogImageUrl = `/api/og/model?modelName=${name}&metricType=tendency&value=${tendencyAccuracy}`;
-```
-
-**Detection:**
-- Manual audit: Check social media previews for all model pages
-- Automated test: OG image URL includes metricType parameter
-- Visual regression test: Screenshot OG images, compare labels
-
-**Applies to milestone phase:** Phase 3 (SEO Implementation) - prevents misleading social shares
+**Sources:** [GEO Complete Guide 2026](https://adratechsystems.com/en/resources/geo-generative-engine-optimization-complete-guide), [AI Search Optimization 2026](https://www.pagetraffic.com/blog/ai-search-optimization-in-2025/)
 
 ---
 
-### Pitfall 6: Structured Data Accuracy Mismatch with Page Display
+## Mobile UX Pitfalls
 
-**What goes wrong:**
-`schema.org/SportsEvent` structured data shows `winnerPredictionAccuracy: 87%` but page body shows "14% exact scores" prominently. Google sees conflicting signals.
+### P5: Touch Target Sizes Below 48px Causing Mis-taps
 
-**Why it happens:**
-Structured data uses tendency accuracy (standard metric). Page highlights exact scores (impressive but rare metric). No coordination between SEO and UI teams.
+**Risk:** Sports prediction UI has dense data (35 models × multiple columns). Shrinking to fit mobile creates touch targets <48px which leads to accidental taps and user frustration.
 
-**Consequences:**
-- Rich snippets show 87% accuracy
-- User clicks through, sees "14% exact" first
-- Bounce rate increases (feels like bait-and-switch)
-- Google detects discrepancy, reduces snippet eligibility
+**Warning Signs:**
+- User testing shows frequent mis-taps on model names/predictions
+- Analytics show multiple rapid clicks on same element (user trying to hit correct target)
+- High mobile exit rate on prediction table section
 
 **Prevention:**
+1. **Minimum 48×48px touch targets** (WCAG AAA guideline)
+2. **Expandable rows pattern** for mobile prediction tables:
+   - Collapsed: Model name + score (80px row height)
+   - Tap to expand: Full details, accuracy, reasoning
+3. **Increase vertical spacing** between interactive elements (16px minimum)
+4. **Test with thumb simulator** - Ensure bottom 30% of screen is most interactive zone
 
-```typescript
-// WRONG: Structured data and page show different metrics
-// In schema:
-"accuracy": tendencyAccuracy,  // 87%
-// In UI:
-<h2>Exact Score Rate: {exactScoreRate}%</h2>  // 14%
+**Phase:** Phase 1 (Mobile Layout Consolidation)
 
-// RIGHT: Coordinate primary metric
-// In schema AND UI, show same primary metric first
-
-// schema.org structured data
-{
-  "@type": "SportsEvent",
-  "prediction": {
-    "tendencyAccuracy": "87%",
-    "exactScoreRate": "14%",
-    "primaryMetric": "tendencyAccuracy"
-  }
-}
-
-// UI: Match structured data order
-<StatsGrid>
-  <Stat label="Tendency Accuracy" value="87%" primary={true} />
-  <Stat label="Exact Score Rate" value="14%" />
-</StatsGrid>
-```
-
-**Detection:**
-- Automated test: Extract structured data JSON-LD, compare with page text
-- Google Search Console: Monitor rich snippet impressions (drops indicate mismatch)
-- Manual check: Search "site:domain.com accuracy" and verify snippet matches page
-
-**Applies to milestone phase:** Phase 3 (SEO Implementation) - prevents rich snippet loss
+**Sources:** [Mobile Sportsbook UX Best Practices](https://medium.com/@adelinabutler684/mobile-first-sportsbook-design-ux-best-practices-for-higher-retention-2eac17dcb435)
 
 ---
 
-### Pitfall 7: International Terminology Confusion (Football vs Soccer)
+### P6: Typography Unreadable on Mobile - Insufficient Contrast
 
-**What goes wrong:**
-URLs use "football" (`/football-predictions`), some meta descriptions say "soccer", hreflang tags reference both. Google can't determine primary term.
+**Risk:** Your dark mode theme uses subtle grays (`text-muted-foreground`) which fail WCAG contrast requirements on small screens in bright sunlight (common sports viewing scenario).
 
-For international sports platform targeting:
-- US audience: "soccer" expected
-- UK/Europe/Global: "football" expected
-- Current platform: inconsistent mix hurts both audiences
-
-**Why it happens:**
-Developer is European (uses "football"), marketing copy targets US (uses "soccer"), no localization strategy.
-
-**Consequences:**
-- US users search "soccer predictions" → site ranks poorly (content says "football")
-- European users search "football predictions" → US-optimized pages rank better
-- Diluted SEO authority (Google sees as two separate topics)
-- Hreflang mistakes: `en-US` pages use "football", `en-GB` pages use "soccer" (backwards)
+**Warning Signs:**
+- Contrast ratio <4.5:1 for body text
+- User feedback about "can't read scores in daylight"
+- High mobile bounce during afternoon matches (1pm-5pm peaks)
 
 **Prevention:**
+1. **Minimum contrast ratios:**
+   - Body text: 4.5:1 (WCAG AA)
+   - Critical info (scores, predictions): 7:1 (WCAG AAA)
+2. **Responsive font sizing:**
+   - Mobile base: 16px (not 14px - too small for sports data)
+   - Match scores: 48px minimum on mobile
+   - Team names: 18px minimum
+3. **Test in bright sunlight** - Simulate high ambient light conditions
+4. **High contrast mode toggle** - Optional user preference for outdoor viewing
 
-```typescript
-// WRONG: Mixed terminology
-// URL: /football-predictions
-// Meta: "AI soccer predictions..."
-// H1: "Football Match Analysis"
+**Phase:** Phase 1 (Mobile Layout Consolidation)
 
-// RIGHT: Locale-specific consistency
-
-// src/lib/i18n/terminology.ts
-export const SPORT_TERM = {
-  'en-US': 'soccer',
-  'en-GB': 'football',
-  'en-AU': 'football',
-  'default': 'football'
-} as const;
-
-export function getSportTerm(locale: string): string {
-  return SPORT_TERM[locale] || SPORT_TERM.default;
-}
-
-// Usage in metadata
-export function generateMetadata({ params }: { params: { locale: string } }) {
-  const term = getSportTerm(params.locale);
-  return {
-    title: `AI ${term} Predictions`,
-    description: `Get accurate ${term} match predictions...`,
-  };
-}
-
-// URL structure: Keep "football" in URLs (international standard)
-// But use locale-aware text: "Football" for en-GB, "Soccer" for en-US
-```
-
-**Detection:**
-- Automated test: Check all meta descriptions for consistent terminology per locale
-- SEO audit: Search Console shows which terms drive traffic per country
-- Hreflang validator: Check return links and language consistency
-
-**Source:** [International SEO Strategy Mistakes | Sitebulb](https://sitebulb.com/resources/guides/8-international-seo-mistakes-fixes-for-your-expansion-strategy/) notes that "football" vs "soccer" is classic example of localization requirement.
-
-**Applies to milestone phase:** Phase 4 (GEO Optimization) - unlocks international traffic
+**Sources:** [Sports App Design Trends 2026](https://www.iihglobal.com/blog/top-sports-app-design-trends/), [Startup Web Design Mistakes](https://webgamma.ca/startup-web-design-mistakes-that-kill-conversions/)
 
 ---
 
-### Pitfall 8: Recalculating Historical Stats Without Audit Trail
+### P7: Slow Mobile Load Times During Live Matches
 
-**What goes wrong:**
-Migration script updates all 160 models × 17 leagues = 2,720 stat records. If formula is wrong, no way to rollback. Historical comparisons become impossible ("was I better last month or did formula change?").
+**Risk:** 47% of sports fans abandon pages that take >2 seconds to load. Live matches are peak traffic when users have lowest patience. Your match page loads multiple external APIs (match events, standings, next matches) which block rendering.
 
-**Why it happens:**
-Migration runs `UPDATE model_stats SET accuracy = new_formula` without preserving old values.
-
-**Consequences:**
-- User: "My accuracy dropped from 89% to 83%, what changed?"
-- Support can't answer: old data overwritten
-- If migration has bug, no rollback possible without restore from backup
-- Loss of ability to analyze "which models benefited/hurt most from formula fix"
+**Warning Signs:**
+- Mobile LCP (Largest Contentful Paint) >2.5s
+- Analytics show 40%+ bounce rate during live match windows
+- Server logs show API-Football timeout errors during concurrent match times
 
 **Prevention:**
+1. **Progressive loading with Suspense boundaries:**
+   ```typescript
+   <Suspense fallback={<MatchHeaderSkeleton />}>
+     <MatchHeader /> {/* Critical - fast render */}
+   </Suspense>
+   <Suspense fallback={<PredictionsSkeleton />}>
+     <PredictionsSection /> {/* Slower - can stream in */}
+   </Suspense>
+   ```
+2. **Prefetch critical data** at build time (team logos, competition data)
+3. **Client-side polling for live scores** - Don't block page load on match events
+4. **Service Worker caching** for repeat visitors (cache team logos, static assets)
+5. **Budget: Mobile LCP <1.8s, mobile page weight <500KB**
 
-```typescript
-// WRONG: Destructive update
-UPDATE model_stats
-SET accuracy = (new_formula)
-WHERE 1=1;
+**Phase:** Phase 2 (Performance Optimization)
 
-// RIGHT: Preserve history
-
-// Step 1: Add migration metadata
-ALTER TABLE model_stats
-ADD COLUMN accuracy_formula_version INTEGER DEFAULT 1,
-ADD COLUMN accuracy_v1 DECIMAL,  -- Old formula result
-ADD COLUMN migrated_at TIMESTAMP;
-
-// Step 2: Copy current values to v1
-UPDATE model_stats
-SET accuracy_v1 = accuracy,
-    accuracy_formula_version = 1;
-
-// Step 3: Calculate new formula in new column
-ALTER TABLE model_stats ADD COLUMN accuracy_v2 DECIMAL;
-UPDATE model_stats
-SET accuracy_v2 = (new_formula);
-
-// Step 4: Validation (side-by-side comparison)
-SELECT
-  modelId,
-  accuracy_v1 as old,
-  accuracy_v2 as new,
-  accuracy_v2 - accuracy_v1 as change,
-  CASE
-    WHEN ABS(accuracy_v2 - accuracy_v1) > 10 THEN 'REVIEW'
-    ELSE 'OK'
-  END as status
-FROM model_stats
-ORDER BY ABS(accuracy_v2 - accuracy_v1) DESC;
-
-// Step 5: Atomic switchover (only after validation passes)
-BEGIN;
-UPDATE model_stats
-SET accuracy = accuracy_v2,
-    accuracy_formula_version = 2,
-    migrated_at = NOW();
-COMMIT;
-
-// Step 6: Keep v1 for 30 days for rollback/analysis
-```
-
-**Detection:**
-- Validation query shows models with >10% change (manual review)
-- Automated test: Sum of all model accuracies shouldn't change by >5% (formula standardization shouldn't create systematic bias)
-- Rollback ready: `UPDATE model_stats SET accuracy = accuracy_v1` if needed
-
-**Applies to milestone phase:** Phase 2 (Migration Execution) - enables safe rollback
+**Sources:** [Common UX Design Challenges in Sports Betting](https://sportbex.com/blog/ui-ux-design-challenges-in-sports-betting-apps/), [Sports Betting App UX 2026](https://prometteursolutions.com/blog/user-experience-and-interface-in-sports-betting-apps/)
 
 ---
 
-## Minor Pitfalls (User Experience Degradation)
+### P8: Information Architecture Doesn't Follow Mobile Thumb Zones
 
-### Pitfall 9: Cached Leaderboard Rankings Out of Sync with Detail Pages
+**Risk:** Critical actions (view predictions, compare models) placed in top corners of mobile screen - hardest area to reach with one-handed thumb navigation (64.95% of sports fans use mobile).
 
-**What goes wrong:**
-After standardization:
-- Leaderboard cache invalidated, shows new rankings with corrected accuracy
-- Model detail page cache NOT invalidated (different cache key pattern)
-- Model #5 on leaderboard shows 84% accuracy, click through to detail page shows 89% (old cached value)
-
-**Why it happens:**
-Cache keys for different pages stored separately:
-- `db:leaderboard:overall` (invalidated)
-- `db:model:details:model-id` (NOT invalidated, different pattern)
-
-**Consequences:**
-- User confusion: "Which number is correct?"
-- Support tickets: "Leaderboard shows 84% but my profile shows 89%"
-- Diminished trust in accuracy of ALL numbers
-- Users screenshot discrepancies for social media criticism
+**Warning Signs:**
+- Heatmaps show low engagement with top-right CTAs
+- User testing reveals two-handed usage for navigation
+- High scroll depth but low interaction rate
 
 **Prevention:**
+1. **Thumb-friendly navigation zones:**
+   - Top 25%: Logo, back button (passive)
+   - Middle 50%: Scrollable content (read-only)
+   - Bottom 25%: Primary actions (compare, filter, share)
+2. **Bottom sheet pattern** for modal content (filter predictions, model details)
+3. **Floating action button** for key action (e.g., "Compare Models") in bottom-right
+4. **Test with one-handed navigation** - All interactive elements within thumb reach
 
-```typescript
-// WRONG: Invalidate by specific pattern
-await cacheDeletePattern('db:leaderboard:*');
+**Phase:** Phase 1 (Mobile Layout Consolidation)
 
-// RIGHT: Invalidate all stat-dependent caches
-
-// src/lib/cache/invalidation-groups.ts
-export const CACHE_INVALIDATION_GROUPS = {
-  ACCURACY_FORMULA: [
-    'db:leaderboard:*',
-    'db:model:*',
-    'db:stats:*',
-    'db:competition:*',
-    'db:club:*',
-  ],
-  POINTS_FORMULA: [
-    'db:leaderboard:*',
-    'db:match:*:predictions',
-  ],
-} as const;
-
-export async function invalidateGroup(groupName: keyof typeof CACHE_INVALIDATION_GROUPS) {
-  const patterns = CACHE_INVALIDATION_GROUPS[groupName];
-  await Promise.all(patterns.map(pattern => cacheDeletePattern(pattern)));
-}
-
-// Usage during migration:
-await invalidateGroup('ACCURACY_FORMULA');
-```
-
-**Detection:**
-- Post-deployment test: Compare leaderboard rank N accuracy vs model detail page for same model
-- Automated: Fetch `/api/leaderboard`, extract modelId + accuracy, then fetch `/api/models/${modelId}`, compare accuracy values
-- Alert: If any mismatch detected, invalidation incomplete
-
-**Applies to milestone phase:** Phase 2 (Migration Execution) - prevents user-visible inconsistency
+**Sources:** [Mobile-First App Design 2025](https://triare.net/insights/mobile-first-design-2025/)
 
 ---
 
-### Pitfall 10: SEO Meta Description Length Exceeds 160 Characters
+## AI Search Optimization Pitfalls
 
-**What goes wrong:**
-`metadata.ts` line 30 generates dynamic descriptions:
-```
-"Comprehensive coverage of Liverpool vs Arsenal in Premier League.
-AI predictions from 35 models with top model Meta-Llama-3.1-405B-Instruct-Turbo achieving 91% accuracy.
-Match stats, model leaderboard rankings, and detailed performance analysis."
-```
+### P9: Missing Entity Relationships in Structured Data
 
-This is 220+ characters. Google truncates at 155-160, showing "Match stats, model lea..." instead of compelling CTA.
+**Risk:** AI search engines like Claude and Perplexity understand football through entity relationships (Team → Competition → Match). Your structured data defines entities but doesn't connect them properly, reducing relevance signals.
 
-**Why it happens:**
-Template combines all available data without length checking. Long team names + long model names = overflow.
-
-**Consequences:**
-- Search snippets cut off mid-sentence, appear incomplete
-- Lower CTR from search (snippet doesn't convey value)
-- Mobile snippets even shorter (120 chars), cut off earlier
-- Wasted opportunity to include CTA like "View all predictions"
+**Warning Signs:**
+- AI search returns competitor sites for "[team] vs [team] prediction"
+- Google Knowledge Graph doesn't show your predictions in match cards
+- Perplexity API cites Wikipedia for your match data instead of your site
 
 **Prevention:**
+1. **Explicit entity connections in schema.org:**
+   ```json
+   {
+     "@type": "SportsEvent",
+     "homeTeam": {
+       "@type": "SportsTeam",
+       "@id": "https://kroam.xyz/teams/liverpool",
+       "name": "Liverpool",
+       "memberOf": { "@id": "https://kroam.xyz/leagues/premier-league" }
+     },
+     "superEvent": { "@id": "https://kroam.xyz/leagues/premier-league" }
+   }
+   ```
+2. **Bidirectional linking:**
+   - Match page links to team pages
+   - Team pages link back to recent matches
+   - Competition pages list all matches (you have this)
+3. **Wikipedia entity alignment** - Use same team names as Wikipedia for entity matching
+4. **SameAs properties** - Link to official team/league pages
 
-```typescript
-// WRONG: Unlimited length concatenation
-return `Comprehensive coverage of ${match.homeTeam} vs ${match.awayTeam} in ${match.competition}.${predictionsInfo}${modelInfo}. Match stats, model leaderboard rankings, and detailed performance analysis.`;
+**Phase:** Phase 2 (AI Search Optimization)
 
-// RIGHT: Length-aware truncation with priority
+**Sources:** [AI Search SEO for ChatGPT and Perplexity](https://www.gravitatedesign.com/blog/ai-search-seo/)
 
-export function createDescription(match: MatchSeoData): string {
-  const MAX_LENGTH = 155;
+---
 
-  // Priority 1: Core value prop (always included)
-  const core = `${match.homeTeam} vs ${match.awayTeam} AI predictions.`;
+### P10: Content Structure Not Optimized for LLM Context Windows
 
-  // Priority 2: Model count (high value signal)
-  const modelsInfo = match.predictionsCount
-    ? ` ${match.predictionsCount} models analyzed.`
-    : '';
+**Risk:** AI search engines extract text in chunks. Your match pages have scattered information (predictions in table, analysis in card, stats in another section) which prevents LLMs from building coherent context.
 
-  // Priority 3: Top model (if space permits)
-  const topModel = match.topModelName && match.topModelAccuracy
-    ? ` Top: ${match.topModelName} (${match.topModelAccuracy}%).`
-    : '';
+**Warning Signs:**
+- ChatGPT provides incomplete answers about your matches
+- Perplexity cites multiple sources for single match instead of just yours
+- AI-generated summaries omit key prediction data
 
-  // Priority 4: CTA (if space permits)
-  const cta = ' Compare predictions →';
+**Prevention:**
+1. **Answer capsule pattern** at page top:
+   ```markdown
+   ## Match Prediction Summary
+   35 AI models predict Liverpool vs Manchester City (Premier League, Jan 15 2026).
+   Consensus: Manchester City win 2-1 (60% of models).
+   Top model: Claude 3.5 Sonnet predicted exact 2-1 (10 points).
+   ```
+2. **Hierarchical content structure:**
+   - H2: What are the AI predictions?
+   - H3: Consensus prediction
+   - H3: Top performing models
+   - H2: How accurate are these predictions?
+3. **Context-rich first paragraphs** - Include all essential entities in opening 150 words
+4. **Avoid pronoun ambiguity** - "Liverpool's form" not "Their form" (LLMs lose context)
 
-  // Truncate intelligently
-  let desc = core + modelsInfo + topModel + cta;
-  if (desc.length > MAX_LENGTH) {
-    desc = core + modelsInfo + cta;
-  }
-  if (desc.length > MAX_LENGTH) {
-    desc = core + ' Compare AI model predictions.';
-  }
+**Phase:** Phase 2 (AI Search Optimization)
 
-  return desc;
-}
+**Sources:** [How to Rank on AI Search Engines 2026](https://almcorp.com/blog/how-to-rank-on-chatgpt-perplexity-ai-search-engines-complete-guide-generative-engine-optimization/)
 
-// VALIDATION:
-assert(createDescription(match).length <= 160);
-```
+---
 
-**Detection:**
-- Automated test: All generated meta descriptions ≤ 160 chars
-- CI check: Fail build if any page metadata exceeds limit
-- Manual: Google Search Console → Enhancement → check truncated snippets
+### P11: Schema.org Validation Errors Breaking AI Parser
 
-**Applies to milestone phase:** Phase 3 (SEO Implementation) - improves CTR from search
+**Risk:** Your buildMatchGraphSchema generates JSON-LD with nested quotes and special characters that break JSON parsing for AI crawlers.
+
+**Warning Signs:**
+- Google Rich Results Test shows "Invalid JSON-LD"
+- Schema.org validator reports syntax errors
+- AI search engines show no structured snippets for your matches
+
+**Prevention:**
+1. **Use sanitizeJsonLd consistently** (you already have this at line 111)
+2. **Validate all dynamic content:**
+   ```typescript
+   const sanitizeForJsonLd = (str: string) =>
+     str.replace(/"/g, '\\"').replace(/\n/g, ' ').trim();
+   ```
+3. **Test with multiple validators:**
+   - Google Rich Results Test
+   - Schema.org Validator
+   - Perplexity structured data checker
+4. **Unit tests for schema generation** - Catch errors before deploy
+
+**Phase:** Phase 2 (AI Search Optimization)
+
+---
+
+## React/Next.js Pitfalls
+
+### P12: Suspense Boundary Placement Causing Waterfall Requests
+
+**Risk:** Your match page wraps `PredictionsSection` in Suspense (line 146) but fetches related data sequentially, causing waterfall: match → analysis → predictions → events. Total time: 4× single query time.
+
+**Warning Signs:**
+- Server logs show sequential database queries with 100-200ms gaps
+- Match page TTFB varies wildly (500ms-2000ms)
+- Database connection pool exhaustion during peak traffic
+
+**Prevention:**
+1. **Parallel data fetching:**
+   ```typescript
+   const [matchResult, predictions, events] = await Promise.all([
+     getMatchWithAnalysis(id),
+     getPredictionsForMatchWithDetails(id),
+     getMatchEvents(externalId),
+   ]);
+   ```
+2. **Granular Suspense boundaries** - Each section fetches independently:
+   ```typescript
+   <Suspense fallback={<HeaderSkeleton />}>
+     <MatchHeader matchId={id} />
+   </Suspense>
+   <Suspense fallback={<PredictionsSkeleton />}>
+     <PredictionsSection matchId={id} />
+   </Suspense>
+   ```
+3. **Preload patterns** for critical data:
+   ```typescript
+   preload(matchId, getMatchWithAnalysis);
+   ```
+
+**Phase:** Phase 2 (Performance Optimization)
+
+**Sources:** [Next.js Data Fetching](https://nextjs.org/docs/14/app/building-your-application/data-fetching/fetching-caching-and-revalidating)
+
+---
+
+### P13: generateStaticParams Removed - Missing Build-Time Optimization
+
+**Risk:** Your `/src/app/leagues/[slug]/page.tsx` comment at line 16 says "Removed generateStaticParams to avoid build-time database queries". This means all league pages render on-demand, increasing cold start latency.
+
+**Warning Signs:**
+- First visit to league page: 1-2s load
+- Subsequent visits: 200ms load (cached)
+- Vercel build time <5 minutes (good) but runtime performance suffers
+
+**Prevention:**
+1. **Implement generateStaticParams for competition pages only:**
+   ```typescript
+   export async function generateStaticParams() {
+     return COMPETITIONS.map(comp => ({ slug: comp.id }));
+   }
+   ```
+   - 17 leagues = 17 static pages at build time
+   - Minimal build cost, huge runtime benefit
+2. **Dynamic params true for catch-all:**
+   ```typescript
+   export const dynamicParams = true; // Allow new slugs at runtime
+   ```
+3. **Keep on-demand for match pages** (thousands of matches, infeasible to build all)
+
+**Phase:** Phase 2 (Performance Optimization)
+
+**Sources:** [Next.js 16 dynamicParams Issues](https://github.com/vercel/next.js/discussions/81155), [generateStaticParams Purpose](https://github.com/vercel/next.js/discussions/73959)
+
+---
+
+### P14: Defensive Error Handling Hiding Real Issues
+
+**Risk:** Your match page uses try-catch blocks that swallow errors and return null data (lines 101-126, 139-167). This masks production issues - users see partial pages without knowing something failed.
+
+**Warning Signs:**
+- Console full of "Failed to fetch X" errors but page looks fine
+- Users report "predictions missing" but no error tracking fires
+- Database errors logged but not surfaced to monitoring
+
+**Prevention:**
+1. **Fail loudly for critical data:**
+   ```typescript
+   const result = await getMatchBySlug(competitionSlug, match);
+   if (!result) {
+     notFound(); // 404 is better than broken page
+   }
+   ```
+2. **Graceful degradation for supplementary data:**
+   ```typescript
+   const events = await getMatchEvents(id).catch(err => {
+     logger.error({ matchId: id, err }, 'Events fetch failed');
+     captureException(err); // Send to Sentry
+     return []; // Empty array, show "Events unavailable"
+   });
+   ```
+3. **User-visible error states:**
+   ```typescript
+   {events.length === 0 && isLive && (
+     <ErrorBoundary fallback={<EventsUnavailable />}>
+       <MatchEvents />
+     </ErrorBoundary>
+   )}
+   ```
+4. **Monitoring thresholds** - Alert if >5% of match page loads have missing data
+
+**Phase:** Phase 3 (Content Generation Pipeline Fixes)
+
+**Sources:** [React Error Boundaries](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)
+
+---
+
+### P15: Client-Side State Hydration for Server-Fetched Data
+
+**Risk:** Your PredictionTable component receives server-fetched predictions but may need client-side sorting/filtering. If you add useState for this, you'll hit hydration mismatches.
+
+**Warning Signs:**
+- "Hydration failed" errors when adding sort functionality
+- Table flickers during initial render
+- Sort state resets on navigation
+
+**Prevention:**
+1. **URL-based filtering** (no client state needed):
+   ```typescript
+   const searchParams = useSearchParams();
+   const sortBy = searchParams.get('sortBy') || 'points';
+   ```
+2. **Server actions for interactions:**
+   ```typescript
+   'use server'
+   export async function sortPredictions(matchId: string, sortKey: string) {
+     return getPredictions(matchId, { sortBy: sortKey });
+   }
+   ```
+3. **Client components for UI-only state:**
+   ```typescript
+   'use client'
+   function PredictionTableClient({ predictions }: { predictions: Prediction[] }) {
+     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+     // Local UI state only - no hydration conflict
+   }
+   ```
+
+**Phase:** Phase 1 (Mobile Layout Consolidation)
+
+**Sources:** [React Server Components Patterns](https://react.dev/reference/react/use-client)
+
+---
+
+## Content Generation Pipeline Pitfalls
+
+### P16: LLM Hallucination Validation Missing for Real-Time Content
+
+**Risk:** Your content generator has `validateLeagueRoundupOutput` for blog posts but no validation for `MatchContentSection` live content. LLMs can hallucinate player names, fake statistics, or wrong match details.
+
+**Warning Signs:**
+- User reports "wrong player scored" in match content
+- Generated content mentions players not in the match
+- AI writes about events that didn't happen
+- SEO credibility damaged by factual errors
+
+**Prevention:**
+1. **Entity validation for match content:**
+   ```typescript
+   function validateMatchContent(content: string, allowedEntities: {
+     teams: string[];
+     players: string[];
+     competition: string;
+   }) {
+     const mentions = extractEntities(content);
+     const invalid = mentions.filter(m => !allowedEntities.includes(m));
+     if (invalid.length > 0) {
+       throw new ValidationError(`Invalid entities: ${invalid.join(', ')}`);
+     }
+   }
+   ```
+2. **Source data constraints in prompts:**
+   ```
+   You are writing about {homeTeam} vs {awayTeam}.
+   ONLY mention these players: {playerList}
+   DO NOT invent statistics or events.
+   ```
+3. **Post-generation fact checking** - Compare generated stats against source data
+4. **Human review queue** for high-traffic matches
+
+**Phase:** Phase 3 (Content Generation Pipeline Fixes)
+
+**Sources:** [LLM Failure Modes](https://medium.com/@adnanmasood/a-field-guide-to-llm-failure-modes-5ffaeeb08e80), [Handling LLM Output Errors](https://apxml.com/courses/prompt-engineering-llm-application-development/chapter-7-output-parsing-validation-reliability/handling-parsing-errors)
+
+---
+
+### P17: Content Deduplication Over-Aggressive - Blocking Legitimate Variations
+
+**Risk:** Your `checkForDuplicates` function uses similarity threshold that may flag legitimate match variations as duplicates (e.g., two 2-1 wins with similar phrasing).
+
+**Warning Signs:**
+- Content generation logs show frequent "skip duplicate" actions
+- Multiple matches missing post-match content
+- Generated content feels repetitive (validation too strict forces formulaic writing)
+
+**Prevention:**
+1. **Tune similarity thresholds per content type:**
+   ```typescript
+   const thresholds = {
+     postMatchRoundup: 0.85, // High - each match should be unique
+     leagueRoundup: 0.70, // Medium - weekly patterns acceptable
+     matchPreview: 0.75, // Medium-high
+   };
+   ```
+2. **Whitelist common football phrases:**
+   - "found the back of the net"
+   - "clinical finish"
+   - "kept a clean sheet"
+   These shouldn't count toward similarity score
+3. **Semantic similarity vs string similarity:**
+   - Use embeddings (OpenAI ada-002) instead of character-based comparison
+   - Two different phrasings of same facts = acceptable
+4. **Monitor regeneration attempts** - If >20% of content needs regeneration, threshold too strict
+
+**Phase:** Phase 3 (Content Generation Pipeline Fixes)
+
+**Sources:** [Debugging LLM Failures](https://dev.to/kuldeep_paul/how-to-effectively-debug-llm-failures-a-step-by-step-guide-2e8n)
+
+---
+
+### P18: Queue Worker Retry Strategy Causing Duplicate Content
+
+**Risk:** Your BullMQ workers retry failed jobs with exponential backoff, but content generation isn't idempotent. A transient database error during insert could generate content twice and charge 2× API cost.
+
+**Warning Signs:**
+- Duplicate rows in `matchContent` table with same `matchId`
+- Together AI bill shows 2× expected usage
+- Content generation logs show successful generation but database insert failures
+
+**Prevention:**
+1. **Idempotent content generation:**
+   ```typescript
+   // Check existence before generating
+   const existing = await getMatchContent(matchId);
+   if (existing && existing.postMatchContent) {
+     logger.info({ matchId }, 'Content already exists, skipping generation');
+     return existing.id;
+   }
+   ```
+2. **Database transactions with locks:**
+   ```typescript
+   await db.transaction(async (tx) => {
+     const locked = await tx
+       .select()
+       .from(matchContent)
+       .where(eq(matchContent.matchId, matchId))
+       .for('update') // Row-level lock
+       .execute();
+
+     if (locked.length > 0) return locked[0].id;
+
+     // Generate and insert atomically
+     const content = await generateContent();
+     return await tx.insert(matchContent).values(content);
+   });
+   ```
+3. **Retry with generation cache:**
+   ```typescript
+   // Store generated content in Redis before database insert
+   await redis.setex(`content:${matchId}`, 3600, generatedContent);
+   // Retry insert from cache, not regeneration
+   ```
+4. **Monitor duplicate detection** - Alert if >1% of content generations are duplicates
+
+**Phase:** Phase 3 (Content Generation Pipeline Fixes)
+
+**Sources:** [Retry Mechanisms for LLM Calls](https://apxml.com/courses/prompt-engineering-llm-application-development/chapter-7-output-parsing-validation-reliability/implementing-retry-mechanisms), [Failover Strategies for LLMs](https://portkey.ai/blog/failover-routing-strategies-for-llms-in-production/)
 
 ---
 
 ## Phase-Specific Warnings
 
-### Phase 1: Stats Foundation (Calculation Standardization)
-
-**Likely pitfall:** Changing accuracy formula creates user perception of "nerf"
-
-**Why:** Models showing 94% accuracy (inflated by IS NOT NULL bug) will drop to realistic 87% after fix. Users don't understand this is correction, they think models got worse.
-
-**Mitigation:**
-1. Add changelog entry: "Accuracy calculation corrected - now only counts predictions that earned points"
-2. Show comparison: "Old formula: 94% | Corrected formula: 87%"
-3. Publish blog post explaining fix BEFORE deployment
-4. Add badge to affected model pages: "⚠ Accuracy recalculated with corrected formula"
-
-### Phase 2: Migration Execution
-
-**Likely pitfall:** Background recalculation job blocks production queries
-
-**Why:** `UPDATE model_stats SET accuracy = (SELECT ... FROM predictions ...)` for 2,720 rows holds table locks.
-
-**Mitigation:**
-1. Run migration during low-traffic window (3-5am UTC)
-2. Use batch updates (100 rows at a time) instead of single transaction
-3. Monitor query duration and replication lag
-4. Add `NOWAIT` to lock acquisition, skip if blocked
-
-### Phase 3: SEO Implementation
-
-**Likely pitfall:** Structured data validation errors not caught until deployed
-
-**Why:** Schema.org validator requires live URL, can't test in staging.
-
-**Mitigation:**
-1. Use Google's Rich Results Test on staging URLs (allows testing with authentication)
-2. Automated test: Parse JSON-LD from rendered HTML, validate against schema
-3. CI step: `schema-dts` TypeScript types catch structural errors
-4. Deploy to preview URL first, validate, then promote to production
-
-### Phase 4: GEO Optimization
-
-**Likely pitfall:** Hreflang return link errors
-
-**Why:** Page A links to Page B with hreflang, but Page B doesn't link back to Page A.
-
-**Mitigation:**
-1. Generate hreflang tags programmatically (ensure bidirectional links)
-2. Test with [Merkle hreflang tester](https://technicalseo.com/tools/hreflang/)
-3. Validate before deploy: "Every hreflang reference must have matching return reference"
-
-**Source:** [7 International SEO Mistakes to Avoid in 2026](https://gonzo.co.in/blog/avoid-top-SEO-mistakes-2026/) notes return tag errors are #1 hreflang mistake.
+| Phase | Primary Pitfall Risk | Mitigation Priority |
+|-------|---------------------|---------------------|
+| Phase 1: Mobile Layout | P1 (Duplicate Data Overload), P5 (Touch Targets), P15 (Hydration Mismatch) | Design mobile-first mockups before coding. Validate with real devices. |
+| Phase 2: Performance & AI Search | P3 (force-dynamic), P4 (Schema Fragmentation), P7 (Slow Load) | Set performance budgets before implementation. Monitor cache hit rates. |
+| Phase 3: Content Pipeline | P16 (Hallucination), P17 (Over-Deduplication), P18 (Duplicate Generation) | Build validation framework before scaling content generation. |
 
 ---
 
-## Testing Blind Spots
+## Integration Pitfalls with Existing System
 
-### Hard to Test: Stats Consistency Under Concurrent Updates
+### Existing Architecture Dependencies
 
-**Why hard:** Requires simultaneous:
-- Match settlement writing new scores
-- User requesting stats API
-- Background job recalculating aggregates
+Your codebase uses:
+- **Next.js 16 + React 19** - Latest async params API (breaking changes from 15)
+- **BullMQ job queues** - Content generation triggered by match lifecycle events
+- **PostgreSQL + Redis** - Dual caching layer (data + queue state)
+- **Together AI API** - 35 LLM models for predictions and content
 
-**Manual test approach:**
-```bash
-# Terminal 1: Simulate match settlements
-for i in {1..10}; do
-  curl -X POST /api/admin/settle-match?matchId=match-$i &
-done
+**Integration Risks:**
 
-# Terminal 2: Hammer stats endpoint
-for i in {1..100}; do
-  curl /api/stats/overall &
-done
+1. **Breaking existing prediction pipeline** - Match page redesign must not interfere with T-30m prediction generation
+2. **Cache invalidation cascade** - Changing match page structure requires coordinated revalidation across multiple pages
+3. **Schema migration without downtime** - Restructuring content tables while queue workers are running
+4. **Mobile layout breaking desktop** - 70% traffic is mobile but 30% desktop users exist
 
-# Watch for:
-# - Different accuracy values in responses (cache inconsistency)
-# - 500 errors (division by zero from race condition)
-# - Stale data (requests return cached values from before settlement)
-```
+**Mitigation:**
 
-**Mitigation:** Database row-level locks on stats updates, short cache TTL during settlements.
-
-### Hard to Test: SEO Crawl Budget Impact After Standardization
-
-**Why hard:** Google crawl behavior changes take weeks to observe.
-
-**Manual test approach:**
-1. Submit sitemap with priority hints for updated pages
-2. Monitor Google Search Console → Settings → Crawl stats
-3. Watch for:
-   - Crawl rate increase (Google detects fresh content)
-   - Average response time (new queries may be slower)
-   - Crawl errors (broken structured data)
-
-**Mitigation:** Monitor for 30 days post-deployment, compare before/after metrics.
-
-### Hard to Test: Historical Data Migration Accuracy
-
-**Why hard:** No ground truth for "correct" old accuracy values.
-
-**Manual test approach:**
-```sql
--- Sample validation: Check models with known historical performance
-SELECT
-  m.displayName,
-  old.accuracy as old_formula,
-  new.accuracy as new_formula,
-  -- Manual spot check: Did this model really have 94% accuracy?
-  (SELECT COUNT(*) FROM predictions p
-   WHERE p.modelId = m.id
-   AND p.status = 'scored'
-   AND p.tendencyPoints > 0) / NULLIF(
-    (SELECT COUNT(*) FROM predictions p2
-     WHERE p2.modelId = m.id
-     AND p2.status = 'scored'),
-   0) * 100 as manual_calc
-FROM models m
-JOIN model_stats_v1 old ON old.model_id = m.id
-JOIN model_stats_v2 new ON new.model_id = m.id
-WHERE ABS(new.accuracy - manual_calc) > 1  -- Flag discrepancies
-ORDER BY ABS(new.accuracy - manual_calc) DESC;
-```
-
-**Mitigation:** Keep v1 values for comparison, manual review top 10 models.
-
----
-
-## Rollback Triggers
-
-**Immediate rollback if:**
-
-1. **Accuracy values swing >15% for majority of models**
-   - Indicates formula bug, not just standardization
-   - Example: 30+ models show accuracy drop from 85% → 68%
-   - Action: Revert code, restore `accuracy_v1` column
-
-2. **API error rate >5% on stats endpoints**
-   - Division by zero or missing NULLIF protection
-   - Action: Rollback code, fix locally, redeploy
-
-3. **Cache invalidation cascades to page crashes**
-   - Leaderboard page returns 500 on every request
-   - Sign of infinite loop or dependency cycle
-   - Action: Disable cache invalidation, investigate
-
-4. **SEO structured data validation failures >20%**
-   - Google Search Console shows widespread schema errors
-   - Action: Rollback structured data changes only (keep stats changes)
-
-5. **User complaints about "wrong numbers" spike >3x baseline**
-   - Social media mentions of "kroam.xyz stats broken"
-   - Support tickets about accuracy mismatches
-   - Action: Add banner explaining recalculation, don't rollback (trust damage worse if numbers keep changing)
-
----
-
-## Summary: Top 5 Risks for Stats Accuracy & SEO Milestone
-
-1. **Inconsistent accuracy denominators** → Standardize formula, use single source of truth, test across all endpoints
-2. **IS NOT NULL vs > 0 mismatch** → Change to `> 0` everywhere, validate with historical data
-3. **Cache invalidation timing** → Use dual-column migration, invalidate only after recalculation complete
-4. **OG image misleading labels** → Add metricType parameter, show specific metric name
-5. **Migration without audit trail** → Preserve old values, enable rollback, document changes
-
-**General principle:** Stats accuracy is trust. Every inconsistency erodes credibility. For this milestone:
-- **Correctness over speed:** Validate extensively before deploying
-- **Transparency over hiding:** Announce formula changes, don't silently update
-- **Auditability over efficiency:** Keep old values, enable comparison
-- **Atomic over incremental:** Swap formulas all at once, not page by page
+1. **Feature flags for rollout:**
+   ```typescript
+   const useNewMatchLayout = process.env.FEATURE_NEW_MATCH_LAYOUT === 'true';
+   return useNewMatchLayout ? <NewMatchPage /> : <LegacyMatchPage />;
+   ```
+2. **Parallel component development** - Build new mobile components alongside existing desktop ones
+3. **Gradual traffic migration** - 10% → 50% → 100% over 2 weeks
+4. **Rollback plan** - Keep old match page code for 1 sprint after 100% rollout
 
 ---
 
 ## Sources
 
-**Industry Research (MEDIUM confidence):**
-- [5 Common Mistakes in Sports Analytics/Data Science | Medium](https://medium.com/@glantonandjudge/5-common-mistakes-in-sports-analytics-data-science-9492fee8c8c2) - Sports stats inconsistency patterns
-- [The Importance of Accurate and Reliable Sports Data | Stats Perform](https://www.statsperform.com/resource/the-importance-of-accurate-and-reliable-sports-data-in-todays-sports-industry/) - Trust impact of data errors
-- [Data Migration Best Practices 2026 | Medium](https://medium.com/@kanerika/data-migration-best-practices-your-ultimate-guide-for-2026-7cbd5594d92e) - 83% migration failure rate, standardization importance
-- [Cache Invalidation Strategies | DesignGurus](https://www.designgurus.io/blog/cache-invalidation-strategies) - Migration timing pitfalls
-- [International SEO Strategy Mistakes | Sitebulb](https://sitebulb.com/resources/guides/8-international-seo-mistakes-fixes-for-your-expansion-strategy/) - Football/soccer terminology, hreflang errors
-- [7 International SEO Mistakes 2026 | Gonzo](https://gonzo.co.in/blog/avoid-top-SEO-mistakes-2026/) - Return tag errors, localization
-- [Structured Data in AI SEO 2026 | Studio Ubique](https://www.studioubique.com/structured-data-seo/) - Schema markup as baseline requirement
+**Mobile UX:**
+- [Mobile-First Sportsbook Design: UX Best Practices](https://medium.com/@adelinabutler684/mobile-first-sportsbook-design-ux-best-practices-for-higher-retention-2eac17dcb435)
+- [UI/UX Design Challenges in Sports Betting Apps](https://sportbex.com/blog/ui-ux-design-challenges-in-sports-betting-apps/)
+- [Sports App UI/UX Design Trends](https://www.iihglobal.com/blog/top-sports-app-design-trends/)
+- [Startup Web Design Mistakes](https://webgamma.ca/startup-web-design-mistakes-that-kill-conversions/)
+- [Mobile-First App Design 2025](https://triare.net/insights/mobile-first-design-2025/)
 
-**Direct Codebase Analysis (HIGH confidence):**
-- `src/lib/db/queries/stats.ts` - Lines 100, 156, 215, 275, 331 (accuracy calculations)
-- `src/lib/db/queries.ts` - Lines 273, 275, 352, 1483, 2022, 2112, 2150 (IS NOT NULL vs > 0)
-- `src/app/api/og/model/route.tsx` - Line 64 (generic "Accurate" label)
-- `src/lib/seo/metadata.ts` - Line 30 (meta description generation)
-- `scripts/check-accuracy.ts` - Demonstrates tendency vs total accuracy discrepancy
+**AI Search Optimization:**
+- [GEO: Complete Guide to Ranking on ChatGPT, Perplexity & Google AI](https://adratechsystems.com/en/resources/geo-generative-engine-optimization-complete-guide)
+- [How to Rank on AI Search Engines 2026](https://almcorp.com/blog/how-to-rank-on-chatgpt-perplexity-ai-search-engines-complete-guide-generative-engine-optimization/)
+- [AI Search Optimization in 2026](https://www.pagetraffic.com/blog/ai-search-optimization-in-2025/)
+- [AI Search SEO: ChatGPT, Perplexity & Gemini](https://www.gravitatedesign.com/blog/ai-search-seo/)
+
+**React/Next.js:**
+- [Next.js Hydration Error Documentation](https://nextjs.org/docs/messages/react-hydration-error)
+- [Debugging Hydration Issues](https://blog.somewhatabstract.com/2022/01/03/debugging-and-fixing-hydration-issues/)
+- [Next.js ISR Guide](https://nextjs.org/docs/app/guides/incremental-static-regeneration)
+- [Next.js Caching 2026 Complete Guide](https://dev.to/md_marufrahman_3552855e/nextjs-caching-and-rendering-a-complete-guide-for-2026-21lh)
+- [Next.js Data Fetching Guide](https://nextjs.org/docs/14/app/building-your-application/data-fetching/fetching-caching-and-revalidating)
+
+**LLM Content Generation:**
+- [Debugging LLM Failures: Step-by-Step Guide](https://dev.to/kuldeep_paul/how-to-effectively-debug-llm-failures-a-step-by-step-guide-2e8n)
+- [Retry Mechanisms for LLM Calls](https://apxml.com/courses/prompt-engineering-llm-application-development/chapter-7-output-parsing-validation-reliability/implementing-retry-mechanisms)
+- [Failover Routing Strategies for LLMs](https://portkey.ai/blog/failover-routing-strategies-for-llms-in-production/)
+- [Field Guide to LLM Failure Modes](https://medium.com/@adnanmasood/a-field-guide-to-llm-failure-modes-5ffaeeb08e80)
+- [Handling LLM Output Parsing Errors](https://apxml.com/courses/prompt-engineering-llm-application-development/chapter-7-output-parsing-validation-reliability/handling-parsing-errors)
 
 ---
 
-*Research complete: 2026-02-02. All pitfalls verified against production codebase and industry best practices.*
+**Research completed:** 2026-02-02
+**Confidence level:** HIGH (code analysis + current best practices)
+**Next step:** Create phase roadmap based on pitfall severity and dependencies

@@ -1,991 +1,415 @@
-# Technology Stack: Stats Accuracy & SEO Optimization
+# Stack Research: Match Page Refresh
 
-**Project:** AI Football Predictions Platform
-**Milestone:** Stats Calculation Consistency + SEO/GEO Enhancement
+**Project:** Mobile-First Match Page Redesign & AI Search Optimization
 **Researched:** 2026-02-02
-**Confidence:** HIGH (verified with official docs and current codebase)
+**Confidence:** HIGH
 
----
+## Summary
 
-## Executive Summary
+Your existing stack (Next.js 16, React 19, Tailwind CSS v4, shadcn/ui) already provides the foundation for mobile-first redesign and AI search optimization. No major framework changes needed. The focus should be on **configuration additions** (AI crawler access, llms.txt), **CSS patterns** (mobile-first responsive utilities), and **React 19 hooks** (useActionState, useOptimistic for interactive forms). The LLM content rendering issue is likely a hydration or data fetching bug, not a stack deficiency.
 
-**Current Stack (Validated):**
-- Next.js 16.1.4 + React 19.2.3 (App Router with Server Components)
-- PostgreSQL with Drizzle ORM 0.45.1
-- Redis (ioredis 5.9.2) for caching
-- BullMQ 5.34.3 for job orchestration
-- Together AI LLM integration
+## Current Stack Assessment
 
-**What's Needed:**
-1. **PostgreSQL patterns** for consistent stats aggregation (6 different calculations → 1 canonical)
-2. **Next.js 16 SEO patterns** for better search visibility (metadata API, structured data)
-3. **Schema.org types** for sports statistics (JSON-LD for AI crawlers)
-4. **NO new dependencies required** (use existing stack capabilities)
+### Already Validated (No Changes Needed)
 
-**Problem Statement:**
-- Stats calculated inconsistently across 6 locations in codebase
-- SEO potential untapped (no structured data for sports events)
-- GEO considerations missing (international football audience)
+| Technology | Version | Status |
+|------------|---------|--------|
+| Next.js | 16.1.4 | ✅ Latest with PPR, React Compiler support |
+| React | 19.2.3 | ✅ Latest with useActionState, useOptimistic |
+| Tailwind CSS | v4 | ✅ Latest with CSS-first breakpoints |
+| shadcn/ui | Current | ✅ Mobile-first Radix UI primitives |
+| TypeScript | 5.x | ✅ Modern with proper strict mode |
 
----
+Your stack is already optimized for 2026 mobile-first development. Next.js 16 includes Partial Prerendering (PPR), stable React Compiler support, and Turbopack for 5-10x faster builds.
 
-## Part 1: PostgreSQL Stats Calculation Patterns
+## Recommended Additions
 
-### Problem: Inconsistent Accuracy Calculations
+### Category: AI Search Optimization
 
-**Current State (from codebase analysis):**
-Found 6+ different accuracy calculation patterns:
-- `src/lib/db/queries/stats.ts` line 100: `ROUND(100.0 * SUM(CASE WHEN tendencyPoints > 0...) / NULLIF(SUM(CASE WHEN status = 'scored'...`
-- Variations in WHERE clauses (some include 'pending', some don't)
-- Different NULL handling strategies
-- Inconsistent rounding (some ROUND to 1 decimal, others to 2)
+#### 1. AI Crawler Configuration Files
 
-**Root Cause:**
-Ad-hoc queries duplicated across functions instead of centralized definitions.
+**robots.txt** (create in `/public/robots.txt`)
+- **Why needed:** Allow AI crawlers (GPTBot, ClaudeBot, PerplexityBot) to access your content
+- **Current state:** No robots.txt detected in public directory
+- **Implementation:** Plain text file with AI bot user-agents
+- **Confidence:** HIGH (standard practice as of 2026)
 
-### Solution: Database Views + Query Helpers
+```txt
+# AI Search Crawlers (for visibility in ChatGPT, Claude, Perplexity)
+User-agent: GPTBot
+Allow: /
 
-**Pattern 1: Create PostgreSQL VIEW for canonical stats**
+User-agent: ChatGPT-User
+Allow: /
 
-```sql
--- Create in migration: src/lib/db/migrations/001_stats_views.sql
+User-agent: ClaudeBot
+Allow: /
 
-CREATE OR REPLACE VIEW model_stats_canonical AS
-SELECT
-  p.model_id,
-  COUNT(p.id) AS total_predictions,
-  COUNT(CASE WHEN p.status = 'scored' THEN 1 END) AS scored_predictions,
-  COALESCE(SUM(p.total_points), 0) AS total_points,
-  COALESCE(ROUND(AVG(p.total_points)::numeric, 2), 0) AS avg_points,
+User-agent: Claude-User
+Allow: /
 
-  -- Accuracy: correct tendencies / scored predictions * 100
-  -- Canonical definition: tendency_points > 0 means correct prediction
-  COALESCE(
-    ROUND(
-      100.0 * COUNT(CASE WHEN p.tendency_points > 0 THEN 1 END)::numeric
-      / NULLIF(COUNT(CASE WHEN p.status = 'scored' THEN 1 END), 0)
-    , 1)
-  , 0) AS accuracy,
+User-agent: PerplexityBot
+Allow: /
 
-  COUNT(CASE WHEN p.exact_score_bonus = 3 THEN 1 END) AS exact_scores,
-  COUNT(CASE WHEN p.tendency_points > 0 THEN 1 END) AS correct_tendencies,
-  COUNT(CASE WHEN p.goal_diff_bonus = 1 THEN 1 END) AS correct_goal_diffs
-FROM predictions p
-GROUP BY p.model_id;
+# Block training bots if desired (won't impact search visibility)
+User-agent: Google-Extended
+Disallow: /
 
--- Competition-specific stats view
-CREATE OR REPLACE VIEW model_competition_stats_canonical AS
-SELECT
-  p.model_id,
-  m.competition_id,
-  c.name AS competition_name,
-  c.season,
-  COUNT(p.id) AS total_predictions,
-  COALESCE(SUM(p.total_points), 0) AS total_points,
-  COALESCE(ROUND(AVG(p.total_points)::numeric, 2), 0) AS avg_points,
-  COALESCE(
-    ROUND(
-      100.0 * COUNT(CASE WHEN p.tendency_points > 0 THEN 1 END)::numeric
-      / NULLIF(COUNT(CASE WHEN p.status = 'scored' THEN 1 END), 0)
-    , 1)
-  , 0) AS accuracy,
-  COUNT(CASE WHEN p.exact_score_bonus = 3 THEN 1 END) AS exact_scores,
-  COUNT(CASE WHEN p.tendency_points > 0 THEN 1 END) AS correct_tendencies
-FROM predictions p
-INNER JOIN matches m ON p.match_id = m.id
-INNER JOIN competitions c ON m.competition_id = c.id
-WHERE p.status = 'scored'
-GROUP BY p.model_id, m.competition_id, c.name, c.season;
-
--- Create indexes for view performance
-CREATE INDEX IF NOT EXISTS idx_predictions_model_status ON predictions(model_id, status);
-CREATE INDEX IF NOT EXISTS idx_predictions_tendency_points ON predictions(tendency_points) WHERE tendency_points > 0;
+User-agent: CCBot
+Disallow: /
 ```
 
-**Why VIEWs over Materialized Views:**
-- **Freshness**: Stats must update immediately after match settlement (no refresh lag)
-- **Simplicity**: No refresh jobs to manage, no staleness issues
-- **Performance**: With proper indexes, VIEWs perform well for this dataset size
-- **Trade-off**: Slightly slower than MVIEW but guaranteed fresh
+**llms.txt** (create in `/public/llms.txt`)
+- **Why needed:** Guide AI systems to your most authoritative content for better citation rates
+- **Format:** Simple markdown with key URLs
+- **Adoption status:** 780+ sites including Cloudflare, Vercel (MEDIUM confidence - emerging standard)
+- **Impact:** Potentially higher citation rates in AI search results (Perplexity, ChatGPT, Claude)
 
-**When to use Materialized Views (NOT for core stats):**
-- Historical aggregations (season summaries, archived data)
-- Report generation (monthly leaderboards, exported reports)
-- Data not needed in real-time (admin dashboards showing trends)
+```markdown
+# kroam.xyz - AI Football Prediction Platform
 
-**Pattern 2: TypeScript Query Helpers Using Views**
+> Compare 29 open-source AI models predicting football across 17 competitions
+
+## Key Pages
+
+- Homepage: https://kroam.xyz/
+- Predictions: https://kroam.xyz/predictions
+- Leagues: https://kroam.xyz/leagues
+- Models: https://kroam.xyz/models
+- Leaderboard: https://kroam.xyz/leaderboard
+
+## League Pages (Top Competitions)
+
+- Champions League: https://kroam.xyz/leagues/ucl
+- Premier League: https://kroam.xyz/leagues/epl
+- La Liga: https://kroam.xyz/leagues/laliga
+- Serie A: https://kroam.xyz/leagues/seriea
+- Bundesliga: https://kroam.xyz/leagues/bundesliga
+
+## Documentation
+
+- About: https://kroam.xyz/about
+```
+
+#### 2. Metadata Enhancements for AI
+
+**Next.js Metadata API** (update existing in layout.tsx)
+- **Why needed:** Your existing metadata is solid but missing AI-specific optimization
+- **Current state:** Good foundation with OpenGraph, Twitter cards
+- **Add:** Structured data enhancements for SportsEvent schema
+
+**No new libraries needed** - use existing Next.js metadata API and schema-dts (already installed v1.1.5).
+
+### Category: Mobile-First Component Patterns
+
+#### 1. Tailwind CSS v4 Mobile-First Utilities
+
+**Configuration approach:** CSS-first with @theme
+- **Why needed:** v4 changed from JavaScript config to CSS-first
+- **Current state:** Using Tailwind v4 but may need explicit breakpoint customization
+- **Implementation:** Create `src/app/globals.css` theme extensions
+
+```css
+@import "tailwindcss";
+
+@theme {
+  /* Mobile-first breakpoints (defaults are fine, but document them) */
+  /* sm: 40rem (640px) - Large phones, small tablets */
+  /* md: 48rem (768px) - Tablets */
+  /* lg: 64rem (1024px) - Small laptops */
+  /* xl: 80rem (1280px) - Desktops */
+  /* 2xl: 96rem (1536px) - Large desktops */
+
+  /* Add touch-friendly spacing if needed */
+  --spacing-touch: 44px; /* Minimum touch target size */
+  --spacing-thumb: 48px; /* Comfortable thumb reach */
+}
+```
+
+**Mobile-First Pattern:**
+```tsx
+// ✅ Correct: mobile-first (unprefixed = mobile)
+<div className="text-sm md:text-base lg:text-lg">
+
+// ❌ Wrong: desktop-first
+<div className="text-lg md:text-base sm:text-sm">
+```
+
+#### 2. React 19 Form Hooks (Already Available)
+
+**useActionState** (React 19.2.3)
+- **Why needed:** Simplified form state management with pending/error states
+- **Current state:** Already in React 19.2.3, just needs implementation
+- **Use case:** Match prediction forms, user interactions
+- **No library needed:** Built into React 19
+
+**useOptimistic** (React 19.2.3)
+- **Why needed:** Instant UI feedback before server response (critical for mobile UX)
+- **Current state:** Already in React 19.2.3, just needs implementation
+- **Use case:** Prediction submissions, real-time updates
+- **No library needed:** Built into React 19
+
+Example pattern for mobile forms:
+```tsx
+'use client';
+import { useActionState, useOptimistic } from 'react';
+
+// Optimistic updates for better mobile UX
+const [optimisticPredictions, addOptimistic] = useOptimistic(
+  predictions,
+  (state, newPrediction) => [...state, newPrediction]
+);
+
+// Form state with pending/error handling
+const [state, formAction] = useActionState(submitPrediction, initialState);
+```
+
+#### 3. shadcn/ui Mobile Patterns
+
+**Sheet component for navigation** (already available)
+- **Why needed:** Mobile-first slide-out menus
+- **Current state:** @radix-ui/react-dialog v1.1.15 already installed
+- **Pattern:** Use Sheet for hamburger menus, filters on mobile
+
+**Touch-friendly components:**
+- Ensure minimum 44px touch targets (iOS guideline)
+- Use appropriate spacing for thumb reach zones
+- shadcn/ui already handles this with proper padding
+
+### Category: Next.js 16 Performance Features
+
+#### 1. Partial Prerendering (PPR)
+
+**Enable in next.config.ts:**
+- **Why needed:** Combine static shell with dynamic content for faster mobile loads
+- **Current state:** Available in Next.js 16.1.4 but requires opt-in
+- **Implementation:** Add experimental flag
 
 ```typescript
-// src/lib/db/queries/stats-canonical.ts
+const nextConfig: NextConfig = {
+  experimental: {
+    cacheComponents: true, // Enables PPR + "use cache" directive
+  },
+  // ... existing config
+};
+```
 
-import { getDb } from '@/lib/db';
-import { sql } from 'drizzle-orm';
+**Usage pattern for match pages:**
+```tsx
+import { Suspense } from 'react';
 
-/**
- * Get canonical model stats from database VIEW
- * This is the SINGLE SOURCE OF TRUTH for accuracy calculations
- */
-export async function getModelStatsCanonical(modelId: string) {
-  const db = getDb();
+export default function MatchPage() {
+  return (
+    <div>
+      {/* Static shell - prerendered */}
+      <MatchHeader />
 
-  const result = await db.execute(sql`
-    SELECT * FROM model_stats_canonical
-    WHERE model_id = ${modelId}
-  `);
+      {/* Dynamic content - streamed */}
+      <Suspense fallback={<PredictionsSkeleton />}>
+        <MatchPredictions />
+      </Suspense>
 
-  return result.rows[0] || null;
-}
-
-/**
- * Get competition-specific stats from canonical view
- */
-export async function getModelCompetitionStatsCanonical(
-  modelId: string,
-  competitionId: string
-) {
-  const db = getDb();
-
-  const result = await db.execute(sql`
-    SELECT * FROM model_competition_stats_canonical
-    WHERE model_id = ${modelId}
-      AND competition_id = ${competitionId}
-  `);
-
-  return result.rows[0] || null;
-}
-
-/**
- * Get leaderboard using canonical stats
- * Supports filtering and custom sorting
- */
-export async function getLeaderboardCanonical(
-  limit: number = 30,
-  sortBy: 'avg_points' | 'total_points' | 'accuracy' | 'exact_scores' = 'avg_points',
-  filters?: {
-    competitionId?: string;
-    season?: number;
-    dateFrom?: string;
-    dateTo?: string;
-  }
-) {
-  const db = getDb();
-
-  // Build WHERE clauses for filters
-  const whereClauses = [];
-  if (filters?.competitionId) {
-    whereClauses.push(`m.competition_id = ${filters.competitionId}`);
-  }
-  if (filters?.season) {
-    whereClauses.push(`c.season = ${filters.season}`);
-  }
-  if (filters?.dateFrom) {
-    whereClauses.push(`m.kickoff_time >= ${filters.dateFrom}`);
-  }
-  if (filters?.dateTo) {
-    whereClauses.push(`m.kickoff_time <= ${filters.dateTo}`);
-  }
-
-  const whereClause = whereClauses.length > 0
-    ? `WHERE ${whereClauses.join(' AND ')}`
-    : '';
-
-  const orderByMap = {
-    avg_points: 'avg_points DESC',
-    total_points: 'total_points DESC',
-    accuracy: 'accuracy DESC',
-    exact_scores: 'exact_scores DESC',
-  };
-
-  const result = await db.execute(sql`
-    SELECT
-      s.model_id,
-      mo.display_name,
-      mo.provider,
-      s.total_predictions,
-      s.total_points,
-      s.avg_points,
-      s.accuracy,
-      s.exact_scores,
-      s.correct_tendencies
-    FROM model_stats_canonical s
-    INNER JOIN models mo ON s.model_id = mo.id
-    ${whereClauses.length > 0 ? sql`
-      INNER JOIN predictions p ON s.model_id = p.model_id
-      INNER JOIN matches m ON p.match_id = m.id
-      INNER JOIN competitions c ON m.competition_id = c.id
-      ${sql.raw(whereClause)}
-    ` : sql``}
-    WHERE mo.active = true
-    ORDER BY ${sql.raw(orderByMap[sortBy])}
-    LIMIT ${limit}
-  `);
-
-  return result.rows.map((row, index) => ({
-    rank: index + 1,
-    ...row,
-  }));
+      <Suspense fallback={<ContentSkeleton />}>
+        <LLMGeneratedContent />
+      </Suspense>
+    </div>
+  );
 }
 ```
 
-**Pattern 3: Validation Constraints**
+#### 2. React Compiler (Optional)
 
-```sql
--- Add CHECK constraints to ensure data consistency at DB level
-ALTER TABLE predictions
-  ADD CONSTRAINT check_tendency_points_range
-  CHECK (tendency_points = 0 OR (tendency_points >= 2 AND tendency_points <= 6));
-
-ALTER TABLE predictions
-  ADD CONSTRAINT check_goal_diff_bonus
-  CHECK (goal_diff_bonus IN (0, 1));
-
-ALTER TABLE predictions
-  ADD CONSTRAINT check_exact_score_bonus
-  CHECK (exact_score_bonus IN (0, 3));
-
-ALTER TABLE predictions
-  ADD CONSTRAINT check_total_points_sum
-  CHECK (total_points = COALESCE(tendency_points, 0) + COALESCE(goal_diff_bonus, 0) + COALESCE(exact_score_bonus, 0));
-
--- This constraint ensures points calculation is ALWAYS correct at DB level
--- Prevents bugs where scoring logic miscalculates points
-```
-
-### PostgreSQL Best Practices for Stats Consistency
-
-**1. Use COALESCE for NULL Safety**
-```sql
--- GOOD: Handles NULL gracefully
-COALESCE(SUM(total_points), 0)
-
--- BAD: Returns NULL if all values NULL
-SUM(total_points)
-```
-
-**2. Use NULLIF to Prevent Division by Zero**
-```sql
--- GOOD: Returns NULL instead of error
-ROUND(100.0 * count_correct / NULLIF(count_total, 0), 1)
-
--- BAD: Throws error on zero division
-ROUND(100.0 * count_correct / count_total, 1)
-```
-
-**3. Always Cast to ::numeric Before AVG/ROUND**
-```sql
--- GOOD: Precise decimal calculation
-ROUND(AVG(total_points)::numeric, 2)
-
--- BAD: Integer division loses precision
-ROUND(AVG(total_points), 2)
-```
-
-**4. Use Consistent Rounding**
-- **Money**: 2 decimals (`ROUND(amount, 2)`)
-- **Percentages**: 1 decimal (`ROUND(percentage, 1)`)
-- **Stats (avg points)**: 2 decimals (`ROUND(avg_points, 2)`)
-
-**5. Filter on Indexed Columns**
-```sql
--- GOOD: Uses index idx_predictions_model_status
-WHERE model_id = $1 AND status = 'scored'
-
--- BAD: Full table scan
-WHERE model_id = $1 AND status != 'pending'
-```
-
-### Migration Strategy
-
-**Step 1: Create views alongside existing queries**
-- Don't break current code
-- Views provide canonical source of truth
-- Test views match current calculations
-
-**Step 2: Add query helper functions using views**
-- New functions call views
-- Keep old functions for backward compatibility
-- Gradual refactor of call sites
-
-**Step 3: Replace old queries with view-based queries**
-- Update one component at a time
-- Verify stats match before/after
-- Remove old query functions
-
-**Step 4: Add database constraints**
-- Enforces consistency at DB level
-- Prevents future bugs
-- Safe to add after all queries use views
-
-**Rollback Safety:**
-- Views are DROP IF EXISTS (reversible)
-- Old query functions remain until cutover
-- Constraints added last (after verification)
-
----
-
-## Part 2: Next.js 16 SEO Patterns
-
-### Current State (from codebase)
-
-**Implemented:**
-- `generateMetadata` on match pages (line 30 in `leagues/[slug]/[match]/page.tsx`)
-- Basic Open Graph tags (title, description, images)
-- Twitter Card metadata
-- Canonical URLs
-
-**Missing:**
-- Structured data (JSON-LD) for sports events
-- Breadcrumb navigation schema
-- FAQ schema for common questions
-- Organization schema for site-wide branding
-- hreflang tags for international audiences
-
-### Pattern 1: Structured Data (JSON-LD)
-
-**Why JSON-LD for Sports Sites:**
-- Google Search: Rich results for match scores, team info
-- AI Crawlers: GPTBot, PerplexityBot, ClaudeBot parse structured data for training
-- Voice Search: Google Assistant, Alexa use schema for sports queries
-- Knowledge Graph: Appears in Google search sidebars
-
-**Implementation: Enhanced SportsEvent Schema**
+**Enable in next.config.ts:**
+- **Why consider:** Automatic memoization, fewer re-renders (especially on mobile)
+- **Current state:** Stable in Next.js 16 but not enabled by default
+- **Caution:** Not required for this milestone, test thoroughly before enabling
 
 ```typescript
-// src/lib/seo/schemas/sports-event.ts
-
-import type { Match, Prediction } from '@/lib/db/schema';
-
-export interface SportsEventSchemaData {
-  match: Match;
-  competition: { name: string; };
-  predictions?: Prediction[];
-  analysis?: {
-    homeWinPct?: number;
-    drawPct?: number;
-    awayWinPct?: number;
-    oddsHome?: string;
-    oddsDraw?: string;
-    oddsAway?: string;
-  };
-}
-
-export function generateSportsEventSchema(data: SportsEventSchemaData) {
-  const { match, competition, predictions, analysis } = data;
-
-  // Base SportsEvent schema
-  const schema: any = {
-    "@context": "https://schema.org",
-    "@type": "SportsEvent",
-    "name": `${match.homeTeam} vs ${match.awayTeam}`,
-    "description": `${competition.name} match between ${match.homeTeam} and ${match.awayTeam}`,
-    "startDate": match.kickoffTime,
-    "sport": "Football",
-    "eventStatus": getEventStatus(match.status),
-
-    // Home team
-    "homeTeam": {
-      "@type": "SportsTeam",
-      "name": match.homeTeam,
-      "sport": "Football",
-    },
-
-    // Away team
-    "awayTeam": {
-      "@type": "SportsTeam",
-      "name": match.awayTeam,
-      "sport": "Football",
-    },
-
-    // Competition
-    "tournament": {
-      "@type": "SportsEvent",
-      "name": competition.name,
-    },
-
-    // Competitors array (required by some parsers)
-    "competitor": [
-      { "@type": "SportsTeam", "name": match.homeTeam },
-      { "@type": "SportsTeam", "name": match.awayTeam },
-    ],
-  };
-
-  // Add venue if available
-  if (match.venue) {
-    schema.location = {
-      "@type": "Place",
-      "name": match.venue,
-    };
-  }
-
-  // Add scores if match finished
-  if (match.status === 'finished' && match.homeScore !== null && match.awayScore !== null) {
-    schema.eventStatus = "https://schema.org/EventCompleted";
-    schema.homeTeam.score = match.homeScore;
-    schema.awayTeam.score = match.awayScore;
-  }
-
-  // Add AI prediction statistics (custom extension for AI crawlers)
-  if (predictions && predictions.length > 0) {
-    const avgHome = predictions.reduce((sum, p) => sum + p.predictedHome, 0) / predictions.length;
-    const avgAway = predictions.reduce((sum, p) => sum + p.predictedAway, 0) / predictions.length;
-
-    schema["x-aiPredictions"] = {
-      "@type": "DataCatalog",
-      "name": "AI Model Predictions",
-      "description": `Aggregate predictions from ${predictions.length} AI models`,
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingCount": predictions.length,
-        "reviewAspect": "Score Prediction",
-      },
-      "statistics": {
-        "homeScoreAvg": Math.round(avgHome * 10) / 10,
-        "awayScoreAvg": Math.round(avgAway * 10) / 10,
-        "modelCount": predictions.length,
-      },
-    };
-  }
-
-  // Add betting odds context (for responsible betting info)
-  if (analysis?.oddsHome) {
-    schema["x-bettingOdds"] = {
-      "@type": "Offer",
-      "description": "Market odds for educational purposes",
-      "eligibleRegion": "Worldwide",
-      "priceSpecification": [
-        { "@type": "UnitPriceSpecification", "name": "Home Win", "price": analysis.oddsHome },
-        { "@type": "UnitPriceSpecification", "name": "Draw", "price": analysis.oddsDraw },
-        { "@type": "UnitPriceSpecification", "name": "Away Win", "price": analysis.oddsAway },
-      ],
-    };
-  }
-
-  return schema;
-}
-
-function getEventStatus(status: string): string {
-  const statusMap: Record<string, string> = {
-    'scheduled': 'https://schema.org/EventScheduled',
-    'live': 'https://schema.org/EventScheduled', // In progress
-    'finished': 'https://schema.org/EventCompleted',
-    'postponed': 'https://schema.org/EventPostponed',
-    'cancelled': 'https://schema.org/EventCancelled',
-  };
-  return statusMap[status] || 'https://schema.org/EventScheduled';
-}
+const nextConfig: NextConfig = {
+  reactCompiler: true, // Automatic component memoization
+};
 ```
 
-**Pattern 2: Enhanced Metadata API Usage (Next.js 16)**
+## What NOT to Add
 
-```typescript
-// src/app/leagues/[slug]/[match]/page.tsx
+### ❌ Additional UI Libraries
 
-import type { Metadata } from 'next';
-import { generateSportsEventSchema } from '@/lib/seo/schemas/sports-event';
+**React Native / Nativecn UI**
+- **Why not:** You're building a web app, not a native mobile app
+- **Already have:** Tailwind responsive utilities + shadcn/ui for web
 
-export async function generateMetadata({ params }: MatchPageProps): Promise<Metadata> {
-  const { slug, match: matchSlug } = await params;
-  const result = await getMatchBySlug(slug, matchSlug);
+### ❌ Separate Mobile Framework
 
-  if (!result) {
-    return { title: 'Match Not Found' };
-  }
+**Next.js with separate mobile build**
+- **Why not:** Next.js 16 with responsive Tailwind is sufficient
+- **Already have:** Mobile-first CSS framework and SSR
 
-  const { match, competition } = result;
+### ❌ External AI Search Monitoring Tools
 
-  // Determine status-based title template
-  const title = match.status === 'finished'
-    ? `${match.homeTeam} ${match.homeScore}-${match.awayScore} ${match.awayTeam} | ${competition.name} Match Report`
-    : `${match.homeTeam} vs ${match.awayTeam} Prediction | ${competition.name} AI Analysis`;
+**Otterly.ai, GEO tracking services**
+- **Why not:** Premature optimization; focus on content quality first
+- **Later consideration:** After baseline AI crawler access established
 
-  // Determine status-based description
-  const description = match.status === 'finished'
-    ? `Full match report: ${match.homeTeam} ${match.homeScore}-${match.awayScore} ${match.awayTeam}. AI prediction accuracy analysis from 26 models, post-match statistics, and performance review.`
-    : `AI predictions for ${match.homeTeam} vs ${match.awayTeam} in ${competition.name}. See forecasts from 26 AI models, pre-match analysis, and betting insights.`;
+### ❌ Complex Animation Libraries
 
-  const url = `https://kroam.xyz/leagues/${slug}/${matchSlug}`;
+**Framer Motion, React Spring**
+- **Why not:** Mobile performance overhead; CSS transitions sufficient
+- **Already have:** Tailwind transitions + CSS animations (tw-animate-css v1.4.0)
 
-  return {
-    title,
-    description,
+### ❌ New State Management
 
-    // Canonical URL (prevents duplicate content)
-    alternates: {
-      canonical: url,
-      // TODO: Add hreflang tags for i18n
-      languages: {
-        'en': url,
-        // 'es': `https://kroam.xyz/es/leagues/${slug}/${matchSlug}`,
-        // 'de': `https://kroam.xyz/de/leagues/${slug}/${matchSlug}`,
-      },
-    },
+**Redux, Zustand, Jotai**
+- **Why not:** React 19's useActionState + Server Components handle form state
+- **Already have:** Server Components for data fetching, client components for UI state
 
-    // Open Graph (Facebook, LinkedIn)
-    openGraph: {
-      title,
-      description,
-      url,
-      type: 'article', // Use 'article' for match reports, 'website' for listings
-      siteName: 'kroam.xyz',
-      locale: 'en_US',
-      images: [
-        {
-          url: `https://kroam.xyz/api/og/match?homeTeam=${encodeURIComponent(match.homeTeam)}&awayTeam=${encodeURIComponent(match.awayTeam)}`,
-          width: 1200,
-          height: 630,
-          alt: `${match.homeTeam} vs ${match.awayTeam}`,
-        },
-      ],
-      publishedTime: match.kickoffTime,
-      section: competition.name,
-      tags: [
-        match.homeTeam,
-        match.awayTeam,
-        competition.name,
-        'football',
-        'AI predictions',
-        'match analysis',
-      ],
-    },
+### ❌ Mobile Detection Library
 
-    // Twitter Card
-    twitter: {
-      card: 'summary_large_image',
-      site: '@kroamxyz',
-      title,
-      description,
-      images: [`https://kroam.xyz/api/og/match?homeTeam=${encodeURIComponent(match.homeTeam)}&awayTeam=${encodeURIComponent(match.awayTeam)}`],
-    },
+**react-device-detect, mobile-detect**
+- **Why not:** CSS media queries (Tailwind breakpoints) are the modern approach
+- **Better pattern:** Responsive CSS, not JavaScript device detection
 
-    // Robots meta
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-        'max-snippet': -1, // No limit on text snippet length
-      },
-    },
-  };
-}
+## Integration Notes
 
-export default async function MatchPage({ params }: MatchPageProps) {
-  const { slug, match: matchSlug } = await params;
-  const result = await getMatchBySlug(slug, matchSlug);
+### Integrating AI Crawler Configuration
 
-  if (!result) {
-    notFound();
-  }
+1. **Create `/public/robots.txt`** with AI bot user-agents
+2. **Create `/public/llms.txt`** with key page URLs (markdown format)
+3. **Verify access:** Next.js serves `/public/*` files automatically at root
+4. **Test:** `curl https://kroam.xyz/robots.txt` and `/llms.txt`
 
-  const { match, competition } = result;
-  const predictions = await getPredictionsForMatch(match.id);
-  const analysis = await getMatchAnalysis(match.id);
+### Integrating Mobile-First Patterns
 
-  // Generate structured data
-  const sportsEventSchema = generateSportsEventSchema({
-    match,
-    competition,
-    predictions,
-    analysis,
-  });
+1. **Audit existing components** for mobile-first Tailwind classes
+2. **Use Suspense boundaries** on match pages for streaming dynamic content
+3. **Implement useActionState** for prediction forms (if applicable)
+4. **Add Sheet components** for mobile navigation/filters
+
+### Debugging LLM Content Rendering
+
+**Likely causes (not stack issues):**
+1. **Hydration mismatch:** Server vs client content difference
+2. **Missing Suspense boundaries:** Dynamic content blocking render
+3. **Empty data fetching:** LLM content not retrieved from DB/API
+4. **Conditional rendering bug:** Content hidden by CSS or logic
+
+**Debugging approach:**
+```tsx
+// Add explicit error boundaries
+<ErrorBoundary fallback={<ContentError />}>
+  <Suspense fallback={<ContentLoading />}>
+    <LLMContent matchId={matchId} />
+  </Suspense>
+</ErrorBoundary>
+
+// Log data fetching
+console.log('LLM content:', { preMatch, prediction, postMatch });
+```
+
+### PPR Integration for Match Pages
+
+```tsx
+// app/matches/[id]/page.tsx
+import { Suspense } from 'react';
+
+export default async function MatchPage({ params }) {
+  // Static content (PPR shell)
+  const matchMeta = await getMatchMetadata(params.id);
 
   return (
     <>
-      {/* Inject JSON-LD structured data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(sportsEventSchema) }}
-      />
+      {/* Prerendered static shell */}
+      <MatchHeader {...matchMeta} />
 
-      {/* Page content */}
-      <div>
-        <h1>{match.homeTeam} vs {match.awayTeam}</h1>
-        {/* ... */}
-      </div>
+      {/* Dynamic content streamed after */}
+      <Suspense fallback={<Skeleton />}>
+        <DynamicPredictions matchId={params.id} />
+      </Suspense>
+
+      <Suspense fallback={<Skeleton />}>
+        <DynamicLLMContent matchId={params.id} />
+      </Suspense>
     </>
   );
 }
 ```
 
-**Pattern 3: Leaderboard Schema (for model rankings)**
+### Metadata Enhancement for AI Search
 
 ```typescript
-// src/lib/seo/schemas/leaderboard.ts
-
-export function generateLeaderboardSchema(models: LeaderboardEntry[]) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    "name": "AI Football Prediction Model Leaderboard",
-    "description": "Performance rankings of AI models for football match predictions",
-    "numberOfItems": models.length,
-    "itemListElement": models.map((model, index) => ({
-      "@type": "ListItem",
-      "position": index + 1,
-      "item": {
-        "@type": "SoftwareApplication",
-        "name": model.displayName,
-        "applicationCategory": "Prediction Model",
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": model.accuracy,
-          "bestRating": 100,
-          "worstRating": 0,
-          "ratingCount": model.totalPredictions,
-        },
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD",
-        },
-      },
-    })),
-  };
-}
-```
-
-### Next.js 16 SEO Best Practices Summary
-
-**DO:**
-- Use `generateMetadata` for dynamic pages (NOT static metadata object)
-- Include canonical URLs to prevent duplicate content
-- Add Open Graph for social sharing
-- Use status-specific titles (finished matches get different titles than upcoming)
-- Add breadcrumb schema for navigation
-- Inject JSON-LD in page component (not in metadata)
-
-**DON'T:**
-- Export both `metadata` object AND `generateMetadata` (pick one)
-- Forget to await params in Next.js 16 (breaking change from 15)
-- Skip Twitter Card metadata (used by many platforms)
-- Use generic titles ("Match Page" is bad, "Man City vs Arsenal" is good)
-- Forget alt text on images (accessibility + SEO)
-
----
-
-## Part 3: GEO/i18n Considerations
-
-### Football Audience Analysis
-
-**Top Markets by League:**
-- **Premier League**: UK, USA, Nigeria, India, China
-- **La Liga**: Spain, Latin America, USA
-- **Bundesliga**: Germany, Austria, Switzerland
-- **Serie A**: Italy, USA, Middle East
-- **Ligue 1**: France, North Africa, West Africa
-- **Champions League**: Global (all major markets)
-
-**Language Priority:**
-1. **English** (universal, current implementation)
-2. **Spanish** (Latin America + Spain = huge market)
-3. **German** (Bundesliga fans)
-4. **French** (Ligue 1 + Africa)
-5. **Arabic** (Middle East, North Africa)
-
-### Implementation: next-intl (Recommended)
-
-**Why next-intl over next-i18next:**
-- Built specifically for Next.js App Router
-- Better TypeScript support
-- Smaller bundle size
-- Automatic route handling
-- SEO-friendly (generates hreflang tags)
-
-**Installation:**
-```bash
-npm install next-intl
-```
-
-**Configuration:**
-
-```typescript
-// src/i18n.ts
-import { getRequestConfig } from 'next-intl/server';
-
-export default getRequestConfig(async ({ locale }) => ({
-  messages: (await import(`./messages/${locale}.json`)).default,
-}));
-```
-
-```typescript
-// src/middleware.ts
-import createMiddleware from 'next-intl/middleware';
-
-export default createMiddleware({
-  locales: ['en', 'es', 'de', 'fr', 'ar'],
-  defaultLocale: 'en',
-  localePrefix: 'as-needed', // Don't prefix default locale
-});
-
-export const config = {
-  matcher: ['/((?!api|_next|.*\\..*).*)'],
-};
-```
-
-**Metadata with i18n:**
-
-```typescript
-// src/app/[locale]/leagues/[slug]/[match]/page.tsx
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale, slug, match } = await params;
-  const t = await getTranslations({ locale, namespace: 'metadata' });
-
-  const result = await getMatchBySlug(slug, match);
-  if (!result) return { title: t('notFound') };
-
-  const { match: matchData, competition } = result;
-
-  const title = t('matchTitle', {
-    home: matchData.homeTeam,
-    away: matchData.awayTeam,
-    competition: competition.name,
-  });
+// app/matches/[id]/page.tsx
+export async function generateMetadata({ params }): Promise<Metadata> {
+  const match = await getMatch(params.id);
 
   return {
-    title,
-    description: t('matchDescription', { /* ... */ }),
-    alternates: {
-      canonical: `https://kroam.xyz/${locale}/leagues/${slug}/${match}`,
-      languages: {
-        'en': `https://kroam.xyz/en/leagues/${slug}/${match}`,
-        'es': `https://kroam.xyz/es/leagues/${slug}/${match}`,
-        'de': `https://kroam.xyz/de/leagues/${slug}/${match}`,
-        'fr': `https://kroam.xyz/fr/leagues/${slug}/${match}`,
-        'ar': `https://kroam.xyz/ar/leagues/${slug}/${match}`,
-        'x-default': `https://kroam.xyz/leagues/${slug}/${match}`, // Fallback
-      },
+    title: `${match.homeTeam} vs ${match.awayTeam} Prediction`,
+    description: `AI predictions for ${match.homeTeam} vs ${match.awayTeam}`,
+    openGraph: {
+      title: `${match.homeTeam} vs ${match.awayTeam}`,
+      description: `29 AI models predict this match`,
+      type: 'article', // Better for AI search engines
+    },
+    // AI search engines value recency
+    other: {
+      'article:published_time': match.date,
+      'article:modified_time': match.lastUpdated,
     },
   };
 }
 ```
 
-**Translation Files:**
+## Implementation Priority
 
-```json
-// src/messages/en.json
-{
-  "metadata": {
-    "matchTitle": "{home} vs {away} Prediction | {competition}",
-    "matchDescription": "AI predictions for {home} vs {away}...",
-    "leaderboard": "AI Model Leaderboard",
-    "accuracy": "Accuracy"
-  }
-}
+### Phase 1: AI Search Foundation (Immediate)
+1. ✅ Create `/public/robots.txt` with AI bot configuration
+2. ✅ Create `/public/llms.txt` with key URLs
+3. ✅ Verify existing Schema.org structured data (already implemented)
 
-// src/messages/es.json
-{
-  "metadata": {
-    "matchTitle": "Predicción {home} vs {away} | {competition}",
-    "matchDescription": "Predicciones de IA para {home} vs {away}...",
-    "leaderboard": "Clasificación de Modelos de IA",
-    "accuracy": "Precisión"
-  }
-}
-```
+### Phase 2: Mobile-First Audit (Current Milestone)
+1. ✅ Audit components for mobile-first Tailwind patterns
+2. ✅ Fix duplicate content display (score shown 3x, predictions 2x)
+3. ✅ Debug LLM content rendering (likely hydration/data issue)
+4. ✅ Add Suspense boundaries for dynamic content
 
-### GEO SEO Best Practices
+### Phase 3: Performance Optimization (Optional)
+1. 🔄 Enable PPR with `cacheComponents: true`
+2. 🔄 Consider React Compiler (test thoroughly first)
+3. 🔄 Optimize mobile images with Next.js Image priority
 
-**1. hreflang Tags (Required for Multi-Language)**
-```html
-<link rel="alternate" hreflang="en" href="https://kroam.xyz/en/leagues/..." />
-<link rel="alternate" hreflang="es" href="https://kroam.xyz/es/leagues/..." />
-<link rel="alternate" hreflang="de" href="https://kroam.xyz/de/leagues/..." />
-<link rel="alternate" hreflang="x-default" href="https://kroam.xyz/leagues/..." />
-```
+## Confidence Assessment
 
-**2. Localized Content (Not Just Translation)**
-- **Premier League** in UK: "Manchester City" is fine
-- **Premier League** in USA: "Man City vs Arsenal" needs context (what sport?)
-- **Champions League** in Spain: Use Spanish team names in meta descriptions
-
-**3. Regional Structured Data**
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "SportsEvent",
-  "inLanguage": "en",
-  "contentLocation": {
-    "@type": "Place",
-    "address": {
-      "@type": "PostalAddress",
-      "addressCountry": "GB"
-    }
-  }
-}
-```
-
-### Phased Rollout (Recommended)
-
-**Phase 1: English Only (Current)**
-- Focus on stats accuracy and core SEO
-- Add structured data (JSON-LD)
-- Implement metadata best practices
-
-**Phase 2: Add Spanish**
-- Large market (Spain + Latin America)
-- Translate metadata and UI strings
-- Add hreflang tags
-
-**Phase 3: Add German, French, Arabic**
-- Based on traffic data from Phase 1-2
-- Consider professional translation for key pages
-- Maintain English as fallback
-
----
-
-## Part 4: What NOT to Add
-
-### Anti-Patterns to Avoid
-
-**1. Don't Add Another Caching Layer**
-- **Current**: Redis for hot data, PostgreSQL for source of truth
-- **Don't**: Add Memcached, Varnish, or CDN caching layer
-- **Why**: Complexity outweighs benefit, cache invalidation is already hard
-- **Instead**: Optimize PostgreSQL queries, use Redis strategically
-
-**2. Don't Use GraphQL for Stats**
-- **Temptation**: "GraphQL lets frontend request exactly what it needs"
-- **Reality**: Adds abstraction layer over already-complex aggregations
-- **Problem**: Cache invalidation becomes harder, debugging is nightmare
-- **Instead**: Keep REST API with dedicated stats endpoints
-
-**3. Don't Add Real-Time WebSocket for Leaderboard**
-- **Temptation**: "Users want live updates during matches"
-- **Reality**: Stats update infrequently (only when matches finish)
-- **Cost**: WebSocket infrastructure, connection management, scaling issues
-- **Instead**: Poll every 30s on leaderboard page, or use Redis pub/sub for specific pages
-
-**4. Don't Use Algolia/Elasticsearch for Search**
-- **Temptation**: "Fast search across matches and teams"
-- **Reality**: Dataset is small (~1000 matches/season), PostgreSQL full-text search sufficient
-- **Cost**: $$$, sync complexity, another service to maintain
-- **Instead**: PostgreSQL `tsvector` + trigram indexes
-
-**5. Don't Generate Separate Pages for Every Stat Dimension**
-- **Bad**: `/stats/model/groq-llama/competition/ucl/season/2024/home`
-- **Problem**: Combinatorial explosion (35 models × 17 competitions × 2 seasons × 2 venues = thousands of pages)
-- **SEO Impact**: Thin content, duplicate content penalties
-- **Instead**: Single leaderboard page with filters (client-side or query params)
-
-**6. Don't Use TypeORM, Prisma, or Sequelize**
-- **Current**: Drizzle ORM (lightweight, SQL-first)
-- **Don't Switch**: Heavy ORMs abstract away SQL, making query optimization harder
-- **Problem**: Stats queries need custom SQL (CTEs, window functions), ORMs get in the way
-- **Stick with**: Drizzle for schema + raw SQL for complex stats
-
-### When to Add New Tech
-
-**Add New Dependency When:**
-- Current approach has proven bottleneck (not theoretical)
-- Alternative is orders of magnitude better (not 10% improvement)
-- Team understands maintenance burden (not "we'll figure it out")
-- Solves specific problem (not "might be useful someday")
-
-**Examples:**
-- ✅ Add next-intl when expanding to Spanish market (proven need)
-- ❌ Add GraphQL "because it's modern" (no proven benefit)
-- ✅ Add Sentry for error tracking (specific problem: bugs in production)
-- ❌ Add Datadog APM "for observability" (PostgreSQL logs + Redis metrics sufficient)
-
----
-
-## Implementation Checklist
-
-### Stats Accuracy (Week 1-2)
-
-- [ ] Create `model_stats_canonical` VIEW in PostgreSQL
-- [ ] Create `model_competition_stats_canonical` VIEW
-- [ ] Add database CHECK constraints for point validation
-- [ ] Add indexes for view performance (`idx_predictions_model_status`)
-- [ ] Create `src/lib/db/queries/stats-canonical.ts` query helpers
-- [ ] Write tests comparing old vs new calculations (should match)
-- [ ] Refactor leaderboard to use canonical queries
-- [ ] Refactor model detail page to use canonical queries
-- [ ] Refactor API endpoints to use canonical queries
-- [ ] Remove old ad-hoc query functions
-- [ ] Update documentation with canonical definitions
-
-### SEO Enhancement (Week 2-3)
-
-- [ ] Implement `generateSportsEventSchema` function
-- [ ] Add JSON-LD to match pages
-- [ ] Add breadcrumb schema to navigation
-- [ ] Add FAQ schema to leaderboard (existing FAQs)
-- [ ] Add Organization schema to site layout
-- [ ] Enhance `generateMetadata` with status-specific titles
-- [ ] Add Twitter Card metadata to all pages
-- [ ] Test structured data with Google Rich Results Test
-- [ ] Test Open Graph with Facebook Sharing Debugger
-- [ ] Submit sitemap to Google Search Console
-- [ ] Monitor Google Search Console for indexing issues
-
-### GEO/i18n (Phase 2, Week 4+)
-
-- [ ] Install next-intl
-- [ ] Create translation files for English (baseline)
-- [ ] Add Spanish translations for key pages
-- [ ] Implement middleware for locale detection
-- [ ] Add hreflang tags to metadata
-- [ ] Update structured data with `inLanguage` property
-- [ ] Test with VPN (verify Spanish users see Spanish version)
-- [ ] Add locale switcher to UI
-- [ ] Update sitemap to include language variants
-- [ ] Monitor Google Search Console for international traffic
-
----
-
-## Performance Targets
-
-**Stats Query Performance:**
-- Leaderboard (30 models): < 100ms
-- Model detail page: < 50ms
-- Competition stats: < 50ms
-- Date range filtered leaderboard: < 200ms
-
-**SEO Metrics (6 months):**
-- Google Search Console impressions: +50%
-- Click-through rate: +20%
-- Average position: Top 10 for "[team] vs [team] prediction"
-- Rich results: 80% of match pages showing structured data
-
-**GEO Metrics (Phase 2):**
-- Spanish traffic: +30% within 3 months
-- Bounce rate for Spanish users: < 40%
-- Pages per session (Spanish): > 2.5
-
----
+| Area | Confidence | Rationale |
+|------|-----------|-----------|
+| AI Crawler Config | HIGH | robots.txt is standard; llms.txt adopted by 780+ sites |
+| Mobile-First CSS | HIGH | Tailwind v4 official docs, Next.js 16 case studies |
+| React 19 Hooks | HIGH | Official React docs, production-ready in 19.2.3 |
+| PPR Implementation | MEDIUM | Next.js 16 feature but requires testing with your data patterns |
+| LLM Content Bug | MEDIUM | Needs codebase investigation, likely not stack issue |
 
 ## Sources
 
-**PostgreSQL Stats Patterns:**
-- [PostgreSQL Aggregate Functions](https://www.postgresql.org/docs/current/functions-aggregate.html)
-- [PostgreSQL Materialized Views](https://www.postgresql.org/docs/current/rules-materializedviews.html)
-- [PostgreSQL View Performance](https://www.compilenrun.com/docs/database/postgresql/postgresql-views/postgresql-view-performance/)
+### AI Search Optimization
+- [Superlines - AI Search Optimization 2026](https://www.superlines.io/articles/ai-search-optimization)
+- [GEO Optimization Guide: ChatGPT, Perplexity, Gemini](https://www.getpassionfruit.com/blog/generative-engine-optimization-guide-for-chatgpt-perplexity-gemini-claude-copilot)
+- [How to Rank on ChatGPT, Perplexity, and AI Search Engines](https://almcorp.com/blog/how-to-rank-on-chatgpt-perplexity-ai-search-engines-complete-guide-generative-engine-optimization/)
+- [ClickRank - AI Bots robots.txt Guide 2026](https://www.clickrank.ai/ai-model-index-checker-guide/)
+- [llms.txt Complete Guide 2026](https://www.bigcloudy.com/blog/what-is-llms-txt/)
+- [EasyFAQ - LLMs.txt Standard Guide 2026](https://easyfaq.io/academy/llms-txt-standard-guide)
 
-**Next.js 16 SEO:**
-- [Next.js generateMetadata API Reference](https://nextjs.org/docs/app/api-reference/functions/generate-metadata)
-- [How to Configure SEO in Next.js 16](https://jsdevspace.substack.com/p/how-to-configure-seo-in-nextjs-16)
-- [Next.js SEO Best Practices Guide](https://medium.com/@alokkumar41558/next-js-seo-best-practices-guide-027325bf9339)
+### Next.js 16 & React 19
+- [Next.js 16 Release Notes](https://nextjs.org/blog/next-16)
+- [Practical Guide to Partial Prerendering in Next.js 16](https://www.ashishgogula.in/blogs/a-practical-guide-to-partial-prerendering-in-next-js-16)
+- [React v19 Official Release](https://react.dev/blog/2024/12/05/react-19)
+- [React 19 New Hooks: useActionState, useOptimistic](https://www.freecodecamp.org/news/react-19-new-hooks-explained-with-examples/)
+- [I Migrated to Next.js 16 and Got 218% Mobile Performance Boost](https://medium.com/@desertwebdesigns/i-migrated-a-react-app-to-next-js-16-and-got-a-218-performance-boost-on-mobile-8ae35ee2a739)
+- [Next.js 16: What's New for Frontend Devs](https://blog.logrocket.com/next-js-16-whats-new/)
 
-**Schema.org Sports:**
-- [Schema.org SportsEvent Type](https://schema.org/SportsEvent)
-- [IPTC Sport Schema](https://iptc.org/standards/sport-schema/)
-- [SportsEvent Schema Generator Guide](https://schemantra.com/schema_list/SportsEvent)
+### Mobile-First Patterns
+- [Tailwind CSS v4 Responsive Design](https://tailwindcss.com/docs/responsive-design)
+- [Tailwind CSS v4 Breakpoint Override](https://bordermedia.org/blog/tailwind-css-4-breakpoint-override)
+- [shadcn/ui Mobile Navigation Patterns](https://www.shadcn.io/patterns/sheet-navigation-1)
+- [Master Mobile-First Web Design with Next.js](https://prateeksha.com/blog/how-program-geeks-master-mobile-first-web-design-with-next-js)
 
-**Internationalization:**
-- [Next.js Internationalization Guide](https://nextjs.org/docs/pages/guides/internationalization)
-- [next-intl Documentation](https://next-intl.dev/)
-- [SEO-Friendly Multilingual Next.js](https://medium.com/@rameshkannanyt0078/how-to-build-an-seo-friendly-multilingual-website-with-next-js-and-i18n-f8c5891f89a8)
-
-**Current Codebase:**
-- `src/lib/db/queries/stats.ts` (existing stats calculations)
-- `src/lib/seo/metadata.ts` (existing metadata patterns)
-- `src/lib/seo/schemas.ts` (existing JSON-LD schemas)
-- `src/app/leagues/[slug]/[match]/page.tsx` (existing metadata implementation)
-
----
-
-**Research confidence: HIGH** — All recommendations verified against Next.js 16 documentation, PostgreSQL official docs, and current codebase analysis. No speculative features included.
+### React + LLM Integration
+- [The React + AI Stack for 2026](https://www.builder.io/blog/react-ai-stack-2026)
+- [llm-ui React Library for LLMs](https://llm-ui.com/)
+- [Build Interactive React UIs for LLM Outputs](https://blog.logrocket.com/react-llm-ui/)
