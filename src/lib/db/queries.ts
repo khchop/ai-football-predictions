@@ -1,5 +1,5 @@
 import { getLeaderboard } from './queries/stats';
-import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalances, seasons, predictions, blogPosts, leagueStandings, matchRoundups } from './index';
+import { getDb, competitions, matches, models, matchAnalysis, bets, modelBalances, seasons, predictions, blogPosts, leagueStandings, matchRoundups, matchContent } from './index';
 import { eq, and, desc, gte, lte, sql, inArray, ne, or, lt, not, isNull, isNotNull } from 'drizzle-orm';
 import type { NewCompetition, NewModel, Match, MatchAnalysis, Model, Competition, Bet, ModelBalance, Prediction, BlogPost, NewMatch, NewMatchAnalysis, NewBet, NewModelBalance, NewPrediction } from './schema';
 import { v4 as uuidv4 } from 'uuid';
@@ -2542,4 +2542,109 @@ export async function getTopModelsForWidget(excludeModelId: string | null, limit
     .limit(limit);
 
   return topModels;
+}
+
+// ============= UNIFIED CONTENT QUERIES =============
+
+/**
+ * Unified return type for getMatchContentUnified
+ * Combines matchContent (short 3-section) and matchRoundups (long narrative) tables
+ */
+export interface UnifiedMatchContent {
+  matchId: string;
+  preMatchContent: string | null;
+  preMatchGeneratedAt: string | null;
+  bettingContent: string | null;
+  bettingGeneratedAt: string | null;
+  postMatchContent: string | null;
+  postMatchGeneratedAt: string | null;
+  hasFullRoundup: boolean;
+}
+
+/**
+ * Get unified match content from both matchContent and matchRoundups tables.
+ *
+ * Priority logic for post-match content:
+ * - Prefers matchRoundups.narrative (full 1000+ word analysis) over matchContent.postMatchContent (short summary)
+ * - Uses COALESCE to return first non-null value
+ *
+ * Edge cases handled:
+ * - matchContent exists, matchRoundups doesn't → returns matchContent fields
+ * - matchRoundups exists, matchContent doesn't → uses FULL OUTER JOIN approach via UNION
+ * - Neither exists → returns null
+ *
+ * @param matchId - The match UUID
+ * @returns UnifiedMatchContent object or null if no content exists
+ */
+export async function getMatchContentUnified(matchId: string): Promise<UnifiedMatchContent | null> {
+  const db = getDb();
+
+  // Use a FULL OUTER JOIN approach via UNION to handle cases where
+  // content exists in one table but not the other
+  // PostgreSQL doesn't have clean FULL OUTER JOIN syntax in Drizzle,
+  // so we use two LEFT JOINs and merge results
+
+  const result = await db
+    .select({
+      matchId: matchContent.matchId,
+      preMatchContent: matchContent.preMatchContent,
+      preMatchGeneratedAt: matchContent.preMatchGeneratedAt,
+      bettingContent: matchContent.bettingContent,
+      bettingGeneratedAt: matchContent.bettingGeneratedAt,
+      // COALESCE: prefer roundup narrative (long-form) over matchContent post-match (short)
+      postMatchContent: sql<string | null>`COALESCE(${matchRoundups.narrative}, ${matchContent.postMatchContent})`,
+      // Use roundup publishedAt if roundup exists, else matchContent timestamp
+      postMatchGeneratedAt: sql<string | null>`
+        CASE
+          WHEN ${matchRoundups.id} IS NOT NULL THEN ${matchRoundups.publishedAt}::text
+          ELSE ${matchContent.postMatchGeneratedAt}
+        END
+      `,
+      hasFullRoundup: sql<boolean>`${matchRoundups.id} IS NOT NULL`,
+    })
+    .from(matchContent)
+    .leftJoin(matchRoundups, eq(matchContent.matchId, matchRoundups.matchId))
+    .where(eq(matchContent.matchId, matchId))
+    .limit(1);
+
+  // If matchContent exists, return it (with potentially merged roundup data)
+  if (result.length > 0) {
+    return {
+      matchId: result[0].matchId,
+      preMatchContent: result[0].preMatchContent,
+      preMatchGeneratedAt: result[0].preMatchGeneratedAt,
+      bettingContent: result[0].bettingContent,
+      bettingGeneratedAt: result[0].bettingGeneratedAt,
+      postMatchContent: result[0].postMatchContent,
+      postMatchGeneratedAt: result[0].postMatchGeneratedAt,
+      hasFullRoundup: result[0].hasFullRoundup ?? false,
+    };
+  }
+
+  // Check if roundup exists without matchContent (edge case: roundup-only match)
+  const roundupOnly = await db
+    .select({
+      matchId: matchRoundups.matchId,
+      narrative: matchRoundups.narrative,
+      publishedAt: matchRoundups.publishedAt,
+    })
+    .from(matchRoundups)
+    .where(eq(matchRoundups.matchId, matchId))
+    .limit(1);
+
+  if (roundupOnly.length > 0) {
+    return {
+      matchId: roundupOnly[0].matchId,
+      preMatchContent: null,
+      preMatchGeneratedAt: null,
+      bettingContent: null,
+      bettingGeneratedAt: null,
+      postMatchContent: roundupOnly[0].narrative,
+      postMatchGeneratedAt: roundupOnly[0].publishedAt?.toISOString() ?? null,
+      hasFullRoundup: true,
+    };
+  }
+
+  // No content in either table
+  return null;
 }
