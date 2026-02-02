@@ -6,7 +6,8 @@ import { MatchEvents } from '@/components/match-events';
 import { MatchContentSection } from '@/components/match/MatchContent';
 import { MatchFAQSchema } from '@/components/match/MatchFAQSchema';
 import { PredictionInsightsBlockquote } from '@/components/match/PredictionInsightsBlockquote';
-import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails, getStandingsForTeams, getNextMatchesForTeams, getMatchRoundup } from '@/lib/db/queries';
+import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails, getStandingsForTeams, getNextMatchesForTeams, getMatchRoundup, getRelatedMatches } from '@/lib/db/queries';
+import { RelatedMatchesWidget } from '@/components/match/related-matches-widget';
 import { getMatchEvents } from '@/lib/football/api-football';
 import { getCompetitionByIdOrAlias } from '@/lib/football/competitions';
 import { ArrowLeft, MapPin, Calendar, Clock, Trophy, TrendingUp, Target, ChevronRight } from 'lucide-react';
@@ -516,7 +517,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
             <h3 className="text-lg font-bold mb-4">Popular Models</h3>
             <div className="space-y-3">
               {predictions.slice(0, 3).map((p) => (
-                <Link 
+                <Link
                   key={p.modelId}
                   href={`/models/${p.modelId}`}
                   className="group flex items-start justify-between p-3 rounded-lg bg-muted/20 hover:bg-primary/10 transition-colors"
@@ -535,6 +536,9 @@ export default async function MatchPage({ params }: MatchPageProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Related Matches - SEO Internal Linking */}
+      <RelatedMatchesWidget matchId={matchData.id} competitionSlug={competitionSlug} />
     </div>
   );
 }
