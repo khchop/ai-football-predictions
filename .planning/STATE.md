@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 7 of 8 complete (SEO Enhancement)
-Plan: 3/3 complete
-Status: Phase complete
-Last activity: 2026-02-02 — Completed 07-03-PLAN.md (SEO Finalization)
+Phase: 8 of 8 in progress (UX Transparency)
+Plan: 1/3 complete
+Status: Phase in progress
+Last activity: 2026-02-02 — Completed 08-01-PLAN.md (Tooltip Infrastructure)
 
-Progress: [██████████████████░░] 81% (25/31 total planned plans)
+Progress: [███████████████████░░] 84% (26/31 total planned plans)
 
 ## Performance Metrics
 
@@ -58,6 +58,13 @@ Progress: [██████████████████░░] 81% (25
 | 07-03 | ~5 min | SEO Finalization |
 | Total | ~15 min | 3 plans |
 
+**v1.3 Phase 8:**
+
+| Plan | Duration | Description |
+|------|----------|-------------|
+| 08-01 | ~2.1 min | Tooltip Infrastructure |
+| Total | ~2.1 min | 1/3 plans |
+
 ## Accumulated Context
 
 ### Decisions
@@ -86,6 +93,9 @@ Recent decisions affecting current work:
 - 07-02: Match extraction for roundups — Primary: matchId field, Fallback: parse markdown /matches/ links
 - 07-02: Competition pages indexing — Set robots.index: true (were false), competitions are navigation hubs
 - 07-02: Unique title templates — Every page type has distinct pattern, site name suffix, under 60 chars
+- 08-01: TooltipProvider placement — Single provider in layout.tsx wrapping Navigation/main/Footer avoids nesting
+- 08-01: Denominator format — Show "X/Y (Z%)" to reveal sample size, monospace font for number readability
+- 08-01: Tooltip delays — 300ms initial, 100ms skip between tooltips balances responsiveness vs accidental triggers
 
 ### Pending Todos
 
@@ -111,5 +121,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Phase 7 (SEO Enhancement) complete - all 3 plans executed, verified, human approved
-Resume with: `/gsd:plan-phase 8` to begin UX Transparency phase
+Stopped at: Phase 8 Plan 1 (Tooltip Infrastructure) complete - foundation ready
+Resume with: `/gsd:execute-phase 08-02` to continue UX Transparency phase
