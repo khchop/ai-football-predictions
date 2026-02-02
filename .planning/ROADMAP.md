@@ -190,6 +190,12 @@ After content renders correctly (Phase 13), consolidating duplicate displays and
 **Goal**: Match pages load under 400ms TTFB with smart caching
 **Requirements**: PERF-01, PERF-02, PERF-03
 **Dependencies**: Phase 14 (caching strategy depends on finalized component structure)
+**Plans**: 3 plans
+
+Plans:
+- [ ] 15-01-PLAN.md — Remove force-dynamic and enable ISR with 60s revalidation
+- [ ] 15-02-PLAN.md — Parallelize data fetching with Promise.all (two-stage pattern)
+- [ ] 15-03-PLAN.md — Add cache stats monitoring endpoint
 
 **Success Criteria:**
 1. User sees match page initial render in under 400ms TTFB on mobile network (measured via Chrome DevTools)
@@ -241,7 +247,7 @@ v1.0, v1.1, and v1.2 complete. v1.3 in progress starting Phase 13.
 | 12. Internal Linking | v1.2 | 2/2 | Complete | 2026-02-02 |
 | **13. Content Pipeline Fixes** | **v1.3** | **3/3** | **Complete** | 2026-02-02 |
 | **14. Mobile Layout Consolidation** | **v1.3** | **4/4** | **Complete** | 2026-02-02 |
-| **15. Performance Optimization** | **v1.3** | **0/0** | **Planned** | — |
+| **15. Performance Optimization** | **v1.3** | **0/3** | **Ready** | — |
 | **16. AI Search Optimization** | **v1.3** | **0/0** | **Pending** | — |
 
 ---
