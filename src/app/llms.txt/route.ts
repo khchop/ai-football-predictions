@@ -76,11 +76,11 @@ kroam.xyz tracks and analyzes AI model predictions for football matches using th
 
 ## Important URLs
 
-- Sitemap: https://kroam.xyz/sitemap.xml
-- Robots.txt: https://kroam.xyz/robots.txt
-- Homepage: https://kroam.xyz
-- Leaderboard: https://kroam.xyz/leaderboard
-- Blog: https://kroam.xyz/blog
+- [Sitemap](https://kroam.xyz/sitemap.xml): XML sitemap for all pages
+- [Robots.txt](https://kroam.xyz/robots.txt): Crawler access rules
+- [Homepage](https://kroam.xyz): Main entry point
+- [Leaderboard](https://kroam.xyz/leaderboard): AI model performance rankings
+- [Blog](https://kroam.xyz/blog): Match reports and analysis
 
 ## Schema.org Implementation
 
