@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 11 of 12 (v1.2 milestone) — Redirect Optimization IN PROGRESS
-Plan: 1/2 complete
-Status: Plan 11-01 complete, ready for Plan 11-02
-Last activity: 2026-02-02 — Completed 11-01-PLAN.md (Legacy Match Redirect Fix)
+Phase: 11 of 12 (v1.2 milestone) — Redirect Optimization COMPLETE
+Plan: 2/2 complete
+Status: Phase 11 complete, ready for Phase 12
+Last activity: 2026-02-02 — Completed 11-02-PLAN.md (Noindex Audit & Orphan Strategy)
 
-Progress: [████████████████████░░] 87% (11/12 phases in progress)
+Progress: [█████████████████████░] 92% (11/12 phases complete)
 
 ## Performance Metrics
 
@@ -32,9 +32,9 @@ Progress: [████████████████████░░] 8
 **Velocity (v1.2 - Current):**
 - Phase 9 plans completed: 3 plans
 - Phase 10 plans completed: 2 plans
-- Phase 11 plans completed: 1 plan
-- Total v1.2 commits: 16
-- Phase 11-01 duration: 2 min
+- Phase 11 plans completed: 2 plans
+- Total v1.2 commits: 17
+- Phase 11-02 duration: 3 min
 
 ## Accumulated Context
 
@@ -60,6 +60,9 @@ Full decision history available in phase SUMMARY.md files.
 
 **Phase 11 Decisions:**
 - Use permanentRedirect() (308) instead of redirect() with RedirectType.replace (307) for SEO redirects
+- Ahrefs noindex report is stale cache - code review confirms all league pages have index:true
+- Match pages >30 days old intentionally noindexed (correct SEO practice)
+- Orphan page resolution deferred to Phase 12 with detailed strategy
 
 ### Pending Todos
 
@@ -71,6 +74,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-02 15:32
-Stopped at: Completed 11-01-PLAN.md (Legacy Match Redirect Fix)
-Resume with: `/gsd:execute-phase 11-02` to execute Sitemap Redirect Cleanup plan
+Last session: 2026-02-02 15:34
+Stopped at: Completed Phase 11 (Redirect Optimization)
+Resume with: `/gsd:plan-phase 12` to plan Internal Linking phase
