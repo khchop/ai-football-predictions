@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Prediction pipeline reliably generates scores from 35 LLMs ~30 minutes before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** v1.4 SEO Canonical Fixes
+**Current focus:** v2.0 UI/UX Overhaul
 
 ## Current Position
 
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-02-02 — Milestone v1.4 started
+Last activity: 2026-02-02 — Milestone v2.0 started
 
-Progress: [░░░░░░░░░░░░░░░░░░░░░░░░] 0% (v1.4: 0/? plans, 0/? requirements)
+Progress: [░░░░░░░░░░░░░░░░░░░░░░░░] 0% (v2.0: 0/? plans, 0/? requirements)
 
 ## Milestone History
 
@@ -53,5 +53,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: v1.3 milestone complete
-Resume with: Run `/gsd:new-milestone` to start next milestone
+Stopped at: v2.0 milestone initialized
+Resume with: Run `/gsd:discuss-phase 17` to start planning

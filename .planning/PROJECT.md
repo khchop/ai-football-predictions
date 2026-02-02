@@ -175,20 +175,25 @@ All 68 requirements validated across v1.0, v1.1, v1.2, and v1.3 milestones.
 - Real-time prediction updates during match (post-kickoff is settled)
 - Model fine-tuning or custom training
 
-## Current Milestone: v1.4 SEO Canonical Fixes
+## Current Milestone: v2.0 UI/UX Overhaul
 
-**Goal:** Fix canonical URL issues, broken pages, and remaining SEO errors identified in Sitebulb audit.
+**Goal:** Complete UI/UX rebuild from the ground up with new design system, optimized for speed, SEO, and GEO across all page types.
 
 **Target features:**
-- Fix canonical URLs pointing to redirecting `/matches/{uuid}` URLs
-- Fix 500 error on Genoa vs Bologna match page
-- Fix 404 on Turkish Super Lig league page
-- Add missing H1 tags to league index pages
-- Shorten model page titles to under 60 characters
+- New design system (colors, typography, spacing, component library refresh)
+- Match pages: Fix missing pre-match narratives and prediction explanations, declutter layout
+- Blog pages: Redesign layout to make content usable
+- League pages: SEO/GEO optimization with proper structured data and content
+- Leaderboard pages: SEO/GEO optimization
+- About pages: SEO/GEO optimization
+- Internal linking: Automated contextual links in content + navigation widgets everywhere
+- Speed optimization: Faster initial loads and navigation
+
+**Page types in scope:** Match, League, Model, Blog, Leaderboard, About
 
 ## Open Questions
 
 None currently.
 
 ---
-*Last updated: 2026-02-02 after v1.3 milestone complete*
+*Last updated: 2026-02-02 after v2.0 milestone started*
