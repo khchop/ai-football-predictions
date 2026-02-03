@@ -1,5 +1,3 @@
-'use client';
-
 /**
  * Enhanced loading skeleton for predictions section with shimmer animation.
  * Matches the structure of the actual prediction table (icon, name, scores, points).
