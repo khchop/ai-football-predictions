@@ -21,7 +21,46 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 
 ## Current State
 
-**Brownfield project with v1.3 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. v1.3 Match Page Refresh milestone completed 2026-02-02 with all 18 requirements shipped.
+**Brownfield project with v2.0 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. v2.0 UI/UX Overhaul milestone completed 2026-02-03 with all 33 requirements shipped.
+
+### Validated (v2.0)
+
+The following requirements were validated in v2.0:
+
+- ✓ **DSGN-01**: Semantic color tokens for sports states (win/loss/draw) — v2.0
+- ✓ **DSGN-02**: Typography scale with responsive sizing — v2.0
+- ✓ **DSGN-03**: Spacing system with 4px/8px rhythm — v2.0
+- ✓ **DSGN-04**: Component variants for match states — v2.0
+- ✓ **DSGN-05**: Full dark mode support with toggle — v2.0
+- ✓ **DSGN-06**: View Transitions API for smooth navigation — v2.0
+- ✓ **MTCH-01**: Score displays exactly once on page — v2.0
+- ✓ **MTCH-02**: Pre-match narrative visible on upcoming pages — v2.0
+- ✓ **MTCH-03**: Prediction explanations visible on match pages — v2.0
+- ✓ **MTCH-04**: Post-match roundup visible on finished pages — v2.0
+- ✓ **MTCH-05**: PPR static shell with streaming dynamic content — v2.0
+- ✓ **MTCH-06**: Answer-first content for GEO/AI citations — v2.0
+- ✓ **BLOG-01**: Readable 70ch max line width — v2.0
+- ✓ **BLOG-02**: Typography hierarchy (H1, H2, H3 styling) — v2.0
+- ✓ **BLOG-03**: Table of contents for 500+ word articles — v2.0
+- ✓ **BLOG-04**: FAQ section with FAQPage schema — v2.0
+- ✓ **BLOG-05**: Related articles widget — v2.0
+- ✓ **LEAG-01**: SEO-optimized metadata — v2.0
+- ✓ **LEAG-02**: SportsOrganization schema — v2.0
+- ✓ **LEAG-03**: FAQ section with FAQPage schema — v2.0
+- ✓ **LEAG-04**: Competition stats dashboard — v2.0
+- ✓ **LEAG-05**: Historical trends visualization — v2.0
+- ✓ **LEAD-01**: SEO metadata and FAQ with schema — v2.0
+- ✓ **LEAD-02**: Time period filters (weekly/monthly/all) — v2.0
+- ✓ **LEAD-03**: Trend indicators for model performance — v2.0
+- ✓ **NAVL-01**: Bottom navigation bar for mobile — v2.0
+- ✓ **NAVL-02**: Breadcrumbs on all pages — v2.0
+- ✓ **NAVL-03**: Related content widgets — v2.0
+- ✓ **NAVL-04**: Automated entity linking in content — v2.0
+- ✓ **NAVL-05**: Prefetch on hover/touch — v2.0
+- ✓ **PERF-01**: PPR enabled for static shells — v2.0
+- ✓ **PERF-02**: Cache configuration without conflicts — v2.0
+- ✓ **PERF-03**: Client component audit complete — v2.0
+- ✓ **PERF-04**: View Transitions polished — v2.0
 
 ### Validated (v1.3)
 
@@ -128,9 +167,9 @@ The following capabilities are built and operational:
 
 ### Context
 
-Shipped v1.3 with 82,942 LOC TypeScript.
-Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, react-swipeable.
-All 68 requirements validated across v1.0, v1.1, v1.2, and v1.3 milestones.
+Shipped v2.0 with 46,402 LOC TypeScript.
+Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, next-themes, react-swipeable.
+All 101 requirements validated across v1.0, v1.1, v1.2, v1.3, and v2.0 milestones.
 
 ## Constraints
 
@@ -175,25 +214,19 @@ All 68 requirements validated across v1.0, v1.1, v1.2, and v1.3 milestones.
 - Real-time prediction updates during match (post-kickoff is settled)
 - Model fine-tuning or custom training
 
-## Current Milestone: v2.0 UI/UX Overhaul
+## Next Milestone Goals
 
-**Goal:** Complete UI/UX rebuild from the ground up with new design system, optimized for speed, SEO, and GEO across all page types.
+**Not yet defined.** Run `/gsd:new-milestone` to start the next milestone cycle.
 
-**Target features:**
-- New design system (colors, typography, spacing, component library refresh)
-- Match pages: Fix missing pre-match narratives and prediction explanations, declutter layout
-- Blog pages: Redesign layout to make content usable
-- League pages: SEO/GEO optimization with proper structured data and content
-- Leaderboard pages: SEO/GEO optimization
-- About pages: SEO/GEO optimization
-- Internal linking: Automated contextual links in content + navigation widgets everywhere
-- Speed optimization: Faster initial loads and navigation
-
-**Page types in scope:** Match, League, Model, Blog, Leaderboard, About
+**Potential areas for next milestone:**
+- Model pages redesign (MODL-01, MODL-02)
+- About pages SEO optimization (ABOU-01, ABOU-02)
+- Design system adoption (migrate hardcoded colors to semantic tokens)
+- ThemeToggle integration into Navigation
 
 ## Open Questions
 
 None currently.
 
 ---
-*Last updated: 2026-02-02 after v2.0 milestone started*
+*Last updated: 2026-02-03 after v2.0 milestone shipped*

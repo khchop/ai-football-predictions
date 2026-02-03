@@ -1,5 +1,45 @@
 # Project Milestones: AI Football Predictions Platform
 
+## v2.0 UI/UX Overhaul (Shipped: 2026-02-03)
+
+**Delivered:** Complete UI/UX rebuild with new design system, dark mode, View Transitions, PPR streaming, FAQ schemas for GEO optimization, and systematic internal linking across all page types.
+
+**Phases completed:** 17-23 (28 plans total)
+
+**Key accomplishments:**
+
+- Design system foundation with OKLCH semantic color tokens, 1.2 type scale, 4px/8px spacing rhythm
+- Dark mode with next-themes (system preference default, manual toggle)
+- View Transitions API for smooth page navigation (150ms duration)
+- Match page rebuild with score deduplication, TL;DR summaries, narrative previews, FAQ schema
+- Blog page rebuild with 70ch line width, TOC with IntersectionObserver scroll spy, FAQ extraction
+- League page rebuild with enhanced SportsOrganization schema, CSS-only trend charts, dynamic FAQs
+- Leaderboard time period filters (weekly/monthly/all-time) with rank trend indicators
+- Bottom navigation bar for mobile with 44px touch targets
+- Breadcrumbs on all 5 page types with builder utilities
+- EntityLinkedText for inline team/model/competition links
+- HoverPrefetchLink for intent-based prefetching on hover/touch
+- PPR enabled via cacheComponents with Suspense boundaries
+- 3 client components converted to server components
+
+**Stats:**
+
+- 46,402 lines of TypeScript
+- 7 phases, 28 plans, 33 requirements
+- 1 day from start to ship (2026-02-02 → 2026-02-03)
+
+**Git range:** `feat(17-01)` → `docs(23-03)`
+
+**Tech debt deferred:**
+
+- ThemeToggle not integrated into Navigation (2 min fix)
+- MatchBadge/AccuracyBadge components orphaned (0 imports)
+- 50+ hardcoded colors could use semantic tokens
+
+**What's next:** New milestone planning with `/gsd:new-milestone`
+
+---
+
 ## v1.3 Match Page Refresh (Shipped: 2026-02-02)
 
 **Delivered:** Mobile-first match pages with unified content query, tabbed navigation with swipe gestures, ISR caching, and AI search optimization (robots.txt, llms.txt, consolidated Schema.org @graph).
