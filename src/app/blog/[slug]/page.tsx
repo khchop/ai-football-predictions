@@ -1,13 +1,17 @@
 /**
  * Blog Post Page
- * 
- * Displays individual blog post with markdown rendering
+ *
+ * Displays individual blog post with:
+ * - Typography optimized for readability (70ch max-width via BlogContent)
+ * - Table of contents sidebar for 500+ word articles
+ * - FAQ section with FAQPage schema for GEO
+ * - Related articles widget for content discovery
  */
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { getBlogPostBySlug } from '@/lib/db/queries';
+import { getBlogPostBySlug, getRecentBlogPosts } from '@/lib/db/queries';
 import { generateArticleSchema } from '@/lib/seo/schemas';
 import { buildRoundupSchema } from '@/lib/seo/schema/roundup';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
@@ -15,6 +19,12 @@ import { format, parseISO } from 'date-fns';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import type { Metadata } from 'next';
 import { BlogContent } from '@/components/blog/blog-content';
+import { BlogTOC } from '@/components/blog/blog-toc';
+import { BlogFAQ } from '@/components/blog/blog-faq';
+import { RelatedArticles } from '@/components/blog/related-articles';
+import { extractHeadings } from '@/lib/blog/extract-headings';
+import { extractFAQs } from '@/lib/blog/extract-faqs';
+import { findRelatedArticles } from '@/lib/blog/related-articles';
 import { WebPageSchema } from '@/components/WebPageSchema';
 import { getDb } from '@/lib/db';
 import { matches } from '@/lib/db/schema';
@@ -118,12 +128,35 @@ export default async function BlogPostPage({ params }: PageProps) {
     notFound();
   }
 
+  // Calculate word count for TOC visibility (500+ words only per user decision)
+  const wordCount = post.content.split(/\s+/).length;
+  const showTOC = wordCount >= 500;
+  const headings = showTOC ? extractHeadings(post.content) : [];
+
+  // Extract FAQs for GEO optimization
+  const faqs = extractFAQs(post.content, {
+    includeDefaultTLDR: true,
+    maxFaqs: 5,
+    excerpt: post.excerpt || undefined,
+  });
+
+  // Fetch related articles
+  const recentPosts = await getRecentBlogPosts(20);
+  const relatedArticles = findRelatedArticles(post, recentPosts, 3);
+
   // Determine schema type based on content type
   let schema: object;
 
   if (post.contentType === 'league_roundup') {
     // For roundups, try to extract match data
-    let matchData: Array<{ id: string; homeTeam: string; awayTeam: string; kickoffTime: string; competitionId: string; slug: string | null }> = [];
+    let matchData: Array<{
+      id: string;
+      homeTeam: string;
+      awayTeam: string;
+      kickoffTime: string;
+      competitionId: string;
+      slug: string | null;
+    }> = [];
 
     // Primary path: Check if matchId field contains a match ID (single match)
     if (post.matchId) {
@@ -192,27 +225,27 @@ export default async function BlogPostPage({ params }: PageProps) {
     };
   }
 
-   return (
-     <div className="max-w-3xl mx-auto space-y-8">
-       {/* Article Schema for search engines */}
-       <script
-         type="application/ld+json"
-         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-       />
+  return (
+    <div className="max-w-6xl mx-auto space-y-8">
+      {/* Article Schema for search engines */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
 
-       <WebPageSchema
-         name={post.title}
-         description={post.excerpt || post.title}
-         url={`${BASE_URL}/blog/${post.slug}`}
-         datePublished={post.publishedAt || undefined}
-         breadcrumb={[
-           { name: 'Home', url: BASE_URL },
-           { name: 'Blog', url: `${BASE_URL}/blog` },
-           { name: post.title, url: `${BASE_URL}/blog/${post.slug}` },
-         ]}
-       />
+      <WebPageSchema
+        name={post.title}
+        description={post.excerpt || post.title}
+        url={`${BASE_URL}/blog/${post.slug}`}
+        datePublished={post.publishedAt || undefined}
+        breadcrumb={[
+          { name: 'Home', url: BASE_URL },
+          { name: 'Blog', url: `${BASE_URL}/blog` },
+          { name: post.title, url: `${BASE_URL}/blog/${post.slug}` },
+        ]}
+      />
 
-       {/* Back Link */}
+      {/* Back Link */}
       <Link
         href="/blog"
         className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
@@ -221,67 +254,91 @@ export default async function BlogPostPage({ params }: PageProps) {
         Back to blog
       </Link>
 
-      {/* Article Card */}
-      <Card className="bg-card/50 border-border/50">
-        <CardContent className="p-8 md:p-12">
-          {/* Header */}
-          <div className="space-y-4 mb-8">
-            {/* Content Type Badge */}
-            <div>
-              <span className="inline-block px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary uppercase tracking-wide">
-                {post.contentType === 'league_roundup'
-                  ? 'League Roundup'
-                  : post.contentType === 'model_report'
-                    ? 'Model Report'
-                    : 'Analysis'}
-              </span>
-            </div>
-
-            {/* Title */}
-            <h1 className="text-4xl md:text-5xl font-bold gradient-text leading-tight">{post.title}</h1>
-
-            {/* Meta */}
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-              {post.publishedAt && (
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {format(parseISO(post.publishedAt), 'MMMM d, yyyy')}
+      {/* Main grid: Content + TOC sidebar on desktop */}
+      <div className="lg:grid lg:grid-cols-[1fr_250px] lg:gap-8">
+        {/* Main content column */}
+        <article>
+          {/* Article Card */}
+          <Card className="bg-card/50 border-border/50">
+            <CardContent className="p-8 md:p-12">
+              {/* Header */}
+              <div className="space-y-4 mb-8">
+                {/* Content Type Badge */}
+                <div>
+                  <span className="inline-block px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary uppercase tracking-wide">
+                    {post.contentType === 'league_roundup'
+                      ? 'League Roundup'
+                      : post.contentType === 'model_report'
+                        ? 'Model Report'
+                        : 'Analysis'}
+                  </span>
                 </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                {Math.ceil(post.content.split(/\s+/).length / 265)} min read
+
+                {/* Title */}
+                <h1 className="text-4xl md:text-5xl font-bold gradient-text leading-tight">
+                  {post.title}
+                </h1>
+
+                {/* Meta */}
+                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                  {post.publishedAt && (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      {format(parseISO(post.publishedAt), 'MMMM d, yyyy')}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    {Math.ceil(wordCount / 265)} min read
+                  </div>
+                  {post.generatedBy && (
+                    <div className="text-xs">
+                      Generated by: <span className="font-medium">{post.generatedBy}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Excerpt */}
+                <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
+                  {post.excerpt}
+                </p>
               </div>
-              {post.generatedBy && (
-                <div className="text-xs">
-                  Generated by: <span className="font-medium">{post.generatedBy}</span>
-                </div>
-              )}
-            </div>
 
-            {/* Excerpt */}
-            <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">{post.excerpt}</p>
-          </div>
+              {/* Divider */}
+              <div className="border-t border-border/30 my-8" />
 
-          {/* Divider */}
-          <div className="border-t border-border/30 my-8" />
+              {/* Content */}
+              <BlogContent content={post.content} />
 
-          {/* Content */}
-          <BlogContent content={post.content} />
+              {/* Footer */}
+              <div className="border-t border-border/30 mt-12 pt-8 text-sm text-muted-foreground/60">
+                {post.generationCost && <p>Generation cost: ${post.generationCost}</p>}
+                {post.promptTokens && post.completionTokens && (
+                  <p>
+                    Tokens: {post.promptTokens.toLocaleString()} input +{' '}
+                    {post.completionTokens.toLocaleString()} output
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Footer */}
-          <div className="border-t border-border/30 mt-12 pt-8 text-sm text-muted-foreground/60">
-            {post.generationCost && (
-              <p>Generation cost: ${post.generationCost}</p>
-            )}
-            {post.promptTokens && post.completionTokens && (
-              <p>Tokens: {post.promptTokens.toLocaleString()} input + {post.completionTokens.toLocaleString()} output</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          {/* FAQ Section (after main content, before related - per CONTEXT.md) */}
+          <BlogFAQ faqs={faqs} />
 
-      {/* Related Posts Link */}
+          {/* Related Articles (at the very end) */}
+          <RelatedArticles articles={relatedArticles} />
+        </article>
+
+        {/* TOC sidebar (desktop only, 500+ word articles) */}
+        {showTOC && headings.length > 0 && (
+          <aside className="hidden lg:block">
+            <BlogTOC headings={headings} />
+          </aside>
+        )}
+      </div>
+
+      {/* More Posts Link */}
       <div className="text-center">
         <Link
           href="/blog"
