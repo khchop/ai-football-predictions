@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 22 - Navigation & Internal Linking
-Plan: 3 of 5 complete (In progress)
-Status: Plan 22-03 complete - Entity linking utilities created
-Last activity: 2026-02-03 - Completed 22-03-PLAN.md
+Plan: 4 of 5 complete (In progress)
+Status: Plan 22-04 complete - Navigation components integrated
+Last activity: 2026-02-03 - Completed 22-04-PLAN.md
 
-Progress: [████████████░░░░░░░░░░░░] 46% (v2.0: 23/? plans, 31/34 requirements)
+Progress: [█████████████░░░░░░░░░░░] 48% (v2.0: 24/? plans, 32/34 requirements)
 
 ## Milestone History
 
@@ -36,7 +36,7 @@ Progress: [████████████░░░░░░░░░░░
 | 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Complete |
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Complete |
 | 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Complete |
-| 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | In progress (3/5) |
+| 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | In progress (4/5) |
 | 23. Performance & Polish | PPR validation, client audit, transitions | PERF-01 to PERF-04 (4) | Pending |
 
 **Phase Dependencies:**
@@ -115,6 +115,9 @@ Full decision history available in phase SUMMARY.md files.
 - maxLinks=5 default per content block to prevent over-linking (22-03)
 - Each entity linked only once per text block (22-03)
 - Word boundary regex for accurate entity matching (22-03)
+- Breadcrumbs (visual only) for pages with existing schema, BreadcrumbsWithSchema for match page (22-04)
+- Entity linking at MatchContentSection level, not page level (22-04)
+- ActiveModels fetch in parallel Promise.all on match page (22-04)
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -161,5 +164,5 @@ None blocking current work.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 22-03-PLAN.md (Entity Linking Utilities)
-Resume with: Continue Phase 22 plan 04 (Content Integration)
+Stopped at: Completed 22-04-PLAN.md (Navigation Integration)
+Resume with: Continue Phase 22 plan 05 (Performance Optimization)
