@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-03)
 
 **Core value:** Prediction pipeline reliably generates scores from 35 LLMs ~30 minutes before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** v2.1 Match Page Simplification - Phase 24
+**Current focus:** v2.1 Match Page Simplification - Complete
 
 ## Current Position
 
-Phase: 24 of 25 (Match Page Cleanup)
-Plan: 2 of 2 in current phase
+Phase: 25 of 25 (Content Rendering Fix)
+Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-02-03 - Completed 24-02-PLAN.md
+Last activity: 2026-02-03 - Completed 25-01-PLAN.md
 
-Progress: [██████████] 100% (Phase 24)
+Progress: [██████████] 100% (v2.1 Complete)
 
 ## Milestone History
 
@@ -25,10 +25,11 @@ Progress: [██████████] 100% (Phase 24)
 | v1.2 Technical SEO Fixes | 9-12 | 9 | 13 | 2026-02-02 |
 | v1.3 Match Page Refresh | 13-16 | 13 | 18 | 2026-02-02 |
 | v2.0 UI/UX Overhaul | 17-23 | 28 | 33 | 2026-02-03 |
+| v2.1 Match Page Simplification | 24-25 | 3 | 9 | 2026-02-03 |
 
-**Total:** 23 phases, 74 plans, 101 requirements shipped
+**Total:** 25 phases, 77 plans, 110 requirements shipped
 
-## v2.1 Scope
+## v2.1 Scope (Complete)
 
 **Phases:** 24-25 (2 phases)
 **Requirements:** 9 total (7 in Phase 24, 2 in Phase 25)
@@ -36,7 +37,7 @@ Progress: [██████████] 100% (Phase 24)
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
 | 24 - Match Page Cleanup | Remove sticky header, tabs, hidden sections | 7 | Complete |
-| 25 - Content Rendering Fix | Strip HTML tags from narratives | 2 | Pending |
+| 25 - Content Rendering Fix | Strip HTML tags from narratives | 2 | Complete |
 
 ## Accumulated Context
 
@@ -49,6 +50,8 @@ Progress: [██████████] 100% (Phase 24)
 | H2H removal | Complete removal | 24-02 | Not valuable to users, clutters interface |
 | Standings removal | Complete removal | 24-02 | Redundant with league page, reduces API calls |
 | Empty state handling | Return null | 24-02 | Cleaner UX than showing "no data" placeholders |
+| HTML sanitization library | isomorphic-dompurify | 25-01 | SSR-compatible with Next.js App Router |
+| Content sanitization timing | Strip at render time | 25-01 | Preserves original content in database for flexibility |
 
 ### Pending Todos
 
@@ -61,5 +64,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 24-02-PLAN.md (Phase 24 complete)
-Resume with: /gsd:plan-phase 25
+Stopped at: Completed 25-01-PLAN.md (v2.1 milestone complete)
+Resume with: New milestone planning or feature work
