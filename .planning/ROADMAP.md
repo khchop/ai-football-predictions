@@ -34,10 +34,11 @@ v2.1 simplifies the match detail page by removing the sticky header, mobile tabs
   3. Content appears in order: Score, Scorers/Goals, Odds, Pre-match, Prediction, Post-match, Predictions Table, FAQ
   4. H2H and league standings sections are not visible on any match page
   5. Sections with no data are completely hidden (no "unavailable" placeholders)
-**Plans**: TBD (determined during planning)
+**Plans**: 2 plans
 
 Plans:
-- [ ] 24-01: TBD
+- [ ] 24-01-PLAN.md — Remove sticky header and mobile tabbed navigation
+- [ ] 24-02-PLAN.md — Unify layout order and filter unused sections
 
 ### Phase 25: Content Rendering Fix
 **Goal**: Narrative content displays as clean formatted text without visible HTML tags
@@ -58,7 +59,7 @@ Phases execute in numeric order: 24 -> 25
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 24. Match Page Cleanup | v2.1 | 0/? | Not started | - |
+| 24. Match Page Cleanup | v2.1 | 0/2 | Planning complete | - |
 | 25. Content Rendering Fix | v2.1 | 0/? | Not started | - |
 
 ---
