@@ -62,7 +62,7 @@ None.
 Last session: 2026-02-03
 Stopped at: Completed 28-03-PLAN.md (Content Sections Visual Verification)
 Resume file: None
-Resume with: /gsd:execute-phase 29
+Resume with: /gsd:discuss-phase 29
 
 Config:
 {
