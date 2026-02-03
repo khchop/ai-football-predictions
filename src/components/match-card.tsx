@@ -89,15 +89,15 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
     : `/matches/${match.id}`;
 
   return (
-    <Link href={matchUrl} className="block cursor-pointer">
-      <div
-        className={cn(
-          "group relative rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden transition-all duration-200",
-          "hover:bg-card/80 hover:border-border",
-          isLive && "border-red-500/50 ring-1 ring-red-500/20",
-          showGoalAnimation && "animate-goal-flash"
-        )}
-      >
+    <Link
+      href={matchUrl}
+      className={cn(
+        "group block relative rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden transition-all duration-200 cursor-pointer",
+        "hover:bg-card/80 hover:border-border",
+        isLive && "border-red-500/50 ring-1 ring-red-500/20",
+        showGoalAnimation && "animate-goal-flash"
+      )}
+    >
         {/* Live indicator bar */}
         {isLive && (
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-red-500 animate-pulse" />
@@ -341,7 +341,6 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
             </div>
           )}
         </div>
-      </div>
     </Link>
   );
 }
