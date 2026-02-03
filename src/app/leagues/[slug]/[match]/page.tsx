@@ -17,7 +17,7 @@ import { TopPerformers } from '@/components/match/top-performers';
 import { buildMatchMetadata } from '@/lib/seo/metadata';
 import { mapMatchToSeoData } from '@/lib/seo/types';
 import { MatchH1 } from '@/components/match/match-h1';
-import { MatchHeaderSticky } from '@/components/match/match-header-sticky';
+import { MatchPageHeader } from '@/components/match/match-page-header';
 import { MatchTabsMobile } from '@/components/match/match-tabs-mobile';
 import { SummaryTab } from '@/components/match/tab-content/summary-tab';
 import { StatsTab } from '@/components/match/tab-content/stats-tab';
@@ -181,8 +181,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
         Back to league
       </Link>
 
-      {/* Sticky Header - Single source of truth for score (MOBL-01) */}
-      <MatchHeaderSticky
+      {/* Hero + Sticky Header - Score appears here only (MTCH-01) */}
+      <MatchPageHeader
         match={matchData}
         competition={competition}
         isLive={isLive}
