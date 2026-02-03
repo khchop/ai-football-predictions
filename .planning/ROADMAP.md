@@ -37,10 +37,11 @@ Complete rewrite of match detail pages from scratch with clean layout, zero dupl
   2. useMatch() hook returns normalized match data from context
   3. Match state (upcoming/live/finished) is derived once at page level
   4. No component fetches match data independently (verified by code review)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 26-01: TBD
+- [ ] 26-01-PLAN.md — Create MatchDataProvider component and useMatch hook
+- [ ] 26-02-PLAN.md — Integrate MatchDataProvider into match pages (matches/[id] and leagues/[slug]/[match])
 
 ### Phase 27: Hero Component
 **Goal**: Create single authoritative score/VS display that renders match info exactly once
