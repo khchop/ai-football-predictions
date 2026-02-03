@@ -35,11 +35,11 @@ Requirements for UI/UX Overhaul. Each maps to roadmap phases.
 
 ### League Pages
 
-- [ ] **LEAG-01**: SEO-optimized metadata (titles, descriptions, OG tags)
-- [ ] **LEAG-02**: Structured data (SportsOrganization/SportsLeague schema)
-- [ ] **LEAG-03**: FAQ section with FAQPage schema for GEO
-- [ ] **LEAG-04**: Competition stats dashboard (total matches, predictions, accuracy)
-- [ ] **LEAG-05**: Historical performance trends visualization
+- [x] **LEAG-01**: SEO-optimized metadata (titles, descriptions, OG tags)
+- [x] **LEAG-02**: Structured data (SportsOrganization/SportsLeague schema)
+- [x] **LEAG-03**: FAQ section with FAQPage schema for GEO
+- [x] **LEAG-04**: Competition stats dashboard (total matches, predictions, accuracy)
+- [x] **LEAG-05**: Historical performance trends visualization
 
 ### Leaderboard Pages
 
@@ -117,11 +117,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BLOG-03 | Phase 19 | Complete |
 | BLOG-04 | Phase 19 | Complete |
 | BLOG-05 | Phase 19 | Complete |
-| LEAG-01 | Phase 20 | Pending |
-| LEAG-02 | Phase 20 | Pending |
-| LEAG-03 | Phase 20 | Pending |
-| LEAG-04 | Phase 20 | Pending |
-| LEAG-05 | Phase 20 | Pending |
+| LEAG-01 | Phase 20 | Complete |
+| LEAG-02 | Phase 20 | Complete |
+| LEAG-03 | Phase 20 | Complete |
+| LEAG-04 | Phase 20 | Complete |
+| LEAG-05 | Phase 20 | Complete |
 | LEAD-01 | Phase 21 | Pending |
 | LEAD-02 | Phase 21 | Pending |
 | LEAD-03 | Phase 21 | Pending |
@@ -142,4 +142,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-03 after Phase 19 completion*
+*Last updated: 2026-02-03 after Phase 20 completion*

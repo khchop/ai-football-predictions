@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 20 - League Page Rebuild (COMPLETE)
-Plan: 4 of 4 complete
-Status: Phase complete
-Last activity: 2026-02-03 - Completed 20-04-PLAN.md (League Page Integration)
+Phase: 20 - League Page Rebuild
+Plan: 4 of 4 complete (Phase complete)
+Status: Phase 20 verified and complete - Ready for Phase 21
+Last activity: 2026-02-03 - Phase 20 verified (16/16 must-haves passed)
 
 Progress: [██████████░░░░░░░░░░░░░░] 35% (v2.0: 18/? plans, 28/34 requirements)
 
@@ -92,6 +92,8 @@ Full decision history available in phase SUMMARY.md files.
 - Map-based visibility tracking for performance (avoid state re-renders) (19-04)
 - Two-column layout with max-w-6xl for TOC sidebar accommodation (19-05)
 - 500-word threshold for TOC visibility per user decision (19-05)
+- getCountryFromCompetitionId maps IDs to countries for areaServed (20-01)
+- Stats fallback to static description when finishedMatches is 0 (20-01)
 - Sentence-aware truncation for FAQ answers (20-02)
 - CSS-only chart implementation (no Chart.js/D3.js) for minimal bundle size (20-03)
 - Weekly grouping (ISO week) for trend granularity (20-03)
@@ -143,5 +145,5 @@ None blocking current work.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 20-04-PLAN.md (League Page Integration)
+Stopped at: Completed Phase 20 (League Page Rebuild) - verified
 Resume with: Begin Phase 21 (Leaderboard Page Rebuild)

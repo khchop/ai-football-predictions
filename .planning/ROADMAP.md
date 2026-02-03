@@ -318,10 +318,10 @@ Second major page type. Blog readability is table stakes - currently full-width 
 **Plans**: 4 plans
 
 Plans:
-- [ ] 20-01-PLAN.md — SEO metadata and SportsOrganization schema enhancement
-- [ ] 20-02-PLAN.md — FAQ generator and LeagueFAQ component
-- [ ] 20-03-PLAN.md — Trend chart component and data query
-- [ ] 20-04-PLAN.md — Integration with combined @graph schema
+- [x] 20-01-PLAN.md — SEO metadata and SportsOrganization schema enhancement
+- [x] 20-02-PLAN.md — FAQ generator and LeagueFAQ component
+- [x] 20-03-PLAN.md — Trend chart component and data query
+- [x] 20-04-PLAN.md — Integration with combined @graph schema
 
 **Success Criteria:**
 1. User finds league pages via search engines with rich snippets (SEO metadata optimized)
@@ -412,10 +412,10 @@ v1.0, v1.1, v1.2, and v1.3 complete. v2.0 in progress.
 | **17. Design System Foundation** | **v2.0** | **4/4** | **Complete** | 2026-02-02 |
 | **18. Match Page Rebuild** | **v2.0** | **5/5** | **Complete** | 2026-02-03 |
 | **19. Blog Page Rebuild** | **v2.0** | **5/5** | **Complete** | 2026-02-03 |
-| **20. League Page Rebuild** | **v2.0** | **0/4** | **Pending** | — |
+| **20. League Page Rebuild** | **v2.0** | **4/4** | **Complete** | 2026-02-03 |
 | **21. Leaderboard Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
 | **22. Navigation & Internal Linking** | **v2.0** | **0/?** | **Pending** | — |
 | **23. Performance & Polish** | **v2.0** | **0/?** | **Pending** | — |
 
 ---
-*Last updated: 2026-02-03 (Phase 20 planned - 4 plans in 2 waves)*
+*Last updated: 2026-02-03 (Phase 20 complete - 4 plans in 2 waves)*
