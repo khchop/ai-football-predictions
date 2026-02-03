@@ -267,11 +267,11 @@ Foundation patterns prevent technical debt accumulation in later phases. Design 
 **Plans**: 5 plans
 
 Plans:
-- [ ] 18-01-PLAN.md — Score deduplication with Intersection Observer for sticky header trigger
-- [ ] 18-02-PLAN.md — TL;DR component and preview with scroll-to-section pattern
-- [ ] 18-03-PLAN.md — PPR infrastructure with shimmer skeletons
-- [ ] 18-04-PLAN.md — FAQ component with JSON-LD schema for GEO
-- [ ] 18-05-PLAN.md — Final integration and human verification
+- [x] 18-01-PLAN.md — Score deduplication with Intersection Observer for sticky header trigger
+- [x] 18-02-PLAN.md — TL;DR component and preview with scroll-to-section pattern
+- [x] 18-03-PLAN.md — PPR infrastructure with shimmer skeletons (activation deferred to Phase 23)
+- [x] 18-04-PLAN.md — FAQ component with JSON-LD schema for GEO
+- [x] 18-05-PLAN.md — Final integration and human verification
 
 **Success Criteria:**
 1. User sees match score exactly once on the page (no duplication in header, stats, or other sections)
@@ -397,7 +397,7 @@ v1.0, v1.1, v1.2, and v1.3 complete. v2.0 in progress.
 | 15. Performance Optimization | v1.3 | 3/3 | Complete | 2026-02-02 |
 | 16. AI Search Optimization | v1.3 | 3/3 | Complete | 2026-02-02 |
 | **17. Design System Foundation** | **v2.0** | **4/4** | **Complete** | 2026-02-02 |
-| **18. Match Page Rebuild** | **v2.0** | **0/5** | **Planned** | — |
+| **18. Match Page Rebuild** | **v2.0** | **5/5** | **Complete** | 2026-02-03 |
 | **19. Blog Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
 | **20. League Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
 | **21. Leaderboard Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
@@ -405,4 +405,4 @@ v1.0, v1.1, v1.2, and v1.3 complete. v2.0 in progress.
 | **23. Performance & Polish** | **v2.0** | **0/?** | **Pending** | — |
 
 ---
-*Last updated: 2026-02-02 (Phase 18 planned - 5 plans in 2 waves)*
+*Last updated: 2026-02-03 (Phase 18 complete - PPR activation deferred to Phase 23)*
