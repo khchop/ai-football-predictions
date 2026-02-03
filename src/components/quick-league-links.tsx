@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 import { Trophy } from 'lucide-react';
 import { COMPETITIONS } from '@/lib/football/competitions';
