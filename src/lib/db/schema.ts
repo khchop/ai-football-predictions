@@ -474,7 +474,7 @@ export type NewMatchPreview = typeof matchPreviews.$inferInsert;
 // 3. Post-match (~150-200 words) - results/performance
 export const matchContent = pgTable('match_content', {
   id: text('id').primaryKey(), // UUID
-  matchId: text('match_id').notNull(),
+  matchId: text('match_id').notNull().unique(),
 
   // Pre-match section (generated after odds refresh, ~6h before kickoff)
   preMatchContent: text('pre_match_content'),
