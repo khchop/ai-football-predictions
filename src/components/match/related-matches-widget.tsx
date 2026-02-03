@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import { getRelatedMatches } from '@/lib/db/queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from 'lucide-react';
+import { HoverPrefetchLink } from '@/components/navigation/hover-prefetch-link';
 
 interface RelatedMatchesWidgetProps {
   matchId: string;
@@ -28,7 +28,7 @@ export async function RelatedMatchesWidget({ matchId, competitionSlug }: Related
               : `/matches/${match.id}`;
 
             return (
-              <Link
+              <HoverPrefetchLink
                 key={match.id}
                 href={matchUrl}
                 className="block p-3 rounded-lg border border-border/50 hover:bg-accent transition-colors min-h-[44px]"
@@ -52,7 +52,7 @@ export async function RelatedMatchesWidget({ matchId, competitionSlug }: Related
                     Final: {match.homeScore}-{match.awayScore}
                   </p>
                 )}
-              </Link>
+              </HoverPrefetchLink>
             );
           })}
         </div>

@@ -14,10 +14,10 @@
  * - Shows 1-3 articles based on what's available
  */
 
-import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { format, parseISO } from 'date-fns';
 import type { RelatedArticle } from '@/lib/blog/related-articles';
+import { HoverPrefetchLink } from '@/components/navigation/hover-prefetch-link';
 
 interface RelatedArticlesProps {
   articles: RelatedArticle[];
@@ -52,7 +52,7 @@ export function RelatedArticles({ articles }: RelatedArticlesProps) {
       {/* Card grid: 1 col mobile, 2 col tablet, 3 col desktop */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {articles.map((article) => (
-          <Link key={article.id} href={`/blog/${article.slug}`}>
+          <HoverPrefetchLink key={article.id} href={`/blog/${article.slug}`}>
             <Card className="h-full hover:border-primary/50 transition-colors cursor-pointer">
               <CardContent className="p-5 h-full flex flex-col">
                 {/* Content Type Badge */}
@@ -80,7 +80,7 @@ export function RelatedArticles({ articles }: RelatedArticlesProps) {
                 )}
               </CardContent>
             </Card>
-          </Link>
+          </HoverPrefetchLink>
         ))}
       </div>
     </section>

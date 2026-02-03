@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { getTopModelsForWidget } from '@/lib/db/queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trophy } from 'lucide-react';
+import { HoverPrefetchLink } from '@/components/navigation/hover-prefetch-link';
 
 interface RelatedModelsWidgetProps {
   currentModelId: string;
@@ -23,7 +23,7 @@ export async function RelatedModelsWidget({ currentModelId }: RelatedModelsWidge
       <CardContent>
         <div className="space-y-3">
           {topModels.map((model, index) => (
-            <Link
+            <HoverPrefetchLink
               key={model.id}
               href={`/models/${model.id}`}
               className="block p-3 rounded-lg border border-border/50 hover:bg-accent transition-colors"
@@ -48,7 +48,7 @@ export async function RelatedModelsWidget({ currentModelId }: RelatedModelsWidge
                   <p className="text-sm font-bold">{model.totalPoints} pts</p>
                 </div>
               </div>
-            </Link>
+            </HoverPrefetchLink>
           ))}
         </div>
       </CardContent>
