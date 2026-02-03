@@ -255,6 +255,13 @@ export interface LeaderboardFilters {
   season?: number;
   dateFrom?: string;
   dateTo?: string;
+  timePeriod?: 'all' | 'weekly' | 'monthly';
+}
+
+export interface LeaderboardEntryWithTrend extends LeaderboardEntry {
+  trendDirection: 'rising' | 'falling' | 'stable' | 'new';
+  rankChange: number;
+  previousRank: number | null;
 }
 
 export type LeaderboardMetric = 'avgPoints' | 'totalPoints' | 'exactScores' | 'accuracy';
@@ -381,6 +388,196 @@ export async function getLeaderboard(
     correctTendencies: Number(r.correctTendencies),
     accuracy: Number(r.accuracy),
   }));
+}
+
+/**
+ * Get leaderboard with trend indicators showing rank changes
+ * Compares current period rankings to previous period rankings
+ * - weekly: compares this week vs last week (ISO week, Monday start)
+ * - monthly: compares this month vs last month
+ * - all: compares current month vs previous month for trend
+ */
+export async function getLeaderboardWithTrends(
+  limit: number = 30,
+  metric: LeaderboardMetric = 'avgPoints',
+  filters?: LeaderboardFilters
+): Promise<LeaderboardEntryWithTrend[]> {
+  const db = getDb();
+  const timePeriod = filters?.timePeriod || 'all';
+
+  // Build the time filter SQL based on period
+  const getTimeFilter = (period: string, isPrevious: boolean = false) => {
+    const offset = isPrevious ? (period === 'weekly' ? 7 : 1) : 0;
+
+    if (period === 'weekly') {
+      // ISO week (Monday start) using DATE_TRUNC
+      if (isPrevious) {
+        return sql`DATE_TRUNC('week', ${matches.kickoffTime}::timestamp) = DATE_TRUNC('week', CURRENT_DATE - INTERVAL '7 days')`;
+      }
+      return sql`DATE_TRUNC('week', ${matches.kickoffTime}::timestamp) = DATE_TRUNC('week', CURRENT_DATE)`;
+    } else if (period === 'monthly') {
+      if (isPrevious) {
+        return sql`DATE_TRUNC('month', ${matches.kickoffTime}::timestamp) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')`;
+      }
+      return sql`DATE_TRUNC('month', ${matches.kickoffTime}::timestamp) = DATE_TRUNC('month', CURRENT_DATE)`;
+    } else {
+      // 'all' - use monthly comparison for trend calculation
+      if (isPrevious) {
+        return sql`DATE_TRUNC('month', ${matches.kickoffTime}::timestamp) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')`;
+      }
+      return sql`1=1`; // No time filter for current period (all time)
+    }
+  };
+
+  // Build WHERE conditions for filters (excluding time)
+  const buildBaseConditions = () => {
+    const conditions: any[] = [eq(models.active, true)];
+
+    if (filters?.competitionId) {
+      conditions.push(eq(matches.competitionId, filters.competitionId));
+    }
+
+    if (filters?.clubId) {
+      if (filters.isHome === true) {
+        conditions.push(eq(matches.homeTeam, filters.clubId));
+      } else if (filters.isHome === false) {
+        conditions.push(eq(matches.awayTeam, filters.clubId));
+      } else {
+        const clubCondition = or(
+          eq(matches.homeTeam, filters.clubId),
+          eq(matches.awayTeam, filters.clubId)
+        );
+        if (clubCondition) {
+          conditions.push(clubCondition);
+        }
+      }
+    }
+
+    if (filters?.season) {
+      conditions.push(eq(competitions.season, filters.season));
+    }
+
+    return conditions;
+  };
+
+  const orderByColumn = metric === 'avgPoints'
+    ? desc(sql`COALESCE(AVG(${predictions.totalPoints})::numeric, 0)`)
+    : metric === 'totalPoints'
+    ? desc(sql`COALESCE(SUM(${predictions.totalPoints}), 0)`)
+    : metric === 'exactScores'
+    ? desc(sql`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`)
+    : desc(sql`ROUND(100.0 * SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN ${predictions.status} = 'scored' THEN 1 ELSE 0 END), 0)::numeric, 1)`);
+
+  const selectFields = {
+    modelId: models.id,
+    displayName: models.displayName,
+    provider: models.provider,
+    totalPredictions: sql<number>`COUNT(${predictions.id})`,
+    totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
+    avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
+    exactScores: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
+    correctTendencies: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)`,
+    accuracy: sql<number>`COALESCE(ROUND(100.0 * SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN ${predictions.status} = 'scored' THEN 1 ELSE 0 END), 0)::numeric, 1), 0)`,
+  };
+
+  // Get current period rankings
+  const baseConditions = buildBaseConditions();
+  const currentTimeFilter = getTimeFilter(timePeriod, false);
+
+  // Build current period query
+  let currentQuery = db
+    .select(selectFields)
+    .from(models)
+    .innerJoin(predictions, and(
+      eq(predictions.modelId, models.id),
+      eq(predictions.status, 'scored')
+    ))
+    .innerJoin(matches, eq(predictions.matchId, matches.id));
+
+  // Join competitions if season filter is used
+  if (filters?.season) {
+    currentQuery = currentQuery.innerJoin(competitions, eq(matches.competitionId, competitions.id)) as any;
+  }
+
+  const currentConditions = timePeriod !== 'all'
+    ? [...baseConditions, currentTimeFilter]
+    : baseConditions;
+
+  const currentResults = await currentQuery
+    .where(and(...currentConditions))
+    .groupBy(models.id)
+    .orderBy(orderByColumn)
+    .limit(limit);
+
+  // Get previous period rankings for trend calculation
+  const previousTimeFilter = getTimeFilter(timePeriod === 'all' ? 'monthly' : timePeriod, true);
+
+  let previousQuery = db
+    .select({
+      modelId: models.id,
+      avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
+    })
+    .from(models)
+    .innerJoin(predictions, and(
+      eq(predictions.modelId, models.id),
+      eq(predictions.status, 'scored')
+    ))
+    .innerJoin(matches, eq(predictions.matchId, matches.id));
+
+  if (filters?.season) {
+    previousQuery = previousQuery.innerJoin(competitions, eq(matches.competitionId, competitions.id)) as any;
+  }
+
+  const previousConditions = [...baseConditions, previousTimeFilter];
+
+  const previousResults = await previousQuery
+    .where(and(...previousConditions))
+    .groupBy(models.id)
+    .orderBy(desc(sql`COALESCE(AVG(${predictions.totalPoints})::numeric, 0)`));
+
+  // Create previous rank map
+  const previousRankMap = new Map<string, number>();
+  previousResults.forEach((r, index) => {
+    previousRankMap.set(r.modelId, index + 1);
+  });
+
+  // Calculate trends
+  return currentResults.map((r, index) => {
+    const currentRank = index + 1;
+    const previousRank = previousRankMap.get(r.modelId) ?? null;
+
+    let trendDirection: 'rising' | 'falling' | 'stable' | 'new';
+    let rankChange = 0;
+
+    if (previousRank === null) {
+      trendDirection = 'new';
+    } else {
+      rankChange = previousRank - currentRank; // Positive = rising (was lower rank, now higher)
+      if (rankChange > 0) {
+        trendDirection = 'rising';
+      } else if (rankChange < 0) {
+        trendDirection = 'falling';
+      } else {
+        trendDirection = 'stable';
+      }
+    }
+
+    return {
+      rank: currentRank,
+      modelId: r.modelId,
+      displayName: r.displayName,
+      provider: r.provider,
+      totalPredictions: Number(r.totalPredictions),
+      totalPoints: Number(r.totalPoints),
+      avgPoints: Number(r.avgPoints),
+      exactScores: Number(r.exactScores),
+      correctTendencies: Number(r.correctTendencies),
+      accuracy: Number(r.accuracy),
+      trendDirection,
+      rankChange,
+      previousRank,
+    };
+  });
 }
 
 export async function getModelRecentForm(

@@ -26,12 +26,11 @@ const COMPETITION_OPTIONS = [
   { id: 'nations-league', name: 'Nations League' },
 ];
 
-// Time range options matching API TimeRange type
-const TIME_RANGE_OPTIONS = [
+// Time period options for filtering leaderboard data
+const TIME_PERIOD_OPTIONS = [
   { value: 'all', label: 'All Time' },
-  { value: '90d', label: 'Last 90 Days' },
-  { value: '30d', label: 'Last 30 Days' },
-  { value: '7d', label: 'Last 7 Days' },
+  { value: 'monthly', label: 'This Month' },
+  { value: 'weekly', label: 'This Week' },
 ];
 
 // Season options for filtering by football season
@@ -89,7 +88,7 @@ export function LeaderboardFilters({ className, disabledFilters = [] }: Leaderbo
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const currentTimeRange = searchParams.get('timeRange') || 'all';
+  const currentTimePeriod = searchParams.get('timePeriod') || 'all';
   const currentMinPredictions = searchParams.get('minPredictions') || '0';
   const currentCompetition = searchParams.get('competition') || 'all';
   const currentClub = searchParams.get('club') || 'all';
@@ -98,19 +97,24 @@ export function LeaderboardFilters({ className, disabledFilters = [] }: Leaderbo
 
   const updateParams = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    
+
     if (value === 'all' || value === '0') {
       params.delete(key);
     } else {
       params.set(key, value);
     }
-    
+
+    // Reset page when changing time filters to avoid empty results
+    if (key === 'timePeriod') {
+      params.delete('page');
+    }
+
     // Preserve sort params if they exist
     const sortParam = searchParams.get('sort');
     const orderParam = searchParams.get('order');
     if (sortParam) params.set('sort', sortParam);
     if (orderParam) params.set('order', orderParam);
-    
+
     const queryString = params.toString();
     router.push(`/leaderboard${queryString ? `?${queryString}` : ''}`, { scroll: false });
   }, [router, searchParams]);
@@ -185,14 +189,14 @@ export function LeaderboardFilters({ className, disabledFilters = [] }: Leaderbo
       <div className="flex items-center gap-2">
         <Calendar className="h-4 w-4 text-muted-foreground" />
         <Select
-          value={currentTimeRange}
-          onValueChange={(value: string) => updateParams('timeRange', value)}
+          value={currentTimePeriod}
+          onValueChange={(value: string) => updateParams('timePeriod', value)}
         >
           <SelectTrigger className="w-[150px] bg-card/50 border-border/50">
             <SelectValue placeholder="Time period" />
           </SelectTrigger>
           <SelectContent>
-            {TIME_RANGE_OPTIONS.map((option) => (
+            {TIME_PERIOD_OPTIONS.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>
