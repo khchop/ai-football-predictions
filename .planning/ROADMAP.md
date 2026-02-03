@@ -7,7 +7,7 @@
 - v1.2 Technical SEO Fixes - Phases 9-12 (shipped 2026-02-02)
 - v1.3 Match Page Refresh - Phases 13-16 (shipped 2026-02-02)
 - v2.0 UI/UX Overhaul - Phases 17-23 (shipped 2026-02-03)
-- **v2.1 Match Page Simplification** - Phases 24-25 (in progress)
+- **v2.1 Match Page Simplification** - Phases 24-25 (complete)
 
 ## Overview
 
@@ -20,7 +20,7 @@ v2.1 simplifies the match detail page by removing the sticky header, mobile tabs
 - v2.1 phases: 24-25
 
 - [x] **Phase 24: Match Page Cleanup** - Remove sticky header, tabs, and hidden sections
-- [ ] **Phase 25: Content Rendering Fix** - Strip HTML tags from narrative content
+- [x] **Phase 25: Content Rendering Fix** - Strip HTML tags from narrative content
 
 ## Phase Details
 
@@ -50,7 +50,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 25-01-PLAN.md — Strip HTML tags from narrative content using isomorphic-dompurify
+- [x] 25-01-PLAN.md — Strip HTML tags from narrative content using isomorphic-dompurify
 
 ## Progress
 
@@ -60,8 +60,8 @@ Phases execute in numeric order: 24 -> 25
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 24. Match Page Cleanup | v2.1 | 2/2 | Complete | 2026-02-03 |
-| 25. Content Rendering Fix | v2.1 | 0/1 | Not started | - |
+| 25. Content Rendering Fix | v2.1 | 1/1 | Complete | 2026-02-03 |
 
 ---
 *Roadmap created: 2026-02-03*
-*Last updated: 2026-02-03 after Phase 25 planning*
+*Last updated: 2026-02-03 after Phase 25 completion*

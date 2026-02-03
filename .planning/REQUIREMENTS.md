@@ -22,8 +22,8 @@ Requirements for v2.1 Match Page Simplification milestone.
 
 ### Content Quality
 
-- [ ] **QUAL-01**: Strip/render HTML tags properly in narrative content — no raw `<h2>`, `<p>`, etc. visible
-- [ ] **QUAL-02**: Clean narrative output without HTML fragments in database content
+- [x] **QUAL-01**: Strip/render HTML tags properly in narrative content — no raw `<h2>`, `<p>`, etc. visible
+- [x] **QUAL-02**: Clean narrative output without HTML fragments in database content
 
 ## Future Requirements
 
@@ -63,8 +63,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FILT-02 | Phase 24 | Complete |
 | FILT-03 | Phase 24 | Complete |
 | FILT-04 | Phase 24 | Complete |
-| QUAL-01 | Phase 25 | Pending |
-| QUAL-02 | Phase 25 | Pending |
+| QUAL-01 | Phase 25 | Complete |
+| QUAL-02 | Phase 25 | Complete |
 
 **Coverage:**
 - v2.1 requirements: 9 total
@@ -73,4 +73,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-03*
-*Last updated: 2026-02-03 after Phase 24 completion*
+*Last updated: 2026-02-03 after Phase 25 completion*
