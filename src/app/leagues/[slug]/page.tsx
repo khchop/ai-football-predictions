@@ -4,10 +4,11 @@ import type { Metadata } from 'next';
 import { getCompetitionByIdOrAlias, COMPETITIONS } from '@/lib/football/competitions';
 import { LeagueHubContent } from './league-hub-content';
 import { Skeleton } from '@/components/ui/skeleton';
-import { buildCompetitionSchema } from '@/lib/seo/schema/competition';
+import { buildCompetitionSchema, buildEnhancedCompetitionSchema } from '@/lib/seo/schema/competition';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { BASE_URL } from '@/lib/seo/constants';
 import { abbreviateCompetition } from '@/lib/seo/abbreviations';
+import { getCompetitionStats } from '@/lib/db/queries';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -26,22 +27,37 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
+  // Fetch stats for dynamic metadata
+  const stats = await getCompetitionStats(competition.id);
+
   const shortName = abbreviateCompetition(competition.name);
-  const title = `${shortName} Predictions | kroam.xyz`;
-  const description = `AI predictions for ${competition.name} from 35 models. Track accuracy, compare predictions, and see which AI performs best.`;
+  const title = `${shortName} AI Predictions | 35 Models | kroam.xyz`;
+
+  // Dynamic description based on stats
+  const description = stats.finishedMatches > 0
+    ? `AI predictions for ${competition.name} from 35 models. ${stats.finishedMatches} matches analyzed with ${stats.avgGoalsPerMatch} avg goals. Track model accuracy and compare predictions.`
+    : `AI predictions for ${competition.name} from 35 models. Track accuracy, compare predictions, and see which AI performs best.`;
+
   // Use canonical ID in URL, not the slug
   const url = `${BASE_URL}/leagues/${competition.id}`;
 
-  // OG image for competition
+  // OG image for competition with real stats
   const ogImageUrl = new URL(`${BASE_URL}/api/og/league`);
   ogImageUrl.searchParams.set('leagueName', competition.name);
-  ogImageUrl.searchParams.set('matchCount', '0');
-  ogImageUrl.searchParams.set('upcomingCount', '0');
+  ogImageUrl.searchParams.set('matchCount', String(stats.finishedMatches || 0));
+  ogImageUrl.searchParams.set('upcomingCount', String(stats.scheduledMatches || 0));
 
   return {
     title,
     description,
-    keywords: [competition.name, 'football predictions', 'AI predictions'],
+    keywords: [
+      competition.name,
+      `${competition.name} predictions`,
+      `${competition.name} AI`,
+      'football predictions',
+      'AI predictions',
+      'football betting tips',
+    ],
     alternates: {
       canonical: url,
     },
