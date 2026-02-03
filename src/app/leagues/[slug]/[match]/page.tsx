@@ -23,6 +23,8 @@ import { SummaryTab } from '@/components/match/tab-content/summary-tab';
 import { StatsTab } from '@/components/match/tab-content/stats-tab';
 import { PredictionsTab } from '@/components/match/tab-content/predictions-tab';
 import { AnalysisTab } from '@/components/match/tab-content/analysis-tab';
+import { MatchTLDR } from '@/components/match/match-tldr';
+import { MatchFAQ } from '@/components/match/match-faq';
 
 
 interface MatchPageProps {
@@ -180,6 +182,9 @@ export default async function MatchPage({ params }: MatchPageProps) {
         Back to league
       </Link>
 
+      {/* TL;DR Summary - State-aware summary at top (MTCH-02) */}
+      <MatchTLDR match={matchData} competition={competition} />
+
       {/* Hero + Sticky Header - Score appears here only (MTCH-01) */}
       <MatchPageHeader
         match={matchData}
@@ -189,7 +194,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
       />
 
       {/* Mobile: Tabbed Layout */}
-      <div className="md:hidden">
+      <div className="md:hidden space-y-6">
         <MatchTabsMobile>
           {{
             summary: (
@@ -255,6 +260,9 @@ export default async function MatchPage({ params }: MatchPageProps) {
             ),
           }}
         </MatchTabsMobile>
+
+        {/* FAQ Section - Also on mobile (MTCH-06) */}
+        <MatchFAQ match={matchData} competition={competition} />
       </div>
 
       {/* Desktop: Stacked Layout (existing) */}
@@ -380,6 +388,9 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
       {/* Related Matches - SEO Internal Linking */}
       <RelatedMatchesWidget matchId={matchData.id} competitionSlug={competitionSlug} />
+
+      {/* FAQ Section - SEO enhancement with JSON-LD schema (MTCH-06) */}
+      <MatchFAQ match={matchData} competition={competition} />
       </div>
     </div>
   );
