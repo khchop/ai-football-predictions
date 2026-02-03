@@ -43,9 +43,9 @@ Requirements for UI/UX Overhaul. Each maps to roadmap phases.
 
 ### Leaderboard Pages
 
-- [ ] **LEAD-01**: SEO-optimized metadata and FAQ section with schema
-- [ ] **LEAD-02**: Time period filters (weekly/monthly/all-time)
-- [ ] **LEAD-03**: Trend indicators showing rising/falling model performance
+- [x] **LEAD-01**: SEO-optimized metadata and FAQ section with schema
+- [x] **LEAD-02**: Time period filters (weekly/monthly/all-time)
+- [x] **LEAD-03**: Trend indicators showing rising/falling model performance
 
 ### Navigation & Internal Linking
 
@@ -122,9 +122,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LEAG-03 | Phase 20 | Complete |
 | LEAG-04 | Phase 20 | Complete |
 | LEAG-05 | Phase 20 | Complete |
-| LEAD-01 | Phase 21 | Pending |
-| LEAD-02 | Phase 21 | Pending |
-| LEAD-03 | Phase 21 | Pending |
+| LEAD-01 | Phase 21 | Complete |
+| LEAD-02 | Phase 21 | Complete |
+| LEAD-03 | Phase 21 | Complete |
 | NAVL-01 | Phase 22 | Pending |
 | NAVL-02 | Phase 22 | Pending |
 | NAVL-03 | Phase 22 | Pending |
@@ -142,4 +142,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-03 after Phase 20 completion*
+*Last updated: 2026-02-03 after Phase 21 completion*

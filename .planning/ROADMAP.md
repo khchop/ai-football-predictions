@@ -342,8 +342,8 @@ League pages are entry points for organic traffic. SEO optimization and schema m
 **Plans**: 2 plans
 
 Plans:
-- [ ] 21-01-PLAN.md — Time period filtering (weekly/monthly/all) and rank trend calculation
-- [ ] 21-02-PLAN.md — Dynamic FAQ generator and FAQPage schema integration
+- [x] 21-01-PLAN.md — Time period filtering (weekly/monthly/all) and rank trend calculation
+- [x] 21-02-PLAN.md — Dynamic FAQ generator and FAQPage schema integration
 
 **Success Criteria:**
 1. User finds leaderboard pages via search with FAQ rich snippets (SEO and schema optimized)
@@ -417,9 +417,9 @@ v1.0, v1.1, v1.2, and v1.3 complete. v2.0 in progress.
 | **18. Match Page Rebuild** | **v2.0** | **5/5** | **Complete** | 2026-02-03 |
 | **19. Blog Page Rebuild** | **v2.0** | **5/5** | **Complete** | 2026-02-03 |
 | **20. League Page Rebuild** | **v2.0** | **4/4** | **Complete** | 2026-02-03 |
-| **21. Leaderboard Page Rebuild** | **v2.0** | **0/2** | **Planned** | — |
+| **21. Leaderboard Page Rebuild** | **v2.0** | **2/2** | **Complete** | 2026-02-03 |
 | **22. Navigation & Internal Linking** | **v2.0** | **0/?** | **Pending** | — |
 | **23. Performance & Polish** | **v2.0** | **0/?** | **Pending** | — |
 
 ---
-*Last updated: 2026-02-03 (Phase 21 planned - 2 plans in 2 waves)*
+*Last updated: 2026-02-03 (Phase 21 complete - leaderboard time filtering and FAQ schema)*
