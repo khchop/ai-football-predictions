@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-03)
 ## Current Position
 
 Phase: 29 of 30 (FAQ & SEO)
-Plan: 5 of 5 (EventStatus Mapping - Gap Closure)
+Plan: 2 of 5 (FAQ Generation Extension)
 Status: In progress
-Last activity: 2026-02-03 - Completed 29-05-PLAN.md (EventStatus Mapping)
+Last activity: 2026-02-03 - Completed 29-02-PLAN.md (FAQ Generation Extension)
 
-Progress: [##########] 100% (v2.1) | [#######...] 70% (v2.2)
+Progress: [##########] 100% (v2.1) | [#######...] 72% (v2.2)
 
 ## Milestone History
 
@@ -49,6 +49,7 @@ Progress: [##########] 100% (v2.1) | [#######...] 70% (v2.2)
 - PRED-001: Default sort by points (desc) for finished matches, alphabetical for upcoming
 - PRED-002: Color-coded points: 4+ pts green, 3 pts yellow, 2 pts orange, <2 pts gray
 - ES-001: Use default case for both 'scheduled' and unknown statuses (EventScheduled is safe fallback)
+- FAQ-001: Unified upcoming/live question set (5 questions with conditional kickoff answer)
 
 ### Pending Todos
 
@@ -61,9 +62,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 29-05-PLAN.md (EventStatus Mapping)
+Stopped at: Completed 29-02-PLAN.md (FAQ Generation Extension)
 Resume file: None
-Resume with: /gsd:execute-phase 29 (continue remaining plans)
+Resume with: /gsd:execute-phase 29 (continue with Plan 03)
 
 Config:
 {
