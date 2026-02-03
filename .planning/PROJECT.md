@@ -228,13 +228,28 @@ All 110 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, and v2.1 mil
 - Real-time prediction updates during match (post-kickoff is settled)
 - Model fine-tuning or custom training
 
-## Next Milestone
+## Current Milestone: v2.2 Match Page Rewrite
 
-Ready for new milestone planning. Run `/gsd:new-milestone` to start.
+**Goal:** Complete rewrite of match detail pages from scratch with clean layout, zero duplicate content, and SEO/GEO optimization.
+
+**Target features:**
+- Single scrollable page (NO tabs on mobile or desktop)
+- State-aware layouts: Upcoming, Live, Finished
+- Each content element appears exactly once
+- Simple sortable predictions table (all 35 models)
+- Auto-generated FAQ from match data
+- Structured for AI citations and search engines
+
+**Layout structure:**
+| Match State | Sections |
+|-------------|----------|
+| Upcoming | Match Info → Preview Narrative → Predictions Table → FAQ |
+| Live | Match Info + Live Score → Predictions Table → FAQ |
+| Finished | Final Score → Post-Match Narrative → Predictions Table → FAQ |
 
 ## Open Questions
 
 None currently.
 
 ---
-*Last updated: 2026-02-03 after v2.1 milestone shipped*
+*Last updated: 2026-02-03 after v2.2 milestone started*
