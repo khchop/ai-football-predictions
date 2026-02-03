@@ -127,8 +127,18 @@ export default async function LeaguePage({ params }: PageProps) {
     permanentRedirect(`/leagues/${competition.id}`);
   }
 
-  // Build schema.org structured data
-  const competitionSchema = buildCompetitionSchema(competition);
+  // Fetch stats for enhanced schema
+  const stats = await getCompetitionStats(competition.id);
+
+  // Build schema.org structured data with enhanced competition schema
+  const competitionSchema = buildEnhancedCompetitionSchema({
+    competition,
+    stats: {
+      totalMatches: stats.totalMatches,
+      finishedMatches: stats.finishedMatches,
+      avgGoalsPerMatch: stats.avgGoalsPerMatch,
+    },
+  });
   const breadcrumbs = buildBreadcrumbSchema([
     { name: 'Home', url: BASE_URL },
     { name: 'Leagues', url: `${BASE_URL}/leagues` },
