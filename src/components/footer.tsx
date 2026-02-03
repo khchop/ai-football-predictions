@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Calendar, Trophy, Home, FileText, Sparkles, Calculator } from 'lucide-react';
 import { COMPETITIONS } from '@/lib/football/competitions';
+import { CopyrightYear } from './copyright-year';
 
 export function Footer() {
   return (
@@ -84,7 +85,7 @@ export function Footer() {
 
         <div className="mt-8 pt-8 border-t border-border/50 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} AI Football Predictions. All rights reserved.
+            © <CopyrightYear /> AI Football Predictions. All rights reserved.
           </p>
           <p className="text-sm text-muted-foreground">
             Built with Next.js, Tailwind CSS, and shadcn/ui

@@ -5,7 +5,6 @@ import { buildMatchMetadata } from '@/lib/seo/metadata';
 import { buildMatchGraphSchema, sanitizeJsonLd } from '@/lib/seo/schema/graph';
 import { mapMatchToSeoData } from '@/lib/seo/types';
 
-export const revalidate = 60;
 
 interface StatsPageProps {
   params: Promise<{ id: string }>;

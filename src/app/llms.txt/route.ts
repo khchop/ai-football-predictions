@@ -8,8 +8,6 @@
 import { getDb, models } from '@/lib/db';
 import { count } from 'drizzle-orm';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 3600; // Revalidate every hour
 
 export async function GET() {
   try {

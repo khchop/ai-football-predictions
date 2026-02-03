@@ -7,7 +7,7 @@ import { Trophy, Calendar, Bot, Target, ArrowRight, Sparkles, Award } from 'luci
 import Link from 'next/link';
 import { QuickLeagueLinks } from '@/components/quick-league-links';
 
-export const dynamic = 'force-dynamic';
+// PPR enabled - removed force-dynamic, Next.js handles static/dynamic split via Suspense
 
 async function StatsBar() {
   const stats = await getOverallStats();

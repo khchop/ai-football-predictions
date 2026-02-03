@@ -59,7 +59,6 @@ export const metadata: Metadata = {
 };
 
 // ISR: Revalidate every 60 seconds
-export const revalidate = 60;
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

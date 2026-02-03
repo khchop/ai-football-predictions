@@ -1,8 +1,6 @@
 import { BASE_URL } from '@/lib/seo/constants';
 import { getDb, models } from '@/lib/db';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 3600;
 
 export async function GET(): Promise<Response> {
   const db = getDb();

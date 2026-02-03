@@ -7,14 +7,23 @@
  * SECURITY: Requires admin authentication via X-Admin-Password header
  */
 
-import { getAllQueues, QUEUE_NAMES } from '@/lib/queue';
+import { getAllQueues } from '@/lib/queue';
 import { NextRequest, NextResponse } from 'next/server';
 import type { Queue } from 'bullmq';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 import { requireAdminAuth } from '@/lib/utils/admin-auth';
 import { sanitizeError } from '@/lib/utils/error-sanitizer';
 
-async function getQueueStats(queue: Queue) {
+interface QueueStats {
+  waiting: number;
+  active: number;
+  completed: number;
+  failed: number;
+  delayed: number;
+  paused: boolean;
+}
+
+async function getQueueStats(queue: Queue): Promise<QueueStats> {
   const [waiting, active, completed, failed, delayed, paused] = await Promise.all([
     queue.getWaitingCount(),
     queue.getActiveCount(),
@@ -100,13 +109,13 @@ export async function GET(request: NextRequest) {
         queues: queueStats.reduce((acc, { name, stats }) => {
           acc[name] = stats;
           return acc;
-        }, {} as Record<string, any>),
+        }, {} as Record<string, QueueStats>),
         recentJobs: allJobs
           .flatMap(({ queueName, waiting, active, delayed, failed }) => [
-            ...waiting.map(j => ({ ...formatJob(j), queue: queueName, state: 'waiting' })),
-            ...active.map(j => ({ ...formatJob(j), queue: queueName, state: 'active' })),
-            ...delayed.map(j => ({ ...formatJob(j), queue: queueName, state: 'delayed' })),
-            ...failed.map(j => ({ ...formatJob(j), queue: queueName, state: 'failed' })),
+            ...waiting.map(j => ({ ...formatJob(j), queue: queueName, state: 'waiting' as const })),
+            ...active.map(j => ({ ...formatJob(j), queue: queueName, state: 'active' as const })),
+            ...delayed.map(j => ({ ...formatJob(j), queue: queueName, state: 'delayed' as const })),
+            ...failed.map(j => ({ ...formatJob(j), queue: queueName, state: 'failed' as const })),
           ])
           .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
           .slice(0, 30),
@@ -123,7 +132,7 @@ export async function GET(request: NextRequest) {
       },
       { headers: createRateLimitHeaders(rateLimitResult) }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
       {
         status: 'error',
@@ -134,7 +143,20 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function formatJob(job: any) {
+interface QueuedJob {
+  id: string;
+  name: string;
+  data?: { matchId?: string; type?: string };
+  timestamp?: number;
+  processedOn?: number;
+  finishedOn?: number;
+  delay?: number;
+  attemptsMade: number;
+  failedReason?: string;
+  returnvalue?: { failedPredictions?: unknown[] };
+}
+
+function formatJob(job: QueuedJob) {
   // Sanitize job data to prevent sensitive info leakage
   const sanitizedData = job.data ? {
     matchId: job.data.matchId,

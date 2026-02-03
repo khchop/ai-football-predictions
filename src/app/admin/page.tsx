@@ -1,8 +1,7 @@
 import { AdminDashboard } from '@/components/admin/admin-dashboard';
 import { Shield } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// PPR enabled - removed force-dynamic, Next.js handles static/dynamic split via Suspense
 
 export default function AdminPage() {
   return (

@@ -1,7 +1,6 @@
 import { getRedis, isRedisAvailable } from '@/lib/cache/redis';
 import { NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic'; // Always fresh stats
 
 /**
  * Cache Statistics API

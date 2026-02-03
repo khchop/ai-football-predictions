@@ -2,8 +2,6 @@ import { BASE_URL } from '@/lib/seo/constants';
 import { getDb, blogPosts } from '@/lib/db';
 import { eq, isNotNull, and, desc } from 'drizzle-orm';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 3600;
 
 export async function GET(): Promise<Response> {
   const db = getDb();

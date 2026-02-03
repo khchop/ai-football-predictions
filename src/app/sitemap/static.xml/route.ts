@@ -1,7 +1,5 @@
 import { BASE_URL } from '@/lib/seo/constants';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 3600;
 
 interface SitemapEntry {
   url: string;

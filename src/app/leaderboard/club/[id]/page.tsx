@@ -13,7 +13,6 @@ import { eq, or } from 'drizzle-orm';
 import { getLeaderboard, type LeaderboardFilters as LeaderboardQueryFilters } from '@/lib/db/queries/stats';
 
 // ISR: Revalidate every 60 seconds
-export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ id: string }>;

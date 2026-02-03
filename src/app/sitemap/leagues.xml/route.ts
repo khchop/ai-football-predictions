@@ -1,8 +1,6 @@
 import { BASE_URL } from '@/lib/seo/constants';
 import { COMPETITIONS } from '@/lib/football/competitions';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 3600;
 
 export async function GET(): Promise<Response> {
   const today = new Date().toISOString().split('T')[0];

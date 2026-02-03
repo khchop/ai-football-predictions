@@ -28,7 +28,7 @@ import { RelatedModelsWidget } from '@/components/model/related-models-widget';
 const getModelStatsData = cache((modelId: string) => getModelPredictionStats(modelId));
 const getModelRankData = cache((modelId: string) => getModelRank(modelId));
 
-export const dynamic = 'force-dynamic';
+// PPR enabled - removed force-dynamic, Next.js handles static/dynamic split via Suspense
 
 interface ModelPageProps {
   params: Promise<{ id: string }>;

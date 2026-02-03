@@ -8,7 +8,7 @@ import { Calendar, Clock, CheckCircle, List, Radio, Filter } from 'lucide-react'
 import { LiveTabRefresher } from './live-refresher';
 import { CompetitionFilter } from '@/components/competition-filter';
 
-export const dynamic = 'force-dynamic';
+// PPR enabled - removed force-dynamic, Next.js handles static/dynamic split via Suspense
 
 export const metadata: Metadata = {
   title: 'Upcoming Football Matches | AI Predictions | kroam.xyz',
@@ -294,7 +294,9 @@ export default function MatchesPage() {
           </div>
         </div>
       </div>
-      <CompetitionFilter />
+      <Suspense fallback={<div className="h-10" />}>
+        <CompetitionFilter />
+      </Suspense>
 
       {/* Tabs */}
       <Tabs defaultValue="live" className="space-y-6">

@@ -17,11 +17,29 @@ import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRE
 // Lazy initialization to avoid build-time errors
 let serverAdapter: ExpressAdapter | null = null;
 
-function getServerAdapter() {
+interface MockRequest {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  body?: unknown;
+}
+
+interface MockResponse {
+  statusCode: number;
+  headers: Record<string, string>;
+  body?: string;
+  setHeader(key: string, value: string): void;
+  status(code: number): MockResponse;
+  send(data: string): void;
+  json(data: unknown): void;
+  end(data?: string): void;
+}
+
+async function getServerAdapter() {
   if (serverAdapter) return serverAdapter;
   
   // Import queue at runtime (not during build)
-  const { matchQueue } = require('@/lib/queue');
+  const { matchQueue } = await import('@/lib/queue');
   
   serverAdapter = new ExpressAdapter();
   serverAdapter.setBasePath('/api/admin/queues');
@@ -79,14 +97,14 @@ async function handleRequest(req: NextRequest, params: { path?: string[] }) {
   const fullPath = `/api/admin/queues${path ? '/' + path : ''}${url.search}`;
 
   // Create a mock Express request/response
-  const mockReq: any = {
+  const mockReq: MockRequest = {
     url: fullPath,
     method: req.method,
     headers: Object.fromEntries(req.headers.entries()),
     body: req.method !== 'GET' && req.method !== 'HEAD' ? await req.json().catch(() => ({})) : undefined,
   };
 
-  const mockRes: any = {
+  const mockRes: MockResponse = {
     statusCode: 200,
     headers: {} as Record<string, string>,
     setHeader(key: string, value: string) {
@@ -96,25 +114,25 @@ async function handleRequest(req: NextRequest, params: { path?: string[] }) {
       this.statusCode = code;
       return this;
     },
-    send(data: any) {
+    send(data: string) {
       this.body = data;
     },
-    json(data: any) {
+    json(data: unknown) {
       this.body = JSON.stringify(data);
       this.setHeader('Content-Type', 'application/json');
     },
-    end(data?: any) {
+    end(data?: string) {
       if (data) this.body = data;
     },
   };
 
   // Get the Express handler
-  const adapter = getServerAdapter();
+  const adapter = await getServerAdapter();
   const handler = adapter.getRouter();
   
   return new Promise<NextResponse>((resolve) => {
     // Process the request through Bull Board's Express adapter
-    (handler as any)(mockReq, mockRes, () => {
+    (handler as (req: MockRequest, res: MockResponse, next: () => void) => void)(mockReq, mockRes, () => {
       // If no route matched, return 404
       resolve(new NextResponse('Not Found', { status: 404 }));
     });

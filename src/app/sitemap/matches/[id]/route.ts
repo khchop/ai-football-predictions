@@ -3,8 +3,6 @@ import { getDb, matches, competitions } from '@/lib/db';
 import { eq, isNotNull, desc } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 3600;
 
 const CHUNK_SIZE = 45000;
 

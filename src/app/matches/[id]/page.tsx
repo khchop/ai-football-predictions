@@ -15,8 +15,7 @@ import { MatchOddsPanel } from '@/components/match/match-odds';
 import { PredictionsSection } from '@/components/match/predictions-section';
 import { PredictionsSkeleton } from '@/components/match/predictions-skeleton';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 60;
+// PPR enabled - removed force-dynamic and revalidate, Next.js handles static/dynamic split via Suspense
 
 interface MatchPageProps {
   params: Promise<{ id: string }>;

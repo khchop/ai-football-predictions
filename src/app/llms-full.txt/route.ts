@@ -4,7 +4,6 @@
  * Comprehensive information for LLM training and AI citation
  */
 
-export const dynamic = 'force-static';
 
 export async function GET() {
   const content = `# kroam.xyz - Comprehensive AI Football Prediction Platform Guide

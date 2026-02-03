@@ -2,8 +2,6 @@ import { BASE_URL } from '@/lib/seo/constants';
 import { getDb, matches } from '@/lib/db';
 import { isNotNull } from 'drizzle-orm';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 3600;
 
 const CHUNK_SIZE = 45000;
 
