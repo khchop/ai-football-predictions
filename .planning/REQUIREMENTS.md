@@ -12,7 +12,7 @@ Requirements for match page rewrite. Each maps to roadmap phases.
 - [ ] **LAYT-01**: Match page renders as single scrollable page (no tabs on any device)
 - [ ] **LAYT-02**: Score displays exactly once in a single hero section
 - [ ] **LAYT-03**: Layout adapts to match state (Upcoming/Live/Finished)
-- [ ] **LAYT-04**: Sections follow consistent order: Match Info → Narrative → Predictions → FAQ
+- [ ] **LAYT-04**: Sections follow consistent order: Match Info -> Narrative -> Predictions -> FAQ
 - [ ] **LAYT-05**: Mobile layout identical to desktop (no hidden/collapsed content)
 
 ### Content
@@ -60,33 +60,33 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LAYT-01 | TBD | Pending |
-| LAYT-02 | TBD | Pending |
-| LAYT-03 | TBD | Pending |
-| LAYT-04 | TBD | Pending |
-| LAYT-05 | TBD | Pending |
-| CONT-01 | TBD | Pending |
-| CONT-02 | TBD | Pending |
-| CONT-03 | TBD | Pending |
-| CONT-04 | TBD | Pending |
-| CONT-05 | TBD | Pending |
-| CONT-06 | TBD | Pending |
-| CONT-07 | TBD | Pending |
-| SGEO-01 | TBD | Pending |
-| SGEO-02 | TBD | Pending |
-| SGEO-03 | TBD | Pending |
-| SGEO-04 | TBD | Pending |
-| SGEO-05 | TBD | Pending |
-| ARCH-01 | TBD | Pending |
-| ARCH-02 | TBD | Pending |
-| ARCH-03 | TBD | Pending |
-| ARCH-04 | TBD | Pending |
+| ARCH-01 | Phase 26 | Pending |
+| ARCH-02 | Phase 26 | Pending |
+| ARCH-03 | Phase 26 | Pending |
+| LAYT-02 | Phase 27 | Pending |
+| CONT-01 | Phase 27 | Pending |
+| CONT-07 | Phase 27 | Pending |
+| CONT-02 | Phase 28 | Pending |
+| CONT-03 | Phase 28 | Pending |
+| CONT-04 | Phase 28 | Pending |
+| CONT-05 | Phase 28 | Pending |
+| CONT-06 | Phase 29 | Pending |
+| SGEO-01 | Phase 29 | Pending |
+| SGEO-02 | Phase 29 | Pending |
+| SGEO-03 | Phase 29 | Pending |
+| SGEO-04 | Phase 29 | Pending |
+| SGEO-05 | Phase 29 | Pending |
+| LAYT-01 | Phase 30 | Pending |
+| LAYT-03 | Phase 30 | Pending |
+| LAYT-04 | Phase 30 | Pending |
+| LAYT-05 | Phase 30 | Pending |
+| ARCH-04 | Phase 30 | Pending |
 
 **Coverage:**
 - v2.2 requirements: 21 total
-- Mapped to phases: 0
-- Unmapped: 21 (awaiting roadmap)
+- Mapped to phases: 21
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-03*
-*Last updated: 2026-02-03 after initial definition*
+*Last updated: 2026-02-03 after roadmap creation*
