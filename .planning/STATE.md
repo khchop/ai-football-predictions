@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-03)
 ## Current Position
 
 Phase: 24 of 25 (Match Page Cleanup)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-03 - Completed 24-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-03 - Completed 24-02-PLAN.md
 
-Progress: [█░░░░░░░░░] 10%
+Progress: [██████████] 100% (Phase 24)
 
 ## Milestone History
 
@@ -33,10 +33,10 @@ Progress: [█░░░░░░░░░] 10%
 **Phases:** 24-25 (2 phases)
 **Requirements:** 9 total (7 in Phase 24, 2 in Phase 25)
 
-| Phase | Goal | Requirements |
-|-------|------|--------------|
-| 24 - Match Page Cleanup | Remove sticky header, tabs, hidden sections | 7 |
-| 25 - Content Rendering Fix | Strip HTML tags from narratives | 2 |
+| Phase | Goal | Requirements | Status |
+|-------|------|--------------|--------|
+| 24 - Match Page Cleanup | Remove sticky header, tabs, hidden sections | 7 | Complete |
+| 25 - Content Rendering Fix | Strip HTML tags from narratives | 2 | Pending |
 
 ## Accumulated Context
 
@@ -46,6 +46,9 @@ Progress: [█░░░░░░░░░] 10%
 |----------|--------|-------|-----------|
 | Layout approach | Single-column for all devices | 24-01 | Eliminates UX divergence between mobile/desktop |
 | MatchPageHeader | Keep as pass-through | 24-01 | Maintains API surface without sticky logic |
+| H2H removal | Complete removal | 24-02 | Not valuable to users, clutters interface |
+| Standings removal | Complete removal | 24-02 | Redundant with league page, reduces API calls |
+| Empty state handling | Return null | 24-02 | Cleaner UX than showing "no data" placeholders |
 
 ### Pending Todos
 
@@ -58,5 +61,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 24-01-PLAN.md
-Resume with: /gsd:execute-phase 24-02
+Stopped at: Completed 24-02-PLAN.md (Phase 24 complete)
+Resume with: /gsd:execute-phase 25-01
