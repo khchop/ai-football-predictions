@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 21 - Leaderboard Page Rebuild
-Plan: 1 of 3 complete
+Plan: 2 of 3 complete
 Status: In progress
-Last activity: 2026-02-03 - Completed 21-01-PLAN.md (time period filters + trends)
+Last activity: 2026-02-03 - Completed 21-02-PLAN.md (SEO Enhancement)
 
-Progress: [███████████░░░░░░░░░░░░░] 38% (v2.0: 19/? plans, 29/34 requirements)
+Progress: [████████████░░░░░░░░░░░░] 40% (v2.0: 20/? plans, 30/34 requirements)
 
 ## Milestone History
 
@@ -35,7 +35,7 @@ Progress: [███████████░░░░░░░░░░░░
 | 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | Complete |
 | 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Complete |
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Complete |
-| 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | In Progress (1/3) |
+| 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | In Progress (2/3) |
 | 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | Pending |
 | 23. Performance & Polish | PPR validation, client audit, transitions | PERF-01 to PERF-04 (4) | Pending |
 
@@ -49,7 +49,7 @@ Phase 17 (Foundation) [COMPLETE]
   |                                    |
   +---> Phase 20 (League) [COMPLETE]--+
   |                                    |
-  +---> Phase 21 (Leader) [1/3]-------+--> Phase 23 (Performance)
+  +---> Phase 21 (Leader) [2/3]-------+--> Phase 23 (Performance)
 ```
 
 ## Accumulated Context
@@ -103,6 +103,9 @@ Full decision history available in phase SUMMARY.md files.
 - ISO week (Monday start) via DATE_TRUNC for weekly comparisons (21-01)
 - Monthly comparison for 'all' time period trend calculation (21-01)
 - Trend column placed after Accuracy, before Streak in leaderboard table (21-01)
+- FAQPage schema rendered inside LeaderboardContent (has access to dynamic data) (21-02)
+- BreadcrumbList schema kept in page wrapper (outside Suspense) (21-02)
+- Native details/summary for accordion (no JavaScript, accessible by default) (21-02)
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -149,5 +152,5 @@ None blocking current work.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 21-01-PLAN.md (time period filters + trends)
-Resume with: Execute 21-02-PLAN.md (SEO Enhancement)
+Stopped at: Completed 21-02-PLAN.md (SEO Enhancement)
+Resume with: Execute 21-03-PLAN.md (Stats Enhancement)
