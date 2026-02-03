@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 23 - Performance & Polish (In Progress)
-Plan: 2 of 4 complete
-Status: Client component audit complete
-Last activity: 2026-02-03 - Completed 23-02-PLAN.md
+Plan: 2 of 4 complete (01 and 02)
+Status: Blog page PPR + client audit complete
+Last activity: 2026-02-03 - Completed 23-01-PLAN.md (blog PPR)
 
 Progress: [██████████████░░░░░░░░░░] 51% (v2.0: 27/? plans, 34/34 requirements)
 
@@ -120,6 +120,8 @@ Full decision history available in phase SUMMARY.md files.
 - ActiveModels fetch in parallel Promise.all on match page (22-04)
 - Logo Link kept as regular prefetch, nav items use HoverPrefetchLink (22-05)
 - HoverPrefetchLink for components with 3+ links to reduce prefetch requests (22-05)
+- PPR pattern: searchParams await inside Suspense-wrapped child component (23-01)
+- Competition filter pills moved inside BlogPostsList (depend on searchParams value) (23-01)
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -154,17 +156,17 @@ None.
 
 ### Blockers/Concerns
 
-**PPR Activation Deferred to Phase 23:**
+**PPR Progress (Phase 23):**
 - Shimmer infrastructure complete (CSS, enhanced skeletons)
 - Route segment configs removed (18 files cleaned)
-- Remaining work: Suspense boundaries for searchParams-dependent pages (blog, leaderboard)
-- Impact: PPR benefits delayed, but shimmer skeletons work with ISR
-- Estimated Phase 23 effort: 2-3 hours
+- Blog page: PPR-compatible with Suspense boundary (23-01 complete)
+- Leaderboard page: Already has Suspense pattern (no changes needed)
+- Remaining: 23-03 (view transitions), 23-04 (final polish)
 
 None blocking current work.
 
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 23-02-PLAN.md (client component audit)
-Resume with: Continue Phase 23 (23-03-PLAN.md)
+Stopped at: Completed 23-01-PLAN.md (blog page PPR compatibility)
+Resume with: Continue Phase 23 (23-03-PLAN.md next)
