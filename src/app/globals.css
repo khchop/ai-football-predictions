@@ -424,6 +424,11 @@
   }
 }
 
+/* Safe area for mobile bottom navigation */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
