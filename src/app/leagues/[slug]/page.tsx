@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { getCompetitionByIdOrAlias, COMPETITIONS } from '@/lib/football/competitions';
 import { LeagueHubContent } from './league-hub-content';
 import { Skeleton } from '@/components/ui/skeleton';
-import { buildCompetitionSchema, buildEnhancedCompetitionSchema } from '@/lib/seo/schema/competition';
+import { buildEnhancedCompetitionSchema } from '@/lib/seo/schema/competition';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { BASE_URL } from '@/lib/seo/constants';
 import { abbreviateCompetition } from '@/lib/seo/abbreviations';
