@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 22 - Navigation & Internal Linking
-Plan: 1 of 5 complete (In progress)
-Status: Plan 22-01 complete - Core navigation components created
-Last activity: 2026-02-03 - Completed 22-01-PLAN.md
+Plan: 2 of 5 complete (In progress)
+Status: Plan 22-02 complete - Breadcrumbs UI components created
+Last activity: 2026-02-03 - Completed 22-02-PLAN.md
 
-Progress: [████████████░░░░░░░░░░░░] 43% (v2.0: 21/? plans, 31/34 requirements)
+Progress: [████████████░░░░░░░░░░░░] 44% (v2.0: 22/? plans, 31/34 requirements)
 
 ## Milestone History
 
@@ -36,7 +36,7 @@ Progress: [████████████░░░░░░░░░░░
 | 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Complete |
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Complete |
 | 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Complete |
-| 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | In progress (1/5) |
+| 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | In progress (2/5) |
 | 23. Performance & Polish | PPR validation, client audit, transitions | PERF-01 to PERF-04 (4) | Pending |
 
 **Phase Dependencies:**
@@ -108,6 +108,9 @@ Full decision history available in phase SUMMARY.md files.
 - Native details/summary for accordion (no JavaScript, accessible by default) (21-02)
 - Intent-based prefetching via HoverPrefetchLink (hover/touch triggers, not viewport) (22-01)
 - 4 bottom nav items: Home, Matches, Leaderboard, Blog (matches header nav) (22-01)
+- ChevronRight separator with aria-hidden for breadcrumbs (22-02)
+- Last breadcrumb as span with aria-current="page" (22-02)
+- Empty href string for current page in breadcrumb builders (22-02)
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -154,5 +157,5 @@ None blocking current work.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed Plan 22-01 (Core Navigation Components)
-Resume with: Plan 22-02 (Visual Breadcrumbs)
+Stopped at: Completed 22-02-PLAN.md (Breadcrumbs UI)
+Resume with: Continue Phase 22 plan 03 (Page Integration)
