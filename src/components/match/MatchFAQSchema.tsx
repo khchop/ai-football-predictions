@@ -1,44 +1,81 @@
-import { FaqSchema } from '@/components/FaqSchema';
 import type { Match, Competition } from '@/lib/db/schema';
-import type { FAQItem } from '@/lib/seo/schemas';
 
 interface MatchFAQSchemaProps {
   match: Match;
   competition: Competition;
 }
 
-/**
- * Match-specific FAQ schema component
- * Generates dynamic FAQs based on match data
- * Injects into page for rich snippet visibility in search results
- */
-export function MatchFAQSchema({ 
-  match, 
-  competition
-}: MatchFAQSchemaProps) {
-  // Generate dynamic FAQs based on match data
-  const faqs: FAQItem[] = [
-    {
-      question: `What is the predicted score for ${match.homeTeam} vs ${match.awayTeam}?`,
-      answer: `AI models predict an average score based on team form, historical matchups, and player performance. The predictions vary by model, as each uses different algorithms and training data. View the full prediction table above for individual model forecasts.`,
-    },
-    {
-      question: 'How are Kicktipp points calculated?',
-      answer: 'In the Kicktipp scoring system, models earn points for predicting the correct match result (win/draw/loss) and bonus points for predicting the exact final score. Tendency points are awarded for getting the outcome right, and exact score bonuses for predicting the precise scoreline.',
-    },
-    {
-      question: 'Why do different AI models predict different scores?',
-      answer: `Different AI models have been trained on different datasets and use different methodologies. Some focus on recent form, others on historical head-to-head records, player statistics, or league-wide patterns. This diversity is valuable because it provides multiple perspectives on the likely outcome.`,
-    },
-    {
-      question: `Can I trust these AI predictions for ${competition.name}?`,
-      answer: `These AI model predictions should be used as one information source among many. They are based on historical data and statistical patterns, but football involves inherent unpredictability. Always consider team news, injuries, and other contextual factors before making decisions based on any predictions.`,
-    },
-    {
-      question: `What competition is ${match.homeTeam} vs ${match.awayTeam}?`,
-      answer: `This match is part of the ${competition.name}${match.round ? ` (${match.round})` : ''}. The kroam.xyz platform tracks AI model predictions across multiple football competitions to help you understand how different algorithms forecast match outcomes.`,
-    },
-  ];
-
-  return <FaqSchema faqs={faqs} />;
+export interface FAQItem {
+  question: string;
+  answer: string;
 }
+
+function generateMatchFAQs(match: Match, competition: Competition): FAQItem[] {
+  const isUpcoming = match.status === 'scheduled';
+  const isLive = match.status === 'live';
+  const isFinished = match.status === 'finished';
+  const kickoffDate = new Date(match.kickoffTime);
+
+  const faqs: FAQItem[] = [];
+
+  // TL;DR question - always first (most important for GEO)
+  if (isFinished && match.homeScore !== null && match.awayScore !== null) {
+    faqs.push({
+      question: `What was the final score of ${match.homeTeam} vs ${match.awayTeam}?`,
+      answer: `${match.homeTeam} ${match.homeScore} - ${match.awayScore} ${match.awayTeam}. The match was played in the ${competition.name} on ${kickoffDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.`,
+    });
+  } else if (isUpcoming || isLive) {
+    faqs.push({
+      question: `Who is predicted to win ${match.homeTeam} vs ${match.awayTeam}?`,
+      answer: `AI models predict the outcome based on team form, historical matchups, and statistical analysis. View the predictions table on this page for individual model forecasts. Match kicks off ${kickoffDate.toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' })}.`,
+    });
+  }
+
+  // When/where questions
+  faqs.push({
+    question: `When is ${match.homeTeam} vs ${match.awayTeam}?`,
+    answer: `The match ${isFinished ? 'was played' : 'kicks off'} on ${kickoffDate.toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}${match.venue ? ` at ${match.venue}` : ''}.`,
+  });
+
+  faqs.push({
+    question: `What competition is ${match.homeTeam} vs ${match.awayTeam} in?`,
+    answer: `This match is part of the ${competition.name}${match.round ? ` (${match.round})` : ''}. Follow AI model predictions for this competition on kroam.xyz.`,
+  });
+
+  // Prediction methodology question
+  faqs.push({
+    question: 'How accurate are AI predictions for football matches?',
+    answer: 'Our AI models use historical data, team form, head-to-head records, and statistical patterns to forecast match outcomes. Accuracy varies by model and competition. Predictions should be considered alongside other factors like team news, injuries, and match context.',
+  });
+
+  return faqs;
+}
+
+export function MatchFAQSchema({ match, competition }: MatchFAQSchemaProps) {
+  const faqs = generateMatchFAQs(match, competition);
+
+  const schema = {
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  };
+
+  // Note: @context added at page level with @graph, not here
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(schema),
+      }}
+    />
+  );
+}
+
+// Export for use in visual component
+export { generateMatchFAQs };
