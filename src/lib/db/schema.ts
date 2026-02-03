@@ -488,6 +488,10 @@ export const matchContent = pgTable('match_content', {
   postMatchContent: text('post_match_content'),
   postMatchGeneratedAt: text('post_match_generated_at'),
 
+  // FAQ section (generated alongside pre-match or post-match content)
+  faqContent: text('faq_content'), // JSON array of {question, answer} pairs
+  faqGeneratedAt: text('faq_generated_at'),
+
   // AI generation metadata
   generatedBy: text('generated_by').default('meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8'),
   totalTokens: integer('total_tokens').default(0),

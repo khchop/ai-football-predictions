@@ -1,7 +1,7 @@
 'use client';
 
 import type { Match, Competition } from '@/lib/db/schema';
-import { generateMatchFAQs } from './MatchFAQSchema';
+import { generateMatchFAQs, type FAQItem } from './MatchFAQSchema';
 import {
   Accordion,
   AccordionContent,
@@ -11,14 +11,18 @@ import {
 
 // Re-export for page-level schema use
 export { generateMatchFAQs } from './MatchFAQSchema';
+export type { FAQItem } from './MatchFAQSchema';
 
 interface MatchFAQProps {
   match: Match;
   competition: Competition;
+  /** AI-generated FAQs (optional). Falls back to template-based if not provided. */
+  aiFaqs?: FAQItem[] | null;
 }
 
-export function MatchFAQ({ match, competition }: MatchFAQProps) {
-  const faqs = generateMatchFAQs(match, competition);
+export function MatchFAQ({ match, competition, aiFaqs }: MatchFAQProps) {
+  // Use AI-generated FAQs if available, otherwise fall back to template-based
+  const faqs = aiFaqs && aiFaqs.length > 0 ? aiFaqs : generateMatchFAQs(match, competition);
 
   return (
     <section className="mt-16 pt-8 border-t border-border/50">

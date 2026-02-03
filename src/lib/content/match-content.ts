@@ -13,9 +13,15 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getDb, matchContent, matches, matchAnalysis, bets, models, predictions } from '@/lib/db';
 import { loggers } from '@/lib/logger/modules';
-import { generateTextWithTogetherAI } from './together-client';
+import { generateTextWithTogetherAI, generateWithTogetherAI } from './together-client';
 import { CONTENT_CONFIG, estimateContentCost } from './config';
 import { eq, desc } from 'drizzle-orm';
+import { format } from 'date-fns';
+
+export interface FAQItem {
+  question: string;
+  answer: string;
+}
 
 const log = loggers.content;
 
@@ -478,4 +484,252 @@ Write flowing prose without headers.`;
      // Non-blocking: don't throw, return false
      return false;
    }
+}
+
+/**
+ * Generate FAQ content (5 Q&A pairs)
+ *
+ * Triggered: After pre-match content (upcoming) or post-match content (finished)
+ * Content: Match-specific FAQ with AI-generated answers
+ *
+ * Returns: true if content generated and saved, false if failed (non-blocking)
+ */
+export async function generateFAQContent(matchId: string): Promise<boolean> {
+  console.log('[generateFAQContent] Starting for match:', matchId);
+  try {
+    const db = getDb();
+
+    // Get match, competition, and analysis data
+    const matchData = await db
+      .select({
+        match: matches,
+        analysis: matchAnalysis,
+      })
+      .from(matches)
+      .leftJoin(matchAnalysis, eq(matches.id, matchAnalysis.matchId))
+      .where(eq(matches.id, matchId))
+      .limit(1);
+
+    if (matchData.length === 0) {
+      log.warn({ matchId }, 'Match not found for FAQ content generation');
+      return false;
+    }
+
+    const { match, analysis } = matchData[0];
+    const isFinished = match.status === 'finished';
+    const kickoffDate = new Date(match.kickoffTime);
+    const formattedDate = format(kickoffDate, 'MMMM d, yyyy');
+    const formattedTime = format(kickoffDate, 'h:mm a');
+
+    // Get predictions for context
+    const modelPredictions = await db
+      .select({
+        modelName: models.displayName,
+        predictedHome: predictions.predictedHome,
+        predictedAway: predictions.predictedAway,
+        predictedResult: predictions.predictedResult,
+        totalPoints: predictions.totalPoints,
+      })
+      .from(predictions)
+      .innerJoin(models, eq(predictions.modelId, models.id))
+      .where(eq(predictions.matchId, matchId))
+      .orderBy(desc(predictions.totalPoints));
+
+    // Build context for FAQ generation
+    let matchContext = '';
+
+    if (isFinished && match.homeScore !== null && match.awayScore !== null) {
+      // Finished match context
+      const correctPredictions = modelPredictions.filter(p => p.totalPoints !== null && p.totalPoints > 0);
+      const exactScoreHits = modelPredictions.filter(p =>
+        p.predictedHome === match.homeScore && p.predictedAway === match.awayScore
+      );
+
+      matchContext = `
+MATCH RESULT:
+${match.homeTeam} ${match.homeScore} - ${match.awayScore} ${match.awayTeam}
+Competition: Match page
+Date: ${formattedDate}
+Venue: ${match.venue || 'Not specified'}
+
+AI MODEL PERFORMANCE:
+- Total predictions: ${modelPredictions.length}
+- Correct tendency: ${correctPredictions.length} models
+- Exact score hits: ${exactScoreHits.length > 0 ? exactScoreHits.map(p => p.modelName).join(', ') : 'None'}
+
+Top performing models:
+${modelPredictions.slice(0, 5).map(p => `- ${p.modelName}: predicted ${p.predictedHome}-${p.predictedAway}, scored ${p.totalPoints ?? 0} points`).join('\n')}
+
+Generate 5 FAQs for a FINISHED match covering:
+1. What was the final score? (include actual score and date)
+2. Which AI models correctly predicted this match? (name specific top performers)
+3. Who scored in the match? (mention we track events)
+4. What competition was this? (mention it's part of our coverage)
+5. How accurate are AI predictions for football? (mention our 35+ model coverage)`;
+    } else {
+      // Upcoming/Live match context
+      const homeFavor = modelPredictions.filter(p => p.predictedResult === 'H').length;
+      const drawFavor = modelPredictions.filter(p => p.predictedResult === 'D').length;
+      const awayFavor = modelPredictions.filter(p => p.predictedResult === 'A').length;
+
+      const scoreFrequency = modelPredictions.reduce((acc, p) => {
+        const score = `${p.predictedHome}-${p.predictedAway}`;
+        acc[score] = (acc[score] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const topScores = Object.entries(scoreFrequency)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 3);
+
+      matchContext = `
+UPCOMING MATCH:
+${match.homeTeam} vs ${match.awayTeam}
+Kickoff: ${formattedDate} at ${formattedTime}
+Venue: ${match.venue || 'TBD'}
+
+BETTING ODDS:
+- Home win: ${analysis?.oddsHome || 'N/A'}
+- Draw: ${analysis?.oddsDraw || 'N/A'}
+- Away win: ${analysis?.oddsAway || 'N/A'}
+
+AI PREDICTIONS (${modelPredictions.length} models):
+- Home win favored by: ${homeFavor} models
+- Draw favored by: ${drawFavor} models
+- Away win favored by: ${awayFavor} models
+- Most predicted scores: ${topScores.map(([score, count]) => `${score} (${count} models)`).join(', ')}
+
+Sample predictions:
+${modelPredictions.slice(0, 5).map(p => `- ${p.modelName}: ${p.predictedHome}-${p.predictedAway}`).join('\n')}
+
+Generate 5 FAQs for an UPCOMING match covering:
+1. When is the match? (include date, time, venue)
+2. What do AI models predict? (summarize consensus and name top models)
+3. How can I watch? (generic advice about finding broadcasters)
+4. Where is it being played? (venue info)
+5. How accurate are AI predictions? (mention our 35+ model coverage)`;
+    }
+
+    const prompt = `Generate exactly 5 FAQ question-answer pairs for this football match.
+
+${matchContext}
+
+REQUIREMENTS:
+- Each answer should be 1-3 sentences, factual and direct
+- Mention specific AI model names when relevant (GPT-4, Claude, Gemini, Llama, DeepSeek, etc.)
+- Answers should be informative and SEO-friendly
+- Do NOT use generic placeholders - use the actual data provided
+
+Return a JSON array with exactly 5 objects, each having "question" and "answer" fields.
+Example format:
+[
+  {"question": "What was the final score of Team A vs Team B?", "answer": "Team A won 2-1 against Team B..."},
+  ...
+]`;
+
+    const systemPrompt = 'You are an SEO expert generating FAQ content for AI-powered football prediction pages. Generate factual, helpful Q&A pairs that would appear in search results. Return valid JSON only.';
+
+    console.log('[generateFAQContent] Calling Together AI...');
+
+    // Generate structured FAQ content
+    const result = await generateWithTogetherAI<FAQItem[]>(
+      systemPrompt,
+      prompt,
+      0.7,
+      2000
+    );
+
+    console.log('[generateFAQContent] Together AI response received, validating...');
+
+    // Validate we got an array of FAQs
+    if (!Array.isArray(result.content) || result.content.length === 0) {
+      log.warn({ matchId, content: result.content }, 'FAQ generation returned invalid format');
+      console.log('[generateFAQContent] Invalid format:', typeof result.content, result.content);
+      return false;
+    }
+
+    // Ensure exactly 5 FAQs
+    const faqs = result.content.slice(0, 5);
+
+    // Save to database
+    const db2 = getDb();
+    const nowISOString = new Date().toISOString();
+    const contentId = uuidv4();
+
+    await db2
+      .insert(matchContent)
+      .values({
+        id: contentId,
+        matchId,
+        faqContent: JSON.stringify(faqs),
+        faqGeneratedAt: nowISOString,
+        generatedBy: CONTENT_CONFIG.model,
+        totalTokens: result.usage.totalTokens,
+        totalCost: estimateContentCost(
+          result.usage.promptTokens,
+          result.usage.completionTokens
+        ).toFixed(4),
+        createdAt: nowISOString,
+        updatedAt: nowISOString,
+      })
+      .onConflictDoUpdate({
+        target: matchContent.matchId,
+        set: {
+          faqContent: JSON.stringify(faqs),
+          faqGeneratedAt: nowISOString,
+          totalTokens: result.usage.totalTokens,
+          totalCost: estimateContentCost(
+            result.usage.promptTokens,
+            result.usage.completionTokens
+          ).toFixed(4),
+          updatedAt: nowISOString,
+        },
+      });
+
+    log.info(
+      {
+        matchId,
+        faqCount: faqs.length,
+        tokens: result.usage.totalTokens,
+        cost: result.cost.toFixed(4),
+      },
+      '✓ FAQ content generated'
+    );
+    return true;
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error('[generateFAQContent] Error:', errMsg);
+    log.error(
+      {
+        matchId,
+        err: errMsg,
+      },
+      'FAQ content generation failed'
+    );
+    // Non-blocking: don't throw, return false
+    return false;
+  }
+}
+
+/**
+ * Get FAQ content for a match
+ * Returns AI-generated FAQs if available, null otherwise
+ */
+export async function getMatchFAQContent(matchId: string): Promise<FAQItem[] | null> {
+  try {
+    const db = getDb();
+    const result = await db
+      .select({ faqContent: matchContent.faqContent })
+      .from(matchContent)
+      .where(eq(matchContent.matchId, matchId))
+      .limit(1);
+
+    if (result.length === 0 || !result[0].faqContent) {
+      return null;
+    }
+
+    return JSON.parse(result[0].faqContent) as FAQItem[];
+  } catch {
+    return null;
+  }
 }

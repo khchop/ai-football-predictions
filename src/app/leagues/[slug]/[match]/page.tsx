@@ -21,6 +21,7 @@ import { MatchPageHeader } from '@/components/match/match-page-header';
 import { MatchTLDR } from '@/components/match/match-tldr';
 import { MatchFAQ } from '@/components/match/match-faq';
 import { generateMatchFAQs } from '@/components/match/MatchFAQSchema';
+import { getMatchFAQContent } from '@/lib/content/match-content';
 import { BreadcrumbsWithSchema } from '@/components/navigation/breadcrumbs';
 import { buildMatchBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 import { MatchDataProvider } from '@/components/match/match-data-provider';
@@ -166,8 +167,9 @@ export default async function MatchPage({ params }: MatchPageProps) {
     matchData.slug || ''
   );
 
-  // Generate FAQs for both visual display and schema (SGEO-02: single source of truth)
-  const faqs = generateMatchFAQs(matchData, competition);
+  // Fetch AI-generated FAQs if available, fall back to template-based
+  const aiFaqs = await getMatchFAQContent(matchData.id);
+  const faqs = aiFaqs && aiFaqs.length > 0 ? aiFaqs : generateMatchFAQs(matchData, competition);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -338,7 +340,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
         <RelatedMatchesWidget matchId={matchData.id} competitionSlug={competitionSlug} />
 
         {/* FAQ Section - SEO enhancement with JSON-LD schema (MTCH-06) */}
-        <MatchFAQ match={matchData} competition={competition} />
+        <MatchFAQ match={matchData} competition={competition} aiFaqs={aiFaqs} />
         </div>
       </MatchDataProvider>
     </div>
