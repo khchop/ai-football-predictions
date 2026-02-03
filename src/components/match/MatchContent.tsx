@@ -2,15 +2,16 @@
  * Match Content Section Component
  *
  * Displays 3-section narrative content for match pages:
- * 1. Pre-match (~150-200 words) - market expectations (scheduled only)
- * 2. Betting (~150-200 words) - AI predictions (live/finished)
- * 3. Post-match (~150-200 words) - results & performance (finished only)
+ * 1. Pre-match - market expectations (scheduled only)
+ * 2. AI Model Predictions - prediction analysis (live/finished)
+ * 3. Post-match - results & performance analysis (finished only)
  *
  * Content visibility is determined by match status:
  * - scheduled: pre-match only
  * - live: betting only
  * - finished: betting + post-match
  *
+ * Each section renders once (no duplicate preview+full patterns).
  * Shows nothing if no applicable content exists for the current match state.
  *
  * Supports entity linking for team names and model names when props are provided.
@@ -18,7 +19,6 @@
 
 import { getMatchContent } from '@/lib/content/queries';
 import { Card, CardContent } from '@/components/ui/card';
-import { NarrativePreview } from '@/components/match/narrative-preview';
 import { EntityLinkedText } from '@/components/content/entity-linked-text';
 import { stripHtml } from '@/lib/utils/strip-html';
 
@@ -65,41 +65,29 @@ export async function MatchContentSection({
       <CardContent className="p-6 space-y-8">
         {/* Pre-match section (scheduled only) */}
         {showPreMatch && (
-          <>
-            {/* Preview above the fold */}
-            <div>
-              <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-                Match Preview
-              </h3>
-              <NarrativePreview
-                previewText={stripHtml(content.preMatchContent)}
-                fullSectionId="full-narrative-prematch"
-              />
-            </div>
-
-            {/* Full content section (linked from preview) */}
-            <section id="full-narrative-prematch" className="scroll-mt-20 pt-8 border-t border-border/30">
-              <h3 className="text-lg font-bold mb-4">Full Match Preview</h3>
-              <div className="text-foreground leading-relaxed text-sm md:text-base">
-                {enableEntityLinking ? (
-                  <EntityLinkedText
-                    text={stripHtml(content.preMatchContent)}
-                    teams={teams}
-                    models={models}
-                    maxLinks={5}
-                  />
-                ) : (
-                  stripHtml(content.preMatchContent)
-                )}
-              </div>
-              {content.preMatchGeneratedAt && (
-                <p className="text-xs text-muted-foreground/60 mt-4">
-                  Generated{' '}
-                  {new Date(content.preMatchGeneratedAt).toLocaleString()}
-                </p>
+          <div>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+              Match Preview
+            </h3>
+            <div className="text-foreground leading-relaxed text-sm md:text-base">
+              {enableEntityLinking ? (
+                <EntityLinkedText
+                  text={stripHtml(content.preMatchContent)}
+                  teams={teams}
+                  models={models}
+                  maxLinks={5}
+                />
+              ) : (
+                stripHtml(content.preMatchContent)
               )}
-            </section>
-          </>
+            </div>
+            {content.preMatchGeneratedAt && (
+              <p className="text-xs text-muted-foreground/60 mt-2">
+                Generated{' '}
+                {new Date(content.preMatchGeneratedAt).toLocaleString()}
+              </p>
+            )}
+          </div>
         )}
 
 
@@ -133,41 +121,29 @@ export async function MatchContentSection({
 
         {/* Post-match section (finished only) */}
         {showPostMatch && (
-          <>
-            {/* Brief summary at preview location */}
-            <div>
-              <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-                Match Report
-              </h3>
-              <NarrativePreview
-                previewText={stripHtml(content.postMatchContent)}
-                fullSectionId="full-narrative-postmatch"
-              />
-            </div>
-
-            {/* Full roundup section (linked from preview) */}
-            <section id="full-narrative-postmatch" className="scroll-mt-20 pt-8 border-t border-border/30">
-              <h3 className="text-lg font-bold mb-4">Full Match Analysis</h3>
-              <div className="text-foreground leading-relaxed text-sm md:text-base">
-                {enableEntityLinking ? (
-                  <EntityLinkedText
-                    text={stripHtml(content.postMatchContent)}
-                    teams={teams}
-                    models={models}
-                    maxLinks={5}
-                  />
-                ) : (
-                  stripHtml(content.postMatchContent)
-                )}
-              </div>
-              {content.postMatchGeneratedAt && (
-                <p className="text-xs text-muted-foreground/60 mt-4">
-                  Generated{' '}
-                  {new Date(content.postMatchGeneratedAt).toLocaleString()}
-                </p>
+          <div>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+              Match Report
+            </h3>
+            <div className="text-foreground leading-relaxed text-sm md:text-base">
+              {enableEntityLinking ? (
+                <EntityLinkedText
+                  text={stripHtml(content.postMatchContent)}
+                  teams={teams}
+                  models={models}
+                  maxLinks={5}
+                />
+              ) : (
+                stripHtml(content.postMatchContent)
               )}
-            </section>
-          </>
+            </div>
+            {content.postMatchGeneratedAt && (
+              <p className="text-xs text-muted-foreground/60 mt-2">
+                Generated{' '}
+                {new Date(content.postMatchGeneratedAt).toLocaleString()}
+              </p>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>
