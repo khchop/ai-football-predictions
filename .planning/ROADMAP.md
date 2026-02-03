@@ -52,10 +52,11 @@ Plans:
   2. Match hero shows teams, competition, kickoff time correctly
   3. Live matches display current score and match minute
   4. Upcoming matches show "VS" instead of score
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 27-01: TBD
+- [ ] 27-01-PLAN.md — Create MatchHero component with useLiveMatchMinute polling hook and API route
+- [ ] 27-02-PLAN.md — Visual verification of hero component across all match states
 
 ### Phase 28: Content Sections
 **Goal**: Deliver narrative content and predictions table that render correctly based on match state
@@ -109,7 +110,7 @@ Phases execute in numeric order: 26 -> 27 -> 28 -> 29 -> 30
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 26. Context Foundation | 2/2 | Complete | 2026-02-03 |
-| 27. Hero Component | 0/? | Not started | - |
+| 27. Hero Component | 0/2 | Ready to execute | - |
 | 28. Content Sections | 0/? | Not started | - |
 | 29. FAQ & SEO | 0/? | Not started | - |
 | 30. Layout Assembly | 0/? | Not started | - |
