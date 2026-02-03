@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 20 - League Page Rebuild
-Plan: 2 of 4 complete
+Plan: 3 of 4 complete
 Status: In progress
-Last activity: 2026-02-03 - Completed 20-02-PLAN.md (League FAQ Component)
+Last activity: 2026-02-03 - Completed 20-03-PLAN.md (Trend Visualization)
 
-Progress: [████████░░░░░░░░░░░░░░░░] 30% (v2.0: 16/? plans, 24/33 requirements)
+Progress: [█████████░░░░░░░░░░░░░░░] 32% (v2.0: 17/? plans, 25/33 requirements)
 
 ## Milestone History
 
@@ -34,7 +34,7 @@ Progress: [████████░░░░░░░░░░░░░░░
 | 17. Design System Foundation | Design tokens, dark mode, PPR infrastructure | DSGN-01 to DSGN-06 (6) | Complete |
 | 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | Complete |
 | 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Complete |
-| 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | In Progress (2/4) |
+| 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | In Progress (3/4) |
 | 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Pending |
 | 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | Pending |
 | 23. Performance & Polish | PPR validation, client audit, transitions | PERF-01 to PERF-04 (4) | Pending |
@@ -59,7 +59,7 @@ Phase 17 (Foundation) [COMPLETE]
 Decisions are logged in PROJECT.md Key Decisions table.
 Full decision history available in phase SUMMARY.md files.
 
-**Key v2.0 Decisions (Phases 17-19):**
+**Key v2.0 Decisions (Phases 17-20):**
 - OKLCH color space for perceptual uniformity across light/dark modes
 - Dark mode uses dark grays (L=0.14), not pure black, for eye comfort
 - System preference as default theme via next-themes
@@ -93,6 +93,9 @@ Full decision history available in phase SUMMARY.md files.
 - Two-column layout with max-w-6xl for TOC sidebar accommodation (19-05)
 - 500-word threshold for TOC visibility per user decision (19-05)
 - Sentence-aware truncation for FAQ answers (20-02)
+- CSS-only chart implementation (no Chart.js/D3.js) for minimal bundle size (20-03)
+- Weekly grouping (ISO week) for trend granularity (20-03)
+- Chronological order (oldest to newest) for left-to-right chart display (20-03)
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -139,5 +142,5 @@ None blocking current work.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 20-02-PLAN.md (League FAQ Component)
-Resume with: Continue Phase 20 (20-03 or 20-04)
+Stopped at: Completed 20-03-PLAN.md (Trend Visualization)
+Resume with: Continue Phase 20 (20-04: League Page Integration)
