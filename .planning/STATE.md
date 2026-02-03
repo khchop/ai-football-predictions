@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 21 - Leaderboard Page Rebuild
-Plan: 2 of 2 complete (Phase complete)
-Status: Phase 21 verified and complete - Ready for Phase 22
-Last activity: 2026-02-03 - Phase 21 verified (8/8 must-haves passed)
+Phase: 22 - Navigation & Internal Linking
+Plan: 1 of 5 complete (In progress)
+Status: Plan 22-01 complete - Core navigation components created
+Last activity: 2026-02-03 - Completed 22-01-PLAN.md
 
-Progress: [████████████░░░░░░░░░░░░] 41% (v2.0: 20/? plans, 31/34 requirements)
+Progress: [████████████░░░░░░░░░░░░] 43% (v2.0: 21/? plans, 31/34 requirements)
 
 ## Milestone History
 
@@ -36,7 +36,7 @@ Progress: [████████████░░░░░░░░░░░
 | 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Complete |
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Complete |
 | 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Complete |
-| 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | Pending |
+| 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | In progress (1/5) |
 | 23. Performance & Polish | PPR validation, client audit, transitions | PERF-01 to PERF-04 (4) | Pending |
 
 **Phase Dependencies:**
@@ -106,6 +106,8 @@ Full decision history available in phase SUMMARY.md files.
 - FAQPage schema rendered inside LeaderboardContent (has access to dynamic data) (21-02)
 - BreadcrumbList schema kept in page wrapper (outside Suspense) (21-02)
 - Native details/summary for accordion (no JavaScript, accessible by default) (21-02)
+- Intent-based prefetching via HoverPrefetchLink (hover/touch triggers, not viewport) (22-01)
+- 4 bottom nav items: Home, Matches, Leaderboard, Blog (matches header nav) (22-01)
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -152,5 +154,5 @@ None blocking current work.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed Phase 21 (Leaderboard Page Rebuild) - verified
-Resume with: Begin Phase 22 (Navigation & Internal Linking)
+Stopped at: Completed Plan 22-01 (Core Navigation Components)
+Resume with: Plan 22-02 (Visual Breadcrumbs)
