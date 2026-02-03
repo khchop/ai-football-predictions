@@ -10,7 +10,7 @@ import { Trophy } from 'lucide-react';
 import type { Metadata } from 'next';
 import type { FAQItem } from '@/lib/seo/schemas';
 import { LiveTabRefresher } from '@/app/matches/live-refresher';
-import { getLeaderboard } from '@/lib/db/queries/stats';
+import { getLeaderboardWithTrends } from '@/lib/db/queries/stats';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { BASE_URL } from '@/lib/seo/constants';
 
@@ -75,11 +75,15 @@ async function LeaderboardContent({ searchParams }: { searchParams: { [key: stri
   const minPredictions = typeof searchParams.minPredictions === 'string'
     ? parseInt(searchParams.minPredictions, 10)
     : 0;
+  const timePeriod = typeof searchParams.timePeriod === 'string'
+    ? searchParams.timePeriod as 'all' | 'weekly' | 'monthly'
+    : 'all';
 
   // Query database directly instead of HTTP fetch (avoids self-referential timeout)
-  const leaderboard = await getLeaderboard(50, 'avgPoints', {
+  const leaderboard = await getLeaderboardWithTrends(50, 'avgPoints', {
     competitionId,
     season,
+    timePeriod,
   });
 
   if (leaderboard.length === 0) {
@@ -104,6 +108,8 @@ async function LeaderboardContent({ searchParams }: { searchParams: { [key: stri
     averagePoints: entry.avgPoints,
     exactScores: entry.exactScores,
     correctTendencies: entry.correctTendencies,
+    trendDirection: entry.trendDirection,
+    rankChange: entry.rankChange,
   })).filter((entry) => entry.totalPredictions >= minPredictions);
 
   return (
