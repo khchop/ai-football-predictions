@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-03)
 
 **Core value:** Prediction pipeline reliably generates scores from 35 LLMs ~30 minutes before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** v2.2 Match Page Rewrite - Phase 29 (next)
+**Current focus:** v2.2 Match Page Rewrite - Phase 29 (execution)
 
 ## Current Position
 
 Phase: 29 of 30 (FAQ & SEO)
-Plan: 2 of 5 (FAQ Generation Extension)
+Plan: 3 of 5 (Schema Consolidation)
 Status: In progress
-Last activity: 2026-02-03 - Completed 29-02-PLAN.md (FAQ Generation Extension)
+Last activity: 2026-02-03 - Completed 29-03-PLAN.md (Schema Consolidation)
 
-Progress: [##########] 100% (v2.1) | [#######...] 72% (v2.2)
+Progress: [##########] 100% (v2.1) | [########..] 80% (v2.2)
 
 ## Milestone History
 
@@ -50,6 +50,8 @@ Progress: [##########] 100% (v2.1) | [#######...] 72% (v2.2)
 - PRED-002: Color-coded points: 4+ pts green, 3 pts yellow, 2 pts orange, <2 pts gray
 - ES-001: Use default case for both 'scheduled' and unknown statuses (EventScheduled is safe fallback)
 - FAQ-001: Unified upcoming/live question set (5 questions with conditional kickoff answer)
+- SGEO-01: FAQPage added to existing @graph (single JSON-LD script contains all schema types)
+- SGEO-02: FAQs generated once at page level, shared between schema and visual display
 
 ### Pending Todos
 
@@ -62,9 +64,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 29-02-PLAN.md (FAQ Generation Extension)
+Stopped at: Completed 29-03-PLAN.md (Schema Consolidation)
 Resume file: None
-Resume with: /gsd:execute-phase 29 (continue with Plan 03)
+Resume with: /gsd:execute-phase 29 (continue with Plan 04)
 
 Config:
 {
