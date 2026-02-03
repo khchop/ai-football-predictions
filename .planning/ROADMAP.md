@@ -19,7 +19,7 @@ v2.1 simplifies the match detail page by removing the sticky header, mobile tabs
 - Continues from v2.0 (phases 17-23)
 - v2.1 phases: 24-25
 
-- [ ] **Phase 24: Match Page Cleanup** - Remove sticky header, tabs, and hidden sections
+- [x] **Phase 24: Match Page Cleanup** - Remove sticky header, tabs, and hidden sections
 - [ ] **Phase 25: Content Rendering Fix** - Strip HTML tags from narrative content
 
 ## Phase Details
@@ -37,8 +37,8 @@ v2.1 simplifies the match detail page by removing the sticky header, mobile tabs
 **Plans**: 2 plans
 
 Plans:
-- [ ] 24-01-PLAN.md — Remove sticky header and mobile tabbed navigation
-- [ ] 24-02-PLAN.md — Unify layout order and filter unused sections
+- [x] 24-01-PLAN.md — Remove sticky header and mobile tabbed navigation
+- [x] 24-02-PLAN.md — Unify layout order and filter unused sections
 
 ### Phase 25: Content Rendering Fix
 **Goal**: Narrative content displays as clean formatted text without visible HTML tags
@@ -59,9 +59,9 @@ Phases execute in numeric order: 24 -> 25
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 24. Match Page Cleanup | v2.1 | 0/2 | Planning complete | - |
+| 24. Match Page Cleanup | v2.1 | 2/2 | Complete | 2026-02-03 |
 | 25. Content Rendering Fix | v2.1 | 0/? | Not started | - |
 
 ---
 *Roadmap created: 2026-02-03*
-*Last updated: 2026-02-03*
+*Last updated: 2026-02-03 after Phase 24 completion*

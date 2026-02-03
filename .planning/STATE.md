@@ -62,4 +62,4 @@ None.
 
 Last session: 2026-02-03
 Stopped at: Completed 24-02-PLAN.md (Phase 24 complete)
-Resume with: /gsd:execute-phase 25-01
+Resume with: /gsd:plan-phase 25
