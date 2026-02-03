@@ -60,9 +60,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ARCH-01 | Phase 26 | Pending |
-| ARCH-02 | Phase 26 | Pending |
-| ARCH-03 | Phase 26 | Pending |
+| ARCH-01 | Phase 26 | Complete |
+| ARCH-02 | Phase 26 | Complete |
+| ARCH-03 | Phase 26 | Complete |
 | LAYT-02 | Phase 27 | Pending |
 | CONT-01 | Phase 27 | Pending |
 | CONT-07 | Phase 27 | Pending |
