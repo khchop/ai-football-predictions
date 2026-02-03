@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 22 - Navigation & Internal Linking
-Plan: 4 of 5 complete (In progress)
-Status: Plan 22-04 complete - Navigation components integrated
-Last activity: 2026-02-03 - Completed 22-04-PLAN.md
+Phase: 22 - Navigation & Internal Linking (Complete)
+Plan: 5 of 5 complete
+Status: Phase 22 complete - All navigation requirements met
+Last activity: 2026-02-03 - Completed 22-05-PLAN.md
 
-Progress: [█████████████░░░░░░░░░░░] 48% (v2.0: 24/? plans, 32/34 requirements)
+Progress: [██████████████░░░░░░░░░░] 50% (v2.0: 25/? plans, 34/34 requirements)
 
 ## Milestone History
 
@@ -36,7 +36,7 @@ Progress: [█████████████░░░░░░░░░░
 | 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Complete |
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Complete |
 | 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Complete |
-| 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | In progress (4/5) |
+| 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | Complete |
 | 23. Performance & Polish | PPR validation, client audit, transitions | PERF-01 to PERF-04 (4) | Pending |
 
 **Phase Dependencies:**
@@ -45,7 +45,7 @@ Phase 17 (Foundation) [COMPLETE]
   |
   +---> Phase 18 (Match) [COMPLETE] --+
   |                                    |
-  +---> Phase 19 (Blog) [COMPLETE]----+--> Phase 22 (Navigation)
+  +---> Phase 19 (Blog) [COMPLETE]----+--> Phase 22 (Navigation) [COMPLETE]
   |                                    |
   +---> Phase 20 (League) [COMPLETE]--+
   |                                    |
@@ -59,7 +59,7 @@ Phase 17 (Foundation) [COMPLETE]
 Decisions are logged in PROJECT.md Key Decisions table.
 Full decision history available in phase SUMMARY.md files.
 
-**Key v2.0 Decisions (Phases 17-21):**
+**Key v2.0 Decisions (Phases 17-22):**
 - OKLCH color space for perceptual uniformity across light/dark modes
 - Dark mode uses dark grays (L=0.14), not pure black, for eye comfort
 - System preference as default theme via next-themes
@@ -118,6 +118,8 @@ Full decision history available in phase SUMMARY.md files.
 - Breadcrumbs (visual only) for pages with existing schema, BreadcrumbsWithSchema for match page (22-04)
 - Entity linking at MatchContentSection level, not page level (22-04)
 - ActiveModels fetch in parallel Promise.all on match page (22-04)
+- Logo Link kept as regular prefetch, nav items use HoverPrefetchLink (22-05)
+- HoverPrefetchLink for components with 3+ links to reduce prefetch requests (22-05)
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -164,5 +166,5 @@ None blocking current work.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 22-04-PLAN.md (Navigation Integration)
-Resume with: Continue Phase 22 plan 05 (Performance Optimization)
+Stopped at: Completed 22-05-PLAN.md (Prefetch Optimization)
+Resume with: Start Phase 23 planning (Performance & Polish)
