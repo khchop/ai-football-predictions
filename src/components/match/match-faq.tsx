@@ -1,5 +1,5 @@
 import type { Match, Competition } from '@/lib/db/schema';
-import { generateMatchFAQs, MatchFAQSchema } from './MatchFAQSchema';
+import { generateMatchFAQs } from './MatchFAQSchema';
 
 interface MatchFAQProps {
   match: Match;
@@ -40,8 +40,7 @@ export function MatchFAQ({ match, competition }: MatchFAQProps) {
         ))}
       </div>
 
-      {/* JSON-LD schema for search engines */}
-      <MatchFAQSchema match={match} competition={competition} />
+      {/* JSON-LD schema rendered via MatchPageSchema (Plan 03) */}
     </section>
   );
 }
