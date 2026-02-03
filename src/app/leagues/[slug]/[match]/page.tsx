@@ -25,6 +25,8 @@ import { PredictionsTab } from '@/components/match/tab-content/predictions-tab';
 import { AnalysisTab } from '@/components/match/tab-content/analysis-tab';
 import { MatchTLDR } from '@/components/match/match-tldr';
 import { MatchFAQ } from '@/components/match/match-faq';
+import { BreadcrumbsWithSchema } from '@/components/navigation/breadcrumbs';
+import { buildMatchBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 
 
 interface MatchPageProps {
@@ -160,6 +162,15 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const homeStanding = teamStandings.find(s => s.teamName === matchData.homeTeam) || null;
   const awayStanding = teamStandings.find(s => s.teamName === matchData.awayTeam) || null;
 
+  // Build breadcrumbs
+  const matchTitle = `${matchData.homeTeam} vs ${matchData.awayTeam}`;
+  const breadcrumbs = buildMatchBreadcrumbs(
+    competition.name,
+    competitionSlug,
+    matchTitle,
+    matchData.slug || ''
+  );
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <MatchPageSchema
@@ -167,6 +178,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
         competition={{ name: competition.name, slug: competitionSlug }}
         url={`https://kroam.xyz/leagues/${competitionSlug}/${matchData.slug}`}
       />
+      <BreadcrumbsWithSchema items={breadcrumbs} />
       <MatchH1
         homeTeam={matchData.homeTeam}
         awayTeam={matchData.awayTeam}

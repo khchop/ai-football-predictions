@@ -13,6 +13,8 @@ import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { generateFAQPageSchema } from '@/lib/seo/schemas';
 import { generateLeaderboardFAQs } from '@/lib/leaderboard/generate-leaderboard-faqs';
 import { BASE_URL } from '@/lib/seo/constants';
+import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
+import { buildLeaderboardBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 
 export const metadata: Metadata = {
   title: 'AI Model Leaderboard | Compare 35 Models | kroam.xyz',
@@ -164,6 +166,9 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
     '@graph': [breadcrumbs],
   };
 
+  // Build visual breadcrumbs
+  const visualBreadcrumbs = buildLeaderboardBreadcrumbs();
+
   return (
     <LiveTabRefresher refreshInterval={30000}>
       {/* BreadcrumbList Schema */}
@@ -172,6 +177,9 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
       <div className="space-y-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs items={visualBreadcrumbs} />
+
         {/* Header */}
         <div className="flex items-center gap-4">
           <div className="h-12 w-12 rounded-xl gradient-primary flex items-center justify-center">

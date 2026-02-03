@@ -11,6 +11,8 @@ import { abbreviateCompetition } from '@/lib/seo/abbreviations';
 import { getCompetitionStats, getTopModelsByCompetition } from '@/lib/db/queries';
 import { generateFAQPageSchema } from '@/lib/seo/schemas';
 import { generateLeagueFAQs } from '@/lib/league/generate-league-faqs';
+import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
+import { buildLeagueBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -171,6 +173,9 @@ export default async function LeaguePage({ params }: PageProps) {
     '@graph': [competitionSchema, breadcrumbs, faqSchema],
   };
 
+  // Build visual breadcrumbs
+  const visualBreadcrumbs = buildLeagueBreadcrumbs(competition.name, competition.id);
+
   return (
     <>
       {/* Structured data for search engines */}
@@ -178,6 +183,7 @@ export default async function LeaguePage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
+      <Breadcrumbs items={visualBreadcrumbs} />
       <Suspense fallback={<LoadingSkeleton />}>
         <LeagueHubContent competitionId={competition.id} />
       </Suspense>

@@ -30,6 +30,8 @@ import { getDb } from '@/lib/db';
 import { matches } from '@/lib/db/schema';
 import { inArray } from 'drizzle-orm';
 import { BASE_URL } from '@/lib/seo/constants';
+import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
+import { buildBlogBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -225,6 +227,9 @@ export default async function BlogPostPage({ params }: PageProps) {
     };
   }
 
+  // Build visual breadcrumbs
+  const visualBreadcrumbs = buildBlogBreadcrumbs(post.title, slug);
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Article Schema for search engines */}
@@ -245,14 +250,8 @@ export default async function BlogPostPage({ params }: PageProps) {
         ]}
       />
 
-      {/* Back Link */}
-      <Link
-        href="/blog"
-        className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to blog
-      </Link>
+      {/* Breadcrumbs */}
+      <Breadcrumbs items={visualBreadcrumbs} />
 
       {/* Main grid: Content + TOC sidebar on desktop */}
       <div className="lg:grid lg:grid-cols-[1fr_250px] lg:gap-8">

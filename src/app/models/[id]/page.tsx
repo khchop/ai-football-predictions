@@ -23,6 +23,8 @@ import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { BASE_URL } from '@/lib/seo/constants';
 import { AccuracyDisplay } from '@/components/accuracy-display';
 import { RelatedModelsWidget } from '@/components/model/related-models-widget';
+import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
+import { buildModelBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 
 // Memoize queries to avoid duplication between generateMetadata and page component
 const getModelStatsData = cache((modelId: string) => getModelPredictionStats(modelId));
@@ -155,6 +157,9 @@ export default async function ModelPage({ params }: ModelPageProps) {
       '@graph': [breadcrumbs],
     };
 
+    // Build visual breadcrumbs
+    const visualBreadcrumbs = buildModelBreadcrumbs(model.displayName, id);
+
     return (
       <div className="space-y-8">
         {/* Structured data for search engines */}
@@ -172,17 +177,12 @@ export default async function ModelPage({ params }: ModelPageProps) {
             { name: model.displayName, url: `${BASE_URL}/models/${id}` },
           ]}
         />
+
+        {/* Breadcrumbs */}
+        <Breadcrumbs items={visualBreadcrumbs} />
+
        {/* Model Header */}
        <div className="border-b border-border/50 pb-6">
-         <div className="flex items-start justify-between gap-4 mb-4">
-           <Link 
-             href="/leaderboard" 
-             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-           >
-             <ArrowLeft className="h-4 w-4" />
-             Back to Leaderboard
-           </Link>
-         </div>
 
          {/* Model Name and Provider */}
          <div className="space-y-2 mb-4">
