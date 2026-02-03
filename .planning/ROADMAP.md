@@ -84,10 +84,13 @@ Plans:
   3. FAQPage schema questions match visible FAQ section exactly
   4. eventStatus correctly maps to scheduled/live/finished/postponed/cancelled
   5. Content uses semantic H2/H3 headings with answer-first paragraph structure
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 29-01: TBD
+- [ ] 29-01-PLAN.md — Install Radix Accordion and create accordion.tsx UI component with animations
+- [ ] 29-02-PLAN.md — Extend FAQ generation to 5 state-specific questions
+- [ ] 29-03-PLAN.md — Consolidate FAQPage into MatchPageSchema @graph and update visual component
+- [ ] 29-04-PLAN.md — Visual verification of FAQ across match states and schema validation
 
 ### Phase 30: Layout Assembly
 **Goal**: Assemble state-aware layouts and remove all deprecated match page components
@@ -114,7 +117,7 @@ Phases execute in numeric order: 26 -> 27 -> 28 -> 29 -> 30
 | 26. Context Foundation | 2/2 | Complete | 2026-02-03 |
 | 27. Hero Component | 2/2 | Complete | 2026-02-03 |
 | 28. Content Sections | 3/3 | Complete | 2026-02-03 |
-| 29. FAQ & SEO | 0/? | Not started | - |
+| 29. FAQ & SEO | 0/4 | Not started | - |
 | 30. Layout Assembly | 0/? | Not started | - |
 
 ---
