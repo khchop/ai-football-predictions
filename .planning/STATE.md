@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-03)
 ## Current Position
 
 Phase: 28 of 30 (Content Sections)
-Plan: 1 of ? (MatchNarrative Component)
+Plan: 2 of ? (Sortable Predictions Table)
 Status: In progress
-Last activity: 2026-02-03 — Completed 28-01-PLAN.md (MatchNarrative component and content API)
+Last activity: 2026-02-03 — Completed 28-02-PLAN.md (SortablePredictionsTable and PredictionsSummary)
 
 Progress: [##########] 100% (v2.1) | [#####.....] 50% (v2.2)
 
@@ -26,9 +26,9 @@ Progress: [##########] 100% (v2.1) | [#####.....] 50% (v2.2)
 | v1.3 Match Page Refresh | 13-16 | 13 | 18 | 2026-02-02 |
 | v2.0 UI/UX Overhaul | 17-23 | 28 | 33 | 2026-02-03 |
 | v2.1 Match Page Simplification | 24-25 | 3 | 9 | 2026-02-03 |
-| v2.2 Match Page Rewrite | 26-30 | 4+ | 21 | In progress |
+| v2.2 Match Page Rewrite | 26-30 | 5+ | 21 | In progress |
 
-**Total shipped:** 25 phases, 79 plans, 110 requirements
+**Total shipped:** 25 phases, 80 plans, 110 requirements
 
 ## Accumulated Context
 
@@ -46,6 +46,8 @@ Progress: [##########] 100% (v2.1) | [#####.....] 50% (v2.2)
 - HERO-003: Visibility detection pauses polling when tab hidden (resource efficiency)
 - NAR-001: Use client-side fetch for narrative content (keeps component simple)
 - NAR-002: Unified heading logic (live + upcoming show "Match Preview", finished shows "Match Report")
+- PRED-001: Default sort by points (desc) for finished matches, alphabetical for upcoming
+- PRED-002: Color-coded points: 4+ pts green, 3 pts yellow, 2 pts orange, <2 pts gray
 
 ### Pending Todos
 
@@ -58,9 +60,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 28-01-PLAN.md (MatchNarrative component)
+Stopped at: Completed 28-02-PLAN.md (SortablePredictionsTable and PredictionsSummary)
 Resume file: None
-Resume with: /gsd:execute-phase 28 (continue with 28-02 PredictionsTable if exists)
+Resume with: /gsd:execute-phase 28 (continue with 28-03 if exists)
 
 Config:
 {
