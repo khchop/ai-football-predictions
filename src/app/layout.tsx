@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 import { ViewTransition } from "react";
 import "./globals.css";
 import { Navigation } from "@/components/navigation";
@@ -102,6 +103,38 @@ export default function RootLayout({
     "inLanguage": "en-US"
   };
 
+  // Static skeleton fallbacks for PPR (prerendered instantly)
+  const NavigationSkeleton = () => (
+    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="flex h-14 items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+            <div className="h-4 w-24 rounded bg-muted animate-pulse hidden sm:block" />
+          </div>
+          <nav className="flex items-center gap-1">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-8 w-20 rounded-lg bg-muted animate-pulse" />
+            ))}
+          </nav>
+        </div>
+      </div>
+    </header>
+  );
+
+  const BottomNavSkeleton = () => (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border/50 bg-background/95 backdrop-blur-md safe-area-pb">
+      <div className="flex items-center justify-around h-16">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="flex flex-col items-center gap-1">
+            <div className="h-5 w-5 rounded bg-muted animate-pulse" />
+            <div className="h-3 w-12 rounded bg-muted animate-pulse" />
+          </div>
+        ))}
+      </div>
+    </nav>
+  );
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased min-h-screen bg-background flex flex-col`}>
@@ -131,18 +164,26 @@ export default function RootLayout({
           </div>
 
           <TooltipProvider delayDuration={300} skipDelayDuration={100}>
-            <Navigation />
+            {/* Navigation wrapped in Suspense for PPR compatibility */}
+            <Suspense fallback={<NavigationSkeleton />}>
+              <Navigation />
+            </Suspense>
 
             <ViewTransition>
               <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl pb-20 md:pb-0">
-                <ErrorBoundaryProvider>
-                  {children}
-                </ErrorBoundaryProvider>
+                <Suspense>
+                  <ErrorBoundaryProvider>
+                    {children}
+                  </ErrorBoundaryProvider>
+                </Suspense>
               </main>
             </ViewTransition>
 
             <Footer />
-            <BottomNav />
+            {/* Bottom nav wrapped in Suspense for PPR compatibility */}
+            <Suspense fallback={<BottomNavSkeleton />}>
+              <BottomNav />
+            </Suspense>
           </TooltipProvider>
         </Providers>
       </body>

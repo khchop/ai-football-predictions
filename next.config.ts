@@ -2,11 +2,7 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
-  // TODO(Phase 23): Enable cacheComponents for PPR after Suspense boundaries added
-  // cacheComponents: true requires:
-  // - Remove all route segment configs (dynamic/revalidate/runtime) - DONE
-  // - Wrap searchParams-dependent content in Suspense boundaries
-  // - Refactor pages with immediate uncached data access (blog, leaderboard)
+  cacheComponents: true, // Enables PPR + Cache Components (Phase 23)
   experimental: {
     viewTransition: true,
   },

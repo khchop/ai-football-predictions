@@ -5,6 +5,7 @@
 
 import Redis from 'ioredis';
 import crypto from 'crypto';
+import { connection } from 'next/server';
 import { loggers } from '@/lib/logger/modules';
 
 // Singleton Redis client
@@ -461,6 +462,9 @@ export async function withCache<T>(
    ttlSeconds: number,
    fetchFn: () => Promise<T>
 ): Promise<T> {
+   // PPR: Signal request-time data access before using Date.now()
+   await connection();
+
    // Try to get from cache first (with graceful degradation)
    if (shouldUseRedis()) {
      const redis = getRedis();
