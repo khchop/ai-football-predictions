@@ -2,8 +2,10 @@
  * Blog Index Page
  *
  * Displays list of published blog posts (league roundups, model reports, etc.)
+ * PPR-compatible: Static shell (header) prerenders, posts list streams via Suspense.
  */
 
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { getPublishedBlogPosts } from '@/lib/db/queries';
@@ -12,6 +14,7 @@ import { ArrowLeft, ArrowRight, Filter } from 'lucide-react';
 import type { Metadata } from 'next';
 import type { BlogPost } from '@/lib/db/schema';
 import { COMPETITIONS } from '@/lib/football/competitions';
+import { BlogListSkeleton } from '@/components/blog/blog-list-skeleton';
 
 export const metadata: Metadata = {
   title: 'AI Football Analysis Blog | kroam.xyz',
@@ -45,7 +48,17 @@ interface PageProps {
   searchParams: Promise<{ page?: string; competition?: string }>;
 }
 
-export default async function BlogPage({ searchParams }: PageProps) {
+/**
+ * BlogPostsList - Dynamic content component
+ *
+ * Awaits searchParams inside the component (PPR pattern).
+ * Renders competition filter pills, posts grid, empty state, and pagination.
+ */
+async function BlogPostsList({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; competition?: string }>;
+}) {
   const { page: pageParam, competition } = await searchParams;
   const page = Math.max(1, parseInt(pageParam || '1', 10));
   const offset = (page - 1) * POSTS_PER_PAGE;
@@ -64,42 +77,24 @@ export default async function BlogPage({ searchParams }: PageProps) {
     : null;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="space-y-3">
-        <Link
-          href="/matches"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to matches
-        </Link>
-
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-bold gradient-text">Football Insights</h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mt-2">
-              Weekly league roundups, AI model performance reports, and detailed match analysis.
-            </p>
-          </div>
-
-          {/* Competition Filter */}
-          {competition && (
-            <Link
-              href="/blog"
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
-            >
-              <Filter className="h-4 w-4" />
-              {selectedCompetition?.icon} {selectedCompetition?.name}
-              <span className="ml-1 text-xs opacity-60">(Clear)</span>
-            </Link>
-          )}
+    <>
+      {/* Competition Filter - Active filter indicator */}
+      {competition && (
+        <div className="mb-8">
+          <Link
+            href="/blog"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+          >
+            <Filter className="h-4 w-4" />
+            {selectedCompetition?.icon} {selectedCompetition?.name}
+            <span className="ml-1 text-xs opacity-60">(Clear)</span>
+          </Link>
         </div>
-      </div>
+      )}
 
-      {/* Competition Pills */}
+      {/* Competition Pills - Show when no filter active */}
       {competition === undefined && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mb-8">
           {COMPETITIONS.filter(c => c.category === 'club-domestic' || c.category === 'club-europe').map(comp => (
             <Link
               key={comp.id}
@@ -205,6 +200,42 @@ export default async function BlogPage({ searchParams }: PageProps) {
           </CardContent>
         </Card>
       )}
+    </>
+  );
+}
+
+/**
+ * BlogPage - PPR-compatible page component
+ *
+ * Static shell (header, title, description) prerenders.
+ * Dynamic content (posts list) streams via Suspense boundary.
+ */
+export default function BlogPage({ searchParams }: PageProps) {
+  // NO await here - static shell prerendered for PPR
+  return (
+    <div className="max-w-5xl mx-auto space-y-8">
+      {/* Static: prerendered shell */}
+      <div className="space-y-3">
+        <Link
+          href="/matches"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to matches
+        </Link>
+
+        <div>
+          <h1 className="text-4xl md:text-5xl font-bold gradient-text">Football Insights</h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mt-2">
+            Weekly league roundups, AI model performance reports, and detailed match analysis.
+          </p>
+        </div>
+      </div>
+
+      {/* Dynamic: streams with searchParams */}
+      <Suspense fallback={<BlogListSkeleton />}>
+        <BlogPostsList searchParams={searchParams} />
+      </Suspense>
     </div>
   );
 }
