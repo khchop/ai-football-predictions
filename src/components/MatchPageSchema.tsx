@@ -12,6 +12,7 @@
  */
 
 import type { Match } from '@/lib/db/schema';
+import type { FAQItem } from './match/MatchFAQSchema';
 
 interface MatchPageSchemaProps {
   match: Match;
@@ -20,6 +21,7 @@ interface MatchPageSchemaProps {
     slug: string;
   };
   url: string;
+  faqs: FAQItem[];
 }
 
 /**
@@ -40,7 +42,7 @@ function getEventStatus(status: string | null): string {
   }
 }
 
-export function MatchPageSchema({ match, competition, url }: MatchPageSchemaProps) {
+export function MatchPageSchema({ match, competition, url, faqs }: MatchPageSchemaProps) {
   const eventStatus = getEventStatus(match.status);
   const matchName = `${match.homeTeam} vs ${match.awayTeam}`;
   const pageDescription = `AI predictions for ${matchName} (${competition.name}). Compare forecasts from 35+ AI models.`;
@@ -103,6 +105,19 @@ export function MatchPageSchema({ match, competition, url }: MatchPageSchemaProp
         description: pageDescription,
         isPartOf: { '@id': 'https://kroam.xyz#website' },
         about: { '@id': url },
+      },
+      // FAQPage - questions from match-specific FAQ
+      {
+        '@type': 'FAQPage',
+        '@id': `${url}#faq`,
+        mainEntity: faqs.map((faq) => ({
+          '@type': 'Question',
+          name: faq.question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: faq.answer,
+          },
+        })),
       },
       // BreadcrumbList (page-specific navigation)
       {
