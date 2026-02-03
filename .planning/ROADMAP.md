@@ -21,7 +21,7 @@ Complete rewrite of match detail pages from scratch with clean layout, zero dupl
 - Decimal phases (27.1, 27.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 26: Context Foundation** - Establish single source of truth for match data
-- [ ] **Phase 27: Hero Component** - Single score render point eliminating duplication
+- [x] **Phase 27: Hero Component** - Single score render point eliminating duplication
 - [ ] **Phase 28: Content Sections** - Narrative and predictions content display
 - [ ] **Phase 29: FAQ & SEO** - Auto-generated FAQ with Schema.org integration
 - [ ] **Phase 30: Layout Assembly** - State-aware layouts and deprecated code cleanup
@@ -55,8 +55,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 27-01-PLAN.md — Create MatchHero component with useLiveMatchMinute polling hook and API route
-- [ ] 27-02-PLAN.md — Visual verification of hero component across all match states
+- [x] 27-01-PLAN.md — Create MatchHero component with useLiveMatchMinute polling hook and API route
+- [x] 27-02-PLAN.md — Visual verification of hero component across all match states
 
 ### Phase 28: Content Sections
 **Goal**: Deliver narrative content and predictions table that render correctly based on match state
@@ -67,10 +67,12 @@ Plans:
   2. Post-match narrative renders only for finished matches
   3. Predictions table displays all 35 models in sortable format
   4. Finished match predictions show actual result and points earned per model
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 28-01: TBD
+- [ ] 28-01-PLAN.md — Create MatchNarrative component with state-aware display
+- [ ] 28-02-PLAN.md — Create SortablePredictionsTable with sorting and color-coded points
+- [ ] 28-03-PLAN.md — Visual verification of content sections across all match states
 
 ### Phase 29: FAQ & SEO
 **Goal**: Auto-generate FAQ from match data with proper Schema.org FAQPage markup
@@ -110,8 +112,8 @@ Phases execute in numeric order: 26 -> 27 -> 28 -> 29 -> 30
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 26. Context Foundation | 2/2 | Complete | 2026-02-03 |
-| 27. Hero Component | 0/2 | Ready to execute | - |
-| 28. Content Sections | 0/? | Not started | - |
+| 27. Hero Component | 2/2 | Complete | 2026-02-03 |
+| 28. Content Sections | 0/3 | Ready to execute | - |
 | 29. FAQ & SEO | 0/? | Not started | - |
 | 30. Layout Assembly | 0/? | Not started | - |
 
