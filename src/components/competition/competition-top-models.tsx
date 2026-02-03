@@ -24,9 +24,9 @@ interface CompetitionTopModelsProps {
 function ModelCard({ model, index }: { model: TopModelEntry; index: number }) {
   const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
   const medalColor = index < 3 ? medalColors[index] : undefined;
-  
+
   return (
-    <Link href={`/models/${model.model.id}`}>
+    <Link href={`/models/${model.model.id}`} className="block">
       <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
         <div 
           className="flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm"

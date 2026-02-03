@@ -89,8 +89,8 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
     : `/matches/${match.id}`;
 
   return (
-    <Link href={matchUrl}>
-      <div 
+    <Link href={matchUrl} className="block">
+      <div
         className={cn(
           "group relative rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden transition-all duration-200",
           "hover:bg-card/80 hover:border-border",
