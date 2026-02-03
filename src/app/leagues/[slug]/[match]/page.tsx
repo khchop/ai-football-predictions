@@ -19,7 +19,7 @@ import { mapMatchToSeoData } from '@/lib/seo/types';
 import { MatchH1 } from '@/components/match/match-h1';
 import { MatchPageHeader } from '@/components/match/match-page-header';
 import { MatchTLDR } from '@/components/match/match-tldr';
-import { MatchFAQ } from '@/components/match/match-faq';
+import { MatchFAQ, generateMatchFAQs } from '@/components/match/match-faq';
 import { BreadcrumbsWithSchema } from '@/components/navigation/breadcrumbs';
 import { buildMatchBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 import { MatchDataProvider } from '@/components/match/match-data-provider';
@@ -165,12 +165,16 @@ export default async function MatchPage({ params }: MatchPageProps) {
     matchData.slug || ''
   );
 
+  // Generate FAQs for both visual display and schema (SGEO-02: single source of truth)
+  const faqs = generateMatchFAQs(matchData, competition);
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <MatchPageSchema
         match={matchData}
         competition={{ name: competition.name, slug: competitionSlug }}
         url={`https://kroam.xyz/leagues/${competitionSlug}/${matchData.slug}`}
+        faqs={faqs}
       />
       <BreadcrumbsWithSchema items={breadcrumbs} />
 
