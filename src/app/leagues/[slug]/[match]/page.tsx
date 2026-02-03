@@ -18,11 +18,6 @@ import { buildMatchMetadata } from '@/lib/seo/metadata';
 import { mapMatchToSeoData } from '@/lib/seo/types';
 import { MatchH1 } from '@/components/match/match-h1';
 import { MatchPageHeader } from '@/components/match/match-page-header';
-import { MatchTabsMobile } from '@/components/match/match-tabs-mobile';
-import { SummaryTab } from '@/components/match/tab-content/summary-tab';
-import { StatsTab } from '@/components/match/tab-content/stats-tab';
-import { PredictionsTab } from '@/components/match/tab-content/predictions-tab';
-import { AnalysisTab } from '@/components/match/tab-content/analysis-tab';
 import { MatchTLDR } from '@/components/match/match-tldr';
 import { MatchFAQ } from '@/components/match/match-faq';
 import { BreadcrumbsWithSchema } from '@/components/navigation/breadcrumbs';
@@ -210,80 +205,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
         isFinished={isFinished}
       />
 
-      {/* Mobile: Tabbed Layout */}
-      <div className="md:hidden space-y-6">
-        <MatchTabsMobile>
-          {{
-            summary: (
-              <SummaryTab
-                match={{
-                  homeTeam: matchData.homeTeam,
-                  awayTeam: matchData.awayTeam,
-                  competition: competition.name,
-                  venue: matchData.venue || undefined,
-                  kickoff: matchData.kickoffTime,
-                }}
-                competition={competition}
-                isLive={isLive}
-                isFinished={isFinished}
-                matchEvents={matchEvents.map(e => ({
-                  minute: e.time?.elapsed || 0,
-                  type: e.type || 'event',
-                  description: e.detail || '',
-                  team: e.team?.name,
-                }))}
-              />
-            ),
-            stats: (
-              <StatsTab
-                analysis={analysis || null}
-                homeStanding={homeStanding}
-                awayStanding={awayStanding}
-                homeTeam={matchData.homeTeam}
-                awayTeam={matchData.awayTeam}
-              />
-            ),
-            predictions: (
-              <PredictionsTab
-                predictions={predictions.map(p => ({
-                  id: p.predictionId,
-                  modelId: p.modelId,
-                  modelDisplayName: p.modelDisplayName,
-                  provider: p.provider,
-                  predictedHomeScore: p.predictedHome,
-                  predictedAwayScore: p.predictedAway,
-                  confidence: null,
-                  points: p.totalPoints,
-                  isExact: p.exactScoreBonus !== null && p.exactScoreBonus > 0,
-                  isCorrectResult: p.tendencyPoints !== null && p.tendencyPoints > 0,
-                }))}
-                homeTeam={matchData.homeTeam}
-                awayTeam={matchData.awayTeam}
-                isFinished={isFinished}
-              />
-            ),
-            analysis: (
-              <AnalysisTab
-                matchId={matchData.id}
-                matchStatus={matchData.status}
-                roundup={roundup ? {
-                  title: roundup.title,
-                  narrative: roundup.narrative,
-                  events: roundup.events ? JSON.parse(roundup.events) : undefined,
-                  stats: roundup.stats ? JSON.parse(roundup.stats) : undefined,
-                  topPerformers: roundup.topPerformers ? JSON.parse(roundup.topPerformers) : undefined,
-                } : null}
-              />
-            ),
-          }}
-        </MatchTabsMobile>
-
-        {/* FAQ Section - Also on mobile (MTCH-06) */}
-        <MatchFAQ match={matchData} competition={competition} />
-      </div>
-
-      {/* Desktop: Stacked Layout (existing) */}
-      <div className="hidden md:block space-y-8">
+      {/* Unified Layout - Single column for all devices */}
+      <div className="space-y-8">
 
       {(isFinished || isLive) && matchEvents.length > 0 && (
         <Card className="bg-card/50 border-border/50">
