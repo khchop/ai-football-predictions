@@ -47,10 +47,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Pre-match, prediction, and post-match narratives display formatted text without raw HTML tags
   2. Database content is clean (no HTML fragments in stored narrative text)
-**Plans**: TBD (determined during planning)
+**Plans**: 1 plan
 
 Plans:
-- [ ] 25-01: TBD
+- [ ] 25-01-PLAN.md — Strip HTML tags from narrative content using isomorphic-dompurify
 
 ## Progress
 
@@ -60,8 +60,8 @@ Phases execute in numeric order: 24 -> 25
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 24. Match Page Cleanup | v2.1 | 2/2 | Complete | 2026-02-03 |
-| 25. Content Rendering Fix | v2.1 | 0/? | Not started | - |
+| 25. Content Rendering Fix | v2.1 | 0/1 | Not started | - |
 
 ---
 *Roadmap created: 2026-02-03*
-*Last updated: 2026-02-03 after Phase 24 completion*
+*Last updated: 2026-02-03 after Phase 25 planning*
