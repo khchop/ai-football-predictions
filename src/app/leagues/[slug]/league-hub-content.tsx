@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MatchCard } from '@/components/match-card';
-import { 
-  getMatchesByCompetitionId, 
-  getPublishedBlogPosts, 
+import {
+  getMatchesByCompetitionId,
+  getPublishedBlogPosts,
   getStandingsByCompetitionId,
   getTopModelsByCompetition,
   getCompetitionStats,
@@ -12,7 +12,6 @@ import {
   getNextMatchForCompetition
 } from '@/lib/db/queries';
 import { Calendar, Clock, CheckCircle, List, Trophy } from 'lucide-react';
-import { CompetitionBadge } from '@/components/competition-badge';
 import type { BlogPost } from '@/lib/db/schema';
 import type { Match, Competition } from '@/lib/db/schema';
 import Link from 'next/link';
@@ -22,6 +21,11 @@ import { CompetitionTopModels } from '@/components/competition/competition-top-m
 import { CompetitionStats } from '@/components/competition/competition-stats';
 import { CompetitionPredictionSummary } from '@/components/competition/competition-prediction-summary';
 import { RecentPredictionsWidget } from '@/components/competition/recent-predictions-widget';
+import { LeagueFAQ } from '@/components/league/league-faq';
+import { LeagueTrendChart } from '@/components/league/league-trend-chart';
+import { generateLeagueFAQs } from '@/lib/league/generate-league-faqs';
+import { getLeagueTrends } from '@/lib/league/get-league-trends';
+import { getCompetitionByIdOrAlias } from '@/lib/football/competitions';
 
 interface LeagueHubContentProps {
   competitionId: string;
@@ -241,25 +245,43 @@ function InsightsLoadingSkeleton() {
 
 async function LeagueInsights({ competitionId }: { competitionId: string }) {
   // Fetch all data in parallel
-  const [topModels, stats, predictionSummary, nextMatch, matches] = await Promise.all([
+  const [topModels, stats, predictionSummary, nextMatch, matches, trends] = await Promise.all([
     getTopModelsByCompetition(competitionId, 5),
     getCompetitionStats(competitionId),
     getCompetitionPredictionSummary(competitionId),
     getNextMatchForCompetition(competitionId),
     getMatchesByCompetitionId(competitionId, 1),
+    getLeagueTrends(competitionId, 8),
   ]);
 
   const matchCount = matches.length;
   const nextMatchTime = nextMatch?.match?.kickoffTime;
 
+  // Get competition config for FAQ generation
+  const competition = getCompetitionByIdOrAlias(competitionId);
+
+  // Generate FAQs with dynamic data
+  const topModel = topModels[0];
+  const faqs = generateLeagueFAQs({
+    competition: { id: competitionId, name: competition?.name || '' },
+    stats: {
+      finishedMatches: stats.finishedMatches,
+      avgGoalsPerMatch: stats.avgGoalsPerMatch,
+    },
+    topModel: topModel ? {
+      model: { name: topModel.model.displayName },
+      accuracy: topModel.accuracy,
+    } : undefined,
+  });
+
   return (
     <div className="space-y-6">
-      <CompetitionHeader 
+      <CompetitionHeader
         competitionId={competitionId}
         matchCount={matchCount}
         nextMatchTime={nextMatchTime}
       />
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column - Top Models and Recent Predictions */}
         <div className="lg:col-span-1 space-y-6">
@@ -269,13 +291,26 @@ async function LeagueInsights({ competitionId }: { competitionId: string }) {
           />
           <RecentPredictionsWidget competitionId={competitionId} />
         </div>
-        
-        {/* Right column - Stats and Predictions */}
+
+        {/* Right column - Stats, Trends, and Predictions */}
         <div className="lg:col-span-2 space-y-6">
           <CompetitionStats stats={stats} />
+          {trends.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Accuracy Trend</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <LeagueTrendChart data={trends} />
+              </CardContent>
+            </Card>
+          )}
           <CompetitionPredictionSummary summary={predictionSummary} />
         </div>
       </div>
+
+      {/* FAQ section at bottom */}
+      <LeagueFAQ faqs={faqs} />
     </div>
   );
 }
