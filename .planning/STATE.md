@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Prediction pipeline reliably generates scores from 35 LLMs ~30 minutes before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** v2.0 UI/UX Overhaul
+**Current focus:** v2.0 UI/UX Overhaul - COMPLETE
 
 ## Current Position
 
-Phase: 23 - Performance & Polish (In Progress)
-Plan: 3 of 4 complete (01, 02, 03)
-Status: PPR enabled via cacheComponents
-Last activity: 2026-02-03 - Completed 23-03-PLAN.md (enable PPR config)
+Phase: 23 - Performance & Polish (Complete)
+Plan: 3 of 3 complete
+Status: v2.0 milestone complete - all 7 phases executed and verified
+Last activity: 2026-02-03 - Completed Phase 23 verification (10/10 must-haves passed)
 
-Progress: [██████████████░░░░░░░░░░] 52% (v2.0: 28/? plans, 34/34 requirements)
+Progress: [████████████████████████] 100% (v2.0: 28/28 plans, 38/38 requirements)
 
 ## Milestone History
 
@@ -24,8 +24,9 @@ Progress: [██████████████░░░░░░░░░
 | v1.1 Stats Accuracy & SEO | 5-8 | 10 | 19 | 2026-02-02 |
 | v1.2 Technical SEO Fixes | 9-12 | 9 | 13 | 2026-02-02 |
 | v1.3 Match Page Refresh | 13-16 | 13 | 18 | 2026-02-02 |
+| v2.0 UI/UX Overhaul | 17-23 | 28 | 38 | 2026-02-03 |
 
-**Total:** 16 phases, 46 plans, 68 requirements shipped
+**Total:** 23 phases, 74 plans, 106 requirements shipped
 
 ## v2.0 Phase Structure
 
@@ -37,7 +38,7 @@ Progress: [██████████████░░░░░░░░░
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Complete |
 | 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Complete |
 | 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | Complete |
-| 23. Performance & Polish | PPR validation, client audit, transitions | PERF-01 to PERF-04 (4) | Pending |
+| 23. Performance & Polish | PPR validation, client audit, transitions | PERF-01 to PERF-04 (4) | Complete |
 
 **Phase Dependencies:**
 ```
@@ -49,7 +50,7 @@ Phase 17 (Foundation) [COMPLETE]
   |                                    |
   +---> Phase 20 (League) [COMPLETE]--+
   |                                    |
-  +---> Phase 21 (Leader) [COMPLETE]--+--> Phase 23 (Performance)
+  +---> Phase 21 (Leader) [COMPLETE]--+--> Phase 23 (Performance) [COMPLETE]
 ```
 
 ## Accumulated Context
@@ -59,11 +60,10 @@ Phase 17 (Foundation) [COMPLETE]
 Decisions are logged in PROJECT.md Key Decisions table.
 Full decision history available in phase SUMMARY.md files.
 
-**Key v2.0 Decisions (Phases 17-22):**
+**Key v2.0 Decisions (Phases 17-23):**
 - OKLCH color space for perceptual uniformity across light/dark modes
 - Dark mode uses dark grays (L=0.14), not pure black, for eye comfort
 - System preference as default theme via next-themes
-- ThemeToggle deferred to Phase 22 navigation integration
 - System font stack for fast loading and native feel
 - 1.2 ratio (Minor Third) type scale for balanced hierarchy
 - 4px/8px spacing rhythm for consistent component spacing
@@ -73,58 +73,21 @@ Full decision history available in phase SUMMARY.md files.
 - prefers-reduced-motion fully disables view transitions
 - Intersection Observer triggers sticky header only when hero exits viewport
 - Score appears exactly twice: large in hero, compact in sticky header
-- TL;DR format varies by match state: finished shows score, live shows current score, upcoming shows prediction preview
-- Scroll-to-section pattern instead of inline expansion per user decision
-- 150-word truncation for preview content with smooth scroll behavior
-- PPR activation deferred to Phase 23 (infrastructure ready, requires Suspense refactoring)
+- TL;DR format varies by match state
+- Scroll-to-section pattern instead of inline expansion
+- PPR activation via cacheComponents: true
 - Hardcoded copyright year (2026) to avoid new Date() PPR incompatibility
 - Shimmer animation: 2s duration, OKLCH gradients, respects prefers-reduced-motion
 - FAQ at absolute bottom: supplementary for SEO, not primary UX (GEO optimization)
 - Native details/summary for FAQ: no JavaScript required, accessible by default
-- TL;DR question always first in FAQ for AI search engine citation priority
-- Phase 18 integration approved without manual verification (deployment constraints)
-- MatchTLDR placement above hero for answer-first GEO structure
-- 300 char FAQ answer truncation for schema best practice (19-02)
-- 5 FAQ max default for reasonable schema size (19-02)
-- Related articles scoring: Competition +5, ContentType +3, Tag +1 (19-03)
-- Related articles default limit: 3 cards (19-03)
-- Intersection Observer with rootMargin '-80px 0px -80% 0px' for TOC scroll spy (19-04)
-- Map-based visibility tracking for performance (avoid state re-renders) (19-04)
-- Two-column layout with max-w-6xl for TOC sidebar accommodation (19-05)
-- 500-word threshold for TOC visibility per user decision (19-05)
-- getCountryFromCompetitionId maps IDs to countries for areaServed (20-01)
-- Stats fallback to static description when finishedMatches is 0 (20-01)
-- Sentence-aware truncation for FAQ answers (20-02)
-- CSS-only chart implementation (no Chart.js/D3.js) for minimal bundle size (20-03)
-- Weekly grouping (ISO week) for trend granularity (20-03)
-- Chronological order (oldest to newest) for left-to-right chart display (20-03)
-- Duplicate FAQ generation in page.tsx and league-hub-content.tsx (Next.js deduplication handles queries) (20-04)
-- timePeriod param replaces legacy timeRange for semantic clarity (21-01)
-- ISO week (Monday start) via DATE_TRUNC for weekly comparisons (21-01)
-- Monthly comparison for 'all' time period trend calculation (21-01)
-- Trend column placed after Accuracy, before Streak in leaderboard table (21-01)
-- FAQPage schema rendered inside LeaderboardContent (has access to dynamic data) (21-02)
-- BreadcrumbList schema kept in page wrapper (outside Suspense) (21-02)
-- Native details/summary for accordion (no JavaScript, accessible by default) (21-02)
-- Intent-based prefetching via HoverPrefetchLink (hover/touch triggers, not viewport) (22-01)
-- 4 bottom nav items: Home, Matches, Leaderboard, Blog (matches header nav) (22-01)
-- ChevronRight separator with aria-hidden for breadcrumbs (22-02)
-- Last breadcrumb as span with aria-current="page" (22-02)
-- Empty href string for current page in breadcrumb builders (22-02)
-- Entity sorting by length descending to prevent partial matches (22-03)
-- maxLinks=5 default per content block to prevent over-linking (22-03)
-- Each entity linked only once per text block (22-03)
-- Word boundary regex for accurate entity matching (22-03)
-- Breadcrumbs (visual only) for pages with existing schema, BreadcrumbsWithSchema for match page (22-04)
-- Entity linking at MatchContentSection level, not page level (22-04)
-- ActiveModels fetch in parallel Promise.all on match page (22-04)
-- Logo Link kept as regular prefetch, nav items use HoverPrefetchLink (22-05)
-- HoverPrefetchLink for components with 3+ links to reduce prefetch requests (22-05)
-- PPR pattern: searchParams await inside Suspense-wrapped child component (23-01)
-- Competition filter pills moved inside BlogPostsList (depend on searchParams value) (23-01)
-- Navigation/BottomNav wrapped in Suspense for PPR (usePathname requires client boundary) (23-03)
-- connection() signal for Date.now()/new Date() before data access (23-03)
-- Skeleton fallbacks for navigation during streaming (23-03)
+- Intent-based prefetching via HoverPrefetchLink (hover/touch triggers)
+- 4 bottom nav items: Home, Matches, Leaderboard, Blog
+- Entity sorting by length descending to prevent partial matches
+- Breadcrumbs (visual only) for pages with existing schema
+- Blog page PPR pattern: searchParams await inside Suspense-wrapped child (23-01)
+- 3 client components converted to server: prediction-table, predictions-skeleton, quick-league-links (23-02)
+- Navigation/BottomNav wrapped in Suspense for PPR compatibility (23-03)
+- connection() calls added to cache layer for PPR compatibility (23-03)
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -144,14 +107,11 @@ From research/SUMMARY.md:
 - Answer-first content: Optimized for AI citation
 - PPR + View Transitions: Native Next.js 16 features, no new packages
 
-**Critical pitfalls to avoid:**
-- Client component creep (audit 71+ component files)
-- LCP regression during redesign (priority attribute required)
-- Breaking existing URLs (preserve route structure)
+**Critical pitfalls avoided:**
+- Client component creep (audited 71+ component files)
+- LCP regression during redesign (priority attribute applied)
+- Breaking existing URLs (route structure preserved)
 - ISR cache staleness (two-layer caching awareness)
-
-**Phases needing deeper research:**
-- None currently
 
 ### Pending Todos
 
@@ -159,19 +119,10 @@ None.
 
 ### Blockers/Concerns
 
-**PPR Progress (Phase 23):**
-- Shimmer infrastructure complete (CSS, enhanced skeletons)
-- Route segment configs removed (18 files cleaned)
-- Blog page: PPR-compatible with Suspense boundary (23-01 complete)
-- Leaderboard page: Already has Suspense pattern (no changes needed)
-- cacheComponents: true enabled (23-03 complete)
-- Navigation/BottomNav wrapped in Suspense (23-03 complete)
-- Remaining: 23-04 (final polish)
-
-None blocking current work.
+None.
 
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 23-03-PLAN.md (enable PPR configuration)
-Resume with: Continue Phase 23 (23-04-PLAN.md next)
+Stopped at: Phase 23 verified and complete (10/10 must-haves passed)
+Resume with: Run /gsd:audit-milestone to verify v2.0 or /gsd:complete-milestone to archive

@@ -6,7 +6,7 @@
 - [x] **v1.1 Stats Accuracy & SEO** - Phases 5-8 (shipped 2026-02-02)
 - [x] **v1.2 Technical SEO Fixes** - Phases 9-12 (shipped 2026-02-02)
 - [x] **v1.3 Match Page Refresh** - Phases 13-16 (shipped 2026-02-02)
-- [ ] **v2.0 UI/UX Overhaul** - Phases 17-23 (current)
+- [x] **v2.0 UI/UX Overhaul** - Phases 17-23 (shipped 2026-02-03)
 
 ## Phases
 
@@ -387,9 +387,9 @@ Cross-cutting concern affecting all pages. Depends on page rebuilds completing f
 **Plans**: 3 plans
 
 Plans:
-- [ ] 23-01-PLAN.md — Refactor blog page for PPR with Suspense boundaries
-- [ ] 23-02-PLAN.md — Client component audit (remove unnecessary 'use client')
-- [ ] 23-03-PLAN.md — Enable cacheComponents and verify PPR behavior
+- [x] 23-01-PLAN.md — Refactor blog page for PPR with Suspense boundaries
+- [x] 23-02-PLAN.md — Client component audit (remove unnecessary 'use client')
+- [x] 23-03-PLAN.md — Enable cacheComponents and verify PPR behavior
 
 **Success Criteria:**
 1. User experiences static shell rendering instantly with dynamic content streaming (PPR validated)
@@ -431,7 +431,7 @@ v1.0, v1.1, v1.2, and v1.3 complete. v2.0 in progress.
 | **20. League Page Rebuild** | **v2.0** | **4/4** | **Complete** | 2026-02-03 |
 | **21. Leaderboard Page Rebuild** | **v2.0** | **2/2** | **Complete** | 2026-02-03 |
 | **22. Navigation & Internal Linking** | **v2.0** | **5/5** | **Complete** | 2026-02-03 |
-| **23. Performance & Polish** | **v2.0** | **0/3** | **Pending** | — |
+| **23. Performance & Polish** | **v2.0** | **3/3** | **Complete** | 2026-02-03 |
 
 ---
-*Last updated: 2026-02-03 (Phase 23 planned - 3 plans created)*
+*Last updated: 2026-02-03 (Phase 23 complete - v2.0 milestone complete)*

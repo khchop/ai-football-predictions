@@ -18,12 +18,12 @@ Requirements for UI/UX Overhaul. Each maps to roadmap phases.
 
 ### Match Pages
 
-- [ ] **MTCH-01**: Score displays exactly once on page (no duplication across sections)
-- [ ] **MTCH-02**: Pre-match narrative content visible on upcoming match pages
-- [ ] **MTCH-03**: Prediction explanation content visible on match pages with predictions
-- [ ] **MTCH-04**: Post-match roundup content visible on finished match pages
-- [ ] **MTCH-05**: Static shell with streaming dynamic content via PPR
-- [ ] **MTCH-06**: Answer-first content structure optimized for GEO/AI citations
+- [x] **MTCH-01**: Score displays exactly once on page (no duplication across sections)
+- [x] **MTCH-02**: Pre-match narrative content visible on upcoming match pages
+- [x] **MTCH-03**: Prediction explanation content visible on match pages with predictions
+- [x] **MTCH-04**: Post-match roundup content visible on finished match pages
+- [x] **MTCH-05**: Static shell with streaming dynamic content via PPR
+- [x] **MTCH-06**: Answer-first content structure optimized for GEO/AI citations
 
 ### Blog Pages
 
@@ -57,10 +57,10 @@ Requirements for UI/UX Overhaul. Each maps to roadmap phases.
 
 ### Performance
 
-- [ ] **PERF-01**: Partial Prerendering (PPR) enabled for static shells
-- [ ] **PERF-02**: Cache configuration fixed (resolve dynamic/revalidate conflicts)
-- [ ] **PERF-03**: Client component audit complete (unnecessary 'use client' removed)
-- [ ] **PERF-04**: View Transitions enabled for smooth page transitions
+- [x] **PERF-01**: Partial Prerendering (PPR) enabled for static shells
+- [x] **PERF-02**: Cache configuration fixed (resolve dynamic/revalidate conflicts)
+- [x] **PERF-03**: Client component audit complete (unnecessary 'use client' removed)
+- [x] **PERF-04**: View Transitions enabled for smooth page transitions
 
 ## Future Requirements
 
@@ -100,18 +100,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DSGN-01 | Phase 17 | Pending |
-| DSGN-02 | Phase 17 | Pending |
-| DSGN-03 | Phase 17 | Pending |
-| DSGN-04 | Phase 17 | Pending |
-| DSGN-05 | Phase 17 | Pending |
-| DSGN-06 | Phase 17 | Pending |
-| MTCH-01 | Phase 18 | Pending |
-| MTCH-02 | Phase 18 | Pending |
-| MTCH-03 | Phase 18 | Pending |
-| MTCH-04 | Phase 18 | Pending |
-| MTCH-05 | Phase 18 | Pending |
-| MTCH-06 | Phase 18 | Pending |
+| DSGN-01 | Phase 17 | Complete |
+| DSGN-02 | Phase 17 | Complete |
+| DSGN-03 | Phase 17 | Complete |
+| DSGN-04 | Phase 17 | Complete |
+| DSGN-05 | Phase 17 | Complete |
+| DSGN-06 | Phase 17 | Complete |
+| MTCH-01 | Phase 18 | Complete |
+| MTCH-02 | Phase 18 | Complete |
+| MTCH-03 | Phase 18 | Complete |
+| MTCH-04 | Phase 18 | Complete |
+| MTCH-05 | Phase 18 | Complete |
+| MTCH-06 | Phase 18 | Complete |
 | BLOG-01 | Phase 19 | Complete |
 | BLOG-02 | Phase 19 | Complete |
 | BLOG-03 | Phase 19 | Complete |
@@ -130,10 +130,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NAVL-03 | Phase 22 | Complete |
 | NAVL-04 | Phase 22 | Complete |
 | NAVL-05 | Phase 22 | Complete |
-| PERF-01 | Phase 23 | Pending |
-| PERF-02 | Phase 23 | Pending |
-| PERF-03 | Phase 23 | Pending |
-| PERF-04 | Phase 23 | Pending |
+| PERF-01 | Phase 23 | Complete |
+| PERF-02 | Phase 23 | Complete |
+| PERF-03 | Phase 23 | Complete |
+| PERF-04 | Phase 23 | Complete |
 
 **Coverage:**
 - v2.0 requirements: 33 total
@@ -142,4 +142,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-03 after Phase 22 completion*
+*Last updated: 2026-02-03 after Phase 23 completion (v2.0 complete)*
