@@ -31,6 +31,10 @@ function getEventStatus(status: string | null): string {
       return 'https://schema.org/EventCompleted';
     case 'live':
       return 'https://schema.org/EventInProgress';
+    case 'postponed':
+      return 'https://schema.org/EventPostponed';
+    case 'cancelled':
+      return 'https://schema.org/EventCancelled';
     default:
       return 'https://schema.org/EventScheduled';
   }
