@@ -257,23 +257,6 @@ async function LeagueInsights({ competitionId }: { competitionId: string }) {
   const matchCount = matches.length;
   const nextMatchTime = nextMatch?.match?.kickoffTime;
 
-  // Get competition config for FAQ generation
-  const competition = getCompetitionByIdOrAlias(competitionId);
-
-  // Generate FAQs with dynamic data
-  const topModel = topModels[0];
-  const faqs = generateLeagueFAQs({
-    competition: { id: competitionId, name: competition?.name || '' },
-    stats: {
-      finishedMatches: stats.finishedMatches,
-      avgGoalsPerMatch: stats.avgGoalsPerMatch,
-    },
-    topModel: topModel ? {
-      model: { name: topModel.model.displayName },
-      accuracy: topModel.accuracy,
-    } : undefined,
-  });
-
   return (
     <div className="space-y-6">
       <CompetitionHeader
@@ -308,11 +291,32 @@ async function LeagueInsights({ competitionId }: { competitionId: string }) {
           <CompetitionPredictionSummary summary={predictionSummary} />
         </div>
       </div>
-
-      {/* FAQ section at bottom */}
-      <LeagueFAQ faqs={faqs} />
     </div>
   );
+}
+
+async function LeagueFAQSection({ competitionId }: { competitionId: string }) {
+  const [topModels, stats] = await Promise.all([
+    getTopModelsByCompetition(competitionId, 1),
+    getCompetitionStats(competitionId),
+  ]);
+
+  const competition = getCompetitionByIdOrAlias(competitionId);
+  const topModel = topModels[0];
+
+  const faqs = generateLeagueFAQs({
+    competition: { id: competitionId, name: competition?.name || '' },
+    stats: {
+      finishedMatches: stats.finishedMatches,
+      avgGoalsPerMatch: stats.avgGoalsPerMatch,
+    },
+    topModel: topModel ? {
+      model: { name: topModel.model.displayName },
+      accuracy: topModel.accuracy,
+    } : undefined,
+  });
+
+  return <LeagueFAQ faqs={faqs} />;
 }
 
 export async function LeagueHubContent({ competitionId }: LeagueHubContentProps) {
@@ -358,6 +362,11 @@ export async function LeagueHubContent({ competitionId }: LeagueHubContentProps)
           </Suspense>
         </TabsContent>
       </Tabs>
+
+      {/* FAQ section at the very bottom */}
+      <Suspense fallback={null}>
+        <LeagueFAQSection competitionId={competitionId} />
+      </Suspense>
     </div>
   );
 }
