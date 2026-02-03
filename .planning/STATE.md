@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 17 - Design System Foundation
-Plan: 04 of 4 complete (Phase complete)
-Status: Phase complete
-Last activity: 2026-02-02 - Completed 17-04-PLAN.md (View Transitions)
+Phase: 18 - Match Page Rebuild
+Plan: 01 of 6 complete (In progress)
+Status: In progress
+Last activity: 2026-02-03 - Completed 18-01-PLAN.md (Score Deduplication)
 
-Progress: [████░░░░░░░░░░░░░░░░░░░░] 12% (v2.0: 4/? plans, 6/33 requirements)
+Progress: [█████░░░░░░░░░░░░░░░░░░░] 15% (v2.0: 5/? plans, 7/33 requirements)
 
 ## Milestone History
 
@@ -32,7 +32,7 @@ Progress: [████░░░░░░░░░░░░░░░░░░░
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
 | 17. Design System Foundation | Design tokens, dark mode, PPR infrastructure | DSGN-01 to DSGN-06 (6) | Complete |
-| 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | Pending |
+| 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | In Progress (1/6) |
 | 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Pending |
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Pending |
 | 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Pending |
@@ -59,7 +59,7 @@ Phase 17 (Foundation) [COMPLETE]
 Decisions are logged in PROJECT.md Key Decisions table.
 Full decision history available in phase SUMMARY.md files.
 
-**Key v2.0 Decisions (Phase 17):**
+**Key v2.0 Decisions (Phases 17-18):**
 - OKLCH color space for perceptual uniformity across light/dark modes
 - Dark mode uses dark grays (L=0.14), not pure black, for eye comfort
 - System preference as default theme via next-themes
@@ -71,6 +71,8 @@ Full decision history available in phase SUMMARY.md files.
 - AccuracyBadge thresholds: <40% red, 40-70% amber, >70% green
 - 150ms view transition duration for snappy navigation feel
 - prefers-reduced-motion fully disables view transitions
+- Intersection Observer triggers sticky header only when hero exits viewport
+- Score appears exactly twice: large in hero, compact in sticky header
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -110,6 +112,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-02
-Stopped at: Completed 17-04-PLAN.md (View Transitions) - Phase 17 complete
-Resume with: Begin Phase 18 (Match Page Rebuild)
+Last session: 2026-02-03
+Stopped at: Completed 18-01-PLAN.md (Score Deduplication)
+Resume with: Continue Phase 18 - next plan
