@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 23 - Performance & Polish (In Progress)
-Plan: 2 of 4 complete (01 and 02)
-Status: Blog page PPR + client audit complete
-Last activity: 2026-02-03 - Completed 23-01-PLAN.md (blog PPR)
+Plan: 3 of 4 complete (01, 02, 03)
+Status: PPR enabled via cacheComponents
+Last activity: 2026-02-03 - Completed 23-03-PLAN.md (enable PPR config)
 
-Progress: [██████████████░░░░░░░░░░] 51% (v2.0: 27/? plans, 34/34 requirements)
+Progress: [██████████████░░░░░░░░░░] 52% (v2.0: 28/? plans, 34/34 requirements)
 
 ## Milestone History
 
@@ -122,6 +122,9 @@ Full decision history available in phase SUMMARY.md files.
 - HoverPrefetchLink for components with 3+ links to reduce prefetch requests (22-05)
 - PPR pattern: searchParams await inside Suspense-wrapped child component (23-01)
 - Competition filter pills moved inside BlogPostsList (depend on searchParams value) (23-01)
+- Navigation/BottomNav wrapped in Suspense for PPR (usePathname requires client boundary) (23-03)
+- connection() signal for Date.now()/new Date() before data access (23-03)
+- Skeleton fallbacks for navigation during streaming (23-03)
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -161,12 +164,14 @@ None.
 - Route segment configs removed (18 files cleaned)
 - Blog page: PPR-compatible with Suspense boundary (23-01 complete)
 - Leaderboard page: Already has Suspense pattern (no changes needed)
-- Remaining: 23-03 (view transitions), 23-04 (final polish)
+- cacheComponents: true enabled (23-03 complete)
+- Navigation/BottomNav wrapped in Suspense (23-03 complete)
+- Remaining: 23-04 (final polish)
 
 None blocking current work.
 
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 23-01-PLAN.md (blog page PPR compatibility)
-Resume with: Continue Phase 23 (23-03-PLAN.md next)
+Stopped at: Completed 23-03-PLAN.md (enable PPR configuration)
+Resume with: Continue Phase 23 (23-04-PLAN.md next)
