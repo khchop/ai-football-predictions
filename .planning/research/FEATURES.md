@@ -1,318 +1,365 @@
-# Feature Landscape: UI/UX Overhaul
+# Features Research: v2.2 Match Page Rewrite
 
-**Domain:** Sports prediction platform
-**Researched:** 2026-02-02
+**Domain:** Football match detail pages for AI prediction platform
+**Researched:** 2026-02-03
 **Confidence:** HIGH (verified against multiple authoritative sources)
-
-## Table Stakes
-
-Features users expect. Missing = product feels incomplete or unprofessional.
-
-### Navigation & Layout
-
-| Feature | Why Expected | Complexity | Dependencies | Notes |
-|---------|--------------|------------|--------------|-------|
-| **Bottom navigation bar** | 21% faster navigation, thumb-zone optimized (bottom 45% = easy reach) | Medium | None | 4-5 items max. Height 56-64px. Icons + labels (92% correct interpretation vs 73% icon-only) |
-| **Mobile-first responsive design** | 64.95% of sports fans access on mobile; 5x abandonment for non-mobile-friendly | High | Design system | Build mobile-first, adapt up to desktop. Not the reverse. |
-| **Touch targets 44x44px minimum** | Already validated in v1.3 (MOBL-06); accessibility standard | Low | Already done | Verify in redesign |
-| **Fast page loads (<2.5s LCP)** | Google CWV threshold; 24% less abandonment when met | High | ISR, lazy loading | Already have ISR (60s revalidate) |
-| **Sticky header with score** | Users on mobile want score visible while scrolling stats | Low | Already have | Already implemented; preserve in redesign |
-| **Clear visual hierarchy** | Sports fans scanning for quick info; reduces cognitive load | Medium | Design system | Headers, spacing, contrast ratios |
-| **Breadcrumb navigation** | SEO benefit + user orientation; already have schema | Low | Already have | Already implemented |
-
-### Match Pages
-
-| Feature | Why Expected | Complexity | Dependencies | Notes |
-|---------|--------------|------------|--------------|-------|
-| **Live score updates** | 92% of fans say most important feature | Low | Already built | Already have WebSocket/polling |
-| **Match events timeline** | Users expect goals, cards, subs chronologically | Low | Already built | Have MatchEvents component |
-| **Score + team crests prominent** | Visual anchor, instant recognition | Low | MatchHeader | Already have; verify in redesign |
-| **Match status indicator** | Upcoming/Live/Finished clear at glance | Low | Already built | Badge or visual state |
-| **Tabbed content organization** | Already validated v1.3 (MOBL-04); reduces scroll fatigue | Low | Already built | Summary/Stats/Predictions/Analysis |
-
-### Leaderboard
-
-| Feature | Why Expected | Complexity | Dependencies | Notes |
-|---------|--------------|------------|--------------|-------|
-| **Sortable columns** | Users expect to sort by different metrics | Low | Already built | Have LeaderboardTable |
-| **Filter by competition** | Users want league-specific rankings | Low | Already built | LeaderboardFilters component |
-| **Scoring system explanation** | Without explanation, numbers meaningless | Low | Already built | Kicktipp scoring card |
-| **Model profile links** | Click model to see details | Low | Already built | Links to /models/[id] |
-
-### Blog/Content
-
-| Feature | Why Expected | Complexity | Dependencies | Notes |
-|---------|--------------|------------|--------------|-------|
-| **Readable line width** | 600-700px optimal; current blog is full-width | Low | CSS update | max-w-prose or max-w-2xl |
-| **Clear typography hierarchy** | Headers, body, captions distinct | Medium | Design system | Already have ReactMarkdown styling |
-| **Estimated read time** | Busy users appreciate time expectation | Low | Word count calc | Add to blog metadata display |
-| **Back to list navigation** | Users expect easy return; already have | Low | Already built | ArrowLeft link |
-| **Publication date** | Trust signal; already have | Low | Already built | Calendar icon + date |
-
-### SEO/GEO Fundamentals
-
-| Feature | Why Expected | Complexity | Dependencies | Notes |
-|---------|--------------|------------|--------------|-------|
-| **Schema.org structured data** | Already have; maintain/expand | Medium | Already built | SportsEvent, Article, BreadcrumbList |
-| **Canonical URLs** | Prevent duplicate content issues | Low | Already built | alternates.canonical |
-| **Meta descriptions <160 chars** | Already validated v1.1 (SEO-06) | Low | Already done | Maintain |
-| **Open Graph images** | Social sharing previews | Low | Already built | /api/og/* routes |
-| **robots.txt + llms.txt** | Already validated v1.3 (SRCH-01, SRCH-02) | Low | Already done | Maintain |
+**Focus:** SEO/GEO optimization, mobile-first single-scroll design, auto-generated FAQ
 
 ---
 
-## Differentiators
+## Table Stakes (Must Have)
 
-Features that set platform apart. Not expected, but create competitive advantage.
+Essential features for SEO and GEO (Generative Engine Optimization). Missing any of these means losing visibility in both traditional search and AI-generated responses.
 
-### AI Citation Optimization (GEO)
+### Structured Data / Schema Markup
 
-| Feature | Value Proposition | Complexity | Dependencies | Notes |
-|---------|-------------------|------------|--------------|-------|
-| **FAQ sections on all major pages** | 3.2x more likely to appear in AI Overviews; 28% more AI citations with FAQ schema | Medium | FAQPage schema | Already have on leaderboard; expand to match, league, model pages |
-| **Question-answer format content** | Matches how AI platforms present info; reduces interpretive burden | Medium | Content templates | Structure content as Q&A where natural |
-| **Structured comparison tables** | AI platforms favor comparison content for citation | Medium | Component library | Model vs model, league vs league comparisons |
-| **Recent content updates** | Content updated within 30 days earns 3.2x more AI citations | Low | Existing pipeline | Post-match roundups already provide this |
-| **Original research/data** | 4.1x more citations for original research | Low | Existing data | Our 35-model benchmark IS original research - emphasize this |
-| **Encyclopedia-style neutral tone** | ChatGPT favors neutral, authoritative content | Medium | Content guidelines | Match analysis should be factual, not hype |
+| Feature | Why Essential | Complexity | Notes |
+|---------|---------------|------------|-------|
+| **SportsEvent schema** | Google recognizes page as sports event; enables rich results | Low | Already have via MatchPageSchema; verify homeTeam/awayTeam/competitor properties |
+| **FAQPage schema** | 3.2x more likely to appear in AI Overviews; 28% more AI citations | Low | Already have via MatchFAQSchema; expand question coverage |
+| **BreadcrumbList schema** | Navigation context for search engines; already implemented | Low | Keep; validates page hierarchy |
+| **Article schema for narratives** | Pre/post-match content recognized as editorial content | Low | Add for narrative sections; improves E-E-A-T signals |
+| **JSON-LD @graph consolidation** | Single structured data block; avoids fragmentation | Medium | Consolidate all schemas into one @graph array |
 
-### Internal Linking Excellence
+### Content Structure for AI Citation
 
-| Feature | Value Proposition | Complexity | Dependencies | Notes |
-|---------|-------------------|------------|--------------|-------|
-| **Contextual body links** | Most valuable for SEO; "editorial endorsements" | High | Content analysis | Auto-link team names, model names, competitions in text |
-| **Related matches widget** | Already validated v1.2 (SEO-T11); drives discovery | Low | Already built | Cross-links between related matches |
-| **Related models widget** | Already validated v1.2 (SEO-T12); cross-page linking | Low | Already built | "Related models" on model pages |
-| **Recent predictions widget** | Already validated v1.2 (SEO-T13); competition pages | Low | Already built | On competition/league pages |
-| **Sidebar "Popular this week"** | Curated evergreen content; rotate monthly | Medium | Analytics integration | 1-3 top articles with thumbnails |
-| **Dynamic related posts** | Topic clusters; avoid cross-topic recent posts | Medium | Content categorization | Related posts on article pages based on category |
+| Feature | Why Essential | Complexity | Notes |
+|---------|---------------|------------|-------|
+| **Answer-first content** | AI engines extract first paragraph as citation; 4.1x more citations for original research | Low | Lead with TL;DR/summary; already have MatchTLDR |
+| **Clear H1 with match teams** | Crawlers and AI need unambiguous page topic | Low | Already have via MatchH1 |
+| **Semantic heading hierarchy** | H1 -> H2 -> H3 flow; AI systems parse structure | Low | Audit current page; ensure no skipped levels |
+| **Publication/update timestamps** | Freshness signal; content updated within 30 days gets 3.2x more citations | Low | Add dateModified to schema; show "Last updated" on page |
+| **Author/source attribution** | E-E-A-T signal; AI engines prioritize authoritative sources | Medium | "Analysis by AI models" attribution; methodology link |
 
-### Speed-Optimized Navigation
+### Mobile-First Single-Scroll Design
 
-| Feature | Value Proposition | Complexity | Dependencies | Notes |
-|---------|-------------------|------------|--------------|-------|
-| **Prefetch on hover/focus** | Instant perceived navigation | Medium | Next.js Link | Use prefetch prop strategically |
-| **Skeleton loading states** | Perceived speed; already have some | Low | Component library | Consistent skeleton patterns |
-| **Predictive preloading** | AI-driven preload of likely next pages | High | Analytics + ML | Advanced; defer to later phase |
-| **Progressive disclosure** | Already validated v1.3 (MOBL-03); reduces initial load | Low | Already built | Collapse advanced stats |
+| Feature | Why Essential | Complexity | Notes |
+|---------|---------------|------------|-------|
+| **Linear vertical scroll** | 64% of sports fans on mobile; single scroll = no hidden content | Low | Remove tabs entirely; stack all content vertically |
+| **Touch targets 44x44px** | Accessibility standard; already validated v1.3 | Low | Maintain on all interactive elements |
+| **Fast LCP (<2.5s)** | Core Web Vitals threshold; affects ranking | Medium | Priority on above-fold images; lazy load below |
+| **No horizontal scrolling** | Unexpected on mobile; breaks mental model | Low | Responsive tables; wrap or truncate wide content |
+| **Readable on small screens** | 320px minimum viewport support | Low | Test on iPhone SE size; ensure no overflow |
 
-### Leaderboard Gamification
+### Core Match Information
 
-| Feature | Value Proposition | Complexity | Dependencies | Notes |
-|---------|-------------------|------------|--------------|-------|
-| **Micro-leaderboards** | Regional/competition-specific reduces demoralization | Low | Filter system | Already have competition filter |
-| **Time-based leaderboards** | Weekly/monthly fresh start increases engagement | Low | Time filters | Add "This Week" / "This Month" views |
-| **Streak badges** | Visual recognition of consistent performance | Medium | Streak tracking | Already track streaks in DB |
-| **Model performance trends** | Line chart showing improvement/decline over time | Medium | Chart component | Adds "story" to static numbers |
-| **Position change indicators** | Up/down arrows showing rank movement | Low | Historical data | Compare current vs previous period |
-
-### Mobile UX Excellence
-
-| Feature | Value Proposition | Complexity | Dependencies | Notes |
-|---------|-------------------|------------|--------------|-------|
-| **Swipe gestures between tabs** | Already validated v1.3 (MOBL-05); native feel | Low | Already built | react-swipeable |
-| **Pull-to-refresh** | Native mobile pattern for live content | Medium | React hook | Add to match pages, leaderboard |
-| **Floating action button** | Quick access to key actions in thumb zone | Medium | Component | "Share" or "Favorites" quick action |
-| **Collapsible sections** | Already have; ensure consistent pattern | Low | Component library | Standardize accordion behavior |
-| **Bottom sheet modals** | Native mobile pattern; thumb-friendly | Medium | Component library | For filters, sharing, etc. |
-
-### Content Engagement
-
-| Feature | Value Proposition | Complexity | Dependencies | Notes |
-|---------|-------------------|------------|--------------|-------|
-| **Table of contents (long posts)** | Improves navigation for 1500+ word posts | Low | Auto-generate from headers | Add to blog posts |
-| **Sticky sharing buttons** | Always accessible without scroll-back | Low | CSS position:sticky | Mobile: bottom bar; Desktop: sidebar |
-| **Content chunking with "Read More"** | Already validated v1.3 (CONT-05); manages long content | Low | Already built | Preserve pattern |
-| **Reading progress indicator** | Engagement signal; encourages completion | Low | Scroll listener | Thin progress bar at top |
+| Feature | Why Essential | Complexity | Notes |
+|---------|---------------|------------|-------|
+| **Score prominently displayed** | #1 user intent for match pages; 92% say most important | Low | Already have; single display location (no duplication) |
+| **Match status indicator** | Upcoming/Live/Finished immediately clear | Low | Already have; keep in header area |
+| **Kickoff time with timezone** | Critical user information; avoids confusion | Low | Already have; ensure ISO format in schema |
+| **Competition context** | Users need to know league/round | Low | Already have via breadcrumbs and header |
+| **Team names unambiguous** | Home vs Away clearly distinguished | Low | Already have; maintain visual distinction |
 
 ---
 
-## Anti-Features
+## Differentiators (Competitive Advantages)
 
-Features to explicitly NOT build. Common mistakes in this domain.
+Features that distinguish the platform from competitors and maximize AI citation potential.
 
-### Avoid: Over-Gamification
+### Advanced GEO Optimization
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| **Achievement badges everywhere** | Users came for predictions, not badge collecting; creates noise | Subtle streak indicators only; no badge pop-ups |
-| **Points for user actions** | View-only platform; no user accounts to track | Keep gamification in model competition only |
-| **Daily login rewards** | No user accounts; creates obligation anxiety | N/A - not possible |
-| **Competitive pressure notifications** | No user accounts; would require engagement dark patterns | Clean notification-free experience |
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| **Match-state-specific FAQ** | Different questions for upcoming/live/finished; more relevant citations | Medium | Expand existing generateMatchFAQs(); add 3-5 more per state |
+| **Prediction accuracy FAQ** | "How accurate were predictions?" with actual data | Medium | Calculate and include post-match; unique data = citations |
+| **Statistical comparison FAQ** | "What were the key stats?" from match data | Medium | Auto-generate from MatchStats data |
+| **Hub-and-spoke content model** | Match page links to team, league, model pages; topical authority | Low | Already have; ensure bidirectional linking |
+| **Entity consistency** | Same team names everywhere; AI recognizes entities | Low | Audit for variations (e.g., "Man United" vs "Manchester United") |
 
-### Avoid: Information Overload
+### Narrative Content Excellence
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| **All 35 model predictions visible at once** | Overwhelming; cognitive overload | Already solved with expandable section (MOBL-02) |
-| **Every stat metric on initial view** | Users need progressive discovery | Progressive disclosure (MOBL-03) already implemented |
-| **Auto-playing video content** | Bandwidth intensive; annoying on mobile | Static content; user-initiated only |
-| **Infinite scroll for match lists** | SEO-unfriendly; users can't bookmark positions | Paginated with unique URLs; load-more button if needed |
-| **Live ticker/marquee** | Distracting; accessibility issue | Static last-updated timestamp |
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| **Pre-match preview narrative** | Context before predictions; improves engagement | Low | Already have via MatchContentSection |
+| **Post-match analysis narrative** | Unique editorial content; E-E-A-T signal | Low | Already have via roundup; ensure prominent display |
+| **Prediction performance summary** | "X models predicted correctly"; original data | Low | Calculate from predictions array |
+| **Quotable blockquotes** | AI engines extract quotes as citations | Low | Already have PredictionInsightsBlockquote |
 
-### Avoid: Dark Patterns
+### Prediction Table Enhancements
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| **Forced newsletter popups** | View-only platform; creates friction | No popups; footer signup if added later |
-| **Interstitial ads** | Destroys trust and UX | No ads (current model) |
-| **Hidden navigation** | Hamburger-only nav fails 62% of users | Bottom nav + hamburger for secondary items |
-| **Fake urgency indicators** | Betting adjacent = scrutinized; trust critical | Honest match status only |
-| **Social proof manipulation** | "42 people viewing" etc.; erodes trust | No fake metrics |
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| **35 models displayed** | Unique value proposition; no competitor has this | Low | Already have; preserve |
+| **Model accuracy indicators** | Trust signal; shows which models perform well | Low | Points already shown; add visual accuracy tier |
+| **Consensus prediction** | "Most models predict X"; citation-worthy statement | Low | Already calculate average; make it a standalone statement |
+| **Sort by accuracy (post-match)** | Shows best performers; engagement value | Low | Already implemented |
 
-### Avoid: Performance Anti-Patterns
+### Internal Linking Strategy
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| **Lazy-loading above-fold content** | Causes visible content delay; hurts LCP | Eager load above fold; lazy load below |
-| **Third-party script bloat** | Analytics, chat widgets compete for bandwidth | Minimal scripts; defer non-critical |
-| **Uncompressed images** | Largest cause of slow LCP | WebP format; proper sizing; responsive images |
-| **Layout shift from ads/content** | CLS penalty; user frustration | Reserve space before load; no ads |
-| **Redirect chains** | Already fixed (SEO-T02); avoid recreating | Direct links always |
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| **Related matches widget** | Already implemented; drives page discovery | Low | Keep; validates SEO value |
+| **Model profile links** | Each model in table links to /models/[id] | Low | Already have |
+| **Competition page link** | Prominent link back to league | Low | Already have; keep prominent |
+| **Team entity linking** | Link team names to team pages when available | Medium | Future enhancement; requires team pages |
 
-### Avoid: SEO Anti-Patterns
+### Performance Optimization
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| **Orphan pages** | Not discoverable by crawlers | Every page linked from at least one other |
-| **Thin content pages** | Low value for SEO; may be ignored | Add FAQ sections; ensure substantive content |
-| **Generic anchor text** | "Click here" doesn't help SEO | Descriptive anchor text: "Premier League predictions" |
-| **Multiple pages for similar content** | Keyword cannibalization | Single comprehensive page per topic |
-| **Heavy client-side rendering** | AI crawlers struggle; already fixed (SRCH-04) | SSR for all content |
-
-### Avoid: Mobile Anti-Patterns
-
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| **Top-only navigation** | Hard to reach zone (top 25%); 21% slower | Bottom navigation for primary actions |
-| **Small tap targets** | Already validated minimum 44x44 (MOBL-06) | Maintain minimum sizes |
-| **Hover-dependent interactions** | Touch has no hover state | Always show interaction affordances |
-| **Fixed position elements covering content** | Reduces readable area on small screens | Minimal fixed elements; collapse on scroll |
-| **Horizontal scrolling** | Unexpected on mobile; breaks mental model | Vertical scroll only; responsive tables |
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| **Single data fetch pattern** | Eliminate query waterfall; faster TTFB | Medium | Already have Promise.all(); verify no sequential deps |
+| **Skeleton loading states** | Perceived performance while data loads | Low | Add for predictions table |
+| **Image optimization** | WebP format; responsive sizes | Low | Next.js Image component |
+| **Minimal client JS** | Server-render everything possible | Medium | Audit 'use client' directives |
 
 ---
 
-## Feature Dependencies
+## Anti-Features (Do NOT Build)
 
+Features to explicitly avoid. These are common patterns that harm SEO, GEO, or user experience for this page type.
+
+### Navigation Anti-Patterns
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| **Tabbed content on mobile** | Hides content from crawlers; requires interaction to see predictions; SEO penalty for hidden content | Single-scroll layout; all content visible on load |
+| **Accordion-only content** | Similar to tabs; content hidden by default | Use accordions only for optional deep-dive (e.g., all 35 models vs top 5) |
+| **Infinite scroll** | No unique URLs for content sections; hard to bookmark | Finite page with anchor links |
+| **Horizontal tab bars** | Requires scrolling to see all tabs on mobile; 73% miss tabs outside viewport | Stack sections vertically |
+
+### Content Anti-Patterns
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| **Duplicate score display** | Current page shows score 3+ times; redundant; confusing | Single authoritative score location (MatchPageHeader) |
+| **Auto-playing video** | Bandwidth intensive; unexpected; accessibility issue | User-initiated only if video added |
+| **Generic FAQ answers** | "AI predictions are..." without match-specific data | Match-specific answers: "For this match, 23/35 models predicted..." |
+| **Keyword stuffing** | "Man City vs Arsenal predictions Man City Arsenal betting tips" | Natural language; entity mentions feel editorial |
+| **Thin content sections** | Empty cards when no data available | Hide sections with no data; or show meaningful "no data" message |
+
+### Technical Anti-Patterns
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| **Client-side rendering for content** | AI crawlers struggle; content not in initial HTML | Server-render all match data; client only for interactivity |
+| **Separate mobile/desktop pages** | Duplicate content; maintenance burden | Single responsive page |
+| **Lazy-load above-fold content** | LCP regression; visible content delay | Eager load hero/score; lazy load below fold |
+| **Multiple JSON-LD script blocks** | Schema fragmentation; harder for crawlers | Single @graph structure |
+| **Redirect chains** | Slow; loses link equity | Direct links only |
+
+### UX Anti-Patterns
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| **Pop-ups or interstitials** | View-only platform; creates friction | No pop-ups |
+| **Sticky bottom banners** | Reduces readable area on mobile | Minimal fixed elements |
+| **Social share pop-ups** | Unexpected; breaks flow | Inline share buttons if needed |
+| **Loading spinners for critical content** | User sees spinner, not content; bad perceived perf | Skeleton with content shape |
+| **"Load more" for predictions** | Hides unique value (35 models) behind interaction | Show all by default; optionally collapse to top 5 with "show all" |
+
+---
+
+## FAQ Auto-Generation Patterns
+
+The existing `generateMatchFAQs()` function provides a foundation. Expand it for maximum GEO value.
+
+### State-Specific FAQ Templates
+
+**Upcoming Match (scheduled)**
 ```
-Design System
-    |
-    +-- Navigation Components
-    |       +-- Bottom Nav Bar
-    |       +-- Header (existing)
-    |       +-- Breadcrumbs (existing)
-    |
-    +-- Content Components
-    |       +-- FAQ Section
-    |       +-- Internal Link Widgets
-    |       +-- Read More/Progressive Disclosure (existing)
-    |
-    +-- Data Display Components
-            +-- Leaderboard Table (existing)
-            +-- Match Card
-            +-- Model Card
-            +-- Trend Charts (new)
+1. Who is predicted to win [Home] vs [Away]?
+   → "AI models predict..." + consensus + kickoff time
 
-Internal Linking System
-    |
-    +-- Auto-linker (content analysis)
-    |       |
-    |       +-- Team entity recognition
-    |       +-- Model entity recognition
-    |       +-- Competition entity recognition
-    |
-    +-- Related Content Widgets (existing)
-    |       +-- Related Matches
-    |       +-- Related Models
-    |       +-- Recent Predictions
-    |
-    +-- Sidebar Widgets (new)
-            +-- Popular This Week
-            +-- Related Posts
+2. When is [Home] vs [Away]?
+   → Full date/time + venue
 
-GEO Optimization
-    |
-    +-- FAQ Schema (expand existing)
-    |       +-- Match page FAQs
-    |       +-- League page FAQs
-    |       +-- Model page FAQs
-    |
-    +-- Content Structure
-            +-- Q&A format templates
-            +-- Comparison tables
+3. What competition is this match in?
+   → Competition name + round
+
+4. How do AI models make predictions?
+   → Methodology explanation + link to /methodology
+
+5. What is [Home]'s recent form?
+   → Last 5 results if available
+
+6. What is [Away]'s recent form?
+   → Last 5 results if available
 ```
 
+**Live Match (live)**
+```
+1. What is the current score of [Home] vs [Away]?
+   → Current score + minute
+
+2. Who scored in [Home] vs [Away]?
+   → Goal scorers if available
+
+3. What were the pre-match predictions?
+   → Consensus prediction + accuracy so far
+
+4. When did this match start?
+   → Kickoff time
+
+5. What competition is this match in?
+   → Competition + round
+```
+
+**Finished Match (finished)**
+```
+1. What was the final score of [Home] vs [Away]?
+   → Final score + date + competition
+
+2. How accurate were AI predictions for this match?
+   → "X out of 35 models predicted the correct result"
+   → "The consensus prediction was X-Y; actual was A-B"
+
+3. Which AI model predicted this match best?
+   → Top performer + their prediction + points earned
+
+4. What were the key statistics?
+   → Possession, shots, cards from MatchStats
+
+5. What happened in the match?
+   → Brief narrative from roundup or "Key events: [goals, cards]"
+
+6. When was [Home] vs [Away] played?
+   → Full date + venue
+
+7. What competition was this match in?
+   → Competition + round
+```
+
+### FAQ Generation Best Practices
+
+| Practice | Rationale |
+|----------|-----------|
+| **Include match data in answers** | AI engines need data to cite; generic answers don't get cited |
+| **Use full team names in questions** | "Manchester City vs Arsenal" not "Man City vs Arsenal" for SEO |
+| **Keep answers 1-3 sentences** | Long answers get truncated by AI; concise = more citations |
+| **Lead with the answer** | "The final score was 2-1" not "The match, which was played on..." |
+| **Include dates** | Temporal context helps AI understand freshness |
+| **Link to related pages** | "View the model leaderboard at kroam.xyz/leaderboard" in answers |
+
+### Implementation Notes
+
+The current `MatchFAQSchema.tsx` generates 4 FAQs. Expand to 5-7 per state:
+
+```typescript
+// Example expansion for finished matches
+if (isFinished && predictions.length > 0) {
+  const correctPredictions = predictions.filter(p => wasCorrect(p, match));
+  faqs.push({
+    question: `How accurate were AI predictions for ${match.homeTeam} vs ${match.awayTeam}?`,
+    answer: `${correctPredictions.length} out of ${predictions.length} AI models predicted the correct result. The consensus prediction was ${consensusHome}-${consensusAway}, while the actual score was ${match.homeScore}-${match.awayScore}.`
+  });
+}
+```
+
 ---
 
-## MVP Recommendation
+## Layout Specification
 
-For UI/UX overhaul MVP, prioritize:
+The required layout: **Match Info -> Narrative -> Predictions Table -> FAQ**
 
-### Phase 1: Foundation (Must Have)
-1. **Design system refresh** - Colors, typography, spacing, component library
-2. **Bottom navigation** - Mobile-first navigation pattern
-3. **Blog readability fix** - Line width, typography, read time
+### Single-Scroll Section Order
 
-### Phase 2: GEO Enhancement
-4. **FAQ sections on all pages** - Expand from leaderboard to match, league, model
-5. **Internal linking widgets** - Consistent sidebar pattern across pages
+```
+1. BREADCRUMBS
+   └── Leagues > [Competition] > [Match]
 
-### Phase 3: Polish
-6. **Leaderboard enhancements** - Time filters, trend indicators
-7. **Speed optimization** - Prefetch, skeleton consistency
+2. H1 (MatchH1)
+   └── "[Home] vs [Away]" with score if finished
 
-### Defer to Post-MVP
-- **Predictive preloading** - Requires analytics + ML; high complexity
-- **Pull-to-refresh** - Nice-to-have, not critical
-- **Reading progress indicator** - Minor enhancement
-- **Model comparison tables** - Valuable but scope creep risk
-- **Achievement badges** - Avoid over-gamification
+3. MATCH INFO (MatchPageHeader)
+   └── Score/time, status, competition badge
+   └── Single authoritative score display
+
+4. TL;DR SUMMARY (MatchTLDR)
+   └── State-aware summary (upcoming/live/finished)
+   └── GEO answer-first content
+
+5. MATCH EVENTS (if live/finished with events)
+   └── Goals, cards, substitutions timeline
+
+6. NARRATIVE CONTENT (MatchContentSection)
+   └── Pre-match preview OR post-match analysis
+   └── Full editorial content visible (no "read more" truncation for above-fold)
+
+7. MATCH STATS (MatchStats)
+   └── Key statistics comparison
+   └── Only show if data available
+
+8. PREDICTIONS TABLE
+   └── All 35 models visible
+   └── Sort controls
+   └── Consensus summary
+   └── Top performers (post-match)
+
+9. RELATED MATCHES (RelatedMatchesWidget)
+   └── Internal linking for SEO
+   └── Next fixtures for these teams
+
+10. FAQ SECTION (MatchFAQ)
+    └── Expanded state-specific questions
+    └── FAQPage schema for AI citation
+    └── Accordion UI for visual display
+
+11. EXPLORE MORE
+    └── Links to competition, team pages
+    └── Cross-linking for SEO
+```
+
+### Mobile Considerations
+
+| Section | Mobile Treatment |
+|---------|------------------|
+| Breadcrumbs | Truncate if needed; always visible |
+| H1 | Full width; may wrap to 2 lines |
+| Match Info | Centered; score prominent |
+| TL;DR | Full width; 16px+ font |
+| Events | Timeline stacked vertically |
+| Narrative | Full width; comfortable reading width |
+| Stats | 2-column grid or stacked |
+| Predictions | Horizontally scrollable table OR card layout |
+| Related | Full-width cards |
+| FAQ | Accordion pattern |
+| Explore | Stacked links |
+
+---
+
+## Content Preservation Requirements
+
+From milestone context - features to PRESERVE:
+
+| Feature | Current Location | Status |
+|---------|------------------|--------|
+| 35 LLM predictions displayed | PredictionTable | Keep; core value prop |
+| Pre-match narratives | MatchContentSection | Keep; GEO value |
+| Post-match narratives | MatchContentSection + roundup | Keep; E-E-A-T signal |
+| Live score updates | MatchPageHeader + polling | Keep; user expectation |
+| Schema.org structured data | MatchPageSchema + MatchFAQSchema | Keep; expand |
 
 ---
 
 ## Sources
 
-### UI/UX Design Patterns
-- [Sports Betting App UX & UI in 2026](https://prometteursolutions.com/blog/user-experience-and-interface-in-sports-betting-apps/) - Mobile-first, personalization, live betting UX
-- [Sportsbook UX Design Tips](https://altenar.com/blog/how-to-design-a-sportsbook-user-experience-ux-that-wins-in-live-play/) - Live play design, stability during updates
-- [Mobile-First Sportsbook Design](https://medium.com/@adelinabutler684/mobile-first-sportsbook-design-ux-best-practices-for-higher-retention-2eac17dcb435) - Thumb zone, performance
-- [10 UI/UX Design Challenges in Sports Betting Apps](https://sportbex.com/blog/ui-ux-design-challenges-in-sports-betting-apps/) - Common challenges and solutions
+### SEO/GEO Optimization
+- [Generative Engine Optimization Guide 2026](https://www.digitalapplied.com/blog/geo-guide-generative-engine-optimization-2026) - GEO fundamentals, citation patterns
+- [GEO Best Practices 2026](https://www.firebrand.marketing/2025/12/geo-best-practices-2026/) - Content structure for AI citation
+- [FAQ Schema for AI Search](https://www.frase.io/blog/faq-schema-ai-search-geo-aeo) - 3.2x AI Overview appearances with FAQ
+- [10-Step GEO Framework 2025](https://www.tryprofound.com/guides/generative-engine-optimization-geo-guide-2025) - Citation optimization strategies
 
-### AI Citation Optimization (GEO)
-- [AI Platform Citation Patterns](https://www.tryprofound.com/blog/ai-platform-citation-patterns) - ChatGPT vs Perplexity vs Google AI Overviews
-- [How to Get Cited by AI](https://searchengineland.com/how-to-get-cited-by-ai-seo-insights-from-8000-ai-citations-455284) - 8,000 citation analysis
-- [2025 AI Visibility Report](https://thedigitalbloom.com/learn/2025-ai-citation-llm-visibility-report/) - 4.1x citations for original research
-- [FAQ Schema for AI Search](https://www.frase.io/blog/faq-schema-ai-search-geo-aeo) - 3.2x more AI Overview appearances
+### Sports Betting SEO
+- [Sports Betting SEO 2026](https://tentenseven.com/sports-betting-seo/) - Sports-specific SEO patterns
+- [iGaming SEO 2025](https://affpapa.com/igaming-seo-strategies-you-need-a-practical-guide/) - E-E-A-T for betting content
+- [Top Gambling SEO Strategies 2026](https://ambeywebmedia.com/top-gambling-seo-strategies-2026/) - Schema markup importance
 
-### Internal Linking
-- [Internal Linking for SEO](https://yoast.com/internal-linking-for-seo-why-and-how/) - Types and value hierarchy
-- [How to Create Sidebars That Help SEO](https://www.siegemedia.com/seo/create-sidebars-help-seo) - Widget strategies
-- [Internal Linking Best Practices](https://www.6thman.digital/articles/internal-linking-best-practices-for-2025) - Contextual links most valuable
+### Mobile UX
+- [Tabs UX Best Practices](https://www.eleken.co/blog-posts/tabs-ux) - When tabs fail on mobile
+- [Mobile First Design 2025](https://wpbrigade.com/mobile-first-design-strategy/) - Single-scroll patterns
+- [Mobile SEO 2025](https://www.upskillist.com/blog/seo-in-2025-mobile-first-tactics-that-will-keep-dominating/) - 64% mobile traffic
 
-### Mobile Navigation
-- [Mobile Navigation UX Best Practices 2026](https://www.designstudiouiux.com/blog/mobile-navigation-ux/) - Bottom nav patterns
-- [Thumb-Zone Optimization](https://webdesignerindia.medium.com/thumb-zone-optimization-mobile-navigation-patterns-9fbc54418b81) - 55% reduced user effort
-- [Mobile UX Design Trends 2026](https://webdesignerindia.medium.com/10-mobile-ux-design-trends-2026-231783d97d28) - Emerging patterns
+### Structured Data
+- [Schema.org SportsEvent](https://schema.org/SportsEvent) - Official schema properties
+- [Schema.org FAQPage](https://schema.org/FAQPage) - FAQ schema structure
+- [Schema Markup 2026](https://almcorp.com/blog/schema-markup-detailed-guide-2026-serp-visibility/) - Implementation best practices
+- [Structured Data for AI SEO 2026](https://www.digidop.com/blog/structured-data-secret-weapon-seo) - GPT-4 improves 16% to 54% with structured content
 
-### Performance & Core Web Vitals
-- [Core Web Vitals Optimization Guide 2026](https://skyseodigital.com/core-web-vitals-optimization-complete-guide-for-2026/) - LCP, CLS, INP thresholds
-- [Core Web Vitals 2026: Technical SEO](https://almcorp.com/blog/core-web-vitals-2026-technical-seo-guide/) - Tiebreaker for rankings
-- [Lazy Loading Best Practices](https://nitropack.io/blog/what-is-lazy-loading/) - When and how to lazy load
-
-### Competitor Analysis
-- [FotMob vs SofaScore Comparison](https://www.saashub.com/compare-fotmob-vs-sofascore) - UI design differences
-- [FotMob Case Study](https://sevenpeakssoftware.com/case-studies/app-for-football/) - UX improvements
-- [FotMob User Insights](https://www.anecdoteai.com/insights/fotmob) - User feedback patterns
-
-### Blog Design
-- [Blog Layout Best Practices 2025](https://www.linnworks.com/blog/blog-layout-best-practices/) - Line width, whitespace
-- [12 Blog Layout Best Practices](https://www.impactplus.com/blog/blog-layout-best-practices) - Hero images, CTAs
-- [Sports Website Design](https://seahawkmedia.com/design/sports-website-design/) - Sports-specific patterns
-
-### Gamification
-- [How to Design Effective Leaderboards](https://yukaichou.com/advanced-gamification/how-to-design-effective-leaderboards-boosting-motivation-and-engagement/) - Micro-leaderboards, refresh cycles
-- [Gamification Strategy: Leaderboards](https://medium.com/design-bootcamp/gamification-strategy-when-to-use-leaderboards-7bef0cf842e1) - When to use, when to avoid
+### E-E-A-T & Authority
+- [SEO 2026 Predictions](https://yoast.com/2026-seo-predictions-by-yoast-experts/) - E-E-A-T as ranking filter
+- [AI SEO Trends 2026](https://www.techmagnate.com/blog/ai-seo-trends-2026/) - Authority as currency
 
 ---
 
-*Confidence: HIGH - Cross-referenced multiple sources; patterns consistent across sports betting, sports stats, and general mobile UX literature. Existing implementation already validates many patterns (v1.3 requirements).*
+*Confidence: HIGH - Cross-referenced multiple sources; patterns consistent across GEO literature, sports SEO guides, and mobile UX research. Existing implementation already validates many patterns (v1.3 requirements, current FAQ schema).*

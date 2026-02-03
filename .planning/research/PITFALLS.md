@@ -1,492 +1,463 @@
-# Domain Pitfalls: UI/UX Redesign for Next.js Sports Platform
+# Pitfalls Research: v2.2 Match Page Rewrite
 
-**Domain:** Next.js sports prediction platform UI/UX rebuild
-**Researched:** 2026-02-02
-**Confidence:** HIGH (verified via official Next.js docs, GitHub issues, and current project analysis)
+**Domain:** Football prediction platform - match detail pages
+**Researched:** 2026-02-03
+**Confidence:** HIGH (based on project history + verified web research)
+
+## Executive Summary
+
+This is the 3rd attempt at fixing match pages. Previous failures stemmed from:
+1. **Dual-render patterns** (preview + full section = duplicate content)
+2. **Tabs on mobile** (explicitly unwanted by user)
+3. **Section ordering inconsistency** (different layouts per device)
+
+This research identifies pitfalls specific to match page rewrites with SEO/GEO optimization focus.
 
 ---
 
-## Critical Pitfalls
+## Content Duplication Pitfalls
 
-Mistakes that cause rewrites, major regressions, or SEO damage.
+### Pitfall 1: Dual-Render Pattern (Preview + Full)
 
-### Pitfall 1: Client Component Creep Destroys Bundle Size
+**What goes wrong:** Component renders content twice - once as a truncated preview, once as full content below. User sees identical text repeated on the page.
 
-**What goes wrong:** During redesign, developers add `'use client'` to components for convenience (using hooks, event handlers) without considering the cascade effect. Child components become client components too, bloating the JavaScript bundle.
+**Historical evidence:** Quick Task 008 fixed exactly this. `MatchContent.tsx` previously rendered `NarrativePreview` AND full section for pre-match and post-match content.
 
-**Why it happens:**
-- Redesign often means adding interactivity
-- Easier to make everything client than think about boundaries
-- Existing codebase may already have this problem (current `navigation.tsx` is client-side)
-
-**Consequences:**
-- Bundle size increases 30-60%
-- LCP degrades significantly
-- INP suffers from hydration overhead
-- RSC benefits disappear
+**Root cause:** Developer intention to show "teaser then full" but forgetting that both are visible simultaneously on single-page layouts.
 
 **Warning signs:**
-- Many files start with `'use client'`
-- Components that only render data still marked as client
-- Next.js bundle analyzer shows large client chunks
+- Component imports both preview and full-render utilities
+- Multiple render calls for same data source
+- Variable names like `showPreview` AND `showFull` for same content type
 
 **Prevention:**
-1. Audit every `'use client'` directive during redesign
-2. Create clear component boundaries: Server for data, Client for interaction
-3. Use composition pattern: Server component wraps Client component
-4. Move data fetching to Server Components (current match pages do this well)
+```typescript
+// BAD: renders content twice
+{showPreMatch && <NarrativePreview text={content.preMatchContent} />}
+{showPreMatch && <FullSection content={content.preMatchContent} />}
 
-**Detection:**
-```bash
-# Count client components
-grep -r "'use client'" src/components | wc -l
+// GOOD: renders content once
+{showPreMatch && <Section content={content.preMatchContent} />}
 ```
 
-**Which phase:** Address in Phase 1 (Component Architecture). Establish patterns before building.
-
-**Current codebase observation:** Navigation is client (`navigation.tsx`), which is correct for `usePathname`. But 71+ component files need audit.
+**Phase impact:** Architecture phase - establish single-render principle before building components.
 
 ---
 
-### Pitfall 2: LCP Regression from Hero/Above-the-Fold Changes
+### Pitfall 2: Hydration Mismatch Duplication
 
-**What goes wrong:** Redesign changes what appears above the fold. New hero images, new layout causes Largest Contentful Paint element to change. Missing `priority` attribute on new LCP element causes 2-4 second delay.
+**What goes wrong:** Server renders one version of content, client hydration renders a different version, causing flicker or duplicate DOM nodes.
 
-**Why it happens:**
-- Next.js lazy-loads images by default
-- New LCP element not marked with `priority` or `fetchpriority="high"`
-- Developers don't test on throttled connections
-- Multiple images compete for priority
-
-**Consequences:**
-- LCP goes from green (<2.5s) to red (>4s)
-- Google Search Console shows Core Web Vitals regression
-- SEO rankings drop within weeks
+**Root cause:**
+- Using `Date()` or `Math.random()` in render
+- Conditional rendering based on `typeof window`
+- Different data between server and client fetch
 
 **Warning signs:**
-- Console warning: "Image with src X was detected as LCP"
-- PageSpeed Insights shows "Largest Contentful Paint element" is an image without preload
-- Field data in Search Console degrades
+- React console warnings about hydration mismatch
+- Content flickers on page load
+- Different content visible before/after JavaScript loads
 
 **Prevention:**
-1. Identify LCP element for each page type before redesign
-2. Mark LCP images with `priority` (or `preload` in Next.js 16+)
-3. Add PageSpeed Insights check to CI/CD pipeline
-4. Test on 3G throttled connection before merge
+- Use Server Components for all static match data
+- Defer client-only logic to `useEffect`
+- Ensure identical data fetching between server and client
 
-**Detection:**
-- Run Lighthouse on each page type
-- Check: `<Image priority />` on above-fold images
-
-**Which phase:** Phase 2 (Core Web Vitals). Must be addressed before any visual redesign deploys.
-
-**Current codebase observation:** Match pages don't have hero images (good), but any redesign adding team logos above fold needs priority handling.
+**Phase impact:** Component architecture phase - clearly separate server vs client boundaries.
 
 ---
 
-### Pitfall 3: Breaking Existing URLs During Redesign
+### Pitfall 3: Multiple Components Fetching Same Data
 
-**What goes wrong:** URL structure changes during redesign. Old URLs return 404. Backlinks break. Google drops pages from index.
+**What goes wrong:** Header component fetches match data. Score component fetches match data. Events component fetches match data. Same content could render from multiple sources.
 
-**Why it happens:**
-- New routing structure seems cleaner
-- Parameter changes (e.g., from `/matches/[id]` to `/match/[slug]`)
-- Forgetting to add redirects
+**Historical evidence:** Old match page had `MatchHeader`, `MatchOddsPanel`, `PredictionsSection` all potentially displaying score/status.
 
-**Consequences:**
-- Immediate SEO traffic loss (25-80%)
-- Broken backlinks
-- Users bookmarks fail
-- Google shows 404 errors in Search Console
+**Prevention:**
+- Single data fetch at page level, pass as props
+- Use React `cache()` for request deduplication if components must fetch independently
+- Audit: search for all places same field is rendered
+
+**Phase impact:** Data architecture phase - establish single source of truth pattern.
+
+---
+
+### Pitfall 4: SEO Duplicate Content from URL Variations
+
+**What goes wrong:** Same match accessible via:
+- `/matches/[id]`
+- `/leagues/[slug]/[match]`
+- Query params: `?tab=predictions`
+
+Google indexes all as separate pages with duplicate content.
+
+**Historical evidence:** Project has both `/matches/[id]` and `/leagues/[slug]/[match]` routes. The old page redirects to new, but redirect must be permanent (308, not 307).
 
 **Warning signs:**
-- New route patterns in `app/` directory
-- Old route files deleted without redirect implementation
-- No redirect testing in deployment
+- Multiple route patterns leading to same content
+- 307 (temporary) redirects instead of 308 (permanent)
+- Missing or incorrect canonical tags
 
 **Prevention:**
-1. Document all existing URL patterns before redesign
-2. Keep existing routes or implement 301 redirects
-3. Add redirect map to `next.config.js`
-4. Test all old URLs post-deployment
+- Permanent redirect (308) from legacy URLs
+- Explicit canonical tag on every page pointing to preferred URL
+- Avoid query params that don't change canonical content
 
-**Detection:**
-- Crawl site before and after, compare URL lists
-- Check Search Console for 404 spike
-
-**Which phase:** Phase 1 (Planning). URL audit must happen before any routing changes.
-
-**Current codebase observation:** Already has good pattern with `/leagues/[slug]/[match]` and redirect from `/matches/[id]`. This pattern must be preserved.
+**Phase impact:** SEO phase - implement canonical tags and verify redirects.
 
 ---
 
-### Pitfall 4: ISR Cache Staleness with CDN Layer
+## SEO/GEO Pitfalls
 
-**What goes wrong:** Next.js ISR works in development but production shows stale content. Two caching layers (Next.js + CDN) create 2x stale time.
+### Pitfall 5: Answer-First Content Buried Below Fold
 
-**Why it happens:**
-- Next.js sets `Cache-Control: s-maxage=X, stale-while-revalidate`
-- CDN respects this header and caches stale response
-- Request hits CDN cache, CDN requests from origin, origin returns cached stale
-- Result: 2x configured revalidate time
+**What goes wrong:** Key information (final score, prediction) hidden below lengthy headers, navigation, or promotional content. AI search engines can't find the "answer" to extract.
 
-**Consequences:**
-- Live match scores show old data
-- Predictions don't update after matches
-- Users see outdated content for hours
+**GEO context:** Opening paragraphs that answer the query upfront get cited 67% more by AI engines. Burying answers reduces citations.
 
 **Warning signs:**
-- Content older than `revalidate` time appears
-- Production behaves differently than development
-- Manual refresh shows different content than navigation
+- Large hero sections before substantive content
+- "Skip to content" links needed
+- First meaningful content below 500px viewport height
 
 **Prevention:**
-1. For truly dynamic sports data, use `export const dynamic = 'force-dynamic'`
-2. Configure CDN to respect `must-revalidate`
-3. Use on-demand revalidation via API routes for critical updates
-4. Test ISR behavior in staging with CDN layer
+- Score/prediction visible in first 300px
+- Lead with answer, follow with context
+- Structure: Answer -> Evidence -> Details
 
-**Detection:**
-- Check `Cache-Control` headers in production
-- Compare data timestamp to server time
-
-**Which phase:** Phase 2 (Performance). Must verify caching strategy for each page type.
-
-**Current codebase observation:** Match pages have both `dynamic = 'force-dynamic'` and `revalidate = 60`. These conflict - `force-dynamic` wins but intention is unclear.
+**Phase impact:** Layout phase - define above-fold content requirements.
 
 ---
 
-### Pitfall 5: Structured Data (JSON-LD) Breaks During Component Refactoring
+### Pitfall 6: FAQ Schema Without Visible Content
 
-**What goes wrong:** Schema.org structured data lives in components being redesigned. Refactoring breaks or removes JSON-LD scripts. Google loses rich results.
+**What goes wrong:** FAQ schema markup exists in JSON-LD, but actual FAQ content not visible on page. Google may penalize as structured data spam.
 
-**Why it happens:**
-- Schema generation mixed with UI components
-- Developers don't understand SEO impact
-- No automated validation in CI
-
-**Consequences:**
-- Rich snippets disappear from search results
-- Click-through rate drops
-- Competitive disadvantage
+**Current context:** As of 2023 Google update (still valid 2026), FAQ rich results limited to authoritative sites. But schema still helps AI engines understand Q&A structure.
 
 **Warning signs:**
-- JSON-LD scripts moved or deleted during refactor
-- Schema test in Google shows errors
-- Rich results drop in Search Console
+- `FAQPage` schema in head but no FAQ section in body
+- FAQ questions don't match user-visible content
+- Auto-generated FAQs with generic questions
 
 **Prevention:**
-1. Extract all schema generation to dedicated module (`/lib/seo/`)
-2. Keep schema logic separate from UI components
-3. Add schema validation to test suite
-4. Monitor Search Console enhancements report
+- Every FAQ schema question MUST be visible on page
+- Use natural language, not robotic phrasing
+- Validate with Google Rich Results Test
 
-**Detection:**
-- Test with Google's Rich Results Test
-- Validate all pages have required schema types
-
-**Which phase:** Phase 1 (Planning). Audit and protect existing schema before any UI changes.
-
-**Current codebase observation:** Good - schema is already in `/lib/seo/schema/` and components (`MatchPageSchema.tsx`, etc.). Preserve this separation.
+**Phase impact:** FAQ generation phase - ensure schema/content parity.
 
 ---
 
-## Moderate Pitfalls
+### Pitfall 7: Auto-Generated FAQ Content Quality
 
-Mistakes that cause delays, technical debt, or user experience degradation.
+**What goes wrong:** FAQ auto-generation produces:
+- Generic questions not specific to this match
+- Answers that repeat information already on page
+- Questions users don't actually ask
 
-### Pitfall 6: Navigation State Loss During Client-Side Transitions
+**Example of bad FAQ:**
+- "What time is the match?" (already shown in header)
+- "Who is playing?" (redundant with title)
 
-**What goes wrong:** Client components in layout re-render on navigation in production (but not development). Search input loses text, modals close unexpectedly, filters reset.
+**Example of good FAQ:**
+- "What is the AI consensus prediction for [Team A] vs [Team B]?"
+- "Which AI model has the best record for [Competition] matches?"
 
-**Why it happens:**
-- Known Next.js issue: Client components in root layout may re-render
-- `React.memo` can make it worse (state loss)
-- Difference between dev and production behavior
+**Prevention:**
+- Generate match-specific questions using team names, competition
+- Answer questions not directly covered elsewhere on page
+- Limit to 3-5 high-value questions
 
-**Consequences:**
-- Users frustrated by lost input
-- Search modal closes on navigation
-- Filter selections reset
+**Phase impact:** Content generation phase - define FAQ quality criteria.
+
+---
+
+### Pitfall 8: Missing State-Specific SEO
+
+**What goes wrong:** Same meta title/description for upcoming, live, and finished matches. Misses opportunity for state-appropriate messaging.
+
+**Example:**
+- Upcoming: "AI Predictions for Arsenal vs Chelsea - Feb 15, 2026"
+- Live: "Arsenal vs Chelsea LIVE - Current Score 1-0"
+- Finished: "Arsenal 2-1 Chelsea - Match Result & AI Analysis"
 
 **Warning signs:**
-- Works in development, breaks in production
-- Components lose state during soft navigation
-- Console shows unexpected re-renders
+- Static meta templates that ignore match status
+- No dynamic OG images based on state
+- Title doesn't reflect whether match is live/finished
 
 **Prevention:**
-1. Test navigation state in production build (`next build && next start`)
-2. Lift persistent state to context or URL params
-3. Use `<Link>` for SPA transitions, not `<a>` tags
-4. Avoid `React.memo` on stateful layout components
+- State-aware metadata generation (already exists in `buildMatchMetadata`)
+- Verify all 3 states have distinct, appropriate metadata
+- Test OG images for each state
 
-**Detection:**
-- Type in search, navigate, check if text persists
-- Open modal, click nav link, check if modal state preserved
-
-**Which phase:** Phase 3 (Component Implementation). Test each interactive component's state persistence.
-
-**Current codebase observation:** `SearchModal` in navigation - test search input persistence after navigation.
+**Phase impact:** SEO phase - audit metadata per state.
 
 ---
 
-### Pitfall 7: Internal Link Automation Creates Broken Links
+## Component Architecture Pitfalls
 
-**What goes wrong:** Automated internal linking system generates links to pages that don't exist, have changed URLs, or are behind 404s.
+### Pitfall 9: Implicit State Dependencies
 
-**Why it happens:**
-- Links generated from database that's out of sync with routes
-- URL pattern changes without updating link generation
-- Soft-deleted content still has link entries
+**What goes wrong:** Component assumes match status but doesn't receive it as prop. Uses internal logic that diverges from page's understanding of status.
 
-**Consequences:**
-- Broken links hurt SEO (waste crawl budget)
-- User experience degrades
-- 42% of websites have broken internal links (industry stat)
+**Example:**
+```typescript
+// BAD: Component determines status independently
+function ScoreDisplay({ match }) {
+  const isFinished = match.homeScore !== null; // May differ from page's logic
+}
+
+// GOOD: Status passed explicitly
+function ScoreDisplay({ match, isFinished }) {
+  // Uses page's authoritative status
+}
+```
 
 **Warning signs:**
-- 404 spike in Search Console
-- Crawl reports show broken links
-- Users report "page not found"
+- Multiple components computing `isFinished` independently
+- Status derived from different fields in different places
+- Conditional rendering based on data presence vs explicit status
 
 **Prevention:**
-1. Validate generated links exist before rendering
-2. Add link health check to build process
-3. Use database foreign keys to prevent orphaned links
-4. Monitor 404 rate in analytics
+- Compute status ONCE at page level
+- Pass status as explicit prop to all components
+- Components trust prop, don't re-derive
 
-**Detection:**
-- Run Screaming Frog or similar crawler monthly
-- Check `404` requests in server logs
-
-**Which phase:** Phase 4 (Internal Linking). Build validation into link generation.
-
-**Current codebase observation:** `RelatedMatchesWidget` generates links from database queries - ensure query only returns valid matches with slugs.
+**Phase impact:** Component architecture phase - establish status prop pattern.
 
 ---
 
-### Pitfall 8: Mobile-First Design Inversion
+### Pitfall 10: State Machine Gaps
 
-**What goes wrong:** Desktop redesign completed first, then "shrunk" for mobile. Mobile experience is cramped, unusable, or completely different.
+**What goes wrong:** Three states (upcoming, live, finished) but code assumes binary (upcoming vs finished). Live state gets unexpected behavior.
 
-**Why it happens:**
-- Designers work on large screens
-- Stakeholders review on desktop
-- Mobile treated as afterthought
-
-**Consequences:**
-- 60% of traffic has poor experience (mobile majority)
-- Bounce rate increases on mobile
-- Core Web Vitals fail on mobile specifically
+**Historical context:** Match lifecycle: `scheduled` -> `live` -> `finished` (also `postponed`, `cancelled`).
 
 **Warning signs:**
-- No mobile mockups in design phase
-- Testing only happens on desktop
-- Mobile CSS is overrides and `!important`
+- Binary checks: `isFinished ? X : Y` (what about live?)
+- Missing case in switch statement
+- Different components handling live differently
 
 **Prevention:**
-1. Design mobile first, enhance for desktop
-2. Include mobile in every design review
-3. Test on real devices, not just browser resize
-4. Set mobile as primary viewport in Lighthouse
+- Exhaustive state handling in TypeScript:
+```typescript
+type MatchStatus = 'scheduled' | 'live' | 'finished' | 'postponed' | 'cancelled';
 
-**Detection:**
-- Run PageSpeed Insights with "Mobile" selected
-- Test on actual phones (iOS Safari, Android Chrome)
+function getLayout(status: MatchStatus) {
+  switch (status) {
+    case 'scheduled': return UpcomingLayout;
+    case 'live': return LiveLayout;
+    case 'finished': return FinishedLayout;
+    case 'postponed':
+    case 'cancelled':
+      return CancelledLayout;
+  }
+}
+```
 
-**Which phase:** Phase 1 (Design). Establish mobile-first workflow from the start.
-
-**Current codebase observation:** `match-tabs-mobile.tsx` exists (good mobile consideration), but desktop has separate layout. Ensure parity.
+**Phase impact:** Type definition phase - define exhaustive status handling.
 
 ---
 
-### Pitfall 9: Component Library Version Drift
+### Pitfall 11: Props Drilling Through Deep Hierarchies
 
-**What goes wrong:** Radix/shadcn components updated mid-redesign. New version has different prop contracts, breaking existing components.
-
-**Why it happens:**
-- Developer runs `npm update` during redesign
-- Major version of Radix changes API
-- shadcn CLI pulls newer versions
-
-**Consequences:**
-- Build breaks
-- Components behave differently
-- Debugging time wasted
+**What goes wrong:** Match data passed through 5+ levels of components. Changes require updating many intermediate components.
 
 **Warning signs:**
-- TypeScript errors after install
-- Components render incorrectly
-- Props that worked before now error
+- Components receiving props they don't use, just pass through
+- Same prop name appearing in many component interfaces
+- Difficulty adding new data because of intermediate components
 
 **Prevention:**
-1. Pin Radix/shadcn versions in package.json
-2. Don't update dependencies during active redesign
-3. If update needed, do it as isolated task with full regression test
-4. Use lockfile (`package-lock.json` or `pnpm-lock.yaml`)
+- Flatten component hierarchy for match pages
+- Use composition over deep nesting
+- Consider React Context for truly global match data (but prefer props for most cases)
 
-**Detection:**
-- Check for version changes in `package-lock.json` diff
-- TypeScript errors on existing component props
-
-**Which phase:** All phases. Lock versions before starting, update only when complete.
+**Phase impact:** Component architecture phase - design flat hierarchy.
 
 ---
 
-### Pitfall 10: Over-Engineering Design System for Small Team
+## Mobile UX Pitfalls
 
-**What goes wrong:** Team builds comprehensive design system with 50+ components before shipping anything. System goes unused because it doesn't match actual needs.
+### Pitfall 12: Tabs on Mobile (User Explicitly Rejected)
 
-**Why it happens:**
-- Trying to build "the right way"
-- Following enterprise patterns for startup scale
-- Building for hypothetical future needs
+**What goes wrong:** Developer implements tabs "for mobile UX" but user has explicitly stated NO TABS.
 
-**Consequences:**
-- Months wasted on unused components
-- Actual UI needs differ from predictions
-- Team resistance to overly complex system
+**Historical evidence:** v1.3 implemented `MatchTabsMobile` with swipe gestures. v2.1 removed them per user requirement.
+
+**Why tabs fail here:**
+- Horizontal scroll + vertical scroll = confusing
+- Hidden content not discoverable
+- User prefers single scrollable page
 
 **Warning signs:**
-- More time on design system than product features
-- Components built without immediate use case
-- Extensive documentation for internal team of 1-2
+- Component names containing "Tab" or "TabMobile"
+- `hidden md:block` / `md:hidden` responsive classes
+- Swipeable containers
 
 **Prevention:**
-1. Build components as needed (just-in-time)
-2. Extract patterns after 3rd use, not before 1st
-3. Use shadcn's copy-paste model - components in your codebase
-4. Documentation only for non-obvious patterns
+- NO TABS. Single scrollable layout.
+- Same sections visible on all screen sizes
+- Use collapsible sections only if content is very long (500+ words)
 
-**Detection:**
-- Count components with zero imports
-- Check ratio of system work to feature work
-
-**Which phase:** Phase 1 (Planning). Define minimal viable system.
+**Phase impact:** ALL phases - reject any tab-based proposals.
 
 ---
 
-## Minor Pitfalls
+### Pitfall 13: Sticky Elements Interfering with Scroll
 
-Mistakes that cause annoyance but are fixable.
+**What goes wrong:** Sticky header/footer consumes viewport space. User can't see full content. Scroll feels constrained.
 
-### Pitfall 11: Inconsistent Spacing/Colors Across New Components
+**Historical evidence:** v2.1 removed sticky header per user feedback.
 
-**What goes wrong:** Different developers use different spacing values. Some use Tailwind spacing scale, others use arbitrary values. Visual inconsistency.
+**Warning signs:**
+- `position: sticky` or `position: fixed` on headers
+- Components using `useIntersectionObserver` for sticky behavior
+- CSS classes like `sticky`, `fixed`, `top-0`
 
 **Prevention:**
-- Define and enforce spacing scale (4, 8, 12, 16, 24, 32, 48)
-- Use CSS custom properties for colors (already done in globals.css)
-- Add ESLint rule for arbitrary spacing values
+- Header scrolls naturally with page
+- No fixed elements except maybe bottom nav
+- Test: can user see full content section without scrolling past fixed elements?
 
-**Current codebase observation:** Good - using CSS variables (`--border`, `--muted`, etc.). Maintain this pattern.
+**Phase impact:** Layout phase - audit for sticky elements.
 
 ---
 
-### Pitfall 12: Missing Loading States in Redesigned Components
+### Pitfall 14: Touch Target Size
 
-**What goes wrong:** Old loading states not recreated in new components. Users see blank screens during data fetch.
+**What goes wrong:** Buttons, links too small for finger taps. Accessibility failure, frustrating UX.
+
+**Standard:** 44x44px minimum touch target (Apple HIG, WCAG).
+
+**Warning signs:**
+- Links with only icon, no padding
+- Inline text links without adequate tap area
+- Buttons with height < 44px
 
 **Prevention:**
-- Audit all existing Suspense boundaries and skeletons
-- Create corresponding loading states for new components
-- Use `loading.tsx` files in route segments
+- `min-h-11 min-w-11` (44px) on all interactive elements
+- Adequate padding around inline links
+- Test on actual mobile device, not just DevTools
 
-**Current codebase observation:** Has `predictions-skeleton.tsx`, `leaderboard/skeleton.tsx` - ensure redesign preserves these.
+**Phase impact:** Component styling phase - enforce touch targets.
 
 ---
 
-### Pitfall 13: Forgetting Error Boundaries in New Component Tree
+## Rewrite-Specific Pitfalls
 
-**What goes wrong:** Error boundary exists in old tree, not added to new tree. Single component error crashes entire page.
+### Pitfall 15: Losing Existing Functionality in Rewrite
+
+**What goes wrong:** Rewrite focuses on "new" design, forgets to port working features from old implementation.
+
+**Historical evidence:** Previous rewrites lost:
+- Entity linking in narrative content
+- Match events display for finished matches
+- OG image generation
 
 **Prevention:**
-- Add `error.tsx` to each route segment
-- Wrap risky components with error boundaries
-- Test error states explicitly
+- Before rewriting, create feature inventory from existing code
+- Checklist: each existing feature must be in new code OR explicitly deprecated
+- Test coverage for critical features before rewriting
 
-**Current codebase observation:** Has `ErrorBoundaryProvider` in layout - ensure new components are covered.
+**Phase impact:** Planning phase - create feature inventory before starting.
 
 ---
 
-### Pitfall 14: Date/Time Display Without Timezone Handling
+### Pitfall 16: Big Bang Rewrite
 
-**What goes wrong:** Match times display in wrong timezone for users. Already have `client-date.tsx` pattern but new components don't use it.
+**What goes wrong:** Attempt to rewrite entire page in one PR. Review is overwhelming, bugs hide, rollback is all-or-nothing.
+
+**Best practice:** "Rewrites succeed when they are incremental, not heroic." Even in a rewrite, ship in phases.
+
+**Warning signs:**
+- PR touching 20+ files
+- Rewrite branch open for weeks
+- "Just one more thing" syndrome
 
 **Prevention:**
-- All date displays must use client-side component
-- Use existing `client-date.tsx` pattern for new components
-- Consider user locale for formatting
+- Ship new layout structure first (empty sections)
+- Add sections one at a time
+- Each PR is independently reviewable and deployable
+
+**Phase impact:** ALL phases - structure as incremental PRs.
 
 ---
 
-### Pitfall 15: Accessibility Regression in New Interactive Components
+### Pitfall 17: Not Preserving Encapsulated Knowledge
 
-**What goes wrong:** New modals, tabs, dropdowns lack proper ARIA attributes, keyboard navigation, focus management.
+**What goes wrong:** Old code had edge case handling developed over months. Rewrite removes it because developer didn't understand why it existed.
+
+**Example edge cases in this project:**
+- `stripHtml()` for database content with HTML tags
+- Redirect from `/matches/[id]` to `/leagues/[slug]/[match]`
+- Empty section hiding (return null when no data)
 
 **Prevention:**
-- Use Radix primitives (already in stack) which handle a11y
-- Test with keyboard-only navigation
-- Run axe-core in CI
+- Read old code thoroughly before replacing
+- If unclear why something exists, ask before removing
+- Comment non-obvious logic in new code
 
-**Current codebase observation:** Using Radix (`@radix-ui/react-*`) - continue using primitives, don't build custom.
-
----
-
-## Phase-Specific Warnings
-
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|---------------|------------|
-| Component Architecture | Client component creep (#1) | Establish server/client boundaries in design doc |
-| Core Web Vitals | LCP regression (#2) | Add Lighthouse to CI before any visual changes |
-| URL Structure | Breaking URLs (#3) | Complete URL audit before any route changes |
-| Caching Strategy | ISR staleness (#4) | Document caching intent for each page type |
-| SEO Protection | Schema breakage (#5) | Keep schema separate, add validation tests |
-| Navigation | State loss (#6) | Test production build, not just dev |
-| Internal Linking | Broken links (#7) | Validate links at generation time |
-| Responsive Design | Mobile afterthought (#8) | Mobile-first design process |
-| Dependencies | Version drift (#9) | Lock versions, isolated update PRs |
-| Design System | Over-engineering (#10) | Just-in-time component creation |
+**Phase impact:** Architecture phase - document edge cases to preserve.
 
 ---
 
-## Quick Validation Checklist Before Each Phase
+## Confidence Assessment
 
-Before starting any phase:
+| Pitfall Category | Confidence | Basis |
+|-----------------|------------|-------|
+| Content Duplication | HIGH | Project history (quick-008, phase-25) confirms these exact issues occurred |
+| SEO/GEO | MEDIUM | Web research verified; project-specific application extrapolated |
+| Component Architecture | HIGH | React/Next.js established patterns; project history shows state issues |
+| Mobile UX | HIGH | User requirements explicitly documented; previous failures documented |
+| Rewrite-Specific | MEDIUM | Industry research verified; project-specific application extrapolated |
 
-- [ ] LCP element identified for affected pages?
-- [ ] URL changes documented with redirect plan?
-- [ ] Schema/JSON-LD protected from refactor?
-- [ ] Mobile design addressed, not deferred?
-- [ ] Caching behavior verified for page type?
-- [ ] Existing loading/error states preserved?
+---
 
-Before deploying:
+## Phase-Specific Warnings Summary
 
-- [ ] Bundle size compared to baseline?
-- [ ] Lighthouse scores compared to baseline?
-- [ ] All old URLs tested (redirects work)?
-- [ ] Production build tested, not just dev?
-- [ ] Search Console monitored for 48 hours post-deploy?
+| Phase | Critical Pitfalls | Mitigation |
+|-------|------------------|------------|
+| Planning | #15 (losing features), #16 (big bang) | Feature inventory, incremental PRs |
+| Architecture | #1 (dual-render), #9 (implicit state), #10 (state gaps) | Single-render principle, explicit status prop |
+| Layout | #5 (answer buried), #12 (tabs), #13 (sticky) | Answer-first, single scroll, no sticky |
+| Components | #3 (multiple fetches), #11 (props drilling), #14 (touch targets) | Single fetch, flat hierarchy, 44px targets |
+| SEO | #4 (URL duplicates), #8 (state-specific meta) | Canonical tags, state-aware metadata |
+| FAQ | #6 (schema mismatch), #7 (quality) | Schema/content parity, match-specific questions |
+| Content | #2 (hydration mismatch) | Server Component boundaries |
 
 ---
 
 ## Sources
 
-**Official Documentation:**
-- [Next.js ISR Guide](https://nextjs.org/docs/pages/guides/incremental-static-regeneration)
-- [Next.js Image Component](https://nextjs.org/docs/app/api-reference/components/image)
-- [Next.js generateMetadata](https://nextjs.org/docs/app/api-reference/functions/generate-metadata)
-- [Google Core Web Vitals](https://developers.google.com/search/docs/appearance/core-web-vitals)
+**Project History:**
+- `/Users/pieterbos/Documents/bettingsoccer/.planning/quick/008-fix-duplicate-match-content/008-SUMMARY.md`
+- `/Users/pieterbos/Documents/bettingsoccer/.planning/phases/24-match-page-cleanup/24-VERIFICATION.md`
+- `/Users/pieterbos/Documents/bettingsoccer/.planning/phases/25-content-rendering-fix/25-VERIFICATION.md`
 
-**GitHub Issues & Discussions:**
-- [Layout re-render on navigation](https://github.com/vercel/next.js/issues/52558)
-- [ISR stale data issue](https://github.com/vercel/next.js/issues/58909)
-- [LCP warning discussion](https://github.com/vercel/next.js/discussions/48255)
+**SEO/GEO Research:**
+- [Next.js SEO: How to solve Duplicate Content](https://akoskm.com/nextjs-seo-how-to-solve-duplicate-google-chose-different-canonical-than-user/)
+- [SEO for AI Engines: A 2026 Guide to AI Search Optimization & GEO](https://blog.brandsatplayllc.com/blog/seo-for-ai-engines-a-2026-guide-to-ai-search-optimization-geo)
+- [The rise and fall of FAQ schema](https://searchengineland.com/faq-schema-rise-fall-seo-today-463993)
+- [Schema Markup in 2026](https://almcorp.com/blog/schema-markup-detailed-guide-2026-serp-visibility/)
 
-**Industry Research:**
-- [Next.js App Router Common Mistakes](https://upsun.com/blog/avoid-common-mistakes-with-next-js-app-router/)
-- [Design System Adoption Pitfalls](https://www.netguru.com/blog/design-system-adoption-pitfalls)
-- [Internal Linking Mistakes](https://www.quattr.com/improve-discoverability/internal-linking-mistakes)
-- [UX Design Mistakes 2025](https://www.designstudiouiux.com/blog/ux-design-mistakes/)
-- [Core Web Vitals Optimization 2025](https://nitropack.io/blog/core-web-vitals-strategy/)
+**React/Component Research:**
+- [React Strict Mode - Official Docs](https://react.dev/reference/react/StrictMode)
+- [State Machines in React](https://mastery.games/post/state-machines-in-react/)
+- [Next.js Server and Client Components](https://nextjs.org/docs/app/getting-started/server-and-client-components)
+
+**Mobile UX Research:**
+- [Tabs UX: Best Practices and When to Avoid](https://www.eleken.co/blog-posts/tabs-ux)
+- [Mobile Navigation UX Best Practices 2026](https://www.designstudiouiux.com/blog/mobile-navigation-ux/)
+- [Scrolling is Faster than Paging](https://www.freshconsulting.com/insights/blog/uiux-principle-33-scrolling-is-faster-than-paging/)
+
+**Rewrite vs Refactor:**
+- [Refactor vs Rewrite vs Replatform 2026](https://devoxsoftware.com/blog/refactor-vs-rewrite-vs-replatform-what-s-right-for-your-business-in-2026/)
+- [Why refactoring is almost always better than rewriting](https://www.ben-morris.com/why-refactoring-code-is-almost-always-better-than-rewriting-it/)
+
+---
+
+*Researched: 2026-02-03*
+*Researcher: Claude (gsd-researcher)*

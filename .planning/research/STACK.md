@@ -1,362 +1,279 @@
-# Technology Stack for UI/UX Rebuild
+# Stack Research: v2.2 Match Page Rewrite
 
-**Project:** AI Football Predictions - UI/UX Overhaul
-**Researched:** 2026-02-02
-**Focus:** Speed, SEO, GEO optimization
-
-## Current Stack (Validated - No Changes Needed)
-
-These are already in place and working well:
-
-| Technology | Version | Status |
-|------------|---------|--------|
-| Next.js | 16.1.4 | Keep (latest is 16.1.6, minor patch) |
-| React | 19.2.3 | Keep |
-| Tailwind CSS | 4.x | Keep |
-| shadcn/ui | Current | Keep |
-| schema-dts | 1.1.5 | Keep (latest, actively used) |
-| PostgreSQL | - | Keep |
-| Redis | - | Keep |
-| BullMQ | 5.34.3 | Keep |
-| Sentry | 10.36.0 | Keep |
-
-## Recommended Stack Changes
-
-### 1. Enable Next.js 16 Cache Components + PPR
-
-**What:** Enable `cacheComponents: true` in next.config.ts
-**Why:** Unlocks Partial Prerendering (PPR) and explicit `"use cache"` directive
-**Performance gain:** 60-80% TTFB reduction on mixed-content pages
-
-```typescript
-// next.config.ts
-const nextConfig: NextConfig = {
-  cacheComponents: true, // Enables PPR + Cache Components
-  // ... existing config
-};
-```
-
-**No new dependencies required.** This is built into Next.js 16.
-
-**Source:** [Next.js 16 Cache Components](https://nextjs.org/docs/app/getting-started/cache-components)
+**Domain:** SEO/GEO-optimized match pages for AI Football Predictions Platform
+**Researched:** 2026-02-03
+**Overall Confidence:** HIGH
 
 ---
 
-### 2. Enable View Transitions API
+## Executive Summary
 
-**What:** Enable `experimental.viewTransition: true` in next.config.ts
-**Why:** Native browser transitions for page navigation (GPU-accelerated, 60fps)
-**User experience:** Smooth visual transitions without JavaScript animation overhead
+The existing stack is well-suited for SEO/GEO-optimized match pages. Next.js 16.1.4 with PPR, React 19.2.3, and schema-dts 1.1.5 already provide the foundation. The codebase has comprehensive JSON-LD structured data implementation using `@graph` patterns.
+
+**Key Finding:** No new packages required. Focus is on configuration changes and content structure improvements, not stack additions.
+
+---
+
+## Recommended Stack
+
+### Core Framework (KEEP AS-IS)
+
+| Technology | Version | Purpose | Status |
+|------------|---------|---------|--------|
+| Next.js | 16.1.4 | SSR/SSG with PPR, metadata API | Current - verified |
+| React | 19.2.3 | Component rendering | Current - verified |
+| Tailwind CSS | 4.x | Styling | Current - verified |
+| schema-dts | 1.1.5 | TypeScript types for JSON-LD | Current - verified |
+
+**Rationale:** Next.js 16 has native support for streaming metadata, which improves perceived performance without blocking UI rendering. The `generateMetadata` function is already properly implemented in the codebase.
+
+### Structured Data (ENHANCE EXISTING)
+
+| Technology | Version | Purpose | Action |
+|------------|---------|---------|--------|
+| schema-dts | 1.1.5 | Schema.org TypeScript types | Keep - already installed |
+
+**Note:** The existing `schema-dts` package provides TypeScript types for all required Schema.org types (SportsEvent, FAQPage, NewsArticle, BreadcrumbList). No additional schema packages needed.
+
+### No New Packages Required
+
+The existing stack already includes everything needed:
+
+- **Metadata:** Next.js built-in `generateMetadata` function
+- **JSON-LD:** Native JSON.stringify with XSS sanitization
+- **Schema Types:** schema-dts provides all types
+- **Content Structure:** React Server Components
+- **Caching:** Next.js PPR + Suspense boundaries
+
+---
+
+## Schema.org Types for Match Pages
+
+### Current Implementation (Working Well)
+
+The codebase already implements a comprehensive `@graph` structure in `src/lib/seo/schema/graph.ts`:
 
 ```typescript
-// next.config.ts
-const nextConfig: NextConfig = {
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "Organization", ... },     // Site identity
+    { "@type": "SportsEvent", ... },      // Match data
+    { "@type": "NewsArticle", ... },      // Content metadata
+    { "@type": "BreadcrumbList", ... }    // Navigation
+  ]
+}
+```
+
+### Schema Types to ADD to @graph
+
+| Type | Purpose | Priority |
+|------|---------|----------|
+| FAQPage | Auto-generated FAQ from match data | HIGH - critical for GEO |
+| WebPage | Page-level metadata with speakable | MEDIUM - improves AI parsing |
+
+**FAQPage Addition:** The `MatchFAQSchema.tsx` component exists but renders separately. For v2.2, integrate FAQPage into the main `@graph` array for unified structured data.
+
+### SportsEvent Properties (Current vs. Optimal)
+
+| Property | Current | Optimal | Notes |
+|----------|---------|---------|-------|
+| `@type` | SportsEvent | SportsEvent | Correct |
+| `name` | "{Home} vs {Away}" | "{Home} vs {Away}" | Correct |
+| `startDate` | ISO 8601 | ISO 8601 | Correct |
+| `eventStatus` | EventScheduled | EventScheduled/EventPostponed | Add postponed handling |
+| `homeTeam` | SportsTeam | SportsTeam | Correct |
+| `awayTeam` | SportsTeam | SportsTeam | Correct |
+| `competitor` | Array | Array | Correct |
+| `homeTeamScore` | number (when finished) | number | Correct |
+| `awayTeamScore` | number (when finished) | number | Correct |
+| `location` | Place | Place with address | Already has address |
+| `sport` | "Football" | "https://schema.org/Football" | Consider URL form |
+
+### EventStatus Values (schema.org official)
+
+| Value | When to Use |
+|-------|-------------|
+| `EventScheduled` | Match is scheduled (current default) |
+| `EventPostponed` | Match postponed, new date TBD |
+| `EventRescheduled` | Match rescheduled to new date |
+| `EventCancelled` | Match cancelled |
+
+**Current Bug:** The `mapEventStatus` function always returns `EventScheduled`. Should handle postponed/cancelled statuses from the database.
+
+---
+
+## Configuration Changes
+
+### next.config.ts
+
+No changes required. Current configuration is optimal:
+
+```typescript
+{
+  cacheComponents: true, // PPR enabled
   experimental: {
     viewTransition: true,
   },
-  // ... existing config
-};
+  // images config already set for api-sports.io
+  // redirects already handle league URL normalization
+}
 ```
 
-**No new dependencies required.** Native browser API + React 19 integration.
+### robots.txt / Sitemap
 
-**Browser support:** Chrome, Edge, Safari 18+ (progressive enhancement - falls back gracefully)
+The existing implementation is correct. No changes needed for:
+- `robots: { index: true, follow: true }` for active matches
+- `robots: { index: false, follow: true }` for matches > 30 days old
 
-**Source:** [Next.js View Transitions](https://nextjs.org/docs/app/api-reference/config/next-config-js/viewTransition)
+### Headers for AI Crawlers
 
----
-
-### 3. Native Sitemap Generation (Remove next-sitemap)
-
-**What:** Replace next-sitemap with Next.js native sitemap.ts
-**Why:**
-- next-sitemap is a build-time tool; native sitemaps support ISR/dynamic generation
-- One less dependency to maintain
-- Better integration with App Router
-
-**Current:** next-sitemap 4.2.3 installed
-**Recommended:** Remove, use native `src/app/sitemap.ts`
+**Recommendation:** Add custom headers for AI bot identification (optional, low priority):
 
 ```typescript
-// src/app/sitemap.ts
-import type { MetadataRoute } from 'next';
-
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Dynamic sitemap generation with database queries
-  const matches = await getRecentMatches();
-  return matches.map(match => ({
-    url: `https://kroam.xyz/leagues/${match.competitionSlug}/${match.slug}`,
-    lastModified: match.updatedAt,
-    changeFrequency: match.status === 'upcoming' ? 'daily' : 'weekly',
-    priority: match.status === 'upcoming' ? 0.8 : 0.5,
-  }));
+// next.config.ts - headers section (if needed)
+async headers() {
+  return [
+    {
+      source: '/matches/:path*',
+      headers: [
+        {
+          key: 'X-Robots-Tag',
+          value: 'index, follow, max-snippet:-1, max-image-preview:large',
+        },
+      ],
+    },
+  ];
 }
 ```
 
-**Source:** [Next.js Sitemap](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap)
+This signals to crawlers (including GPTBot, ClaudeBot, PerplexityBot) that full content snippets are allowed.
 
 ---
 
-### 4. Font Optimization (Current: Inter, Keep)
+## GEO Optimization Requirements
 
-**Current:** Inter font via next/font/google
-**Status:** Good choice, no change needed
+### Content Structure for AI Citations
 
-Inter is the most popular web font (414 billion Google Fonts requests in 12 months ending May 2025). It's optimized for screen readability and works well at small sizes.
+Based on 2026 GEO research, content should be structured in "200-400 word semantic blocks that can stand alone as answers."
 
-**Verification:** Already using `next/font` with automatic self-hosting and zero layout shift.
+**Current Implementation Gap:** The `MatchContentSection` component renders long-form content without explicit semantic chunking.
 
-**Optional enhancement:** Add Geist Mono for code/data displays (already referenced in CSS variables but not loaded).
+**Recommendation:** Structure content with clear H2/H3 question headers that match FAQ questions:
 
-**Source:** [Next.js Font Optimization](https://nextjs.org/docs/app/getting-started/fonts)
+```html
+<article>
+  <h1>Man Utd vs Liverpool Prediction</h1>
 
----
+  <section aria-label="summary">
+    <p>AI predicts Manchester United 2-1 Liverpool...</p>  <!-- First 100 words = answer -->
+  </section>
 
-## Design System Enhancements
+  <h2>Who will win Man Utd vs Liverpool?</h2>
+  <p>Based on 35 AI models, 67% predict a Manchester United win...</p>
 
-### 5. Tailwind CSS v4 @theme Tokens (No New Dependencies)
-
-**What:** Migrate CSS custom properties to Tailwind v4 `@theme` directive
-**Why:** Single source of truth for design tokens, automatic utility class generation
-
-**Current state:** Using `:root` CSS variables in globals.css
-**Recommended:** Migrate to `@theme inline` directive (already partially done)
-
-```css
-/* Already in globals.css - enhance this pattern */
-@theme inline {
-  --color-background: var(--background);
-  --color-primary: var(--primary);
-  /* ... tokens generate utilities: bg-primary, text-primary */
-}
+  <h2>What is the predicted score?</h2>
+  <p>The consensus prediction is 2-1 to Manchester United...</p>
+</article>
 ```
 
-This is already partially implemented. Extend it to cover all semantic tokens.
+### Blockquote Pattern (Already Implemented)
 
-**Source:** [Tailwind CSS v4 Theme Variables](https://tailwindcss.com/docs/theme)
+The `PredictionInsightsBlockquote.tsx` component correctly uses `<blockquote>` for citable AI insights. This pattern should be maintained and expanded.
 
----
+### Statistics Addition (HIGH IMPACT)
 
-### 6. shadcn/ui Design Token Extension (No New Dependencies)
+Research shows statistics addition improves GEO visibility by 22-37%. The codebase already includes:
+- Model prediction counts ("35 AI models")
+- Win percentage calculations
+- Average predicted scores
 
-**What:** Extend shadcn/ui theme with sports-specific semantic tokens
-**Why:** Consistent visual language for match states, prediction confidence, scores
-
-**Recommended tokens to add:**
-
-```css
-:root {
-  /* Match status (already have --live, extend) */
-  --status-upcoming: var(--primary);
-  --status-live: #ef4444;
-  --status-finished: var(--muted);
-
-  /* Prediction confidence */
-  --confidence-high: #22c55e;
-  --confidence-medium: #eab308;
-  --confidence-low: #ef4444;
-
-  /* Score outcomes */
-  --outcome-win: #22c55e;
-  --outcome-draw: #eab308;
-  --outcome-loss: #ef4444;
-}
-```
-
-**Source:** [shadcn/ui Design Tokens](https://shadisbaih.medium.com/building-a-scalable-design-system-with-shadcn-ui-tailwind-css-and-design-tokens-031474b03690)
-
----
-
-## SEO/GEO Optimization
-
-### 7. FAQPage Schema for GEO (No New Dependencies)
-
-**What:** Add FAQPage structured data to key pages
-**Why:** 78% of AI-generated answers use list formats; FAQ schema has highest AI citation rates
-
-**Implementation:** Use existing schema-dts library (already installed)
-
-```typescript
-import type { FAQPage, WithContext } from 'schema-dts';
-
-function buildFAQSchema(questions: Array<{q: string, a: string}>): WithContext<FAQPage> {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: questions.map(({ q, a }) => ({
-      '@type': 'Question',
-      name: q,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: a,
-      },
-    })),
-  };
-}
-```
-
-**Pages to add FAQ schema:**
-- Match pages: "What is the AI prediction?", "How accurate are the models?"
-- League pages: "How many matches are covered?", "Which AI models predict?"
-- Methodology page: Existing FAQ content
-
-**Source:** [FAQPage Schema for GEO](https://www.frase.io/blog/faq-schema-ai-search-geo-aeo)
-
----
-
-### 8. Internal Linking Automation Strategy (Manual Implementation)
-
-**What:** Implement topic cluster architecture with automated internal links
-**Why:** Internal links are highest ROI SEO lever; manual linking doesn't scale
-
-**Architecture (no library needed):**
-
-```
-Hub Pages (Pillar):
-  /leagues/[slug]          - Competition hub
-  /leaderboard             - Model performance hub
-  /methodology             - How it works hub
-
-Spoke Pages (Cluster):
-  /leagues/[slug]/[match]  - Individual match (links to hub)
-  /models/[id]             - Model detail (links to leaderboard)
-  /blog/[slug]             - Content (links to relevant hubs)
-```
-
-**Implementation approach:**
-1. Create `RelatedMatches` component showing other matches in same competition
-2. Create `RelatedModels` component on match pages
-3. Add "More predictions" sections with contextual links
-4. Ensure 3-click depth maximum from homepage
-
-**Source:** [Internal Linking Best Practices](https://trafficthinktank.com/internal-linking-best-practices/)
+**Recommendation:** Make statistics more prominent with explicit numerical formatting.
 
 ---
 
 ## What NOT to Add
 
-### Rejected: Additional Animation Libraries
+### DO NOT Add: next-seo package
 
-**Options considered:** Framer Motion, GSAP, react-spring
-**Decision:** DO NOT ADD
-**Rationale:**
-- View Transitions API handles page transitions natively
-- Tailwind's tw-animate-css (already installed) covers micro-interactions
-- Additional animation libraries add bundle size without proportional UX benefit
-- GPU-accelerated CSS transitions outperform JS animations
+**Why:** Next.js 16 has built-in metadata API that supersedes next-seo. Mixing them causes duplicate tags and conflicts.
 
-### Rejected: State Management Libraries
+**Current status:** Correctly using Next.js native metadata.
 
-**Options considered:** Zustand, Jotai, Redux
-**Decision:** DO NOT ADD
-**Rationale:**
-- React 19 + Server Components handle most state on server
-- React Context sufficient for client state (theme, search modal)
-- Adding state library increases complexity without solving real problems
+### DO NOT Add: react-helmet or similar
 
-### Rejected: next-seo Package
+**Why:** Server Components don't support client-side head manipulation. The `generateMetadata` pattern is the correct approach.
 
-**Options considered:** next-seo
-**Decision:** DO NOT ADD
-**Rationale:**
-- Next.js 16 Metadata API is more powerful and native
-- Already have comprehensive metadata implementation in `/lib/seo/`
-- next-seo adds abstraction layer over native features
+### DO NOT Add: Additional schema packages
 
-### Rejected: Headless CMS
+**Why:** `schema-dts` already provides comprehensive TypeScript types for all Schema.org types. Adding `schema-org-json-ld` or similar would duplicate functionality.
 
-**Options considered:** Sanity, Contentful, Payload
-**Decision:** DO NOT ADD (for this milestone)
-**Rationale:**
-- Blog content already stored in PostgreSQL
-- Adding CMS increases complexity without solving current problems
-- Consider for future milestone if content volume increases
+### DO NOT Add: Structured data validation at runtime
+
+**Why:** JSON-LD validation should be done at build time or via Google's Rich Results Test, not in production code. Runtime validation adds bundle size with no user benefit.
+
+### DO NOT Add: Client-side structured data injection
+
+**Why:** Search engines prefer server-rendered JSON-LD. Client-side injection via JavaScript is less reliable and may not be indexed correctly.
+
+### DO NOT Add: AMP (Accelerated Mobile Pages)
+
+**Why:** Google no longer requires AMP for Top Stories. Next.js 16 with PPR provides comparable or better performance. AMP adds complexity without SEO benefit in 2026.
+
+### DO NOT Change: schema-dts to newer version
+
+**Why:** Version 1.1.5 is current (verified via npm). The package is stable and matches schema.org specifications.
 
 ---
 
-## Core Web Vitals Targets
+## File-by-File Recommendations
 
-| Metric | Current | Target | Strategy |
-|--------|---------|--------|----------|
-| LCP | Unknown | < 2.5s | PPR static shell, preload hero images |
-| INP | Unknown | < 200ms | Break long tasks, React Compiler auto-memoization |
-| CLS | Unknown | < 0.1 | Already using next/font, add explicit image dimensions |
+### Files to Modify (v2.2)
 
-**Measurement:** Use Vercel Analytics (already integrated via Sentry) or add `web-vitals` for client-side metrics.
+| File | Change | Priority |
+|------|--------|----------|
+| `src/lib/seo/schema/graph.ts` | Add FAQPage to @graph array | HIGH |
+| `src/lib/seo/schema/sports-event.ts` | Handle EventPostponed/EventCancelled | MEDIUM |
+| `src/components/match/MatchFAQSchema.tsx` | Expand FAQ questions, integrate with @graph | HIGH |
+| `src/lib/seo/types.ts` | Add postponed/cancelled to MatchStatus | LOW |
 
----
+### Files to Keep Unchanged
 
-## Installation Summary
-
-### Add to next.config.ts
-
-```typescript
-import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
-
-const nextConfig: NextConfig = {
-  cacheComponents: true, // NEW: Enables PPR + Cache Components
-  experimental: {
-    viewTransition: true, // NEW: Native page transitions
-  },
-  images: {
-    // ... existing config
-  },
-  async redirects() {
-    // ... existing redirects
-  },
-};
-
-export default withSentryConfig(nextConfig, {
-  // ... existing Sentry config
-});
-```
-
-### Remove (Optional)
-
-```bash
-npm uninstall next-sitemap  # Replace with native sitemap.ts
-```
-
-### No New Packages Required
-
-All recommended changes use:
-- Built-in Next.js 16 features
-- Already-installed libraries (schema-dts, Tailwind v4)
-- Native browser APIs (View Transitions)
+| File | Reason |
+|------|--------|
+| `next.config.ts` | Already optimal |
+| `package.json` | No new dependencies needed |
+| `src/lib/seo/metadata.ts` | Well-implemented metadata generation |
+| `src/lib/seo/constants.ts` | Correct length limits and defaults |
 
 ---
 
-## Confidence Assessment
+## Summary Table
 
-| Recommendation | Confidence | Reason |
-|----------------|------------|--------|
-| Cache Components + PPR | HIGH | Official Next.js 16 docs, stable feature |
-| View Transitions | MEDIUM | Experimental flag, but browser API is stable |
-| Native Sitemap | HIGH | Official Next.js feature, documented pattern |
-| FAQPage Schema | HIGH | Research shows direct GEO impact |
-| Internal Linking | MEDIUM | Strategy proven, implementation is manual effort |
-| Remove next-sitemap | MEDIUM | Native alternative exists, but migration effort |
+| Category | Recommendation | Confidence |
+|----------|---------------|------------|
+| Core Stack | Keep as-is | HIGH |
+| Schema Types | Add FAQPage to @graph | HIGH |
+| New Packages | None required | HIGH |
+| Configuration | Minor eventStatus enhancement | HIGH |
+| Content Structure | Add semantic H2/H3 patterns | HIGH |
+| Anti-patterns | Avoid next-seo, AMP, client-side JSON-LD | HIGH |
 
 ---
 
 ## Sources
 
-**Next.js 16 Features:**
-- [Next.js 16 Blog](https://nextjs.org/blog/next-16)
-- [Cache Components Guide](https://nextjs.org/docs/app/getting-started/cache-components)
-- [PPR Guide](https://nextjs.org/docs/15/app/getting-started/partial-prerendering)
-- [View Transitions Config](https://nextjs.org/docs/app/api-reference/config/next-config-js/viewTransition)
+### Official Documentation
+- [Next.js generateMetadata](https://nextjs.org/docs/app/api-reference/functions/generate-metadata) - Verified current
+- [Schema.org SportsEvent](https://schema.org/SportsEvent) - Official specification
+- [Schema.org EventStatusType](https://schema.org/EventStatusType) - EventScheduled, EventPostponed, etc.
 
-**Performance:**
-- [Core Web Vitals 2026](https://roastweb.com/blog/core-web-vitals-explained-2026)
-- [Vercel CWV Guide](https://vercel.com/kb/guide/optimizing-core-web-vitals-in-2024)
+### GEO Research (2026)
+- [GEO Trends 2026](https://webdesignerindia.medium.com/geo-trends-2026-generative-engine-optimization-992ffa83b186) - Market trends
+- [GEO Best Practices](https://www.digitalauthority.me/resources/generative-engine-optimization-best-practices/) - Implementation patterns
+- [What is GEO 2026](https://discoveredlabs.com/blog/what-is-geo-generative-engine-optimization-explained-2026) - Technical recommendations
+- [Next.js SEO 2026](https://www.djamware.com/post/697a19b07c935b6bb054313e/next-js-seo-optimization-guide--2026-edition) - Framework-specific guidance
 
-**SEO/GEO:**
-- [GEO Structured Data](https://www.digidop.com/blog/structured-data-secret-weapon-seo)
-- [FAQ Schema for GEO](https://www.frase.io/blog/faq-schema-ai-search-geo-aeo)
-- [Internal Linking Best Practices](https://trafficthinktank.com/internal-linking-best-practices/)
-
-**Design System:**
-- [Tailwind v4 Theme](https://tailwindcss.com/docs/theme)
-- [shadcn/ui Design Tokens](https://shadisbaih.medium.com/building-a-scalable-design-system-with-shadcn-ui-tailwind-css-and-design-tokens-031474b03690)
+### Package Verification
+- `npm view schema-dts version` - Confirmed 1.1.5 is current
+- package.json analysis - Confirmed all versions current
