@@ -362,11 +362,11 @@ Leaderboard is core differentiator - shows which AI models perform best. Time-ba
 **Plans**: 5 plans
 
 Plans:
-- [ ] 22-01-PLAN.md — HoverPrefetchLink and BottomNav components
-- [ ] 22-02-PLAN.md — Visual breadcrumbs component and builder utilities
-- [ ] 22-03-PLAN.md — Entity linking utilities and component
-- [ ] 22-04-PLAN.md — Integrate navigation across all pages
-- [ ] 22-05-PLAN.md — Prefetch optimization and human verification
+- [x] 22-01-PLAN.md — HoverPrefetchLink and BottomNav components
+- [x] 22-02-PLAN.md — Visual breadcrumbs component and builder utilities
+- [x] 22-03-PLAN.md — Entity linking utilities and component
+- [x] 22-04-PLAN.md — Integrate navigation across all pages
+- [x] 22-05-PLAN.md — Prefetch optimization and human verification
 
 **Success Criteria:**
 1. Mobile user navigates via thumb-friendly bottom navigation bar (4-5 primary destinations)
@@ -425,8 +425,8 @@ v1.0, v1.1, v1.2, and v1.3 complete. v2.0 in progress.
 | **19. Blog Page Rebuild** | **v2.0** | **5/5** | **Complete** | 2026-02-03 |
 | **20. League Page Rebuild** | **v2.0** | **4/4** | **Complete** | 2026-02-03 |
 | **21. Leaderboard Page Rebuild** | **v2.0** | **2/2** | **Complete** | 2026-02-03 |
-| **22. Navigation & Internal Linking** | **v2.0** | **0/5** | **Planned** | — |
+| **22. Navigation & Internal Linking** | **v2.0** | **5/5** | **Complete** | 2026-02-03 |
 | **23. Performance & Polish** | **v2.0** | **0/?** | **Pending** | — |
 
 ---
-*Last updated: 2026-02-03 (Phase 22 planned - 5 plans in 3 waves)*
+*Last updated: 2026-02-03 (Phase 22 complete - 5 plans executed)*

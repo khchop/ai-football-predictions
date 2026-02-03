@@ -49,11 +49,11 @@ Requirements for UI/UX Overhaul. Each maps to roadmap phases.
 
 ### Navigation & Internal Linking
 
-- [ ] **NAVL-01**: Bottom navigation bar for mobile (icons + labels)
-- [ ] **NAVL-02**: Breadcrumbs on all pages
-- [ ] **NAVL-03**: Related content widgets (matches, models, articles)
-- [ ] **NAVL-04**: Automated entity linking in content (team names, competitions, models)
-- [ ] **NAVL-05**: Prefetch on hover/touch for instant navigation
+- [x] **NAVL-01**: Bottom navigation bar for mobile (icons + labels)
+- [x] **NAVL-02**: Breadcrumbs on all pages
+- [x] **NAVL-03**: Related content widgets (matches, models, articles)
+- [x] **NAVL-04**: Automated entity linking in content (team names, competitions, models)
+- [x] **NAVL-05**: Prefetch on hover/touch for instant navigation
 
 ### Performance
 
@@ -125,11 +125,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LEAD-01 | Phase 21 | Complete |
 | LEAD-02 | Phase 21 | Complete |
 | LEAD-03 | Phase 21 | Complete |
-| NAVL-01 | Phase 22 | Pending |
-| NAVL-02 | Phase 22 | Pending |
-| NAVL-03 | Phase 22 | Pending |
-| NAVL-04 | Phase 22 | Pending |
-| NAVL-05 | Phase 22 | Pending |
+| NAVL-01 | Phase 22 | Complete |
+| NAVL-02 | Phase 22 | Complete |
+| NAVL-03 | Phase 22 | Complete |
+| NAVL-04 | Phase 22 | Complete |
+| NAVL-05 | Phase 22 | Complete |
 | PERF-01 | Phase 23 | Pending |
 | PERF-02 | Phase 23 | Pending |
 | PERF-03 | Phase 23 | Pending |
@@ -142,4 +142,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-03 after Phase 21 completion*
+*Last updated: 2026-02-03 after Phase 22 completion*
