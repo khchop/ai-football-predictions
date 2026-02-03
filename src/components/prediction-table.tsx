@@ -1,5 +1,3 @@
-'use client';
-
 import { cn } from '@/lib/utils';
 import { Bot, Trophy, Target, X } from 'lucide-react';
 
