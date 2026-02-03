@@ -290,7 +290,14 @@ Highest traffic pages. Research indicates 387 lines of complex JSX with data app
 **Goal**: Blog posts readable and optimized for GEO with proper typography and navigation
 **Requirements**: BLOG-01, BLOG-02, BLOG-03, BLOG-04, BLOG-05
 **Dependencies**: Phase 17 (typography scale)
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 19-01-PLAN.md — Typography and content styling with heading extraction utility
+- [ ] 19-02-PLAN.md — FAQ extraction and accordion component with FAQPage schema
+- [ ] 19-03-PLAN.md — Related articles utility and card grid widget
+- [ ] 19-04-PLAN.md — Table of contents with Intersection Observer scroll spy
+- [ ] 19-05-PLAN.md — Blog page integration and human verification
 
 **Success Criteria:**
 1. User reads blog content at comfortable line width (600-700px max, not full screen)
@@ -398,11 +405,11 @@ v1.0, v1.1, v1.2, and v1.3 complete. v2.0 in progress.
 | 16. AI Search Optimization | v1.3 | 3/3 | Complete | 2026-02-02 |
 | **17. Design System Foundation** | **v2.0** | **4/4** | **Complete** | 2026-02-02 |
 | **18. Match Page Rebuild** | **v2.0** | **5/5** | **Complete** | 2026-02-03 |
-| **19. Blog Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
+| **19. Blog Page Rebuild** | **v2.0** | **0/5** | **Planned** | — |
 | **20. League Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
 | **21. Leaderboard Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
 | **22. Navigation & Internal Linking** | **v2.0** | **0/?** | **Pending** | — |
 | **23. Performance & Polish** | **v2.0** | **0/?** | **Pending** | — |
 
 ---
-*Last updated: 2026-02-03 (Phase 18 complete - PPR activation deferred to Phase 23)*
+*Last updated: 2026-02-03 (Phase 19 planned - 5 plans in 3 waves)*
