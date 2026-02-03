@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 19 - Blog Page Rebuild
-Plan: 3 of 5 complete
+Plan: 4 of 5 complete
 Status: In progress
-Last activity: 2026-02-03 - Completed 19-03-PLAN.md (Related Articles Widget)
+Last activity: 2026-02-03 - Completed 19-04-PLAN.md (Table of Contents Component)
 
-Progress: [██████░░░░░░░░░░░░░░░░░░] 22% (v2.0: 12/? plans, 17/33 requirements)
+Progress: [███████░░░░░░░░░░░░░░░░░] 24% (v2.0: 13/? plans, 18/33 requirements)
 
 ## Milestone History
 
@@ -33,7 +33,7 @@ Progress: [██████░░░░░░░░░░░░░░░░░
 |-------|------|--------------|--------|
 | 17. Design System Foundation | Design tokens, dark mode, PPR infrastructure | DSGN-01 to DSGN-06 (6) | Complete |
 | 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | Complete |
-| 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | In progress (3/5) |
+| 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | In progress (4/5) |
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Pending |
 | 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Pending |
 | 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | Pending |
@@ -88,6 +88,8 @@ Full decision history available in phase SUMMARY.md files.
 - 5 FAQ max default for reasonable schema size (19-02)
 - Related articles scoring: Competition +5, ContentType +3, Tag +1 (19-03)
 - Related articles default limit: 3 cards (19-03)
+- Intersection Observer with rootMargin '-80px 0px -80% 0px' for TOC scroll spy (19-04)
+- Map-based visibility tracking for performance (avoid state re-renders) (19-04)
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -134,5 +136,5 @@ None blocking current work.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 19-03-PLAN.md (Related Articles Widget)
-Resume with: Continue Phase 19 with 19-04-PLAN.md (or integration plan)
+Stopped at: Completed 19-04-PLAN.md (Table of Contents Component)
+Resume with: Continue Phase 19 with 19-05-PLAN.md (Integration)
