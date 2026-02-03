@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 18 - Match Page Rebuild
-Plan: 03 of 6 complete (In progress)
+Plan: 04 of 6 complete (In progress)
 Status: In progress
-Last activity: 2026-02-03 - Completed 18-03-PLAN.md (PPR Infrastructure)
+Last activity: 2026-02-03 - Completed 18-04-PLAN.md (Match FAQ with GEO Schema)
 
-Progress: [█████░░░░░░░░░░░░░░░░░░░] 16% (v2.0: 7/? plans, 10/33 requirements)
+Progress: [█████░░░░░░░░░░░░░░░░░░░] 17% (v2.0: 8/? plans, 11/33 requirements)
 
 ## Milestone History
 
@@ -32,7 +32,7 @@ Progress: [█████░░░░░░░░░░░░░░░░░░
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
 | 17. Design System Foundation | Design tokens, dark mode, PPR infrastructure | DSGN-01 to DSGN-06 (6) | Complete |
-| 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | In Progress (3/6) |
+| 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | In Progress (4/6) |
 | 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Pending |
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Pending |
 | 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Pending |
@@ -79,6 +79,9 @@ Full decision history available in phase SUMMARY.md files.
 - PPR activation deferred to Phase 23 (infrastructure ready, requires Suspense refactoring)
 - Hardcoded copyright year (2026) to avoid new Date() PPR incompatibility
 - Shimmer animation: 2s duration, OKLCH gradients, respects prefers-reduced-motion
+- FAQ at absolute bottom: supplementary for SEO, not primary UX (GEO optimization)
+- Native details/summary for FAQ: no JavaScript required, accessible by default
+- TL;DR question always first in FAQ for AI search engine citation priority
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -126,5 +129,5 @@ None blocking current work.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 18-03-PLAN.md (PPR Infrastructure)
-Resume with: Continue Phase 18 - Plan 04 (Match Content Integration)
+Stopped at: Completed 18-04-PLAN.md (Match FAQ with GEO Schema)
+Resume with: Continue Phase 18 - Plan 05 (Match Content Integration)
