@@ -214,19 +214,21 @@ All 101 requirements validated across v1.0, v1.1, v1.2, v1.3, and v2.0 milestone
 - Real-time prediction updates during match (post-kickoff is settled)
 - Model fine-tuning or custom training
 
-## Next Milestone Goals
+## Current Milestone: v2.1 Match Page Simplification
 
-**Not yet defined.** Run `/gsd:new-milestone` to start the next milestone cycle.
+**Goal:** Simplify match detail page layout by removing sticky header, mobile tabs, and empty sections while fixing HTML rendering issues.
 
-**Potential areas for next milestone:**
-- Model pages redesign (MODL-01, MODL-02)
-- About pages SEO optimization (ABOU-01, ABOU-02)
-- Design system adoption (migrate hardcoded colors to semantic tokens)
-- ThemeToggle integration into Navigation
+**Target features:**
+- Remove sticky header — header scrolls naturally with page
+- Remove mobile tabbed navigation — single scrollable page on all devices
+- Unified layout order: Score → Scorers → Odds → Pre-match → Prediction → Post-match → Predictions → FAQ
+- Hide H2H and league standings sections
+- Hide empty sections instead of showing "no data" placeholders
+- Fix HTML tags appearing in narrative content
 
 ## Open Questions
 
 None currently.
 
 ---
-*Last updated: 2026-02-03 after v2.0 milestone shipped*
+*Last updated: 2026-02-03 after v2.1 milestone started*
