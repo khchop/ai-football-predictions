@@ -293,11 +293,11 @@ Highest traffic pages. Research indicates 387 lines of complex JSX with data app
 **Plans**: 5 plans
 
 Plans:
-- [ ] 19-01-PLAN.md — Typography and content styling with heading extraction utility
-- [ ] 19-02-PLAN.md — FAQ extraction and accordion component with FAQPage schema
-- [ ] 19-03-PLAN.md — Related articles utility and card grid widget
-- [ ] 19-04-PLAN.md — Table of contents with Intersection Observer scroll spy
-- [ ] 19-05-PLAN.md — Blog page integration and human verification
+- [x] 19-01-PLAN.md — Typography and content styling with heading extraction utility
+- [x] 19-02-PLAN.md — FAQ extraction and accordion component with FAQPage schema
+- [x] 19-03-PLAN.md — Related articles utility and card grid widget
+- [x] 19-04-PLAN.md — Table of contents with Intersection Observer scroll spy
+- [x] 19-05-PLAN.md — Blog page integration and human verification
 
 **Success Criteria:**
 1. User reads blog content at comfortable line width (600-700px max, not full screen)
@@ -315,11 +315,17 @@ Second major page type. Blog readability is table stakes - currently full-width 
 **Goal**: League pages SEO-optimized with rich structured data and stats dashboard
 **Requirements**: LEAG-01, LEAG-02, LEAG-03, LEAG-04, LEAG-05
 **Dependencies**: Phase 17 (design tokens for data visualization)
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 20-01-PLAN.md — SEO metadata and SportsOrganization schema enhancement
+- [ ] 20-02-PLAN.md — FAQ generator and LeagueFAQ component
+- [ ] 20-03-PLAN.md — Trend chart component and data query
+- [ ] 20-04-PLAN.md — Integration with combined @graph schema
 
 **Success Criteria:**
 1. User finds league pages via search engines with rich snippets (SEO metadata optimized)
-2. AI search engines understand league structure (SportsOrganization/SportsLeague schema present)
+2. AI search engines understand league structure (SportsOrganization schema present)
 3. User finds FAQ section answering common league questions (FAQPage schema present)
 4. User views competition stats at a glance (total matches, predictions, accuracy displayed)
 5. User explores historical performance trends via visualization (charts showing model accuracy over time)
@@ -406,10 +412,10 @@ v1.0, v1.1, v1.2, and v1.3 complete. v2.0 in progress.
 | **17. Design System Foundation** | **v2.0** | **4/4** | **Complete** | 2026-02-02 |
 | **18. Match Page Rebuild** | **v2.0** | **5/5** | **Complete** | 2026-02-03 |
 | **19. Blog Page Rebuild** | **v2.0** | **5/5** | **Complete** | 2026-02-03 |
-| **20. League Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
+| **20. League Page Rebuild** | **v2.0** | **0/4** | **Pending** | — |
 | **21. Leaderboard Page Rebuild** | **v2.0** | **0/?** | **Pending** | — |
 | **22. Navigation & Internal Linking** | **v2.0** | **0/?** | **Pending** | — |
 | **23. Performance & Polish** | **v2.0** | **0/?** | **Pending** | — |
 
 ---
-*Last updated: 2026-02-03 (Phase 19 complete - 5 plans executed)*
+*Last updated: 2026-02-03 (Phase 20 planned - 4 plans in 2 waves)*
