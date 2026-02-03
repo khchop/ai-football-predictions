@@ -16,7 +16,7 @@
 
 import { getMatchContent } from '@/lib/content/queries';
 import { Card, CardContent } from '@/components/ui/card';
-import { ReadMoreText } from '@/components/match/ReadMoreText';
+import { NarrativePreview } from '@/components/match/narrative-preview';
 
 interface MatchContentSectionProps {
   matchId: string;
@@ -53,26 +53,34 @@ export async function MatchContentSection({
       <CardContent className="p-6 space-y-8">
         {/* Pre-match section (scheduled only) */}
         {showPreMatch && (
-          <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-              Market Expectations
-            </h3>
-            <p className="text-foreground leading-relaxed text-sm md:text-base">
-              {content.preMatchContent}
-            </p>
-            {content.preMatchGeneratedAt && (
-              <p className="text-xs text-muted-foreground/60 mt-2">
-                Generated{' '}
-                {new Date(content.preMatchGeneratedAt).toLocaleString()}
-              </p>
-            )}
-          </div>
+          <>
+            {/* Preview above the fold */}
+            <div>
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                Match Preview
+              </h3>
+              <NarrativePreview
+                previewText={content.preMatchContent!}
+                fullSectionId="full-narrative-prematch"
+              />
+            </div>
+
+            {/* Full content section (linked from preview) */}
+            <section id="full-narrative-prematch" className="scroll-mt-20 pt-8 border-t border-border/30">
+              <h3 className="text-lg font-bold mb-4">Full Match Preview</h3>
+              <div className="text-foreground leading-relaxed text-sm md:text-base">
+                {content.preMatchContent}
+              </div>
+              {content.preMatchGeneratedAt && (
+                <p className="text-xs text-muted-foreground/60 mt-4">
+                  Generated{' '}
+                  {new Date(content.preMatchGeneratedAt).toLocaleString()}
+                </p>
+              )}
+            </section>
+          </>
         )}
 
-        {/* Divider between pre-match and betting/post-match */}
-        {showPreMatch && (showBetting || showPostMatch) && (
-          <div className="border-t border-border/30" />
-        )}
 
         {/* Betting section (live/finished) */}
         {showBetting && (
@@ -92,29 +100,35 @@ export async function MatchContentSection({
           </div>
         )}
 
-        {/* Divider between betting and post-match */}
-        {showBetting && showPostMatch && (
-          <div className="border-t border-border/30" />
-        )}
 
-        {/* Post-match section (finished only) - with Read More for long content */}
+        {/* Post-match section (finished only) */}
         {showPostMatch && (
-          <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-              Match Report
-            </h3>
-            <ReadMoreText
-              text={content.postMatchContent!}
-              previewLines={6}
-              className="text-sm md:text-base"
-            />
-            {content.postMatchGeneratedAt && (
-              <p className="text-xs text-muted-foreground/60 mt-2">
-                Generated{' '}
-                {new Date(content.postMatchGeneratedAt).toLocaleString()}
-              </p>
-            )}
-          </div>
+          <>
+            {/* Brief summary at preview location */}
+            <div>
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                Match Report
+              </h3>
+              <NarrativePreview
+                previewText={content.postMatchContent!}
+                fullSectionId="full-narrative-postmatch"
+              />
+            </div>
+
+            {/* Full roundup section (linked from preview) */}
+            <section id="full-narrative-postmatch" className="scroll-mt-20 pt-8 border-t border-border/30">
+              <h3 className="text-lg font-bold mb-4">Full Match Analysis</h3>
+              <div className="text-foreground leading-relaxed text-sm md:text-base">
+                {content.postMatchContent}
+              </div>
+              {content.postMatchGeneratedAt && (
+                <p className="text-xs text-muted-foreground/60 mt-4">
+                  Generated{' '}
+                  {new Date(content.postMatchGeneratedAt).toLocaleString()}
+                </p>
+              )}
+            </section>
+          </>
         )}
       </CardContent>
     </Card>
