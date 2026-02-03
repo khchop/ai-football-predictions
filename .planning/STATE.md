@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 20 - League Page Rebuild
-Plan: 4 of 4 complete (Phase complete)
-Status: Phase 20 verified and complete - Ready for Phase 21
-Last activity: 2026-02-03 - Phase 20 verified (16/16 must-haves passed)
+Phase: 21 - Leaderboard Page Rebuild
+Plan: 1 of 3 complete
+Status: In progress
+Last activity: 2026-02-03 - Completed 21-01-PLAN.md (time period filters + trends)
 
-Progress: [██████████░░░░░░░░░░░░░░] 35% (v2.0: 18/? plans, 28/34 requirements)
+Progress: [███████████░░░░░░░░░░░░░] 38% (v2.0: 19/? plans, 29/34 requirements)
 
 ## Milestone History
 
@@ -35,7 +35,7 @@ Progress: [██████████░░░░░░░░░░░░░
 | 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | Complete |
 | 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Complete |
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Complete |
-| 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Pending |
+| 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | In Progress (1/3) |
 | 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | Pending |
 | 23. Performance & Polish | PPR validation, client audit, transitions | PERF-01 to PERF-04 (4) | Pending |
 
@@ -49,7 +49,7 @@ Phase 17 (Foundation) [COMPLETE]
   |                                    |
   +---> Phase 20 (League) [COMPLETE]--+
   |                                    |
-  +---> Phase 21 (Leader)-------------+--> Phase 23 (Performance)
+  +---> Phase 21 (Leader) [1/3]-------+--> Phase 23 (Performance)
 ```
 
 ## Accumulated Context
@@ -59,7 +59,7 @@ Phase 17 (Foundation) [COMPLETE]
 Decisions are logged in PROJECT.md Key Decisions table.
 Full decision history available in phase SUMMARY.md files.
 
-**Key v2.0 Decisions (Phases 17-20):**
+**Key v2.0 Decisions (Phases 17-21):**
 - OKLCH color space for perceptual uniformity across light/dark modes
 - Dark mode uses dark grays (L=0.14), not pure black, for eye comfort
 - System preference as default theme via next-themes
@@ -99,6 +99,10 @@ Full decision history available in phase SUMMARY.md files.
 - Weekly grouping (ISO week) for trend granularity (20-03)
 - Chronological order (oldest to newest) for left-to-right chart display (20-03)
 - Duplicate FAQ generation in page.tsx and league-hub-content.tsx (Next.js deduplication handles queries) (20-04)
+- timePeriod param replaces legacy timeRange for semantic clarity (21-01)
+- ISO week (Monday start) via DATE_TRUNC for weekly comparisons (21-01)
+- Monthly comparison for 'all' time period trend calculation (21-01)
+- Trend column placed after Accuracy, before Streak in leaderboard table (21-01)
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -145,5 +149,5 @@ None blocking current work.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed Phase 20 (League Page Rebuild) - verified
-Resume with: Begin Phase 21 (Leaderboard Page Rebuild)
+Stopped at: Completed 21-01-PLAN.md (time period filters + trends)
+Resume with: Execute 21-02-PLAN.md (SEO Enhancement)
