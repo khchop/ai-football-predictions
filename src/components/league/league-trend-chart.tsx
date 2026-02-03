@@ -89,7 +89,15 @@ export function LeagueTrendChart({
   title = 'Accuracy Trend',
 }: LeagueTrendChartProps) {
   // Empty data: return null for graceful handling
+  // Filter out invalid accuracy values (non-numbers)
   if (!data || data.length === 0) {
+    return null;
+  }
+
+  const validData = data.filter(
+    (item) => typeof item.accuracy === 'number' && !isNaN(item.accuracy)
+  );
+  if (validData.length === 0) {
     return null;
   }
 
@@ -98,7 +106,7 @@ export function LeagueTrendChart({
       <p className="text-sm font-medium text-muted-foreground">{title}</p>
 
       <div className="flex items-end gap-1 h-24">
-        {data.map((item, index) => {
+        {validData.map((item, index) => {
           const height = Math.max(item.accuracy, 2); // Minimum 2% height for visibility
           const colorClass = getColorClass(item.accuracy);
 

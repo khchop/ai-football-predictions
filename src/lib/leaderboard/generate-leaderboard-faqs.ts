@@ -60,7 +60,7 @@ export function generateLeaderboardFAQs(data: LeaderboardFAQData): FAQItem[] {
 
   // Q2: Best performing model (dynamic)
   let bestModelAnswer = `Performance varies by time period and competition.`;
-  if (topModel) {
+  if (topModel && typeof topModel.avgPoints === 'number' && typeof topModel.accuracy === 'number' && !isNaN(topModel.avgPoints) && !isNaN(topModel.accuracy)) {
     bestModelAnswer = `${topModel.name} leads the leaderboard ${periodLabel} with ${topModel.avgPoints.toFixed(2)} average points per match and ${topModel.accuracy.toFixed(1)}% tendency accuracy. Use weekly/monthly filters to compare recent performance versus long-term consistency.`;
   }
 

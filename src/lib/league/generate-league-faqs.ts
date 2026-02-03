@@ -80,7 +80,7 @@ export function generateLeagueFAQs(data: LeagueFAQData): FAQItem[] {
 
   // Q2: Accuracy question with dynamic stats
   let accuracyAnswer = `Across ${stats.finishedMatches} ${name} matches, our AI models achieve varying accuracy levels.`;
-  if (topModel) {
+  if (topModel && typeof topModel.accuracy === 'number' && !isNaN(topModel.accuracy)) {
     accuracyAnswer += ` The best performing model is ${topModel.model.name} with ${topModel.accuracy.toFixed(1)}% tendency accuracy.`;
   }
 
