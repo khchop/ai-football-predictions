@@ -2276,7 +2276,7 @@ export async function getPublishedBlogPosts(limit: number = 20, offset: number =
  */
 export async function getBlogPostBySlug(slug: string) {
   const db = getDb();
-  
+
   const result = await db
     .select()
     .from(blogPosts)
@@ -2287,6 +2287,26 @@ export async function getBlogPostBySlug(slug: string) {
     .limit(1);
 
   return result[0] || null;
+}
+
+/**
+ * Get recent blog posts for related articles calculation
+ *
+ * Returns a pool of published posts for similarity scoring.
+ * Default limit of 20 is sufficient for tag-based similarity
+ * without fetching entire blog history.
+ */
+export async function getRecentBlogPosts(limit: number = 20) {
+  const db = getDb();
+
+  const result = await db
+    .select()
+    .from(blogPosts)
+    .where(eq(blogPosts.status, 'published'))
+    .orderBy(desc(blogPosts.publishedAt))
+    .limit(limit);
+
+  return result;
 }
 
 // Type for prediction with accuracy data
