@@ -1,5 +1,7 @@
 'use client'
 
+import { stripHtml } from '@/lib/utils/strip-html';
+
 interface NarrativePreviewProps {
   previewText: string
   fullSectionId: string
@@ -24,12 +26,13 @@ export function NarrativePreview({
   }
 
   // Truncate to approximate word count for preview (150 words target)
-  const words = previewText.split(/\s+/)
+  const cleanText = stripHtml(previewText)
+  const words = cleanText.split(/\s+/)
   const previewWordCount = 150
   const isLongContent = words.length > previewWordCount
   const preview = isLongContent
     ? words.slice(0, previewWordCount).join(' ') + '...'
-    : previewText
+    : cleanText
 
   return (
     <div className={`space-y-3 ${className}`}>

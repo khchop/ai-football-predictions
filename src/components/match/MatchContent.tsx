@@ -20,6 +20,7 @@ import { getMatchContent } from '@/lib/content/queries';
 import { Card, CardContent } from '@/components/ui/card';
 import { NarrativePreview } from '@/components/match/narrative-preview';
 import { EntityLinkedText } from '@/components/content/entity-linked-text';
+import { stripHtml } from '@/lib/utils/strip-html';
 
 interface MatchContentSectionProps {
   matchId: string;
@@ -71,7 +72,7 @@ export async function MatchContentSection({
                 Match Preview
               </h3>
               <NarrativePreview
-                previewText={content.preMatchContent!}
+                previewText={stripHtml(content.preMatchContent)}
                 fullSectionId="full-narrative-prematch"
               />
             </div>
@@ -82,13 +83,13 @@ export async function MatchContentSection({
               <div className="text-foreground leading-relaxed text-sm md:text-base">
                 {enableEntityLinking ? (
                   <EntityLinkedText
-                    text={content.preMatchContent!}
+                    text={stripHtml(content.preMatchContent)}
                     teams={teams}
                     models={models}
                     maxLinks={5}
                   />
                 ) : (
-                  content.preMatchContent
+                  stripHtml(content.preMatchContent)
                 )}
               </div>
               {content.preMatchGeneratedAt && (
@@ -111,13 +112,13 @@ export async function MatchContentSection({
             <p className="text-foreground leading-relaxed text-sm md:text-base">
               {enableEntityLinking ? (
                 <EntityLinkedText
-                  text={content.bettingContent!}
+                  text={stripHtml(content.bettingContent)}
                   teams={teams}
                   models={models}
                   maxLinks={5}
                 />
               ) : (
-                content.bettingContent
+                stripHtml(content.bettingContent)
               )}
             </p>
             {content.bettingGeneratedAt && (
@@ -139,7 +140,7 @@ export async function MatchContentSection({
                 Match Report
               </h3>
               <NarrativePreview
-                previewText={content.postMatchContent!}
+                previewText={stripHtml(content.postMatchContent)}
                 fullSectionId="full-narrative-postmatch"
               />
             </div>
@@ -150,13 +151,13 @@ export async function MatchContentSection({
               <div className="text-foreground leading-relaxed text-sm md:text-base">
                 {enableEntityLinking ? (
                   <EntityLinkedText
-                    text={content.postMatchContent!}
+                    text={stripHtml(content.postMatchContent)}
                     teams={teams}
                     models={models}
                     maxLinks={5}
                   />
                 ) : (
-                  content.postMatchContent
+                  stripHtml(content.postMatchContent)
                 )}
               </div>
               {content.postMatchGeneratedAt && (
