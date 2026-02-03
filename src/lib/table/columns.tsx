@@ -27,6 +27,9 @@ export interface LeaderboardEntry {
   currentStreakType?: string;
   bestStreak?: number;
   worstStreak?: number;
+  // Trend data
+  trendDirection?: 'rising' | 'falling' | 'stable' | 'new';
+  rankChange?: number;
 }
 
 type RenderRankIcon = (index: number) => React.ReactNode;

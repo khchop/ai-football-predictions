@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { ArrowUp, ArrowDown, ArrowUpDown, Trophy, Medal, Award, Flame, Snowflake, Minus, Check } from 'lucide-react';
 import { CompareModal } from '@/components/leaderboard/compare-modal';
+import { TrendIndicator } from '@/components/leaderboard/trend-indicator';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AccuracyDisplay } from '@/components/accuracy-display';
@@ -43,6 +44,9 @@ export interface LeaderboardEntry {
   currentStreakType?: string;
   bestStreak?: number;
   worstStreak?: number;
+  // Trend data
+  trendDirection?: 'rising' | 'falling' | 'stable' | 'new';
+  rankChange?: number;
 }
 
 interface LeaderboardTableProps {
@@ -327,7 +331,20 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
       meta: { align: 'center' as const },
       size: 120,
     },
-    // 9. Streak (display column)
+    // 9. Trend (display column, after accuracy)
+    {
+      id: 'trend',
+      header: 'Trend',
+      cell: ({ row }) => {
+        const direction = row.original.trendDirection || 'stable';
+        const change = row.original.rankChange || 0;
+        return <TrendIndicator direction={direction} rankChange={change} />;
+      },
+      size: 80,
+      meta: { align: 'center' as const },
+      enableSorting: false, // Trend is derived, not sortable
+    },
+    // 10. Streak (display column)
     {
       id: 'streak',
       header: 'Streak',
@@ -408,7 +425,13 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
               <p className="text-xs text-muted-foreground capitalize">{entry.provider}</p>
             </Link>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            {entry.trendDirection && (
+              <TrendIndicator
+                direction={entry.trendDirection}
+                rankChange={entry.rankChange || 0}
+              />
+            )}
             {getStreakIndicator(entry)}
           </div>
         </div>
