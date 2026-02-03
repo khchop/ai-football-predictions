@@ -1,0 +1,47 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "BuildAgent": {
+      "disable": true
+    },
+    "CodeReviewer": {
+      "disable": true
+    },
+    "CoderAgent": {
+      "disable": true
+    },
+    "ContextScout": {
+      "disable": true
+    },
+    "DocWriter": {
+      "disable": true
+    },
+    "OpenAgent": {
+      "disable": true
+    },
+    "OpenBackendSpecialist": {
+      "disable": true
+    },
+    "OpenCodebaseAgent": {
+      "disable": true
+    },
+    "OpenCoder": {
+      "disable": true
+    },
+    "OpenDevopsSpecialist": {
+      "disable": true
+    },
+    "OpenFrontendSpecialist": {
+      "disable": true
+    },
+    "PatternAnalyst": {
+      "disable": true
+    },
+    "TaskManager": {
+      "disable": true
+    },
+    "TestEngineer": {
+      "disable": true
+    }
+  }
+}
