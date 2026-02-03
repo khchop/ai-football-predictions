@@ -4,6 +4,7 @@ import { ViewTransition } from "react";
 import "./globals.css";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
+import { BottomNav } from "@/components/navigation/bottom-nav";
 import { Analytics } from "@/components/analytics";
 import { ErrorBoundaryProvider } from "@/components/error-boundary-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -133,7 +134,7 @@ export default function RootLayout({
             <Navigation />
 
             <ViewTransition>
-              <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
+              <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl pb-20 md:pb-0">
                 <ErrorBoundaryProvider>
                   {children}
                 </ErrorBoundaryProvider>
@@ -141,6 +142,7 @@ export default function RootLayout({
             </ViewTransition>
 
             <Footer />
+            <BottomNav />
           </TooltipProvider>
         </Providers>
       </body>
