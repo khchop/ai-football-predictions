@@ -1,5 +1,33 @@
 # Project Milestones: AI Football Predictions Platform
 
+## v2.1 Match Page Simplification (Shipped: 2026-02-03)
+
+**Delivered:** Simplified match page layout with natural scrolling (no sticky header), unified single-column design (no mobile tabs), removed H2H/standings sections, and clean HTML stripping for narrative content.
+
+**Phases completed:** 24-25 (3 plans total)
+
+**Key accomplishments:**
+
+- Unified single-column layout — all devices scroll naturally without sticky header or mobile tabs
+- Removed H2H and league standings sections — cleaner interface, fewer API calls
+- Empty section hiding — components return null when no data (no "unavailable" placeholders)
+- HTML stripping utility with isomorphic-dompurify for SSR-compatible content sanitization
+- Clean narrative rendering — pre-match, betting, and post-match display without raw HTML tags
+- Performance improvement — removed standings API call from match page data fetching
+
+**Stats:**
+
+- 98,659 lines of TypeScript (+2,391 from v2.0)
+- 2 phases, 3 plans, 9 requirements
+- 21 files changed, +2,691 / -300 lines
+- 1 day from start to ship (2026-02-03)
+
+**Git range:** `feat(24-01)` → `docs(25)`
+
+**What's next:** New milestone planning with `/gsd:new-milestone`
+
+---
+
 ## v2.0 UI/UX Overhaul (Shipped: 2026-02-03)
 
 **Delivered:** Complete UI/UX rebuild with new design system, dark mode, View Transitions, PPR streaming, FAQ schemas for GEO optimization, and systematic internal linking across all page types.
@@ -163,4 +191,4 @@
 
 ---
 
-*Last updated: 2026-02-02 after v1.3 milestone*
+*Last updated: 2026-02-03 after v2.1 milestone*

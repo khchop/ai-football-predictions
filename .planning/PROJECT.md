@@ -21,7 +21,21 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 
 ## Current State
 
-**Brownfield project with v2.0 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. v2.0 UI/UX Overhaul milestone completed 2026-02-03 with all 33 requirements shipped.
+**Brownfield project with v2.1 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. v2.1 Match Page Simplification milestone completed 2026-02-03 with all 9 requirements shipped.
+
+### Validated (v2.1)
+
+The following requirements were validated in v2.1:
+
+- ✓ **LAYT-01**: Remove sticky header — header scrolls naturally with page — v2.1
+- ✓ **LAYT-02**: Remove mobile tabbed navigation — single scrollable page — v2.1
+- ✓ **LAYT-03**: Unified layout order (Score → Scorers → Odds → Reports → Predictions → FAQ) — v2.1
+- ✓ **FILT-01**: Hide H2H section completely from match pages — v2.1
+- ✓ **FILT-02**: Hide league standings section completely from match pages — v2.1
+- ✓ **FILT-03**: Hide empty sections when no data exists — v2.1
+- ✓ **FILT-04**: No "unavailable" placeholder messages shown — v2.1
+- ✓ **QUAL-01**: Strip HTML tags from narrative content — v2.1
+- ✓ **QUAL-02**: Clean narrative output in database content — v2.1
 
 ### Validated (v2.0)
 
@@ -167,9 +181,9 @@ The following capabilities are built and operational:
 
 ### Context
 
-Shipped v2.0 with 46,402 LOC TypeScript.
-Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, next-themes, react-swipeable.
-All 101 requirements validated across v1.0, v1.1, v1.2, v1.3, and v2.0 milestones.
+Shipped v2.1 with 98,659 LOC TypeScript.
+Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, next-themes, react-swipeable, isomorphic-dompurify.
+All 110 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, and v2.1 milestones.
 
 ## Constraints
 
@@ -214,21 +228,13 @@ All 101 requirements validated across v1.0, v1.1, v1.2, v1.3, and v2.0 milestone
 - Real-time prediction updates during match (post-kickoff is settled)
 - Model fine-tuning or custom training
 
-## Current Milestone: v2.1 Match Page Simplification
+## Next Milestone
 
-**Goal:** Simplify match detail page layout by removing sticky header, mobile tabs, and empty sections while fixing HTML rendering issues.
-
-**Target features:**
-- Remove sticky header — header scrolls naturally with page
-- Remove mobile tabbed navigation — single scrollable page on all devices
-- Unified layout order: Score → Scorers → Odds → Pre-match → Prediction → Post-match → Predictions → FAQ
-- Hide H2H and league standings sections
-- Hide empty sections instead of showing "no data" placeholders
-- Fix HTML tags appearing in narrative content
+Ready for new milestone planning. Run `/gsd:new-milestone` to start.
 
 ## Open Questions
 
 None currently.
 
 ---
-*Last updated: 2026-02-03 after v2.1 milestone started*
+*Last updated: 2026-02-03 after v2.1 milestone shipped*

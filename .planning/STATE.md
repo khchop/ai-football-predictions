@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-03)
 
 **Core value:** Prediction pipeline reliably generates scores from 35 LLMs ~30 minutes before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** v2.1 Match Page Simplification - Complete
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 25 of 25 (Content Rendering Fix)
-Plan: 1 of 1 in current phase
-Status: Phase complete
-Last activity: 2026-02-03 - Completed 25-01-PLAN.md
+Phase: 25 of 25 (v2.1 complete)
+Plan: Milestone complete
+Status: Ready for new milestone
+Last activity: 2026-02-03 — v2.1 milestone shipped
 
 Progress: [██████████] 100% (v2.1 Complete)
 
@@ -29,29 +29,11 @@ Progress: [██████████] 100% (v2.1 Complete)
 
 **Total:** 25 phases, 77 plans, 110 requirements shipped
 
-## v2.1 Scope (Complete)
-
-**Phases:** 24-25 (2 phases)
-**Requirements:** 9 total (7 in Phase 24, 2 in Phase 25)
-
-| Phase | Goal | Requirements | Status |
-|-------|------|--------------|--------|
-| 24 - Match Page Cleanup | Remove sticky header, tabs, hidden sections | 7 | Complete |
-| 25 - Content Rendering Fix | Strip HTML tags from narratives | 2 | Complete |
-
 ## Accumulated Context
 
 ### Decisions
 
-| Decision | Choice | Phase | Rationale |
-|----------|--------|-------|-----------|
-| Layout approach | Single-column for all devices | 24-01 | Eliminates UX divergence between mobile/desktop |
-| MatchPageHeader | Keep as pass-through | 24-01 | Maintains API surface without sticky logic |
-| H2H removal | Complete removal | 24-02 | Not valuable to users, clutters interface |
-| Standings removal | Complete removal | 24-02 | Redundant with league page, reduces API calls |
-| Empty state handling | Return null | 24-02 | Cleaner UX than showing "no data" placeholders |
-| HTML sanitization library | isomorphic-dompurify | 25-01 | SSR-compatible with Next.js App Router |
-| Content sanitization timing | Strip at render time | 25-01 | Preserves original content in database for flexibility |
+All v2.1 decisions documented in `.planning/milestones/v2.1-ROADMAP.md`
 
 ### Pending Todos
 
@@ -64,5 +46,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 25-01-PLAN.md (v2.1 milestone complete)
-Resume with: New milestone planning or feature work
+Stopped at: Completed v2.1 milestone
+Resume with: `/gsd:new-milestone` to start next milestone
