@@ -3,7 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { MatchEvents } from '@/components/match-events';
 import { MatchContentSection } from '@/components/match/MatchContent';
-import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails, getStandingsForTeams, getNextMatchesForTeams, getMatchRoundup, getActiveModels } from '@/lib/db/queries';
+import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails, getNextMatchesForTeams, getMatchRoundup, getActiveModels } from '@/lib/db/queries';
 import { RelatedMatchesWidget } from '@/components/match/related-matches-widget';
 import { getMatchEvents } from '@/lib/football/api-football';
 import { getCompetitionByIdOrAlias } from '@/lib/football/competitions';
@@ -118,7 +118,6 @@ export default async function MatchPage({ params }: MatchPageProps) {
     analysisData,
     predictions,
     matchEvents,
-    teamStandings,
     nextMatches,
     roundup,
     activeModels
@@ -137,10 +136,6 @@ export default async function MatchPage({ params }: MatchPageProps) {
           return [] as Awaited<ReturnType<typeof getMatchEvents>>;
         })
       : Promise.resolve([] as Awaited<ReturnType<typeof getMatchEvents>>),
-    getStandingsForTeams(competition.apiFootballId, [matchData.homeTeam, matchData.awayTeam], competition.season).catch(err => {
-      console.error('Failed to fetch team standings:', err);
-      return [] as Awaited<ReturnType<typeof getStandingsForTeams>>;
-    }),
     getNextMatchesForTeams([matchData.homeTeam, matchData.awayTeam], 4).catch(err => {
       console.error('Failed to fetch next matches:', err);
       return [] as Awaited<ReturnType<typeof getNextMatchesForTeams>>;
@@ -159,8 +154,6 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
   const analysis = analysisData?.analysis;
   const kickoff = parseISO(matchData.kickoffTime);
-  const homeStanding = teamStandings.find(s => s.teamName === matchData.homeTeam) || null;
-  const awayStanding = teamStandings.find(s => s.teamName === matchData.awayTeam) || null;
 
   // Build breadcrumbs
   const matchTitle = `${matchData.homeTeam} vs ${matchData.awayTeam}`;
@@ -223,8 +216,6 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
       <MatchStats
         analysis={analysis || null}
-        homeStanding={homeStanding}
-        awayStanding={awayStanding}
         homeTeam={matchData.homeTeam}
         awayTeam={matchData.awayTeam}
         roundupStats={roundup?.stats ? JSON.parse(roundup.stats) as RoundupStats : null}
