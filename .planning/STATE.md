@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 18 - Match Page Rebuild
-Plan: 5 of 5 complete (Phase complete)
-Status: Phase 18 complete - Ready for Phase 19
-Last activity: 2026-02-03 - Completed 18-05-PLAN.md (Final Integration & Verification)
+Phase: 19 - Blog Page Rebuild
+Plan: 2 of 5 complete
+Status: In progress
+Last activity: 2026-02-03 - Completed 19-02-PLAN.md (FAQ Section with Schema)
 
-Progress: [█████░░░░░░░░░░░░░░░░░░░] 18% (v2.0: 9/? plans, 17/33 requirements)
+Progress: [██████░░░░░░░░░░░░░░░░░░] 20% (v2.0: 11/? plans, 17/33 requirements)
 
 ## Milestone History
 
@@ -33,7 +33,7 @@ Progress: [█████░░░░░░░░░░░░░░░░░░
 |-------|------|--------------|--------|
 | 17. Design System Foundation | Design tokens, dark mode, PPR infrastructure | DSGN-01 to DSGN-06 (6) | Complete |
 | 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | Complete |
-| 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Pending |
+| 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | In progress (2/5) |
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Pending |
 | 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Pending |
 | 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | Pending |
@@ -45,7 +45,7 @@ Phase 17 (Foundation) [COMPLETE]
   |
   +---> Phase 18 (Match) [COMPLETE] --+
   |                                    |
-  +---> Phase 19 (Blog) --------------+--> Phase 22 (Navigation)
+  +---> Phase 19 (Blog) [IN PROGRESS]-+--> Phase 22 (Navigation)
   |                                    |
   +---> Phase 20 (League)-------------+
   |                                    |
@@ -59,7 +59,7 @@ Phase 17 (Foundation) [COMPLETE]
 Decisions are logged in PROJECT.md Key Decisions table.
 Full decision history available in phase SUMMARY.md files.
 
-**Key v2.0 Decisions (Phases 17-18):**
+**Key v2.0 Decisions (Phases 17-19):**
 - OKLCH color space for perceptual uniformity across light/dark modes
 - Dark mode uses dark grays (L=0.14), not pure black, for eye comfort
 - System preference as default theme via next-themes
@@ -84,6 +84,8 @@ Full decision history available in phase SUMMARY.md files.
 - TL;DR question always first in FAQ for AI search engine citation priority
 - Phase 18 integration approved without manual verification (deployment constraints)
 - MatchTLDR placement above hero for answer-first GEO structure
+- 300 char FAQ answer truncation for schema best practice (19-02)
+- 5 FAQ max default for reasonable schema size (19-02)
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -130,5 +132,5 @@ None blocking current work.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed Phase 18 (Match Page Rebuild) - All 5 plans executed
-Resume with: Begin Phase 19 (Blog Page Rebuild)
+Stopped at: Completed 19-02-PLAN.md (FAQ Section with Schema)
+Resume with: Continue Phase 19 with 19-03-PLAN.md
