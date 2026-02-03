@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 20 - League Page Rebuild
-Plan: 3 of 4 complete
-Status: In progress
-Last activity: 2026-02-03 - Completed 20-03-PLAN.md (Trend Visualization)
+Phase: 20 - League Page Rebuild (COMPLETE)
+Plan: 4 of 4 complete
+Status: Phase complete
+Last activity: 2026-02-03 - Completed 20-04-PLAN.md (League Page Integration)
 
-Progress: [█████████░░░░░░░░░░░░░░░] 32% (v2.0: 17/? plans, 25/33 requirements)
+Progress: [██████████░░░░░░░░░░░░░░] 35% (v2.0: 18/? plans, 28/34 requirements)
 
 ## Milestone History
 
@@ -34,7 +34,7 @@ Progress: [█████████░░░░░░░░░░░░░░
 | 17. Design System Foundation | Design tokens, dark mode, PPR infrastructure | DSGN-01 to DSGN-06 (6) | Complete |
 | 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | Complete |
 | 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Complete |
-| 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | In Progress (3/4) |
+| 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Complete |
 | 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Pending |
 | 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | Pending |
 | 23. Performance & Polish | PPR validation, client audit, transitions | PERF-01 to PERF-04 (4) | Pending |
@@ -47,7 +47,7 @@ Phase 17 (Foundation) [COMPLETE]
   |                                    |
   +---> Phase 19 (Blog) [COMPLETE]----+--> Phase 22 (Navigation)
   |                                    |
-  +---> Phase 20 (League)-------------+
+  +---> Phase 20 (League) [COMPLETE]--+
   |                                    |
   +---> Phase 21 (Leader)-------------+--> Phase 23 (Performance)
 ```
@@ -96,6 +96,7 @@ Full decision history available in phase SUMMARY.md files.
 - CSS-only chart implementation (no Chart.js/D3.js) for minimal bundle size (20-03)
 - Weekly grouping (ISO week) for trend granularity (20-03)
 - Chronological order (oldest to newest) for left-to-right chart display (20-03)
+- Duplicate FAQ generation in page.tsx and league-hub-content.tsx (Next.js deduplication handles queries) (20-04)
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -142,5 +143,5 @@ None blocking current work.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 20-03-PLAN.md (Trend Visualization)
-Resume with: Continue Phase 20 (20-04: League Page Integration)
+Stopped at: Completed 20-04-PLAN.md (League Page Integration)
+Resume with: Begin Phase 21 (Leaderboard Page Rebuild)
