@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-03)
 ## Current Position
 
 Phase: 29 of 30 (FAQ & SEO)
-Plan: 1 of 3 (Accordion Component)
+Plan: 5 of 5 (EventStatus Mapping - Gap Closure)
 Status: In progress
-Last activity: 2026-02-03 - Completed 29-01-PLAN.md (Accordion Component)
+Last activity: 2026-02-03 - Completed 29-05-PLAN.md (EventStatus Mapping)
 
-Progress: [##########] 100% (v2.1) | [######....] 65% (v2.2)
+Progress: [##########] 100% (v2.1) | [#######...] 70% (v2.2)
 
 ## Milestone History
 
@@ -48,6 +48,7 @@ Progress: [##########] 100% (v2.1) | [######....] 65% (v2.2)
 - NAR-002: Unified heading logic (live + upcoming show "Match Preview", finished shows "Match Report")
 - PRED-001: Default sort by points (desc) for finished matches, alphabetical for upcoming
 - PRED-002: Color-coded points: 4+ pts green, 3 pts yellow, 2 pts orange, <2 pts gray
+- ES-001: Use default case for both 'scheduled' and unknown statuses (EventScheduled is safe fallback)
 
 ### Pending Todos
 
@@ -60,9 +61,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 29-01-PLAN.md (Accordion Component)
+Stopped at: Completed 29-05-PLAN.md (EventStatus Mapping)
 Resume file: None
-Resume with: /gsd:execute-phase 29 (plan 02)
+Resume with: /gsd:execute-phase 29 (continue remaining plans)
 
 Config:
 {
