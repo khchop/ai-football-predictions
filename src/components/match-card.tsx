@@ -89,7 +89,7 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
     : `/matches/${match.id}`;
 
   return (
-    <Link href={matchUrl} className="block">
+    <Link href={matchUrl} className="block cursor-pointer">
       <div
         className={cn(
           "group relative rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden transition-all duration-200",
@@ -128,7 +128,7 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
             <span className={cn(
               "flex-shrink-0 px-1.5 py-0.5 rounded text-[11px] font-semibold",
               isLive && "bg-red-500 text-white animate-pulse",
-              match.status === 'scheduled' && "bg-primary text-white",
+              match.status === 'scheduled' && "bg-primary text-primary-foreground",
               isFinished && "bg-muted text-muted-foreground"
             )}>
               {isLive 
