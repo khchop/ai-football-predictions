@@ -14,6 +14,7 @@ import { MatchHeader } from '@/components/match/match-header';
 import { MatchOddsPanel } from '@/components/match/match-odds';
 import { PredictionsSection } from '@/components/match/predictions-section';
 import { PredictionsSkeleton } from '@/components/match/predictions-skeleton';
+import { MatchDataProvider } from '@/components/match/match-data-provider';
 
 // PPR enabled - removed force-dynamic and revalidate, Next.js handles static/dynamic split via Suspense
 
@@ -110,46 +111,53 @@ export default async function MatchPage({ params }: MatchPageProps) {
           __html: sanitizeJsonLd(jsonLd),
         }}
       />
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Match Header - Fast render */}
-        <MatchHeader
-          match={match}
-          competition={competition}
-          isLive={isLive}
-          isFinished={isFinished}
-        />
 
-        {/* Match Events (for finished/live matches) - Fast render */}
-        {(isFinished || isLive) && matchEvents.length > 0 && (
-          <Card className="bg-card/50 border-border/50">
-            <CardContent className="p-6">
-              <h2 className="text-xl font-bold mb-4">Match Events</h2>
-              <MatchEvents
-                events={matchEvents}
-                homeTeam={match.homeTeam}
-                awayTeam={match.awayTeam}
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Betting Odds & Predictions Panel - Fast render */}
-        <MatchOddsPanel
-          analysis={analysis}
-          likelyScores={likelyScores}
-          isFinished={isFinished}
-          isLive={isLive}
-        />
-
-        {/* AI Predictions - Streams in with Suspense */}
-        <Suspense fallback={<PredictionsSkeleton />}>
-          <PredictionsSection
-            matchId={id}
+      <MatchDataProvider
+        match={match}
+        competition={competition}
+        analysis={analysis}
+      >
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Match Header - Fast render */}
+          <MatchHeader
             match={match}
+            competition={competition}
+            isLive={isLive}
             isFinished={isFinished}
           />
-        </Suspense>
-      </div>
+
+          {/* Match Events (for finished/live matches) - Fast render */}
+          {(isFinished || isLive) && matchEvents.length > 0 && (
+            <Card className="bg-card/50 border-border/50">
+              <CardContent className="p-6">
+                <h2 className="text-xl font-bold mb-4">Match Events</h2>
+                <MatchEvents
+                  events={matchEvents}
+                  homeTeam={match.homeTeam}
+                  awayTeam={match.awayTeam}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Betting Odds & Predictions Panel - Fast render */}
+          <MatchOddsPanel
+            analysis={analysis}
+            likelyScores={likelyScores}
+            isFinished={isFinished}
+            isLive={isLive}
+          />
+
+          {/* AI Predictions - Streams in with Suspense */}
+          <Suspense fallback={<PredictionsSkeleton />}>
+            <PredictionsSection
+              matchId={id}
+              match={match}
+              isFinished={isFinished}
+            />
+          </Suspense>
+        </div>
+      </MatchDataProvider>
     </>
   );
 }
