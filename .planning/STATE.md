@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-03)
 
 **Core value:** Prediction pipeline reliably generates scores from 35 LLMs ~30 minutes before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** v2.1 Match Page Simplification
+**Current focus:** v2.1 Match Page Simplification - Phase 24
 
 ## Current Position
 
-Phase: Not started (defining roadmap)
-Plan: —
-Status: Defining roadmap
-Last activity: 2026-02-03 — Milestone v2.1 started
+Phase: 24 of 25 (Match Page Cleanup)
+Plan: 0 of ? in current phase
+Status: Ready to plan
+Last activity: 2026-02-03 — Roadmap created for v2.1
 
-Progress: Requirements defined — creating roadmap
+Progress: [░░░░░░░░░░] 0%
 
 ## Milestone History
 
@@ -28,16 +28,22 @@ Progress: Requirements defined — creating roadmap
 
 **Total:** 23 phases, 74 plans, 101 requirements shipped
 
+## v2.1 Scope
+
+**Phases:** 24-25 (2 phases)
+**Requirements:** 9 total (7 in Phase 24, 2 in Phase 25)
+
+| Phase | Goal | Requirements |
+|-------|------|--------------|
+| 24 - Match Page Cleanup | Remove sticky header, tabs, hidden sections | 7 |
+| 25 - Content Rendering Fix | Strip HTML tags from narratives | 2 |
+
 ## Accumulated Context
 
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
 Full decision history available in phase VERIFICATION.md files and milestones/ archives.
-
-### Research Findings
-
-Archived with v2.0 milestone in .planning/milestones/.
 
 ### Pending Todos
 
@@ -50,5 +56,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: v2.0 milestone complete and archived
-Resume with: /gsd:new-milestone to start next milestone cycle
+Stopped at: Roadmap created for v2.1 milestone
+Resume with: /gsd:plan-phase 24

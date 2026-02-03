@@ -56,21 +56,21 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LAYT-01 | TBD | Pending |
-| LAYT-02 | TBD | Pending |
-| LAYT-03 | TBD | Pending |
-| FILT-01 | TBD | Pending |
-| FILT-02 | TBD | Pending |
-| FILT-03 | TBD | Pending |
-| FILT-04 | TBD | Pending |
-| QUAL-01 | TBD | Pending |
-| QUAL-02 | TBD | Pending |
+| LAYT-01 | Phase 24 | Pending |
+| LAYT-02 | Phase 24 | Pending |
+| LAYT-03 | Phase 24 | Pending |
+| FILT-01 | Phase 24 | Pending |
+| FILT-02 | Phase 24 | Pending |
+| FILT-03 | Phase 24 | Pending |
+| FILT-04 | Phase 24 | Pending |
+| QUAL-01 | Phase 25 | Pending |
+| QUAL-02 | Phase 25 | Pending |
 
 **Coverage:**
 - v2.1 requirements: 9 total
-- Mapped to phases: 0
-- Unmapped: 9
+- Mapped to phases: 9
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-03*
-*Last updated: 2026-02-03 after initial definition*
+*Last updated: 2026-02-03 after roadmap creation*
