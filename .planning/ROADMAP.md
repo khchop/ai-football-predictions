@@ -384,7 +384,12 @@ Cross-cutting concern affecting all pages. Depends on page rebuilds completing f
 **Goal**: Validate PPR benefits, optimize bundle size, ensure smooth transitions
 **Requirements**: PERF-01, PERF-02, PERF-03, PERF-04
 **Dependencies**: Phases 17-22 (all components must exist for performance audit)
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 23-01-PLAN.md — Refactor blog page for PPR with Suspense boundaries
+- [ ] 23-02-PLAN.md — Client component audit (remove unnecessary 'use client')
+- [ ] 23-03-PLAN.md — Enable cacheComponents and verify PPR behavior
 
 **Success Criteria:**
 1. User experiences static shell rendering instantly with dynamic content streaming (PPR validated)
@@ -426,7 +431,7 @@ v1.0, v1.1, v1.2, and v1.3 complete. v2.0 in progress.
 | **20. League Page Rebuild** | **v2.0** | **4/4** | **Complete** | 2026-02-03 |
 | **21. Leaderboard Page Rebuild** | **v2.0** | **2/2** | **Complete** | 2026-02-03 |
 | **22. Navigation & Internal Linking** | **v2.0** | **5/5** | **Complete** | 2026-02-03 |
-| **23. Performance & Polish** | **v2.0** | **0/?** | **Pending** | — |
+| **23. Performance & Polish** | **v2.0** | **0/3** | **Pending** | — |
 
 ---
-*Last updated: 2026-02-03 (Phase 22 complete - 5 plans executed)*
+*Last updated: 2026-02-03 (Phase 23 planned - 3 plans created)*
