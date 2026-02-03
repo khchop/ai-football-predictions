@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 22 - Navigation & Internal Linking
-Plan: 2 of 5 complete (In progress)
-Status: Plan 22-02 complete - Breadcrumbs UI components created
-Last activity: 2026-02-03 - Completed 22-02-PLAN.md
+Plan: 3 of 5 complete (In progress)
+Status: Plan 22-03 complete - Entity linking utilities created
+Last activity: 2026-02-03 - Completed 22-03-PLAN.md
 
-Progress: [████████████░░░░░░░░░░░░] 44% (v2.0: 22/? plans, 31/34 requirements)
+Progress: [████████████░░░░░░░░░░░░] 46% (v2.0: 23/? plans, 31/34 requirements)
 
 ## Milestone History
 
@@ -36,7 +36,7 @@ Progress: [████████████░░░░░░░░░░░
 | 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Complete |
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Complete |
 | 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Complete |
-| 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | In progress (2/5) |
+| 22. Navigation & Internal Linking | Bottom nav, breadcrumbs, auto-linking | NAVL-01 to NAVL-05 (5) | In progress (3/5) |
 | 23. Performance & Polish | PPR validation, client audit, transitions | PERF-01 to PERF-04 (4) | Pending |
 
 **Phase Dependencies:**
@@ -111,6 +111,10 @@ Full decision history available in phase SUMMARY.md files.
 - ChevronRight separator with aria-hidden for breadcrumbs (22-02)
 - Last breadcrumb as span with aria-current="page" (22-02)
 - Empty href string for current page in breadcrumb builders (22-02)
+- Entity sorting by length descending to prevent partial matches (22-03)
+- maxLinks=5 default per content block to prevent over-linking (22-03)
+- Each entity linked only once per text block (22-03)
+- Word boundary regex for accurate entity matching (22-03)
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -137,7 +141,7 @@ From research/SUMMARY.md:
 - ISR cache staleness (two-layer caching awareness)
 
 **Phases needing deeper research:**
-- Phase 22: Entity linking automation strategy
+- None currently
 
 ### Pending Todos
 
@@ -157,5 +161,5 @@ None blocking current work.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 22-02-PLAN.md (Breadcrumbs UI)
-Resume with: Continue Phase 22 plan 03 (Page Integration)
+Stopped at: Completed 22-03-PLAN.md (Entity Linking Utilities)
+Resume with: Continue Phase 22 plan 04 (Content Integration)
