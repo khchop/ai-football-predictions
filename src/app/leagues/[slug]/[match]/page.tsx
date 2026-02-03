@@ -3,7 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { MatchEvents } from '@/components/match-events';
 import { MatchContentSection } from '@/components/match/MatchContent';
-import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails, getStandingsForTeams, getNextMatchesForTeams, getMatchRoundup } from '@/lib/db/queries';
+import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails, getStandingsForTeams, getNextMatchesForTeams, getMatchRoundup, getActiveModels } from '@/lib/db/queries';
 import { RelatedMatchesWidget } from '@/components/match/related-matches-widget';
 import { getMatchEvents } from '@/lib/football/api-football';
 import { getCompetitionByIdOrAlias } from '@/lib/football/competitions';
@@ -125,7 +125,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
     matchEvents,
     teamStandings,
     nextMatches,
-    roundup
+    roundup,
+    activeModels
   ] = await Promise.all([
     getMatchWithAnalysis(matchData.id).catch(err => {
       console.error('Failed to fetch analysis:', err);
@@ -154,7 +155,11 @@ export default async function MatchPage({ params }: MatchPageProps) {
           console.error('Failed to fetch match roundup:', err);
           return null;
         })
-      : Promise.resolve(null)
+      : Promise.resolve(null),
+    getActiveModels().catch(err => {
+      console.error('Failed to fetch active models:', err);
+      return [] as Awaited<ReturnType<typeof getActiveModels>>;
+    })
   ]);
 
   const analysis = analysisData?.analysis;
@@ -303,7 +308,12 @@ export default async function MatchPage({ params }: MatchPageProps) {
         isFinished={isFinished}
       />
       
-      <MatchContentSection matchId={matchData.id} matchStatus={matchData.status} />
+      <MatchContentSection
+        matchId={matchData.id}
+        matchStatus={matchData.status}
+        teams={[matchData.homeTeam, matchData.awayTeam]}
+        models={activeModels.map(m => ({ id: m.id, displayName: m.displayName }))}
+      />
 
       <Card className="bg-card/50 border-border/50">
         <CardContent className="p-6 space-y-6">
