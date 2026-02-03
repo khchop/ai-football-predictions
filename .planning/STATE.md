@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 18 - Match Page Rebuild
-Plan: 01 of 6 complete (In progress)
+Plan: 02 of 6 complete (In progress)
 Status: In progress
-Last activity: 2026-02-03 - Completed 18-01-PLAN.md (Score Deduplication)
+Last activity: 2026-02-03 - Completed 18-02-PLAN.md (Content Visibility Patterns)
 
-Progress: [█████░░░░░░░░░░░░░░░░░░░] 15% (v2.0: 5/? plans, 7/33 requirements)
+Progress: [█████░░░░░░░░░░░░░░░░░░░] 15% (v2.0: 6/? plans, 9/33 requirements)
 
 ## Milestone History
 
@@ -32,7 +32,7 @@ Progress: [█████░░░░░░░░░░░░░░░░░░
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
 | 17. Design System Foundation | Design tokens, dark mode, PPR infrastructure | DSGN-01 to DSGN-06 (6) | Complete |
-| 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | In Progress (1/6) |
+| 18. Match Page Rebuild | Content visibility, deduplication, GEO | MTCH-01 to MTCH-06 (6) | In Progress (2/6) |
 | 19. Blog Page Rebuild | Typography, TOC, FAQ, related | BLOG-01 to BLOG-05 (5) | Pending |
 | 20. League Page Rebuild | SEO, schema, stats dashboard | LEAG-01 to LEAG-05 (5) | Pending |
 | 21. Leaderboard Page Rebuild | SEO, filters, trends | LEAD-01 to LEAD-03 (3) | Pending |
@@ -73,6 +73,9 @@ Full decision history available in phase SUMMARY.md files.
 - prefers-reduced-motion fully disables view transitions
 - Intersection Observer triggers sticky header only when hero exits viewport
 - Score appears exactly twice: large in hero, compact in sticky header
+- TL;DR format varies by match state: finished shows score, live shows current score, upcoming shows prediction preview
+- Scroll-to-section pattern instead of inline expansion per user decision
+- 150-word truncation for preview content with smooth scroll behavior
 
 **Key v1.3 Decisions (archived):**
 - Content Pipeline fixes before Mobile Layout
@@ -108,10 +111,14 @@ None.
 
 ### Blockers/Concerns
 
-None.
+**PPR Build Errors (Phase 18-03):**
+- Build failing due to cacheComponents incompatibility with route segment configs
+- Multiple routes have `export const dynamic/runtime/revalidate` which conflicts with PPR
+- Needs resolution before deployment
+- Impact: Blocks deployment but not development of remaining Phase 18 plans
 
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 18-01-PLAN.md (Score Deduplication)
+Stopped at: Completed 18-02-PLAN.md (Content Visibility Patterns)
 Resume with: Continue Phase 18 - next plan
