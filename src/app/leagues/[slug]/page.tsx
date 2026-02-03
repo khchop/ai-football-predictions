@@ -1,14 +1,16 @@
 import { Suspense } from 'react';
 import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getCompetitionByIdOrAlias, COMPETITIONS } from '@/lib/football/competitions';
+import { getCompetitionByIdOrAlias } from '@/lib/football/competitions';
 import { LeagueHubContent } from './league-hub-content';
 import { Skeleton } from '@/components/ui/skeleton';
 import { buildEnhancedCompetitionSchema } from '@/lib/seo/schema/competition';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { BASE_URL } from '@/lib/seo/constants';
 import { abbreviateCompetition } from '@/lib/seo/abbreviations';
-import { getCompetitionStats } from '@/lib/db/queries';
+import { getCompetitionStats, getTopModelsByCompetition } from '@/lib/db/queries';
+import { generateFAQPageSchema } from '@/lib/seo/schemas';
+import { generateLeagueFAQs } from '@/lib/league/generate-league-faqs';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -127,8 +129,25 @@ export default async function LeaguePage({ params }: PageProps) {
     permanentRedirect(`/leagues/${competition.id}`);
   }
 
-  // Fetch stats for enhanced schema
-  const stats = await getCompetitionStats(competition.id);
+  // Fetch stats and top models for enhanced schema and FAQ generation in parallel
+  const [stats, topModels] = await Promise.all([
+    getCompetitionStats(competition.id),
+    getTopModelsByCompetition(competition.id, 1),
+  ]);
+
+  // Generate FAQs for schema (same source as LeagueHubContent for consistency)
+  const topModel = topModels[0];
+  const faqs = generateLeagueFAQs({
+    competition: { id: competition.id, name: competition.name },
+    stats: {
+      finishedMatches: stats.finishedMatches,
+      avgGoalsPerMatch: stats.avgGoalsPerMatch,
+    },
+    topModel: topModel ? {
+      model: { name: topModel.model.displayName },
+      accuracy: topModel.accuracy,
+    } : undefined,
+  });
 
   // Build schema.org structured data with enhanced competition schema
   const competitionSchema = buildEnhancedCompetitionSchema({
@@ -144,10 +163,12 @@ export default async function LeaguePage({ params }: PageProps) {
     { name: 'Leagues', url: `${BASE_URL}/leagues` },
     { name: competition.name, url: `${BASE_URL}/leagues/${competition.id}` },
   ]);
+  const faqSchema = generateFAQPageSchema(faqs);
 
+  // Combined @graph with SportsOrganization, BreadcrumbList, and FAQPage
   const schema = {
     '@context': 'https://schema.org',
-    '@graph': [competitionSchema, breadcrumbs],
+    '@graph': [competitionSchema, breadcrumbs, faqSchema],
   };
 
   return (
