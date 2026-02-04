@@ -10,9 +10,9 @@ import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES, getQueue } from '../index';
 import type { GenerateContentPayload } from '../types';
 import { generateMatchPreview, generateLeagueRoundup, generateModelReport, generatePostMatchRoundup } from '@/lib/content/generator';
-import { 
-   getMatchesNeedingPreviews, 
-   getMatchBetsForPreview, 
+import {
+   getMatchesNeedingPreviews,
+   getMatchBetsForPreview,
    hasMatchPreview,
    getMatchesMissingPreMatchContent,
    getMatchesMissingBettingContent,
@@ -22,12 +22,28 @@ import {
    getOverallModelStats,
  } from '@/lib/content/queries';
 import { getActiveCompetitions } from '@/lib/db/queries';
-import { 
+import {
   generatePreMatchContent,
   generateBettingContent,
   generatePostMatchContent,
 } from '@/lib/content/match-content';
 import { loggers } from '@/lib/logger/modules';
+
+// Shared job options for consistent retry behavior
+const CONTENT_JOB_OPTIONS = {
+  attempts: 5,
+  backoff: {
+    type: 'exponential' as const,
+    delay: 30000, // 30s base, exponential: 30s, 1m, 2m, 4m, 8m
+  },
+  removeOnComplete: {
+    age: 86400,
+    count: 100,
+  },
+  removeOnFail: {
+    age: 604800,
+  },
+};
 
 export function createContentWorker() {
   return new Worker<GenerateContentPayload>(
@@ -209,13 +225,7 @@ async function scanMatchesNeedingPreviews() {
          },
          {
            jobId: `preview-${match.id}`, // Prevent duplicates
-           removeOnComplete: {
-             age: 86400, // Keep for 24 hours
-             count: 100,
-           },
-           removeOnFail: {
-             age: 604800, // Keep failed jobs for 7 days
-           },
+           ...CONTENT_JOB_OPTIONS,
          }
        );
        
@@ -446,13 +456,7 @@ async function scanAndGenerateLeagueRoundups() {
           },
           {
             jobId: `roundup-${competition.id}-${roundupData.week}`, // Prevent duplicates
-            removeOnComplete: {
-              age: 86400, // Keep for 24 hours
-              count: 100,
-            },
-            removeOnFail: {
-              age: 604800, // Keep failed jobs for 7 days
-            },
+            ...CONTENT_JOB_OPTIONS,
           }
         );
 
