@@ -380,7 +380,7 @@ export type NewPrediction = typeof predictions.$inferInsert;
 // AI-generated blog posts for SEO/GEO
 export const blogPosts = pgTable('blog_posts', {
   id: text('id').primaryKey(), // UUID
-  slug: text('slug').notNull(), // SEO-friendly URL slug
+  slug: text('slug').notNull().unique(), // SEO-friendly URL slug
   title: text('title').notNull(),
   excerpt: text('excerpt'), // Short summary (nullable in production)
   content: text('content').notNull(), // Full markdown content
