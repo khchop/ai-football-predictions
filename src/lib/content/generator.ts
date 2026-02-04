@@ -29,6 +29,7 @@ import {
   computeContentHash,
   DEDUPLICATION_CONFIG,
 } from './deduplication';
+import { sanitizeContent, validateNoHtml } from './sanitization';
 
 function normalizePhrase(value: string) {
   return value
@@ -193,22 +194,42 @@ export async function generateMatchPreview(matchData: {
   });
 
   const result = await generateWithTogetherAI<MatchPreviewResponse>(systemPrompt, userPrompt);
-  
+
+  // Sanitize all text fields before save
+  const introduction = sanitizeContent(result.content.introduction);
+  const teamFormAnalysis = sanitizeContent(result.content.teamFormAnalysis);
+  const headToHead = sanitizeContent(result.content.headToHead);
+  const keyPlayers = sanitizeContent(result.content.keyPlayers);
+  const tacticalAnalysis = sanitizeContent(result.content.tacticalAnalysis);
+  const prediction = sanitizeContent(result.content.prediction);
+  const bettingInsights = sanitizeContent(result.content.bettingInsights);
+  const metaDescription = sanitizeContent(result.content.metaDescription);
+
+  // Validate no HTML remains
+  validateNoHtml(introduction);
+  validateNoHtml(teamFormAnalysis);
+  validateNoHtml(headToHead);
+  validateNoHtml(keyPlayers);
+  validateNoHtml(tacticalAnalysis);
+  validateNoHtml(prediction);
+  validateNoHtml(bettingInsights);
+  validateNoHtml(metaDescription);
+
   // Save to database
   const db = getDb();
   const previewId = uuidv4();
-  
+
   const newPreview: NewMatchPreview = {
     id: previewId,
     matchId: matchData.matchId,
-    introduction: result.content.introduction,
-    teamFormAnalysis: result.content.teamFormAnalysis,
-    headToHead: result.content.headToHead,
-    keyPlayers: result.content.keyPlayers,
-    tacticalAnalysis: result.content.tacticalAnalysis,
-    prediction: result.content.prediction,
-    bettingInsights: result.content.bettingInsights,
-    metaDescription: result.content.metaDescription,
+    introduction,
+    teamFormAnalysis,
+    headToHead,
+    keyPlayers,
+    tacticalAnalysis,
+    prediction,
+    bettingInsights,
+    metaDescription,
     keywords: result.content.keywords.join(', '),
     status: 'published',
     publishedAt: new Date().toISOString(),
@@ -359,7 +380,21 @@ export async function generateLeagueRoundup(roundupData: {
     );
     throw new Error(validation.error);
   }
-  
+
+  // Sanitize all text fields before save
+  const title = sanitizeContent(result.content.title);
+  const excerpt = sanitizeContent(result.content.excerpt);
+  const content = sanitizeContent(result.content.content);
+  const metaTitle = sanitizeContent(result.content.metaTitle);
+  const metaDescription = sanitizeContent(result.content.metaDescription);
+
+  // Validate no HTML remains
+  validateNoHtml(title);
+  validateNoHtml(excerpt);
+  validateNoHtml(content);
+  validateNoHtml(metaTitle);
+  validateNoHtml(metaDescription);
+
   // Save to database
   const db = getDb();
   const postId = uuidv4();
@@ -370,12 +405,12 @@ export async function generateLeagueRoundup(roundupData: {
   const newPost: NewBlogPost = {
     id: postId,
     slug,
-    title: result.content.title,
-    excerpt: result.content.excerpt,
-    content: result.content.content,
+    title,
+    excerpt,
+    content,
     contentType: 'league_roundup',
-    metaTitle: result.content.metaTitle,
-    metaDescription: result.content.metaDescription,
+    metaTitle,
+    metaDescription,
     keywords: result.content.keywords.join(', '),
     competitionId: roundupData.competitionId,
     status: 'published',
@@ -439,7 +474,21 @@ export async function generateModelReport(reportData: {
   });
 
   const result = await generateWithTogetherAI<ArticleResponse>(systemPrompt, userPrompt);
-  
+
+  // Sanitize all text fields before save
+  const title = sanitizeContent(result.content.title);
+  const excerpt = sanitizeContent(result.content.excerpt);
+  const content = sanitizeContent(result.content.content);
+  const metaTitle = sanitizeContent(result.content.metaTitle);
+  const metaDescription = sanitizeContent(result.content.metaDescription);
+
+  // Validate no HTML remains
+  validateNoHtml(title);
+  validateNoHtml(excerpt);
+  validateNoHtml(content);
+  validateNoHtml(metaTitle);
+  validateNoHtml(metaDescription);
+
   // Save to database
   const db = getDb();
   const postId = uuidv4();
@@ -448,12 +497,12 @@ export async function generateModelReport(reportData: {
   const newPost: NewBlogPost = {
     id: postId,
     slug,
-    title: result.content.title,
-    excerpt: result.content.excerpt,
-    content: result.content.content,
+    title,
+    excerpt,
+    content,
     contentType: 'model_report',
-    metaTitle: result.content.metaTitle,
-    metaDescription: result.content.metaDescription,
+    metaTitle,
+    metaDescription,
     keywords: result.content.keywords.join(', '),
     status: 'published',
     publishedAt: new Date().toISOString(),
@@ -854,20 +903,39 @@ IMPORTANT: Write this roundup from a completely different angle than typical mat
     }
   }
 
-  // 13. Store in matchRoundups table with deduplication data
+  // 13. Sanitize LLM-generated content before storing
+  const sanitizedTitle = sanitizeContent(result.content.title);
+  const sanitizedNarrative = sanitizeContent(finalNarrative);
+  const sanitizedModelPredictions = sanitizeContent(result.content.modelPredictions);
+  const sanitizedTopPerformers = result.content.topPerformers.map((p: { modelName: string; prediction: string; points: number }) => ({
+    modelName: sanitizeContent(p.modelName),
+    prediction: sanitizeContent(p.prediction),
+    points: p.points,
+  }));
+
+  // Validate no HTML remains in text fields
+  validateNoHtml(sanitizedTitle);
+  validateNoHtml(sanitizedNarrative);
+  validateNoHtml(sanitizedModelPredictions);
+  sanitizedTopPerformers.forEach((p: { modelName: string; prediction: string; points: number }) => {
+    validateNoHtml(p.modelName);
+    validateNoHtml(p.prediction);
+  });
+
+  // Store in matchRoundups table with deduplication data
   const db = getDb();
-  const similarityHash = computeContentHash(finalNarrative);
+  const similarityHash = computeContentHash(sanitizedNarrative);
 
   const newRoundup: NewMatchRoundup = {
     id: uuidv4(),
     matchId,
-    title: result.content.title,
+    title: sanitizedTitle,
     scoreboard: JSON.stringify(result.content.scoreboard),
     events: JSON.stringify(events),
     stats: JSON.stringify(stats),
-    modelPredictions: result.content.modelPredictions,
-    topPerformers: JSON.stringify(result.content.topPerformers),
-    narrative: finalNarrative,
+    modelPredictions: sanitizedModelPredictions,
+    topPerformers: JSON.stringify(sanitizedTopPerformers),
+    narrative: sanitizedNarrative,
     keywords: result.content.keywords.join(', '),
     similarityHash,
     generationCost: finalCost,
@@ -901,8 +969,9 @@ IMPORTANT: Write this roundup from a completely different angle than typical mat
   });
 
   // Also update the existing matchContent table for backward compatibility
+  // Note: HTML structure is intentional for rendering, but text content inside uses sanitized values
   const roundupHtml = `
-<h1>${result.content.title}</h1>
+<h1>${sanitizedTitle}</h1>
 
 <div class="scoreboard">
   <div class="scoreboard-header">
@@ -929,19 +998,19 @@ IMPORTANT: Write this roundup from a completely different angle than typical mat
 
 <div class="model-predictions">
   <h2>AI Model Predictions</h2>
-  ${result.content.modelPredictions}
+  ${sanitizedModelPredictions}
 </div>
 
 <div class="top-performers">
   <h2>Top Performing Models</h2>
   <ul>
-    ${result.content.topPerformers.map((m, i) => `<li>${i + 1}. ${m.modelName}: ${m.prediction} (${m.points} pts)</li>`).join('\n')}
+    ${sanitizedTopPerformers.map((m: { modelName: string; prediction: string; points: number }, i: number) => `<li>${i + 1}. ${m.modelName}: ${m.prediction} (${m.points} pts)</li>`).join('\n')}
   </ul>
 </div>
 
 <div class="narrative">
   <h2>Match Analysis</h2>
-  ${finalNarrative}
+  ${sanitizedNarrative}
 </div>
 
 <div class="keywords">
