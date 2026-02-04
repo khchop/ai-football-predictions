@@ -102,10 +102,14 @@ Plans:
   3. Sections follow order: Match Info -> Narrative -> Predictions -> FAQ
   4. Mobile layout identical to desktop (no hidden or collapsed content)
   5. Deprecated components removed (match-header.tsx, tab components, old layouts)
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 30-01: TBD
+- [ ] 30-01-PLAN.md — Create MatchLayout component with state-aware section rendering
+- [ ] 30-02-PLAN.md — Create loading skeletons and error boundary
+- [ ] 30-03-PLAN.md — Integrate MatchLayout into match pages
+- [ ] 30-04-PLAN.md — Delete deprecated components
+- [ ] 30-05-PLAN.md — Visual verification of layout across all match states
 
 ## Progress
 
@@ -118,7 +122,7 @@ Phases execute in numeric order: 26 -> 27 -> 28 -> 29 -> 30
 | 27. Hero Component | 2/2 | Complete | 2026-02-03 |
 | 28. Content Sections | 3/3 | Complete | 2026-02-03 |
 | 29. FAQ & SEO | 0/4 | Not started | - |
-| 30. Layout Assembly | 0/? | Not started | - |
+| 30. Layout Assembly | 0/5 | Not started | - |
 
 ---
 *Roadmap created: 2026-02-03*
