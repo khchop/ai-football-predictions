@@ -265,13 +265,34 @@ ${matches.map((m) => {
 }).join('\n\n')}
 
 ## OUTPUT REQUIREMENTS
+
+### Opening Summary (CRITICAL - Answer-First Structure)
+Start the excerpt AND the content with a 30-60 word paragraph that directly answers:
+1. Which models performed best this week (name top 3 with avg points/match)
+2. Overall accuracy rate (X% correct tendency)
+3. Biggest surprise or upset result
+
+GOOD EXAMPLE:
+"Llama 3.3 70B led ${competition} predictions this week with 4.2 points per match, followed by GPT-4 Turbo (3.8) and Claude Opus (3.6). Models achieved 67% correct tendency overall, though the [biggest upset] caught most models off guard."
+
+BAD EXAMPLE (DO NOT USE):
+"This week saw exciting ${competition} action with several unexpected results. In this analysis, we'll examine AI model performance across all matches and dive into the key factors that influenced accuracy rates this round."
+
+### Full Content Structure
+After the opening summary, provide:
+- ## Top 10 Models (table with avg points/match ranking)
+- ## Match-by-Match Audit (each match with accuracy stats)
+- ## Biggest Consensus Misses (upsets that fooled most models)
+- ## Methodology (how scoring works)
+
+### Formatting Rules
 - All text fields must be plain text (no HTML tags or entities)
 
 Return JSON only:
 {
   "title": "SEO title (<= 60 chars)",
-  "excerpt": "150-160 char summary (factual-only)",
-  "content": "Markdown. Must be stats-heavy. Use tables where appropriate. Include headings: ## Summary, ## Top 10 Models (Avg Points/Match), ## Match-by-Match Model Audit, ## Biggest Consensus Misses, ## Methodology.",
+  "excerpt": "Opening summary (30-60 words, answer-first with top 3 models and accuracy %)",
+  "content": "Markdown. Start with opening summary (same as excerpt), then: ## Top 10 Models, ## Match-by-Match Audit, ## Biggest Consensus Misses, ## Methodology",
   "metaTitle": "SEO meta title (<= 60 chars)",
   "metaDescription": "150-160 chars (factual-only)",
   "keywords": ["...5-8 SEO keywords including league name + week/round + AI model accuracy + average points per match + kroam.xyz"]
