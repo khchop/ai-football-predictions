@@ -25,15 +25,8 @@ export async function POST(request: Request) {
     }
 
     console.log(`[generate-faq] Starting FAQ generation for match ${matchId}`);
-    const success = await generateFAQContent(matchId);
-    console.log(`[generate-faq] FAQ generation ${success ? 'succeeded' : 'failed'} for match ${matchId}`);
-
-    if (!success) {
-      return NextResponse.json(
-        { error: 'FAQ generation failed - check server logs for details' },
-        { status: 500 }
-      );
-    }
+    await generateFAQContent(matchId);
+    console.log(`[generate-faq] FAQ generation succeeded for match ${matchId}`);
 
     return NextResponse.json({ success: true, matchId });
   } catch (error) {

@@ -31,13 +31,8 @@ export async function GET(request: Request) {
 
     for (const match of finishedMatches) {
       try {
-        const success = await generatePostMatchContent(match.id);
-        if (success) {
-          successCount++;
-        } else {
-          failCount++;
-          errors.push(`${match.homeTeam} vs ${match.awayTeam}: generation returned false`);
-        }
+        await generatePostMatchContent(match.id);
+        successCount++;
         await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (error) {
         failCount++;
