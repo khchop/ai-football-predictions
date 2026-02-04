@@ -70,12 +70,12 @@ Plans:
   2. HTML tags are stripped before database save (not just at render)
   3. Existing content with HTML is cleaned via migration
   4. Match pages render without visible HTML artifacts
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 33-01: Update prompts with plain text instruction
-- [ ] 33-02: Add HTML stripping before database save
-- [ ] 33-03: Run migration to clean existing content
+- [ ] 33-01-PLAN.md — Create sanitization module and update prompts for plain text
+- [ ] 33-02-PLAN.md — Integrate sanitization before database save
+- [ ] 33-03-PLAN.md — Run migration to clean existing content
 
 ### Phase 34: Pipeline Hardening
 **Goal**: Content pipeline has observability and automatic protection against cascading failures
@@ -130,8 +130,8 @@ Phases execute in numeric order: 31 -> 32 -> 33 -> 34 -> 35 -> 36
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 31. Investigation & Diagnosis | 1/1 | ✓ Complete | 2026-02-04 |
-| 32. Make Failures Visible | 2/2 | ✓ Complete | 2026-02-04 |
+| 31. Investigation & Diagnosis | 1/1 | Complete | 2026-02-04 |
+| 32. Make Failures Visible | 2/2 | Complete | 2026-02-04 |
 | 33. HTML Sanitization | 0/3 | Not started | - |
 | 34. Pipeline Hardening | 0/2 | Not started | - |
 | 35. SEO/GEO Content Quality | 0/3 | Not started | - |
