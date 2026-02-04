@@ -22,6 +22,7 @@ interface MatchPageSchemaProps {
   };
   url: string;
   faqs: FAQItem[];
+  contentGeneratedAt?: string; // ISO timestamp when content was last generated
 }
 
 /**
@@ -42,10 +43,14 @@ function getEventStatus(status: string | null): string {
   }
 }
 
-export function MatchPageSchema({ match, competition, url, faqs }: MatchPageSchemaProps) {
+export function MatchPageSchema({ match, competition, url, faqs, contentGeneratedAt }: MatchPageSchemaProps) {
   const eventStatus = getEventStatus(match.status);
   const matchName = `${match.homeTeam} vs ${match.awayTeam}`;
   const pageDescription = `AI predictions for ${matchName} (${competition.name}). Compare forecasts from 35+ AI models.`;
+
+  // Dates for Article schema - content freshness signals (GEO optimization)
+  const datePublished = match.kickoffTime; // Initial content created around kickoff
+  const dateModified = contentGeneratedAt || match.updatedAt || match.kickoffTime;
 
   const graph = {
     '@context': 'https://schema.org',
@@ -105,6 +110,25 @@ export function MatchPageSchema({ match, competition, url, faqs }: MatchPageSche
         description: pageDescription,
         isPartOf: { '@id': 'https://kroam.xyz#website' },
         about: { '@id': url },
+      },
+      // Article entity for content freshness signals (GEO optimization)
+      {
+        '@type': 'Article',
+        '@id': `${url}#article`,
+        headline: `${matchName} - AI Predictions and Analysis`,
+        description: pageDescription,
+        datePublished: datePublished,
+        dateModified: dateModified,
+        author: {
+          '@type': 'Organization',
+          '@id': 'https://kroam.xyz#organization',
+        },
+        publisher: {
+          '@type': 'Organization',
+          '@id': 'https://kroam.xyz#organization',
+        },
+        mainEntityOfPage: { '@id': `${url}#webpage` },
+        about: { '@id': url }, // References the SportsEvent
       },
       // FAQPage - questions from match-specific FAQ
       {
