@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-04)
 
 ## Current Position
 
-Phase: 38 of 39 (Database Integration) - COMPLETE
-Plan: N/A (auto-implemented by existing architecture)
-Status: Phase complete — auto-sync handles database registration
-Last activity: 2026-02-04 — Phase 38 marked complete (sync-models.ts already implements)
+Phase: 39 of 39 (Testing & Validation)
+Plan: 1 of 3 (Model Validation Scripts)
+Status: In progress — Synthetic model validation complete
+Last activity: 2026-02-04 — Completed 39-01-PLAN.md (7/13 Synthetic models validated)
 
-Progress: [██████████] 100%
+Progress: [██████████░] 97%
 
 ## Milestone History
 
@@ -46,6 +46,8 @@ Key decisions from v2.3 are archived in milestones/v2.3-ROADMAP.md.
 - All Synthetic model IDs use -syn suffix to distinguish from Together
 - 13 models configured (4 premium, 9 budget) with placeholder pricing
 - Provider registry checks each API key independently (TOGETHER_API_KEY, SYNTHETIC_API_KEY)
+- **39-01:** 7/13 Synthetic models validated for production (deepseek-r1, kimi-k2-thinking, deepseek-v3 variants, minimax variants, qwen3-coder)
+- **39-01:** 6 models fail validation (GLM-4.7 has API bug, 2 timeout, 2 parse failures, 1 invalid output)
 
 ### Pending Todos
 
@@ -59,7 +61,9 @@ None.
 **Future Concerns:**
 - JSON mode support unknown on Synthetic.new (parser handles non-JSON)
 - Rate limits: 135 req/5hrs on Standard tier (small requests count as 0.2)
-- GLM models may output Chinese text
+- GLM-4.7 has known SGLang structured output bug (Synthetic.new confirmed) - blocked until upstream fix
+- 2 Synthetic models timeout consistently (kimi-k2.5-syn, glm-4.6-syn) - may need rate limit investigation
+- 2 reasoning models return natural language instead of JSON (qwen3-235b-thinking, deepseek-v3.2) - may need prompt adjustment
 
 ### Quick Tasks Completed
 
@@ -70,10 +74,10 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-04T20:47:11Z
-Stopped at: Completed Phase 37 (Synthetic Provider Foundation)
+Last session: 2026-02-04T21:22:00Z
+Stopped at: Completed 39-01-PLAN.md (Model Validation Scripts)
 Resume file: None
-Resume with: `/gsd:plan-phase 39` to plan Testing & Validation
+Resume with: Continue with 39-02 (Together AI validation) or 39-03 (Integration testing)
 
 **v2.4 Summary:**
 - 3 phases (37-39), 17 requirements
@@ -89,3 +93,6 @@ Resume with: `/gsd:plan-phase 39` to plan Testing & Validation
 **Phase 38 Complete:**
 - Already implemented by sync-models.ts auto-sync architecture
 - Models register automatically on server startup when SYNTHETIC_API_KEY set
+
+**Phase 39 In Progress:**
+- 39-01: Model validation script created and executed (7/13 Synthetic models validated)
