@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-03)
 
 **Core value:** Prediction pipeline reliably generates scores from 35 LLMs ~30 minutes before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** v2.2 Match Page Rewrite - Phase 29 (execution)
+**Current focus:** v2.2 Match Page Rewrite - Phase 30 (execution)
 
 ## Current Position
 
-Phase: 29 of 30 (FAQ & SEO)
-Plan: 3 of 5 (Schema Consolidation)
-Status: In progress
-Last activity: 2026-02-03 - Completed 29-03-PLAN.md (Schema Consolidation)
+Phase: 30 of 30 (Layout Assembly)
+Plan: 1 of 5 (MatchLayout Component)
+Status: Complete
+Last activity: 2026-02-04 - Completed 30-01-PLAN.md (MatchLayout Component)
 
-Progress: [##########] 100% (v2.1) | [########..] 80% (v2.2)
+Progress: [##########] 100% (v2.1) | [#########.] 90% (v2.2)
 
 ## Milestone History
 
@@ -52,6 +52,8 @@ Progress: [##########] 100% (v2.1) | [########..] 80% (v2.2)
 - FAQ-001: Unified upcoming/live question set (5 questions with conditional kickoff answer)
 - SGEO-01: FAQPage added to existing @graph (single JSON-LD script contains all schema types)
 - SGEO-02: FAQs generated once at page level, shared between schema and visual display
+- LAYOUT-001: Hide MatchNarrative during live matches (no preview during play)
+- LAYOUT-002: PredictionsSection as internal component with H2 heading wrapper
 
 ### Pending Todos
 
@@ -63,10 +65,10 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-03
-Stopped at: Completed 29-03-PLAN.md (Schema Consolidation)
+Last session: 2026-02-04
+Stopped at: Completed 30-01-PLAN.md (MatchLayout Component)
 Resume file: None
-Resume with: /gsd:execute-phase 29 (continue with Plan 04)
+Resume with: /gsd:execute-phase 30 (continue with Plan 02)
 
 Config:
 {
