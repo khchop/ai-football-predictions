@@ -28,6 +28,10 @@ import {
   generatePostMatchContent,
 } from '@/lib/content/match-content';
 import { loggers } from '@/lib/logger/modules';
+import {
+  recordQueueRateLimitError,
+  recordQueueSuccess,
+} from '../circuit-breaker/queue-circuit-breaker';
 
 // Shared job options for consistent retry behavior
 const CONTENT_JOB_OPTIONS = {
@@ -67,8 +71,8 @@ export function createContentWorker() {
       try {
         log.info(`Generating ${type} content`);
 
-        // Existing job processing
-        return await (async () => {
+        // Execute job and track success
+        const result = await (async () => {
         if (type === 'match_preview') {
           return await generateMatchPreviewContent(data as {
             matchId: string;
@@ -106,8 +110,23 @@ export function createContentWorker() {
             throw new Error(`Unknown content type: ${type}`);
           }
         })();
+
+        // Record successful job completion to reset rate limit counter
+        recordQueueSuccess(QUEUE_NAMES.CONTENT);
+
+        return result;
       } catch (error) {
         log.error({ err: error }, `Error generating ${type}`);
+
+        // Check if this is a rate limit error and notify circuit breaker
+        if (
+          error instanceof Error &&
+          (error.message.includes('429') ||
+            error.message.toLowerCase().includes('rate limit'))
+        ) {
+          await recordQueueRateLimitError(QUEUE_NAMES.CONTENT);
+        }
+
         Sentry.captureException(error, {
           level: 'error',
           tags: {
@@ -524,12 +543,22 @@ export function setupContentWorkerEvents(worker: Worker) {
 
   worker.on('completed', (job) => {
     log.info({ jobId: job.id }, 'Job completed');
+    // Also record success here for event-based tracking
+    recordQueueSuccess(QUEUE_NAMES.CONTENT);
   });
 
   worker.on('failed', async (job, err) => {
     if (!job) return;
 
     log.error({ jobId: job.id, err }, 'Job failed');
+
+    // Check for rate limit errors and notify circuit breaker
+    if (
+      err.message.includes('429') ||
+      err.message.toLowerCase().includes('rate limit')
+    ) {
+      await recordQueueRateLimitError(QUEUE_NAMES.CONTENT);
+    }
 
     // Move to DLQ if retries exhausted
     if (job.attemptsMade >= (job.opts.attempts || 1)) {
