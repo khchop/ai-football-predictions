@@ -252,18 +252,14 @@ async function scanMatchesMissingContent() {
      for (const match of missingPreMatch) {
        if (generated >= MAX_GENERATIONS_PER_SCAN) break;
        try {
-         const success = await generatePreMatchContent(match.matchId);
-         if (success) {
-           results.preMatch.generated++;
-           generated++;
-           log.info({ matchId: match.matchId, teams: `${match.homeTeam} vs ${match.awayTeam}` }, 'Backfilled pre-match content');
-         } else {
-           results.preMatch.failed++;
-           log.warn({ matchId: match.matchId }, 'Pre-match backfill returned false (non-blocking)');
-         }
+         await generatePreMatchContent(match.matchId);
+         results.preMatch.generated++;
+         generated++;
+         log.info({ matchId: match.matchId, teams: `${match.homeTeam} vs ${match.awayTeam}` }, 'Backfilled pre-match content');
        } catch (err) {
          results.preMatch.failed++;
-         log.warn({ matchId: match.matchId, err }, 'Pre-match backfill failed (non-blocking)');
+         // Errors are already logged in the content function, just track the failure count here
+         log.debug({ matchId: match.matchId, err }, 'Pre-match backfill failed (continuing scan)');
        }
      }
 
@@ -274,18 +270,14 @@ async function scanMatchesMissingContent() {
      for (const match of missingBetting) {
        if (generated >= MAX_GENERATIONS_PER_SCAN) break;
        try {
-         const success = await generateBettingContent(match.matchId);
-         if (success) {
-           results.betting.generated++;
-           generated++;
-           log.info({ matchId: match.matchId, teams: `${match.homeTeam} vs ${match.awayTeam}` }, 'Backfilled betting content');
-         } else {
-           results.betting.failed++;
-           log.warn({ matchId: match.matchId }, 'Betting backfill returned false (non-blocking)');
-         }
+         await generateBettingContent(match.matchId);
+         results.betting.generated++;
+         generated++;
+         log.info({ matchId: match.matchId, teams: `${match.homeTeam} vs ${match.awayTeam}` }, 'Backfilled betting content');
        } catch (err) {
          results.betting.failed++;
-         log.warn({ matchId: match.matchId, err }, 'Betting backfill failed (non-blocking)');
+         // Errors are already logged in the content function, just track the failure count here
+         log.debug({ matchId: match.matchId, err }, 'Betting backfill failed (continuing scan)');
        }
      }
 
@@ -296,18 +288,14 @@ async function scanMatchesMissingContent() {
      for (const match of missingPostMatch) {
        if (generated >= MAX_GENERATIONS_PER_SCAN) break;
        try {
-         const success = await generatePostMatchContent(match.matchId);
-         if (success) {
-           results.postMatch.generated++;
-           generated++;
-           log.info({ matchId: match.matchId, teams: `${match.homeTeam} vs ${match.awayTeam}` }, 'Backfilled post-match content');
-         } else {
-           results.postMatch.failed++;
-           log.warn({ matchId: match.matchId }, 'Post-match backfill returned false (non-blocking)');
-         }
+         await generatePostMatchContent(match.matchId);
+         results.postMatch.generated++;
+         generated++;
+         log.info({ matchId: match.matchId, teams: `${match.homeTeam} vs ${match.awayTeam}` }, 'Backfilled post-match content');
        } catch (err) {
          results.postMatch.failed++;
-         log.warn({ matchId: match.matchId, err }, 'Post-match backfill failed (non-blocking)');
+         // Errors are already logged in the content function, just track the failure count here
+         log.debug({ matchId: match.matchId, err }, 'Post-match backfill failed (continuing scan)');
        }
      }
 
