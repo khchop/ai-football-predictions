@@ -10,7 +10,7 @@
 | Phase | Name | Goal | Requirements | Success Criteria | Status |
 |-------|------|------|--------------|------------------|--------|
 | 37 | Synthetic Provider | Create provider class and model configurations | PROV-01-04, MODL-01-04, ERRH-01-03 | Provider makes successful API call | ✓ Complete |
-| 38 | Database Integration | Register models in database | DATA-01-03 | Models appear in predictions table | Pending |
+| 38 | Database Integration | Register models in database | DATA-01-03 | Models appear in predictions table | ✓ Complete |
 | 39 | Testing & Validation | Test all 14 models in production | TEST-01-03 | All models generate valid predictions | Pending |
 
 ---
@@ -46,24 +46,31 @@
 
 ---
 
-## Phase 38: Database Integration
+## Phase 38: Database Integration ✓
 
+**Status:** Complete (2026-02-04)
 **Goal:** Register 14 Synthetic models in database
 
 **Requirements:**
-- DATA-01: Seed script registers 14 new models in database
-- DATA-02: Models have `provider: 'synthetic'` for identification
-- DATA-03: Models default to `is_active: true`
+- DATA-01: ✓ Auto-sync registers models via `syncModelsToDatabase()` on server startup
+- DATA-02: ✓ Models have `provider: 'synthetic'` from `SyntheticProvider.name`
+- DATA-03: ✓ Models default to `active: true` via sync logic
 
 **Success Criteria:**
-1. Seed script adds 14 models to `models` table
-2. Models queryable with `provider = 'synthetic'`
-3. Models appear in model selection/leaderboard UI
-4. No duplicate ID conflicts with existing models
+1. ✓ Auto-sync adds models to `models` table (no manual seed needed)
+2. ✓ Models queryable with `provider = 'synthetic'`
+3. ✓ Models appear in model selection/leaderboard UI (after first sync)
+4. ✓ No duplicate ID conflicts (unique IDs with `-syn` suffix)
+
+**Implementation Notes:**
+Phase 38 was already implemented by Phase 37's registry integration. The existing `sync-models.ts` auto-sync mechanism:
+- Reads all providers from `getActiveProviders()` (includes SYNTHETIC_PROVIDERS when API key set)
+- Upserts each provider into the database with `provider`, `modelName`, `displayName`, `isPremium`, `active: true`
+- Runs on server startup — no manual migration or seed script needed
 
 **Deliverables:**
-- Seed script or migration for model registration
-- Verified models visible in application
+- Existing `src/lib/db/sync-models.ts` handles registration automatically
+- Models visible in application after first deployment with `SYNTHETIC_API_KEY` set
 
 ---
 
