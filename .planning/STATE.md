@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-04)
 Phase: 36 of 36 complete (v2.3 Content Pipeline & SEO)
 Plan: All plans complete
 Status: v2.3 milestone shipped
-Last activity: 2026-02-04 - v2.3 milestone complete
+Last activity: 2026-02-04 - Completed quick task 009: Fix HierarchyRequestError on new tab open
 
 Progress: [██████████] 100% (v2.3 shipped)
 
@@ -49,6 +49,12 @@ None.
 **Future Concerns:**
 - REDIS_URL environment variable needs configuration (blocks server startup)
 - Validation patterns may need tuning based on actual LLM output in production
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 009 | Fix HierarchyRequestError on new tab open | 2026-02-04 | 58330f2 | [009-fix-new-tab-hierarchy-error](./quick/009-fix-new-tab-hierarchy-error/) |
 
 ## Session Continuity
 
