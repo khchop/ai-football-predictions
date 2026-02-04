@@ -21,7 +21,33 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 
 ## Current State
 
-**Brownfield project with v2.1 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. v2.1 Match Page Simplification milestone completed 2026-02-03 with all 9 requirements shipped.
+**Brownfield project with v2.2 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. v2.2 Match Page Rewrite milestone completed 2026-02-04 with all 21 requirements shipped.
+
+### Validated (v2.2)
+
+The following requirements were validated in v2.2:
+
+- ✓ **LAYT-01**: Match page renders as single scrollable page (no tabs) — v2.2
+- ✓ **LAYT-02**: Score displays exactly once in a single hero section — v2.2
+- ✓ **LAYT-03**: Layout adapts to match state (Upcoming/Live/Finished) — v2.2
+- ✓ **LAYT-04**: Sections follow consistent order: Match Info -> Narrative -> Predictions -> FAQ — v2.2
+- ✓ **LAYT-05**: Mobile layout identical to desktop (no hidden/collapsed content) — v2.2
+- ✓ **CONT-01**: Match hero shows teams, competition, kickoff time, and score — v2.2
+- ✓ **CONT-02**: Pre-match narrative renders for upcoming matches — v2.2
+- ✓ **CONT-03**: Post-match narrative renders for finished matches — v2.2
+- ✓ **CONT-04**: Predictions table shows all 35 models in sortable format — v2.2
+- ✓ **CONT-05**: Finished match predictions shows actual result and points earned — v2.2
+- ✓ **CONT-06**: FAQ section auto-generates 5-7 questions from match data — v2.2
+- ✓ **CONT-07**: Live match shows current score and match time — v2.2
+- ✓ **SGEO-01**: Single consolidated JSON-LD @graph with SportsEvent + FAQPage — v2.2
+- ✓ **SGEO-02**: FAQPage schema contains same questions as visible FAQ section — v2.2
+- ✓ **SGEO-03**: eventStatus correctly maps to all states — v2.2
+- ✓ **SGEO-04**: Content uses semantic H2/H3 headings matching FAQ questions — v2.2
+- ✓ **SGEO-05**: Answer-first paragraph structure (key info in opening sentences) — v2.2
+- ✓ **ARCH-01**: Single MatchDataProvider context supplies data to all components — v2.2
+- ✓ **ARCH-02**: No component fetches match data independently — v2.2
+- ✓ **ARCH-03**: Match state derived once at page level, passed via context — v2.2
+- ✓ **ARCH-04**: Deprecated components removed (match-header.tsx, tab components) — v2.2
 
 ### Validated (v2.1)
 
@@ -181,9 +207,9 @@ The following capabilities are built and operational:
 
 ### Context
 
-Shipped v2.1 with 98,659 LOC TypeScript.
-Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, next-themes, react-swipeable, isomorphic-dompurify.
-All 110 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, and v2.1 milestones.
+Shipped v2.2 with 47,251 LOC TypeScript.
+Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, Radix UI, next-themes, isomorphic-dompurify.
+All 131 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, and v2.2 milestones.
 
 ## Constraints
 
@@ -228,28 +254,13 @@ All 110 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, and v2.1 mil
 - Real-time prediction updates during match (post-kickoff is settled)
 - Model fine-tuning or custom training
 
-## Current Milestone: v2.2 Match Page Rewrite
+## Next Milestone
 
-**Goal:** Complete rewrite of match detail pages from scratch with clean layout, zero duplicate content, and SEO/GEO optimization.
-
-**Target features:**
-- Single scrollable page (NO tabs on mobile or desktop)
-- State-aware layouts: Upcoming, Live, Finished
-- Each content element appears exactly once
-- Simple sortable predictions table (all 35 models)
-- Auto-generated FAQ from match data
-- Structured for AI citations and search engines
-
-**Layout structure:**
-| Match State | Sections |
-|-------------|----------|
-| Upcoming | Match Info → Preview Narrative → Predictions Table → FAQ |
-| Live | Match Info + Live Score → Predictions Table → FAQ |
-| Finished | Final Score → Post-Match Narrative → Predictions Table → FAQ |
+Planning required. Use `/gsd:new-milestone` to start the next milestone cycle.
 
 ## Open Questions
 
 None currently.
 
 ---
-*Last updated: 2026-02-03 after v2.2 milestone started*
+*Last updated: 2026-02-04 after v2.2 milestone completed*

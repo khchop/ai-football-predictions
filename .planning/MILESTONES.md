@@ -1,5 +1,33 @@
 # Project Milestones: AI Football Predictions Platform
 
+## v2.2 Match Page Rewrite (Shipped: 2026-02-04)
+
+**Delivered:** Complete rewrite of match detail pages with context-driven architecture, single authoritative hero, state-aware content sections, AI-generated FAQ with Schema.org markup, and deprecated component cleanup.
+
+**Phases completed:** 26-30 (17 plans total)
+
+**Key accomplishments:**
+
+- Context-driven architecture — MatchDataProvider establishes single source of truth for match data
+- Single authoritative hero — MatchHero displays score exactly once with live minute polling
+- State-aware content — MatchNarrative shows "Match Preview" or "Match Report" based on matchState
+- Sortable predictions table — 35 models with color-coded points and accessibility icons
+- AI-generated FAQ — 5 questions per match state with Together AI and FAQPage schema
+- Clean codebase — 16 deprecated components removed (-1,673 lines)
+
+**Stats:**
+
+- 47,251 lines of TypeScript (-1,408 from v2.1 due to cleanup)
+- 5 phases, 17 plans, 21 requirements
+- 65 files changed, +3,337 / -2,101 lines
+- 2 days from start to ship (2026-02-03 → 2026-02-04)
+
+**Git range:** `feat(26-01)` → `docs(30)`
+
+**What's next:** New milestone planning with `/gsd:new-milestone`
+
+---
+
 ## v2.1 Match Page Simplification (Shipped: 2026-02-03)
 
 **Delivered:** Simplified match page layout with natural scrolling (no sticky header), unified single-column design (no mobile tabs), removed H2H/standings sections, and clean HTML stripping for narrative content.
