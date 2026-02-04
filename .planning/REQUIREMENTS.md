@@ -9,17 +9,17 @@ Requirements for Synthetic.new provider integration. Adds 14 new models to the e
 
 ### Provider Integration
 
-- [ ] **PROV-01**: SyntheticProvider class extends OpenAICompatibleProvider with correct endpoint
-- [ ] **PROV-02**: Provider uses `SYNTHETIC_API_KEY` environment variable for authentication
-- [ ] **PROV-03**: Provider calls `https://api.synthetic.new/openai/v1/chat/completions`
-- [ ] **PROV-04**: Provider handles `hf:org/model` ID format correctly
+- [x] **PROV-01**: SyntheticProvider class extends OpenAICompatibleProvider with correct endpoint
+- [x] **PROV-02**: Provider uses `SYNTHETIC_API_KEY` environment variable for authentication
+- [x] **PROV-03**: Provider calls `https://api.synthetic.new/openai/v1/chat/completions`
+- [x] **PROV-04**: Provider handles `hf:org/model` ID format correctly
 
 ### Model Configuration
 
-- [ ] **MODL-01**: 14 Synthetic models defined with ID, name, model, displayName
-- [ ] **MODL-02**: Reasoning models (R1-0528, K2-Thinking, Qwen3-Thinking) marked as premium tier
-- [ ] **MODL-03**: Models exported in `SYNTHETIC_PROVIDERS` array
-- [ ] **MODL-04**: Provider registry includes Synthetic providers alongside Together
+- [x] **MODL-01**: 13 Synthetic models defined with ID, name, model, displayName
+- [x] **MODL-02**: Reasoning models (R1-0528, K2-Thinking, Qwen3-Thinking) marked as premium tier
+- [x] **MODL-03**: Models exported in `SYNTHETIC_PROVIDERS` array
+- [x] **MODL-04**: Provider registry includes Synthetic providers alongside Together
 
 ### Database Integration
 
@@ -29,9 +29,9 @@ Requirements for Synthetic.new provider integration. Adds 14 new models to the e
 
 ### Error Handling
 
-- [ ] **ERRH-01**: 429 rate limit errors handled with existing retry logic
-- [ ] **ERRH-02**: Missing `SYNTHETIC_API_KEY` throws descriptive error at startup
-- [ ] **ERRH-03**: Model failures trigger auto-disable after 3 consecutive failures
+- [x] **ERRH-01**: 429 rate limit errors handled with existing retry logic
+- [x] **ERRH-02**: Missing `SYNTHETIC_API_KEY` throws descriptive error at startup
+- [x] **ERRH-03**: Model failures trigger auto-disable after 3 consecutive failures
 
 ### Testing
 
@@ -52,20 +52,20 @@ Requirements for Synthetic.new provider integration. Adds 14 new models to the e
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PROV-01 | Phase 37 | Pending |
-| PROV-02 | Phase 37 | Pending |
-| PROV-03 | Phase 37 | Pending |
-| PROV-04 | Phase 37 | Pending |
-| MODL-01 | Phase 37 | Pending |
-| MODL-02 | Phase 37 | Pending |
-| MODL-03 | Phase 37 | Pending |
-| MODL-04 | Phase 37 | Pending |
+| PROV-01 | Phase 37 | Complete |
+| PROV-02 | Phase 37 | Complete |
+| PROV-03 | Phase 37 | Complete |
+| PROV-04 | Phase 37 | Complete |
+| MODL-01 | Phase 37 | Complete |
+| MODL-02 | Phase 37 | Complete |
+| MODL-03 | Phase 37 | Complete |
+| MODL-04 | Phase 37 | Complete |
 | DATA-01 | Phase 38 | Pending |
 | DATA-02 | Phase 38 | Pending |
 | DATA-03 | Phase 38 | Pending |
-| ERRH-01 | Phase 37 | Pending |
-| ERRH-02 | Phase 37 | Pending |
-| ERRH-03 | Phase 37 | Pending |
+| ERRH-01 | Phase 37 | Complete |
+| ERRH-02 | Phase 37 | Complete |
+| ERRH-03 | Phase 37 | Complete |
 | TEST-01 | Phase 39 | Pending |
 | TEST-02 | Phase 39 | Pending |
 | TEST-03 | Phase 39 | Pending |
