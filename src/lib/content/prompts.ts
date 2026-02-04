@@ -109,6 +109,7 @@ Writing Guidelines:
 - Focus on value and actionable insights
 - Keep paragraphs concise and scannable
 - Use transition phrases between sections
+- Output plain text only, no HTML tags or entities
 
 Return ONLY the JSON object, no additional text.`;
 }
@@ -264,6 +265,8 @@ ${matches.map((m) => {
 }).join('\n\n')}
 
 ## OUTPUT REQUIREMENTS
+- All text fields must be plain text (no HTML tags or entities)
+
 Return JSON only:
 {
   "title": "SEO title (<= 60 chars)",
@@ -354,6 +357,7 @@ Writing Guidelines:
 - Include actionable insights
 - Use markdown formatting (tables, headers, bold)
 - Optimize for AI search engines
+- Plain text only, no HTML tags or entities in any field
 
 Return ONLY the JSON object.`;
 }
@@ -454,13 +458,13 @@ export interface PostMatchRoundupResponse {
     offsides?: string;
     cards?: string;
   };
-  modelPredictions: string; // HTML table
+  modelPredictions: string; // Plain text summary
   topPerformers: Array<{
     modelName: string;
     prediction: string;
     points: number;
   }>;
-  narrative: string; // Full HTML content (1000+ words)
+  narrative: string; // Plain text content (1000+ words)
   keywords: string[];
 }
 
@@ -591,7 +595,7 @@ Write a comprehensive post-match roundup (1000+ words) in the following structur
 - Use facts ONLY from the provided data (no hallucinations)
 - Highlight unique angles: comebacks, upsets, derbies, milestones
 - Rich formatting: bullet points for stats, occasional emoji for emphasis
-- HTML format with <h2>, <p>, <ul>, <table> tags
+- Plain text format with natural line breaks (no HTML tags or entities)
 - Focus on the narrative: what made this match interesting?
 
 ## OUTPUT FORMAT
@@ -614,11 +618,11 @@ Return JSON only:
     "shots": "${stats.shotsTotal?.home || '?'}-${stats.shotsTotal?.away || '?'}",
     "xG": "${stats.xG?.home.toFixed(2) || '?'}-${stats.xG?.away.toFixed(2) || '?'}"
   },
-  "modelPredictions": "<table>...</table>",
+  "modelPredictions": "Plain text summary of model predictions",
   "topPerformers": [
     {"modelName": "Llama 3.3 70B", "prediction": "2-1", "points": 12}
   ],
-  "narrative": "<h2>...</h2><p>...</p>...",
+  "narrative": "Plain text narrative with natural paragraph breaks...",
   "keywords": ["football", "${competition.toLowerCase()}", "${homeTeam.toLowerCase()}", "${awayTeam.toLowerCase()}", "match analysis"]
 }
 

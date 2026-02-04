@@ -136,6 +136,11 @@ Include:
 - Key market insights (over/under, BTTS trends)
 - Any notable value or pricing anomalies
 
+OUTPUT FORMAT:
+- Plain text only, no HTML tags
+- No HTML entities (use actual characters: &, ", etc.)
+- Use natural line breaks for paragraphs
+
 Write flowing prose without headers.`;
 
      const systemPrompt = 'You are a professional football analyst writing a pre-match market summary for betting enthusiasts.';
@@ -324,6 +329,11 @@ Include:
 - Distribution breakdown (how many models favor each side)
 - Notable outliers or split opinions
 - Confidence level of the consensus
+
+OUTPUT FORMAT:
+- Plain text only, no HTML tags
+- No HTML entities (use actual characters: &, ", etc.)
+- Use natural line breaks for paragraphs
 
 Write flowing prose without headers.`;
 
@@ -526,6 +536,11 @@ Include:
 - Notable predictions that hit or missed (with model names)
 
 IMPORTANT: Use the actual model names provided above. DO NOT use generic names like "Model 1", "Model 2", etc.
+
+OUTPUT FORMAT:
+- Plain text only, no HTML tags
+- No HTML entities (use actual characters: &, ", etc.)
+- Use natural line breaks for paragraphs
 
 Write flowing prose without headers.`;
 
@@ -768,7 +783,7 @@ Example format:
   ...
 ]`;
 
-    const systemPrompt = 'You are an SEO expert generating FAQ content for AI-powered football prediction pages. Generate factual, helpful Q&A pairs that would appear in search results. Return valid JSON only.';
+    const systemPrompt = 'You are an SEO expert generating FAQ content for AI-powered football prediction pages. Generate factual, helpful Q&A pairs that would appear in search results. CRITICAL: All text in question/answer fields must be plain text with no HTML tags or entities. Return valid JSON only.';
 
     console.log('[generateFAQContent] Calling Together AI...');
 
