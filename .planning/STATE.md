@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-04)
 ## Current Position
 
 Phase: 39 of 39 (Testing & Validation)
-Plan: 2 of 4 (Disable Failing Synthetic Models)
-Status: In progress — 6 failing models disabled from production
-Last activity: 2026-02-04 — Completed 39-02-PLAN.md (7 Synthetic models active)
+Plan: 3 of 4 (Together AI Fallbacks)
+Status: In progress — Fallback mapping added for cross-provider resilience
+Last activity: 2026-02-04 — Completed 39-03-PLAN.md (MODEL_FALLBACKS + getFallbackProvider)
 
-Progress: [██████████░] 98%
+Progress: [██████████░] 99%
 
 ## Milestone History
 
@@ -49,6 +49,7 @@ Key decisions from v2.3 are archived in milestones/v2.3-ROADMAP.md.
 - **39-01:** 7/13 Synthetic models validated for production (deepseek-r1, kimi-k2-thinking, deepseek-v3 variants, minimax variants, qwen3-coder)
 - **39-01:** 6 models fail validation (GLM-4.7 has API bug, 2 timeout, 2 parse failures, 1 invalid output)
 - **39-02:** 6 failing models disabled in code, definitions preserved for future re-testing
+- **39-03:** Fallback mapping added (deepseek-r1-0528-syn -> deepseek-r1, kimi-k2-thinking-syn -> kimi-k2-instruct)
 
 ### Pending Todos
 
@@ -75,10 +76,10 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-04T21:38:00Z
-Stopped at: Completed 39-02-PLAN.md (Disable Failing Synthetic Models)
+Last session: 2026-02-04T21:47:00Z
+Stopped at: Completed 39-03-PLAN.md (Together AI Fallbacks)
 Resume file: None
-Resume with: Continue with 39-03 (Integration testing) or 39-04 (Validation Dashboard)
+Resume with: Continue with 39-04 (Production Validation)
 
 **v2.4 Summary:**
 - 3 phases (37-39), 17 requirements
@@ -98,3 +99,4 @@ Resume with: Continue with 39-03 (Integration testing) or 39-04 (Validation Dash
 **Phase 39 In Progress:**
 - 39-01: Model validation script created and executed (7/13 Synthetic models validated)
 - 39-02: 6 failing models disabled in SYNTHETIC_PROVIDERS (7 remain active)
+- 39-03: Fallback mapping (MODEL_FALLBACKS) and getFallbackProvider() for cross-provider resilience
