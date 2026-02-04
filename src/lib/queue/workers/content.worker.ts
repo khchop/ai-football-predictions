@@ -32,6 +32,7 @@ import {
   recordQueueRateLimitError,
   recordQueueSuccess,
 } from '../circuit-breaker/queue-circuit-breaker';
+import { checkWorkerHealth, checkContentCompleteness } from '../monitoring';
 
 // Shared job options for consistent retry behavior
 const CONTENT_JOB_OPTIONS = {
@@ -106,6 +107,13 @@ export function createContentWorker() {
               matchId: string;
               triggeredAt: string;
             });
+          } else if (type === 'worker_health_check') {
+            // Check worker health for content queue
+            const { queueName } = data as { queueName: string };
+            return await checkWorkerHealth(queueName || QUEUE_NAMES.CONTENT);
+          } else if (type === 'content_completeness_check') {
+            // Check for finished matches missing content
+            return await checkContentCompleteness();
           } else {
             throw new Error(`Unknown content type: ${type}`);
           }

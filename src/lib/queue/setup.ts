@@ -323,11 +323,11 @@ export async function setupRepeatableJobs(): Promise<void> {
    await registerRepeatableJob(
      contentQueue,
      'generate-model-report',
-     { 
-       type: 'model_report', 
-       data: { 
+     {
+       type: 'model_report',
+       data: {
          period: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-       } 
+       }
      },
      {
        repeat: {
@@ -337,7 +337,47 @@ export async function setupRepeatableJobs(): Promise<void> {
        jobId: 'model-report-monthly',
      }
    );
-   
+
+   // ============================================================================
+   // MONITORING JOBS
+   // ============================================================================
+
+   // Worker health check every 5 minutes
+   // Detects dead workers and stalled jobs before jobs pile up
+   await registerRepeatableJob(
+     contentQueue,
+     'worker-health-check',
+     {
+       type: 'worker_health_check',
+       data: { queueName: 'content-queue' }
+     },
+     {
+       repeat: {
+         pattern: '*/5 * * * *', // Every 5 minutes
+         tz: 'Europe/Berlin',
+       },
+       jobId: 'worker-health-check-repeatable',
+     }
+   );
+
+   // Content completeness check every hour at :45
+   // Detects finished matches missing content before users notice gaps
+   await registerRepeatableJob(
+     contentQueue,
+     'content-completeness-check',
+     {
+       type: 'content_completeness_check',
+       data: {}
+     },
+     {
+       repeat: {
+         pattern: '45 * * * *', // Every hour at :45 (after other scans at :10, :15)
+         tz: 'Europe/Berlin',
+       },
+       jobId: 'content-completeness-check-repeatable',
+     }
+   );
+
    log.info('All repeatable jobs registered');
    startPeriodicMetricsLogging();
 }

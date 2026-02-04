@@ -96,8 +96,9 @@ export interface BackfillMissingPayload {
 }
 
 // Generate AI content (match previews, league roundups, model reports)
+// Also includes monitoring job types for worker health and content completeness checks
 export interface GenerateContentPayload {
-  type: 'match_preview' | 'league_roundup' | 'model_report' | 'scan_matches' | 'scan_match_content' | 'scan_league_roundups' | 'generate-roundup';
+  type: 'match_preview' | 'league_roundup' | 'model_report' | 'scan_matches' | 'scan_match_content' | 'scan_league_roundups' | 'generate-roundup' | 'worker_health_check' | 'content_completeness_check';
   data: Record<string, unknown>;
 }
 
