@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-04)
 ## Current Position
 
 Phase: 32 of 36 (Make Failures Visible)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-04 — Completed 32-01-PLAN.md (Error Throwing Implementation)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-04 — Completed 32-02-PLAN.md (BullMQ Worker Configuration)
 
-Progress: [█░░░░░░░░░] 8.3% (v2.3)
+Progress: [█░░░░░░░░░] 9.0% (v2.3)
 
 ## Milestone History
 
@@ -33,16 +33,16 @@ Progress: [█░░░░░░░░░] 8.3% (v2.3)
 ## Performance Metrics
 
 **v2.3 Velocity:**
-- Total plans completed: 2
-- Average duration: 4.5 min
-- Total execution time: 0.15 hours
+- Total plans completed: 3
+- Average duration: 4.0 min
+- Total execution time: 0.2 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 31 | 1/1 | 4min | 4min |
-| 32 | 1/2 | 5min | 5min |
+| 32 | 2/2 | 8min | 4min |
 | 33 | 0/3 | - | - |
 | 34 | 0/2 | - | - |
 | 35 | 0/3 | - | - |
@@ -60,6 +60,10 @@ Progress: [█░░░░░░░░░] 8.3% (v2.3)
 | 2026-02-04 | 32-01 | Use BullMQ UnrecoverableError for fatal errors | Prevents wasted retry attempts for match-not-found cases |
 | 2026-02-04 | 32-01 | Include diagnostic context in all errors | Enables proper debugging with matchId, teams, contentType, timestamp |
 | 2026-02-04 | 32-01 | Worker scan job continues on individual failures | More robust backfill - individual jobs retry via BullMQ |
+| 2026-02-04 | 32-02 | 120-second lock duration with 30s heartbeat | Content generation takes 30-90s, 4x safety margin |
+| 2026-02-04 | 32-02 | 5 retry attempts with exponential backoff | LLM APIs have transient failures, need multiple chances |
+| 2026-02-04 | 32-02 | Concurrency 3 for content worker | Balance throughput with LLM API rate limits (30 req/min) |
+| 2026-02-04 | 32-02 | DLQ retention 7 days | Failed jobs visible for manual review, auto-cleaned weekly |
 | v2.3 | - | Investigation before code changes (confirm root cause first) | Diagnostic phase prevents wasted effort on wrong fixes |
 | v2.3 | - | Error throwing over return false (BullMQ retry pattern) | Enable proper error propagation and retry logic |
 
@@ -76,12 +80,14 @@ None.
 
 **Future Concerns:**
 - HTML tags visible in older match reports — Phase 33 fix
+- Validation patterns may need tuning based on actual LLM output in production
+- Heartbeat frequency (30s) chosen conservatively, could be optimized
 
 ## Session Continuity
 
-Last session: 2026-02-04 14:39 UTC
-Stopped at: Completed Phase 32 Plan 01 (Error Throwing Implementation)
+Last session: 2026-02-04 15:26 UTC
+Stopped at: Completed Phase 32 Plan 02 (BullMQ Worker Configuration)
 Resume file: None
-Resume with: /gsd:plan-phase 32 (Plan 02)
+Resume with: /gsd:execute-phase 33
 
-**Next plan:** 32-02-implement-dlq (Implement Dead Letter Queue for failed jobs)
+**Next phase:** 33 (Fix HTML Tags in Content)
