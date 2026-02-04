@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-03)
 ## Current Position
 
 Phase: 30 of 30 (Layout Assembly)
-Plan: 1 of 5 (MatchLayout Component)
+Plan: 2 of 5 (Loading Skeletons & Error Boundary)
 Status: Complete
-Last activity: 2026-02-04 - Completed 30-01-PLAN.md (MatchLayout Component)
+Last activity: 2026-02-04 - Completed 30-02-PLAN.md (Loading Skeletons & Error Boundary)
 
-Progress: [##########] 100% (v2.1) | [#########.] 90% (v2.2)
+Progress: [##########] 100% (v2.1) | [#########.] 92% (v2.2)
 
 ## Milestone History
 
@@ -54,6 +54,8 @@ Progress: [##########] 100% (v2.1) | [#########.] 90% (v2.2)
 - SGEO-02: FAQs generated once at page level, shared between schema and visual display
 - LAYOUT-001: Hide MatchNarrative during live matches (no preview during play)
 - LAYOUT-002: PredictionsSection as internal component with H2 heading wrapper
+- SKEL-001: Skeleton dimensions exactly match source component dimensions (prevents layout shift)
+- SKEL-002: FullLayoutSkeleton composes HeroSkeleton, NarrativeSkeleton, PredictionsSkeleton
 
 ### Pending Todos
 
@@ -66,9 +68,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-04
-Stopped at: Completed 30-01-PLAN.md (MatchLayout Component)
+Stopped at: Completed 30-02-PLAN.md (Loading Skeletons & Error Boundary)
 Resume file: None
-Resume with: /gsd:execute-phase 30 (continue with Plan 02)
+Resume with: /gsd:execute-phase 30 (continue with Plan 03)
 
 Config:
 {
