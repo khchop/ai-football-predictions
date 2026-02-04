@@ -25,7 +25,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 31: Investigation & Diagnosis** - Confirm root cause and affected scope before making changes
 - [x] **Phase 32: Make Failures Visible** - Convert silent failures to thrown errors with proper retry
-- [ ] **Phase 33: HTML Sanitization** - Strip HTML from prompts and content before database save
+- [x] **Phase 33: HTML Sanitization** - Strip HTML from prompts and content before database save
 - [ ] **Phase 34: Pipeline Hardening** - Add circuit breaker, heartbeat monitoring, and completeness alerts
 - [ ] **Phase 35: SEO/GEO Content Quality** - Optimize prompts for answer-first structure and match-specific FAQs
 - [ ] **Phase 36: Blog Generation** - Complete blog pipeline with reliable triggers and error handling
@@ -73,9 +73,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 33-01-PLAN.md — Create sanitization module and update prompts for plain text
-- [ ] 33-02-PLAN.md — Integrate sanitization before database save
-- [ ] 33-03-PLAN.md — Run migration to clean existing content
+- [x] 33-01-PLAN.md — Create sanitization module and update prompts for plain text
+- [x] 33-02-PLAN.md — Integrate sanitization before database save
+- [x] 33-03-PLAN.md — Run migration to clean existing content
 
 ### Phase 34: Pipeline Hardening
 **Goal**: Content pipeline has observability and automatic protection against cascading failures
@@ -132,7 +132,7 @@ Phases execute in numeric order: 31 -> 32 -> 33 -> 34 -> 35 -> 36
 |-------|----------------|--------|-----------|
 | 31. Investigation & Diagnosis | 1/1 | Complete | 2026-02-04 |
 | 32. Make Failures Visible | 2/2 | Complete | 2026-02-04 |
-| 33. HTML Sanitization | 0/3 | Not started | - |
+| 33. HTML Sanitization | 3/3 | Complete | 2026-02-04 |
 | 34. Pipeline Hardening | 0/2 | Not started | - |
 | 35. SEO/GEO Content Quality | 0/3 | Not started | - |
 | 36. Blog Generation | 0/2 | Not started | - |

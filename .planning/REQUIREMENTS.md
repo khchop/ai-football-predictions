@@ -20,10 +20,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### HTML Sanitization
 
-- [ ] **HTML-01**: LLM prompts include explicit "plain text only, no HTML" instruction
-- [ ] **HTML-02**: HTML tags stripped before database save (not just at render)
-- [ ] **HTML-03**: One-time migration cleans HTML from existing content
-- [ ] **HTML-04**: Content rendered without visible HTML artifacts
+- [x] **HTML-01**: LLM prompts include explicit "plain text only, no HTML" instruction
+- [x] **HTML-02**: HTML tags stripped before database save (not just at render)
+- [x] **HTML-03**: One-time migration cleans HTML from existing content
+- [x] **HTML-04**: Content rendered without visible HTML artifacts
 
 ### SEO/GEO Content Quality
 
@@ -85,10 +85,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PIPE-06 | Phase 34 | Pending |
 | PIPE-07 | Phase 34 | Pending |
 | PIPE-08 | Phase 36 | Pending |
-| HTML-01 | Phase 33 | Pending |
-| HTML-02 | Phase 33 | Pending |
-| HTML-03 | Phase 33 | Pending |
-| HTML-04 | Phase 33 | Pending |
+| HTML-01 | Phase 33 | Complete |
+| HTML-02 | Phase 33 | Complete |
+| HTML-03 | Phase 33 | Complete |
+| HTML-04 | Phase 33 | Complete |
 | SGEO-01 | Phase 35 | Pending |
 | SGEO-02 | Phase 35 | Pending |
 | SGEO-03 | Phase 35 | Pending |
