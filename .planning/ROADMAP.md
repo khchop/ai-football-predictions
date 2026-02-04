@@ -27,7 +27,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 32: Make Failures Visible** - Convert silent failures to thrown errors with proper retry
 - [x] **Phase 33: HTML Sanitization** - Strip HTML from prompts and content before database save
 - [x] **Phase 34: Pipeline Hardening** - Add circuit breaker, heartbeat monitoring, and completeness alerts
-- [ ] **Phase 35: SEO/GEO Content Quality** - Optimize prompts for answer-first structure and match-specific FAQs
+- [x] **Phase 35: SEO/GEO Content Quality** - Optimize prompts for answer-first structure and match-specific FAQs
 - [ ] **Phase 36: Blog Generation** - Complete blog pipeline with reliable triggers and error handling
 
 ## Phase Details
@@ -104,9 +104,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 35-01-PLAN.md — Answer-first prompts for pre-match and post-match content
-- [ ] 35-02-PLAN.md — Match-specific FAQ generation with accuracy data
-- [ ] 35-03-PLAN.md — Article schema with datePublished/dateModified
+- [x] 35-01-PLAN.md — Answer-first prompts for pre-match and post-match content
+- [x] 35-02-PLAN.md — Match-specific FAQ generation with accuracy data
+- [x] 35-03-PLAN.md — Article schema with datePublished/dateModified
 
 ### Phase 36: Blog Generation
 **Goal**: Blog posts generate reliably for eligible matches with proper error handling
@@ -134,7 +134,7 @@ Phases execute in numeric order: 31 -> 32 -> 33 -> 34 -> 35 -> 36
 | 32. Make Failures Visible | 2/2 | Complete | 2026-02-04 |
 | 33. HTML Sanitization | 3/3 | Complete | 2026-02-04 |
 | 34. Pipeline Hardening | 2/2 | Complete | 2026-02-04 |
-| 35. SEO/GEO Content Quality | 0/3 | Not started | - |
+| 35. SEO/GEO Content Quality | 3/3 | Complete | 2026-02-04 |
 | 36. Blog Generation | 0/2 | Not started | - |
 
 ---

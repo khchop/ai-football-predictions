@@ -27,14 +27,14 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### SEO/GEO Content Quality
 
-- [ ] **SGEO-01**: Pre-match content uses answer-first structure (prediction in first 30-60 words)
-- [ ] **SGEO-02**: Post-match content uses answer-first structure (result in first 30-60 words)
-- [ ] **SGEO-03**: FAQ questions are match-specific with actual data (not generic)
-- [ ] **SGEO-04**: Upcoming matches generate 5 state-specific FAQ questions
-- [ ] **SGEO-05**: Finished matches generate 5 state-specific FAQ questions including accuracy
-- [ ] **SGEO-06**: Finished match FAQ includes "How accurate were AI predictions?" with X/35 data
-- [ ] **SGEO-07**: Content includes datePublished and dateModified schema properties
-- [ ] **SGEO-08**: Entity names consistent throughout content (full team names, not abbreviations)
+- [x] **SGEO-01**: Pre-match content uses answer-first structure (prediction in first 30-60 words)
+- [x] **SGEO-02**: Post-match content uses answer-first structure (result in first 30-60 words)
+- [x] **SGEO-03**: FAQ questions are match-specific with actual data (not generic)
+- [x] **SGEO-04**: Upcoming matches generate 5 state-specific FAQ questions
+- [x] **SGEO-05**: Finished matches generate 5 state-specific FAQ questions including accuracy
+- [x] **SGEO-06**: Finished match FAQ includes "How accurate were AI predictions?" with X/35 data
+- [x] **SGEO-07**: Content includes datePublished and dateModified schema properties
+- [x] **SGEO-08**: Entity names consistent throughout content (full team names, not abbreviations)
 
 ### Blog Generation
 
@@ -89,14 +89,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HTML-02 | Phase 33 | Complete |
 | HTML-03 | Phase 33 | Complete |
 | HTML-04 | Phase 33 | Complete |
-| SGEO-01 | Phase 35 | Pending |
-| SGEO-02 | Phase 35 | Pending |
-| SGEO-03 | Phase 35 | Pending |
-| SGEO-04 | Phase 35 | Pending |
-| SGEO-05 | Phase 35 | Pending |
-| SGEO-06 | Phase 35 | Pending |
-| SGEO-07 | Phase 35 | Pending |
-| SGEO-08 | Phase 35 | Pending |
+| SGEO-01 | Phase 35 | Complete |
+| SGEO-02 | Phase 35 | Complete |
+| SGEO-03 | Phase 35 | Complete |
+| SGEO-04 | Phase 35 | Complete |
+| SGEO-05 | Phase 35 | Complete |
+| SGEO-06 | Phase 35 | Complete |
+| SGEO-07 | Phase 35 | Complete |
+| SGEO-08 | Phase 35 | Complete |
 | BLOG-01 | Phase 36 | Pending |
 | BLOG-02 | Phase 36 | Pending |
 | BLOG-03 | Phase 36 | Pending |
