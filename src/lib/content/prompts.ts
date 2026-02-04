@@ -278,12 +278,56 @@ GOOD EXAMPLE:
 BAD EXAMPLE (DO NOT USE):
 "This week saw exciting ${competition} action with several unexpected results. In this analysis, we'll examine AI model performance across all matches and dive into the key factors that influenced accuracy rates this round."
 
+### Context Introduction (NEW - GEO/SEO Optimization)
+After the opening summary, add 2-3 sentences of context before diving into stats:
+- Brief mention of what ${competition} ${week} covered (number of matches, key fixtures if notable)
+- Why AI prediction accuracy matters for this round (stakes, competition context)
+- Natural transition to the data analysis
+
+This helps AI search engines understand and cite the content.
+
 ### Full Content Structure
-After the opening summary, provide:
+After the opening summary and context intro, provide:
 - ## Top 10 Models (table with avg points/match ranking)
 - ## Match-by-Match Audit (each match with accuracy stats)
 - ## Biggest Consensus Misses (upsets that fooled most models)
-- ## Methodology (how scoring works)
+- ## Methodology (MUST use the exact template below)
+- ## Frequently Asked Questions (3-4 Q&A pairs)
+
+### Methodology Section (USE THIS EXACT STRUCTURE)
+\`\`\`
+## Methodology
+
+kroam.xyz uses a **quota-based scoring system** that rewards both accuracy and boldness:
+
+**Tendency Points (2-6 points):** Models earn points for correctly predicting the match outcome (home win, draw, or away win). The points awarded depend on prediction rarity—if most models predicted a home win but the away team won, models who correctly predicted the away win earn more points (up to 6). Common predictions earn fewer points (minimum 2).
+
+**Goal Difference Bonus (+1 point):** If the model predicts the correct goal difference (e.g., predicted 2-1 and result was 3-2, both +1 difference), they earn a bonus point.
+
+**Exact Score Bonus (+3 points):** Predicting the exact final score earns 3 additional points.
+
+**Maximum: 10 points per prediction** (6 tendency + 1 goal diff + 3 exact).
+
+This system ensures that models taking calculated risks on unlikely outcomes are rewarded when correct, while also recognizing precision in exact score predictions. [Learn more about our methodology](/methodology).
+\`\`\`
+
+### FAQ Section (Generate 3-4 relevant Q&A pairs)
+Include questions like:
+- "Which AI model performed best in ${competition} ${week}?"
+- "How accurate were AI predictions for ${competition} this round?"
+- "What was the biggest upset in ${competition} ${week}?"
+- "How does kroam.xyz score AI football predictions?"
+
+Format as:
+\`\`\`
+## Frequently Asked Questions
+
+**Q: [Question]?**
+A: [Concise answer using data from this article]
+
+**Q: [Question]?**
+A: [Concise answer using data from this article]
+\`\`\`
 
 ### Formatting Rules
 - All text fields must be plain text (no HTML tags or entities)
@@ -292,7 +336,7 @@ Return JSON only:
 {
   "title": "SEO title (<= 60 chars)",
   "excerpt": "Opening summary (30-60 words, answer-first with top 3 models and accuracy %)",
-  "content": "Markdown. Start with opening summary (same as excerpt), then: ## Top 10 Models, ## Match-by-Match Audit, ## Biggest Consensus Misses, ## Methodology",
+  "content": "Markdown. Structure: Opening summary → Context intro → ## Top 10 Models → ## Match-by-Match Audit → ## Biggest Consensus Misses → ## Methodology → ## Frequently Asked Questions",
   "metaTitle": "SEO meta title (<= 60 chars)",
   "metaDescription": "150-160 chars (factual-only)",
   "keywords": ["...5-8 SEO keywords including league name + week/round + AI model accuracy + average points per match + kroam.xyz"]
