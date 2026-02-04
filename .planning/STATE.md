@@ -4,15 +4,15 @@
 
 See: .planning/PROJECT.md (updated 2026-02-04)
 
-**Core value:** Prediction pipeline reliably generates scores from 35 LLMs ~30 minutes before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** v2.3 Content Pipeline & SEO — fixing broken content generation
+**Core value:** Content generation pipeline must reliably trigger and produce SEO/GEO optimized content for all matches
+**Current focus:** Phase 31 - Investigation & Diagnosis
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-02-04 — Milestone v2.3 started
+Phase: 31 of 36 (Investigation & Diagnosis)
+Plan: 0 of 1 in current phase
+Status: Ready to plan
+Last activity: 2026-02-04 — Roadmap created for v2.3
 
 Progress: [░░░░░░░░░░] 0% (v2.3)
 
@@ -30,11 +30,30 @@ Progress: [░░░░░░░░░░] 0% (v2.3)
 
 **Total shipped:** 30 phases, 94 plans, 131 requirements
 
+## Performance Metrics
+
+**v2.3 Velocity:**
+- Total plans completed: 0
+- Average duration: -
+- Total execution time: 0 hours
+
+**By Phase:**
+
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| 31 | 0/1 | - | - |
+| 32 | 0/2 | - | - |
+| 33 | 0/3 | - | - |
+| 34 | 0/2 | - | - |
+| 35 | 0/3 | - | - |
+| 36 | 0/2 | - | - |
+
 ## Accumulated Context
 
 ### Decisions
 
-None yet for v2.3.
+- v2.3: Investigation before code changes (confirm root cause first)
+- v2.3: Error throwing over return false (BullMQ retry pattern)
 
 ### Pending Todos
 
@@ -42,26 +61,12 @@ None.
 
 ### Blockers/Concerns
 
-- All matches from 2026-02-03 have no generated content — needs investigation
-- HTML tags visible in older match reports — may be regression or uncovered path
+- All matches from 2026-02-03 have no generated content — Phase 31 investigation target
+- HTML tags visible in older match reports — Phase 33 fix
 
 ## Session Continuity
 
 Last session: 2026-02-04
-Stopped at: Defining v2.3 requirements
+Stopped at: Roadmap created for v2.3 milestone
 Resume file: None
-Resume with: Continue /gsd:new-milestone flow
-
-Config:
-{
-  "mode": "yolo",
-  "depth": "comprehensive",
-  "parallelization": true,
-  "commit_docs": true,
-  "model_profile": "balanced",
-  "workflow": {
-    "research": true,
-    "plan_check": true,
-    "verifier": true
-  }
-}
+Resume with: /gsd:plan-phase 31

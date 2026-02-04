@@ -77,36 +77,36 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PIPE-01 | TBD | Pending |
-| PIPE-02 | TBD | Pending |
-| PIPE-03 | TBD | Pending |
-| PIPE-04 | TBD | Pending |
-| PIPE-05 | TBD | Pending |
-| PIPE-06 | TBD | Pending |
-| PIPE-07 | TBD | Pending |
-| PIPE-08 | TBD | Pending |
-| HTML-01 | TBD | Pending |
-| HTML-02 | TBD | Pending |
-| HTML-03 | TBD | Pending |
-| HTML-04 | TBD | Pending |
-| SGEO-01 | TBD | Pending |
-| SGEO-02 | TBD | Pending |
-| SGEO-03 | TBD | Pending |
-| SGEO-04 | TBD | Pending |
-| SGEO-05 | TBD | Pending |
-| SGEO-06 | TBD | Pending |
-| SGEO-07 | TBD | Pending |
-| SGEO-08 | TBD | Pending |
-| BLOG-01 | TBD | Pending |
-| BLOG-02 | TBD | Pending |
-| BLOG-03 | TBD | Pending |
-| BLOG-04 | TBD | Pending |
+| PIPE-01 | Phase 32 | Pending |
+| PIPE-02 | Phase 32 | Pending |
+| PIPE-03 | Phase 32 | Pending |
+| PIPE-04 | Phase 32 | Pending |
+| PIPE-05 | Phase 34 | Pending |
+| PIPE-06 | Phase 34 | Pending |
+| PIPE-07 | Phase 34 | Pending |
+| PIPE-08 | Phase 36 | Pending |
+| HTML-01 | Phase 33 | Pending |
+| HTML-02 | Phase 33 | Pending |
+| HTML-03 | Phase 33 | Pending |
+| HTML-04 | Phase 33 | Pending |
+| SGEO-01 | Phase 35 | Pending |
+| SGEO-02 | Phase 35 | Pending |
+| SGEO-03 | Phase 35 | Pending |
+| SGEO-04 | Phase 35 | Pending |
+| SGEO-05 | Phase 35 | Pending |
+| SGEO-06 | Phase 35 | Pending |
+| SGEO-07 | Phase 35 | Pending |
+| SGEO-08 | Phase 35 | Pending |
+| BLOG-01 | Phase 36 | Pending |
+| BLOG-02 | Phase 36 | Pending |
+| BLOG-03 | Phase 36 | Pending |
+| BLOG-04 | Phase 36 | Pending |
 
 **Coverage:**
 - v2.3 requirements: 24 total
-- Mapped to phases: 0
-- Unmapped: 24 ⚠️
+- Mapped to phases: 24
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-04*
-*Last updated: 2026-02-04 after initial definition*
+*Last updated: 2026-02-04 after roadmap creation*
