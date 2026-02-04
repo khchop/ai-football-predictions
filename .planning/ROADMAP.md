@@ -28,7 +28,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 33: HTML Sanitization** - Strip HTML from prompts and content before database save
 - [x] **Phase 34: Pipeline Hardening** - Add circuit breaker, heartbeat monitoring, and completeness alerts
 - [x] **Phase 35: SEO/GEO Content Quality** - Optimize prompts for answer-first structure and match-specific FAQs
-- [ ] **Phase 36: Blog Generation** - Complete blog pipeline with reliable triggers and error handling
+- [x] **Phase 36: Blog Generation** - Complete blog pipeline with reliable triggers and error handling
 
 ## Phase Details
 
@@ -120,8 +120,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 36-01-PLAN.md — Answer-first prompts for blog content (league roundups, model reports)
-- [ ] 36-02-PLAN.md — Error handling alignment and job scheduler verification
+- [x] 36-01-PLAN.md — Answer-first prompts for blog content (league roundups, model reports)
+- [x] 36-02-PLAN.md — Error handling alignment and job scheduler verification
 
 ## Progress
 
@@ -135,7 +135,7 @@ Phases execute in numeric order: 31 -> 32 -> 33 -> 34 -> 35 -> 36
 | 33. HTML Sanitization | 3/3 | Complete | 2026-02-04 |
 | 34. Pipeline Hardening | 2/2 | Complete | 2026-02-04 |
 | 35. SEO/GEO Content Quality | 3/3 | Complete | 2026-02-04 |
-| 36. Blog Generation | 0/2 | Not started | - |
+| 36. Blog Generation | 2/2 | Complete | 2026-02-04 |
 
 ---
 *Roadmap created: 2026-02-04*

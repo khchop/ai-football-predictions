@@ -16,7 +16,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **PIPE-05**: Circuit breaker pauses queue after 5 consecutive rate limit errors
 - [x] **PIPE-06**: Worker heartbeat monitoring detects process death
 - [x] **PIPE-07**: Content completeness monitoring alerts when finished matches have no content
-- [ ] **PIPE-08**: Blog generation pipeline triggers reliably
+- [x] **PIPE-08**: Blog generation pipeline triggers reliably
 
 ### HTML Sanitization
 
@@ -38,10 +38,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Blog Generation
 
-- [ ] **BLOG-01**: Blog generation jobs trigger reliably for eligible matches
-- [ ] **BLOG-02**: Blog content uses same error handling pattern as match content
-- [ ] **BLOG-03**: Blog content sanitized before save
-- [ ] **BLOG-04**: Blog posts include answer-first summary paragraph
+- [x] **BLOG-01**: Blog generation jobs trigger reliably for eligible matches
+- [x] **BLOG-02**: Blog content uses same error handling pattern as match content
+- [x] **BLOG-03**: Blog content sanitized before save
+- [x] **BLOG-04**: Blog posts include answer-first summary paragraph
 
 ## Future Requirements
 
@@ -84,7 +84,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PIPE-05 | Phase 34 | Complete |
 | PIPE-06 | Phase 34 | Complete |
 | PIPE-07 | Phase 34 | Complete |
-| PIPE-08 | Phase 36 | Pending |
+| PIPE-08 | Phase 36 | Complete |
 | HTML-01 | Phase 33 | Complete |
 | HTML-02 | Phase 33 | Complete |
 | HTML-03 | Phase 33 | Complete |
@@ -97,10 +97,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SGEO-06 | Phase 35 | Complete |
 | SGEO-07 | Phase 35 | Complete |
 | SGEO-08 | Phase 35 | Complete |
-| BLOG-01 | Phase 36 | Pending |
-| BLOG-02 | Phase 36 | Pending |
-| BLOG-03 | Phase 36 | Pending |
-| BLOG-04 | Phase 36 | Pending |
+| BLOG-01 | Phase 36 | Complete |
+| BLOG-02 | Phase 36 | Complete |
+| BLOG-03 | Phase 36 | Complete |
+| BLOG-04 | Phase 36 | Complete |
 
 **Coverage:**
 - v2.3 requirements: 24 total
