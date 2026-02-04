@@ -9,13 +9,13 @@
 
 | Phase | Name | Goal | Requirements | Success Criteria | Status |
 |-------|------|------|--------------|------------------|--------|
-| 37 | Synthetic Provider | Create provider class and model configurations | PROV-01-04, MODL-01-04, ERRH-01-03 | Provider makes successful API call | ✓ Complete |
-| 38 | Database Integration | Register models in database | DATA-01-03 | Models appear in predictions table | ✓ Complete |
-| 39 | Testing & Validation | Test all 14 models in production | TEST-01-03 | All models generate valid predictions | Pending |
+| 37 | Synthetic Provider | Create provider class and model configurations | PROV-01-04, MODL-01-04, ERRH-01-03 | Provider makes successful API call | Complete |
+| 38 | Database Integration | Register models in database | DATA-01-03 | Models appear in predictions table | Complete |
+| 39 | Testing & Validation | Test all 13 models in production | TEST-01-03 | All models generate valid predictions | Pending |
 
 ---
 
-## Phase 37: Synthetic Provider Foundation ✓
+## Phase 37: Synthetic Provider Foundation
 
 **Status:** Complete (2026-02-04)
 **Goal:** Create SyntheticProvider class and configure 13 models
@@ -46,21 +46,21 @@
 
 ---
 
-## Phase 38: Database Integration ✓
+## Phase 38: Database Integration
 
 **Status:** Complete (2026-02-04)
 **Goal:** Register 14 Synthetic models in database
 
 **Requirements:**
-- DATA-01: ✓ Auto-sync registers models via `syncModelsToDatabase()` on server startup
-- DATA-02: ✓ Models have `provider: 'synthetic'` from `SyntheticProvider.name`
-- DATA-03: ✓ Models default to `active: true` via sync logic
+- DATA-01: Auto-sync registers models via `syncModelsToDatabase()` on server startup
+- DATA-02: Models have `provider: 'synthetic'` from `SyntheticProvider.name`
+- DATA-03: Models default to `active: true` via sync logic
 
 **Success Criteria:**
-1. ✓ Auto-sync adds models to `models` table (no manual seed needed)
-2. ✓ Models queryable with `provider = 'synthetic'`
-3. ✓ Models appear in model selection/leaderboard UI (after first sync)
-4. ✓ No duplicate ID conflicts (unique IDs with `-syn` suffix)
+1. Auto-sync adds models to `models` table (no manual seed needed)
+2. Models queryable with `provider = 'synthetic'`
+3. Models appear in model selection/leaderboard UI (after first sync)
+4. No duplicate ID conflicts (unique IDs with `-syn` suffix)
 
 **Implementation Notes:**
 Phase 38 was already implemented by Phase 37's registry integration. The existing `sync-models.ts` auto-sync mechanism:
@@ -76,7 +76,9 @@ Phase 38 was already implemented by Phase 37's registry integration. The existin
 
 ## Phase 39: Testing & Validation
 
-**Goal:** Validate all 14 models produce usable predictions
+**Status:** Pending
+**Goal:** Validate all 13 models produce usable predictions
+**Plans:** 1 plan
 
 **Requirements:**
 - TEST-01: Each model tested with sample prediction
@@ -84,7 +86,7 @@ Phase 38 was already implemented by Phase 37's registry integration. The existin
 - TEST-03: GLM models monitored for Chinese output
 
 **Success Criteria:**
-1. All 14 models return parseable JSON predictions
+1. All 13 models return parseable JSON predictions
 2. DeepSeek R1, Kimi K2-Thinking, Qwen3-Thinking correctly parsed (thinking tags stripped)
 3. GLM models produce English output (or auto-disabled if not)
 4. No models stuck in permanent failure state
@@ -94,15 +96,18 @@ Phase 38 was already implemented by Phase 37's registry integration. The existin
 - Test results documented
 - Any non-working models disabled with reason logged
 
+Plans:
+- [ ] 39-01-PLAN.md — Create validation script and test all 13 models
+
 ---
 
 ## Dependency Graph
 
 ```
 Phase 37 (Provider)
-    ↓
+    |
 Phase 38 (Database)
-    ↓
+    |
 Phase 39 (Testing)
 ```
 
@@ -110,7 +115,7 @@ All phases are sequential - provider must exist before database registration, da
 
 ---
 
-## Models to Add (14)
+## Models to Add (13)
 
 | # | ID | Model | Type |
 |---|-----|-------|------|
