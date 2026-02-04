@@ -731,28 +731,37 @@ export async function generateFAQContent(matchId: string): Promise<void> {
       const exactScoreHits = modelPredictions.filter(p =>
         p.predictedHome === match!.homeScore && p.predictedAway === match!.awayScore
       );
+      const accuracyPct = modelPredictions.length > 0
+        ? ((correctPredictions.length / modelPredictions.length) * 100).toFixed(0)
+        : '0';
 
       matchContext = `
 MATCH RESULT:
 ${match.homeTeam} ${match.homeScore} - ${match.awayScore} ${match.awayTeam}
 Competition: Match page
 Date: ${formattedDate}
-Venue: ${match.venue || 'Not specified'}
 
-AI MODEL PERFORMANCE:
-- Total predictions: ${modelPredictions.length}
-- Correct tendency: ${correctPredictions.length} models
-- Exact score hits: ${exactScoreHits.length > 0 ? exactScoreHits.map(p => p.modelName).join(', ') : 'None'}
+AI MODEL ACCURACY DATA (USE THESE EXACT NUMBERS IN YOUR ANSWERS):
+- Total models that predicted: ${modelPredictions.length}
+- Correctly predicted result: ${correctPredictions.length} models (${accuracyPct}%)
+- Predicted exact score: ${exactScoreHits.length} model(s)
+${exactScoreHits.length > 0 ? `- Models with exact score: ${exactScoreHits.map(p => p.modelName).join(', ')}` : ''}
 
-Top performing models:
-${modelPredictions.slice(0, 5).map(p => `- ${p.modelName}: predicted ${p.predictedHome}-${p.predictedAway}, scored ${p.totalPoints ?? 0} points`).join('\n')}
+Top 3 performers by points:
+${modelPredictions.slice(0, 3).map(p => `- ${p.modelName}: ${p.totalPoints ?? 0} points`).join('\n')}
 
-Generate 5 FAQs for a FINISHED match covering:
-1. What was the final score? (include actual score and date)
-2. Which AI models correctly predicted this match? (name specific top performers)
-3. Who scored in the match? (mention we track events)
-4. What competition was this? (mention it's part of our coverage)
-5. How accurate are AI predictions for football? (mention our 35+ model coverage)`;
+ENTITY NAME CONSISTENCY:
+- Always use "${match.homeTeam}" (never abbreviate to nicknames or acronyms)
+- Always use "${match.awayTeam}" (never abbreviate to nicknames or acronyms)
+
+Generate 5 FAQs. CRITICAL - Question #2 MUST be the accuracy question:
+1. What was the final score of ${match.homeTeam} vs ${match.awayTeam}? (Include: ${match.homeScore}-${match.awayScore}, ${formattedDate})
+2. How accurate were AI predictions for ${match.homeTeam} vs ${match.awayTeam}? (MUST include: "${correctPredictions.length} of ${modelPredictions.length} models (${accuracyPct}%)")
+3. Which AI models performed best for this match? (Name the top 3 models with their points)
+4. Did any AI model predict the exact score? (State ${exactScoreHits.length} models, name them if any)
+5. How do AI football predictions work? (Brief methodology explanation)
+
+CRITICAL: Use the EXACT numbers provided above in your answers. Do NOT use placeholders like "check the table" or "see above".`;
     } else {
       // Upcoming/Live match context
       const homeFavor = modelPredictions.filter(p => p.predictedResult === 'H').length;
