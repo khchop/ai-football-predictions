@@ -101,12 +101,12 @@ Plans:
   3. FAQ questions are match-specific with actual data (teams, scores, dates)
   4. Upcoming matches generate 5 state-specific FAQ questions
   5. Finished matches include accuracy FAQ ("X/35 models predicted correctly")
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 35-01: Update pre-match and post-match prompts for answer-first structure
-- [ ] 35-02: Update FAQ prompts for match-specific questions
-- [ ] 35-03: Add datePublished/dateModified and entity name consistency
+- [ ] 35-01-PLAN.md — Answer-first prompts for pre-match and post-match content
+- [ ] 35-02-PLAN.md — Match-specific FAQ generation with accuracy data
+- [ ] 35-03-PLAN.md — Article schema with datePublished/dateModified
 
 ### Phase 36: Blog Generation
 **Goal**: Blog posts generate reliably for eligible matches with proper error handling
