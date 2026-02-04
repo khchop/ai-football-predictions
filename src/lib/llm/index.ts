@@ -11,6 +11,60 @@ export const ALL_PROVIDERS: LLMProvider[] = [
   ...SYNTHETIC_PROVIDERS,
 ];
 
+// ============================================================================
+// MODEL FALLBACKS
+// Maps Synthetic model IDs to Together AI equivalents (same or similar models)
+// Used when a Synthetic model fails and we want to try Together AI instead
+// ============================================================================
+
+/**
+ * Fallback mapping: Synthetic model ID -> Together AI model ID
+ * Only includes models with close equivalents on both providers
+ */
+export const MODEL_FALLBACKS: Record<string, string> = {
+  // DeepSeek R1 variants (reasoning models)
+  // Synthetic R1 0528 -> Together R1 (version difference, same model family)
+  'deepseek-r1-0528-syn': 'deepseek-r1',
+
+  // Kimi K2 variants (Thinking -> Instruct fallback)
+  // Same base model, different tuning (thinking vs instruction-following)
+  'kimi-k2-thinking-syn': 'kimi-k2-instruct',
+
+  // Note: Most Synthetic models are exclusive and have no Together AI equivalent:
+  // - DeepSeek V3 variants (0324, Terminus, V3.2) - not on Together
+  // - MiniMax M2/M2.1 - not on Together
+  // - GLM 4.6/4.7 - not on Together
+  // - Qwen3 Coder 480B - not on Together
+  // - GPT-OSS 120B - Together only has 20B
+};
+
+/**
+ * Get fallback provider for a Synthetic model
+ * @param syntheticModelId - The Synthetic model ID that failed
+ * @returns The equivalent Together AI provider, or undefined if no fallback exists
+ */
+export function getFallbackProvider(syntheticModelId: string): LLMProvider | undefined {
+  const fallbackId = MODEL_FALLBACKS[syntheticModelId];
+  if (!fallbackId) {
+    return undefined;
+  }
+
+  // Check if Together API key is configured
+  if (!process.env.TOGETHER_API_KEY) {
+    return undefined;
+  }
+
+  return ALL_PROVIDERS.find(p => p.id === fallbackId);
+}
+
+// ============================================================================
+// USAGE NOTES:
+// - Call getFallbackProvider(modelId) when a Synthetic model fails
+// - Returns undefined if no fallback exists or TOGETHER_API_KEY not set
+// - Integration into prediction pipeline is a future enhancement
+// - Currently 2 fallbacks configured (deepseek-r1, kimi-k2)
+// ============================================================================
+
 // Get active providers (checks if API keys are configured and filters auto-disabled models)
 export async function getActiveProviders(): Promise<LLMProvider[]> {
   // Filter out auto-disabled models
