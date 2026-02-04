@@ -13,9 +13,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **PIPE-02**: Content queue uses 120-second lock duration for long-running jobs
 - [x] **PIPE-03**: Content validation runs before database save (min 100 chars, no placeholder text)
 - [x] **PIPE-04**: Failed jobs reach dead letter queue for visibility
-- [ ] **PIPE-05**: Circuit breaker pauses queue after 5 consecutive rate limit errors
-- [ ] **PIPE-06**: Worker heartbeat monitoring detects process death
-- [ ] **PIPE-07**: Content completeness monitoring alerts when finished matches have no content
+- [x] **PIPE-05**: Circuit breaker pauses queue after 5 consecutive rate limit errors
+- [x] **PIPE-06**: Worker heartbeat monitoring detects process death
+- [x] **PIPE-07**: Content completeness monitoring alerts when finished matches have no content
 - [ ] **PIPE-08**: Blog generation pipeline triggers reliably
 
 ### HTML Sanitization
@@ -81,9 +81,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PIPE-02 | Phase 32 | Complete |
 | PIPE-03 | Phase 32 | Complete |
 | PIPE-04 | Phase 32 | Complete |
-| PIPE-05 | Phase 34 | Pending |
-| PIPE-06 | Phase 34 | Pending |
-| PIPE-07 | Phase 34 | Pending |
+| PIPE-05 | Phase 34 | Complete |
+| PIPE-06 | Phase 34 | Complete |
+| PIPE-07 | Phase 34 | Complete |
 | PIPE-08 | Phase 36 | Pending |
 | HTML-01 | Phase 33 | Complete |
 | HTML-02 | Phase 33 | Complete |
