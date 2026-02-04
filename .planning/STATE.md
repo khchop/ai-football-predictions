@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-04)
 
 **Core value:** Content generation pipeline must reliably trigger and produce SEO/GEO optimized content for all matches
-**Current focus:** Phase 31 - Investigation & Diagnosis
+**Current focus:** Phase 32 - Make Failures Visible
 
 ## Current Position
 
-Phase: 31 of 36 (Investigation & Diagnosis)
-Plan: 1 of 1 in current phase
-Status: Phase complete
-Last activity: 2026-02-04 — Completed 31-01-PLAN.md (Investigation & Diagnosis)
+Phase: 32 of 36 (Make Failures Visible)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-04 — Completed 32-01-PLAN.md (Error Throwing Implementation)
 
-Progress: [█░░░░░░░░░] 7.7% (v2.3)
+Progress: [█░░░░░░░░░] 8.3% (v2.3)
 
 ## Milestone History
 
@@ -33,16 +33,16 @@ Progress: [█░░░░░░░░░] 7.7% (v2.3)
 ## Performance Metrics
 
 **v2.3 Velocity:**
-- Total plans completed: 1
-- Average duration: 4 min
-- Total execution time: 0.07 hours
+- Total plans completed: 2
+- Average duration: 4.5 min
+- Total execution time: 0.15 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 31 | 1/1 | 4min | 4min |
-| 32 | 0/2 | - | - |
+| 32 | 1/2 | 5min | 5min |
 | 33 | 0/3 | - | - |
 | 34 | 0/2 | - | - |
 | 35 | 0/3 | - | - |
@@ -57,6 +57,9 @@ Progress: [█░░░░░░░░░] 7.7% (v2.3)
 | 2026-02-04 | 31 | Root cause: Application server not running (workers never started) | Content generation halted since 2026-02-01 evening |
 | 2026-02-04 | 31 | REDIS_URL missing from environment blocks queue system initialization | Server startup will fail until configured |
 | 2026-02-04 | 31 | Post-match content uses different generation mechanism (not queue-based) | Explains why post-match works while pre-match/betting broken |
+| 2026-02-04 | 32-01 | Use BullMQ UnrecoverableError for fatal errors | Prevents wasted retry attempts for match-not-found cases |
+| 2026-02-04 | 32-01 | Include diagnostic context in all errors | Enables proper debugging with matchId, teams, contentType, timestamp |
+| 2026-02-04 | 32-01 | Worker scan job continues on individual failures | More robust backfill - individual jobs retry via BullMQ |
 | v2.3 | - | Investigation before code changes (confirm root cause first) | Diagnostic phase prevents wasted effort on wrong fixes |
 | v2.3 | - | Error throwing over return false (BullMQ retry pattern) | Enable proper error propagation and retry logic |
 
@@ -73,13 +76,12 @@ None.
 
 **Future Concerns:**
 - HTML tags visible in older match reports — Phase 33 fix
-- Silent failure pattern in code (return false instead of throw) — Phase 32 visibility
 
 ## Session Continuity
 
-Last session: 2026-02-04 12:26 UTC
-Stopped at: Completed Phase 31 Plan 01 (Investigation & Diagnosis)
+Last session: 2026-02-04 14:39 UTC
+Stopped at: Completed Phase 32 Plan 01 (Error Throwing Implementation)
 Resume file: None
-Resume with: /gsd:plan-phase 32
+Resume with: /gsd:plan-phase 32 (Plan 02)
 
-**Next phase:** 32-make-failures-visible (Make content generation failures visible before fixing root cause)
+**Next plan:** 32-02-implement-dlq (Implement Dead Letter Queue for failed jobs)
