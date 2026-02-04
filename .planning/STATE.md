@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-04)
 ## Current Position
 
 Phase: 33 of 36 (Fix HTML Tags in Content)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-04 — Completed 33-01-PLAN.md (HTML Sanitization Foundation)
+Last activity: 2026-02-04 — Completed 33-02-PLAN.md (Integrate Sanitization)
 
-Progress: [█░░░░░░░░░] 11.5% (v2.3)
+Progress: [██░░░░░░░░] 14.6% (v2.3)
 
 ## Milestone History
 
@@ -33,9 +33,9 @@ Progress: [█░░░░░░░░░] 11.5% (v2.3)
 ## Performance Metrics
 
 **v2.3 Velocity:**
-- Total plans completed: 4
-- Average duration: 4.5 min
-- Total execution time: 0.3 hours
+- Total plans completed: 5
+- Average duration: 4.6 min
+- Total execution time: 0.4 hours
 
 **By Phase:**
 
@@ -43,7 +43,7 @@ Progress: [█░░░░░░░░░] 11.5% (v2.3)
 |-------|-------|-------|----------|
 | 31 | 1/1 | 4min | 4min |
 | 32 | 2/2 | 8min | 4min |
-| 33 | 1/3 | 6min | 6min |
+| 33 | 2/3 | 11min | 5.5min |
 | 34 | 0/2 | - | - |
 | 35 | 0/3 | - | - |
 | 36 | 0/2 | - | - |
@@ -67,6 +67,8 @@ Progress: [█░░░░░░░░░] 11.5% (v2.3)
 | 2026-02-04 | 33-01 | Use html-to-text and he libraries for sanitization | npm standards with 1344+ and 2535+ dependents respectively |
 | 2026-02-04 | 33-01 | Defense-in-depth: prompts + runtime sanitization | LLMs proven to ignore format instructions, need both layers |
 | 2026-02-04 | 33-01 | buildPostMatchRoundupPrompt switched from HTML to plain text | Aligns with plain-text-only content strategy |
+| 2026-02-04 | 33-02 | Sanitize after LLM response, before validation and database save | Ensures clean content before any storage |
+| 2026-02-04 | 33-02 | PostMatchRoundup HTML template preserved, text content inside sanitized | HTML structure intentional for rendering, LLM text sanitized |
 | v2.3 | - | Investigation before code changes (confirm root cause first) | Diagnostic phase prevents wasted effort on wrong fixes |
 | v2.3 | - | Error throwing over return false (BullMQ retry pattern) | Enable proper error propagation and retry logic |
 
@@ -82,15 +84,15 @@ None.
 - 5 matches missing pre-match and betting content (backfill needed in Phase 34)
 
 **Future Concerns:**
-- HTML tags visible in older match reports — Phase 33-02 and 33-03 address
+- Existing content has HTML tags — Phase 33-03 cleanup migration needed
 - Validation patterns may need tuning based on actual LLM output in production
 - Heartbeat frequency (30s) chosen conservatively, could be optimized
 
 ## Session Continuity
 
-Last session: 2026-02-04 15:09 UTC
-Stopped at: Completed Phase 33 Plan 01 (HTML Sanitization Foundation)
+Last session: 2026-02-04 15:15 UTC
+Stopped at: Completed Phase 33 Plan 02 (Integrate Sanitization)
 Resume file: None
 Resume with: /gsd:execute-phase 33
 
-**Next plan:** 33-02 (Integrate sanitization into content generation)
+**Next plan:** 33-03 (Clean existing content with HTML)
