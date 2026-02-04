@@ -70,17 +70,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONT-03 | Phase 28 | Complete |
 | CONT-04 | Phase 28 | Complete |
 | CONT-05 | Phase 28 | Complete |
-| CONT-06 | Phase 29 | Pending |
-| SGEO-01 | Phase 29 | Pending |
-| SGEO-02 | Phase 29 | Pending |
-| SGEO-03 | Phase 29 | Pending |
-| SGEO-04 | Phase 29 | Pending |
-| SGEO-05 | Phase 29 | Pending |
-| LAYT-01 | Phase 30 | Pending |
-| LAYT-03 | Phase 30 | Pending |
-| LAYT-04 | Phase 30 | Pending |
-| LAYT-05 | Phase 30 | Pending |
-| ARCH-04 | Phase 30 | Pending |
+| CONT-06 | Phase 29 | Complete |
+| SGEO-01 | Phase 29 | Complete |
+| SGEO-02 | Phase 29 | Complete |
+| SGEO-03 | Phase 29 | Complete |
+| SGEO-04 | Phase 29 | Complete |
+| SGEO-05 | Phase 29 | Complete |
+| LAYT-01 | Phase 30 | Complete |
+| LAYT-03 | Phase 30 | Complete |
+| LAYT-04 | Phase 30 | Complete |
+| LAYT-05 | Phase 30 | Complete |
+| ARCH-04 | Phase 30 | Complete |
 
 **Coverage:**
 - v2.2 requirements: 21 total
@@ -89,4 +89,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-03*
-*Last updated: 2026-02-03 after roadmap creation*
+*Last updated: 2026-02-04 after milestone completion*

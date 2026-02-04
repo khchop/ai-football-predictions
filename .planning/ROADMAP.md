@@ -12,7 +12,7 @@ Complete rewrite of match detail pages from scratch with clean layout, zero dupl
 - v1.3 Match Page Refresh - Phases 13-16 (shipped 2026-02-02)
 - v2.0 UI/UX Overhaul - Phases 17-23 (shipped 2026-02-03)
 - v2.1 Match Page Simplification - Phases 24-25 (shipped 2026-02-03)
-- **v2.2 Match Page Rewrite** - Phases 26-30 (in progress)
+- **v2.2 Match Page Rewrite** - Phases 26-30 (shipped 2026-02-04)
 
 ## Phases
 
@@ -23,8 +23,8 @@ Complete rewrite of match detail pages from scratch with clean layout, zero dupl
 - [x] **Phase 26: Context Foundation** - Establish single source of truth for match data
 - [x] **Phase 27: Hero Component** - Single score render point eliminating duplication
 - [x] **Phase 28: Content Sections** - Narrative and predictions content display
-- [ ] **Phase 29: FAQ & SEO** - Auto-generated FAQ with Schema.org integration
-- [ ] **Phase 30: Layout Assembly** - State-aware layouts and deprecated code cleanup
+- [x] **Phase 29: FAQ & SEO** - Auto-generated FAQ with Schema.org integration
+- [x] **Phase 30: Layout Assembly** - State-aware layouts and deprecated code cleanup
 
 ## Phase Details
 
@@ -70,9 +70,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 28-01-PLAN.md — Create MatchNarrative component with state-aware display
-- [ ] 28-02-PLAN.md — Create SortablePredictionsTable with sorting and color-coded points
-- [ ] 28-03-PLAN.md — Visual verification of content sections across all match states
+- [x] 28-01-PLAN.md — Create MatchNarrative component with state-aware display
+- [x] 28-02-PLAN.md — Create SortablePredictionsTable with sorting and color-coded points
+- [x] 28-03-PLAN.md — Visual verification of content sections across all match states
 
 ### Phase 29: FAQ & SEO
 **Goal**: Auto-generate FAQ from match data with proper Schema.org FAQPage markup
@@ -87,10 +87,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 29-01-PLAN.md — Install Radix Accordion and create accordion.tsx UI component with animations
-- [ ] 29-02-PLAN.md — Extend FAQ generation to 5 state-specific questions
-- [ ] 29-03-PLAN.md — Consolidate FAQPage into MatchPageSchema @graph and update visual component
-- [ ] 29-04-PLAN.md — Visual verification of FAQ across match states and schema validation
+- [x] 29-01-PLAN.md — Install Radix Accordion and create accordion.tsx UI component with animations
+- [x] 29-02-PLAN.md — Extend FAQ generation to 5 state-specific questions
+- [x] 29-03-PLAN.md — Consolidate FAQPage into MatchPageSchema @graph and update visual component
+- [x] 29-04-PLAN.md — Visual verification of FAQ across match states and schema validation
 
 ### Phase 30: Layout Assembly
 **Goal**: Assemble state-aware layouts and remove all deprecated match page components
@@ -105,11 +105,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 30-01-PLAN.md — Create MatchLayout component with state-aware section rendering
-- [ ] 30-02-PLAN.md — Create loading skeletons and error boundary
-- [ ] 30-03-PLAN.md — Integrate MatchLayout into match pages
-- [ ] 30-04-PLAN.md — Delete deprecated components
-- [ ] 30-05-PLAN.md — Visual verification of layout across all match states
+- [x] 30-01-PLAN.md — Create MatchLayout component with state-aware section rendering
+- [x] 30-02-PLAN.md — Create loading skeletons and error boundary
+- [x] 30-03-PLAN.md — Integrate MatchLayout into match pages
+- [x] 30-04-PLAN.md — Delete deprecated components
+- [x] 30-05-PLAN.md — Visual verification of layout across all match states
 
 ## Progress
 
@@ -121,8 +121,8 @@ Phases execute in numeric order: 26 -> 27 -> 28 -> 29 -> 30
 | 26. Context Foundation | 2/2 | Complete | 2026-02-03 |
 | 27. Hero Component | 2/2 | Complete | 2026-02-03 |
 | 28. Content Sections | 3/3 | Complete | 2026-02-03 |
-| 29. FAQ & SEO | 0/4 | Not started | - |
-| 30. Layout Assembly | 0/5 | Not started | - |
+| 29. FAQ & SEO | 4/4 | Complete | 2026-02-04 |
+| 30. Layout Assembly | 5/5 | Complete | 2026-02-04 |
 
 ---
 *Roadmap created: 2026-02-03*
