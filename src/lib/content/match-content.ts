@@ -778,6 +778,14 @@ CRITICAL: Use the EXACT numbers provided above in your answers. Do NOT use place
         .sort(([, a], [, b]) => b - a)
         .slice(0, 3);
 
+      // Determine consensus prediction (most favored outcome)
+      const consensusOutcome = homeFavor > awayFavor && homeFavor > drawFavor
+        ? `${match.homeTeam} win`
+        : awayFavor > homeFavor && awayFavor > drawFavor
+        ? `${match.awayTeam} win`
+        : 'draw';
+      const consensusCount = Math.max(homeFavor, drawFavor, awayFavor);
+
       matchContext = `
 UPCOMING MATCH:
 ${match.homeTeam} vs ${match.awayTeam}
@@ -789,21 +797,29 @@ BETTING ODDS:
 - Draw: ${analysis?.oddsDraw || 'N/A'}
 - Away win: ${analysis?.oddsAway || 'N/A'}
 
-AI PREDICTIONS (${modelPredictions.length} models):
-- Home win favored by: ${homeFavor} models
-- Draw favored by: ${drawFavor} models
-- Away win favored by: ${awayFavor} models
-- Most predicted scores: ${topScores.map(([score, count]) => `${score} (${count} models)`).join(', ')}
+AI PREDICTION DATA (USE THESE EXACT NUMBERS IN YOUR ANSWERS):
+- Total models predicting: ${modelPredictions.length}
+- Consensus prediction: ${consensusOutcome} (${consensusCount} of ${modelPredictions.length} models)
+- Home win predictions: ${homeFavor} models
+- Draw predictions: ${drawFavor} models
+- Away win predictions: ${awayFavor} models
+- Most predicted score(s): ${topScores.map(([score, count]) => `${score} (${count} models)`).join(', ')}
 
-Sample predictions:
+Sample model predictions:
 ${modelPredictions.slice(0, 5).map(p => `- ${p.modelName}: ${p.predictedHome}-${p.predictedAway}`).join('\n')}
 
-Generate 5 FAQs for an UPCOMING match covering:
-1. When is the match? (include date, time, venue)
-2. What do AI models predict? (summarize consensus and name top models)
-3. How can I watch? (generic advice about finding broadcasters)
-4. Where is it being played? (venue info)
-5. How accurate are AI predictions? (mention our 35+ model coverage)`;
+ENTITY NAME CONSISTENCY:
+- Always use "${match.homeTeam}" (never abbreviate to nicknames or acronyms)
+- Always use "${match.awayTeam}" (never abbreviate to nicknames or acronyms)
+
+Generate 5 FAQs for this UPCOMING match:
+1. When and where is ${match.homeTeam} vs ${match.awayTeam}? (Include: ${formattedDate}, ${formattedTime}, ${match.venue || 'venue TBD'})
+2. What do AI models predict for ${match.homeTeam} vs ${match.awayTeam}? (MUST include: "${consensusCount} of ${modelPredictions.length} models predict ${consensusOutcome}")
+3. What is the most predicted scoreline? (State the top predicted score(s) with model counts)
+4. Which AI models are predicting a ${match.homeTeam} win? (Name specific models from sample list)
+5. How accurate are AI football predictions? (Brief methodology, mention 35+ models)
+
+CRITICAL: Use the EXACT numbers and model names provided above. Do NOT use generic placeholders.`;
     }
 
     const prompt = `Generate exactly 5 FAQ question-answer pairs for this football match.
