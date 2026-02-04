@@ -41,10 +41,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Queue counts and DLQ entries are documented
   3. Count of matches missing content in last 7 days is known
   4. Root cause is confirmed (silent failures vs scheduling vs other)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 31-01: Run diagnostic queries and document findings
+- [ ] 31-01-PLAN.md — Run diagnostic queries and document findings in INVESTIGATION.md
 
 ### Phase 32: Make Failures Visible
 **Goal**: Content generation failures are properly thrown and retried by BullMQ
@@ -130,7 +130,7 @@ Phases execute in numeric order: 31 -> 32 -> 33 -> 34 -> 35 -> 36
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 31. Investigation & Diagnosis | 0/1 | Not started | - |
+| 31. Investigation & Diagnosis | 0/1 | Planned | - |
 | 32. Make Failures Visible | 0/2 | Not started | - |
 | 33. HTML Sanitization | 0/3 | Not started | - |
 | 34. Pipeline Hardening | 0/2 | Not started | - |
