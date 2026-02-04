@@ -9,10 +9,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Pipeline Reliability
 
-- [ ] **PIPE-01**: Content generation functions throw errors on failure instead of returning false
-- [ ] **PIPE-02**: Content queue uses 120-second lock duration for long-running jobs
-- [ ] **PIPE-03**: Content validation runs before database save (min 100 chars, no placeholder text)
-- [ ] **PIPE-04**: Failed jobs reach dead letter queue for visibility
+- [x] **PIPE-01**: Content generation functions throw errors on failure instead of returning false
+- [x] **PIPE-02**: Content queue uses 120-second lock duration for long-running jobs
+- [x] **PIPE-03**: Content validation runs before database save (min 100 chars, no placeholder text)
+- [x] **PIPE-04**: Failed jobs reach dead letter queue for visibility
 - [ ] **PIPE-05**: Circuit breaker pauses queue after 5 consecutive rate limit errors
 - [ ] **PIPE-06**: Worker heartbeat monitoring detects process death
 - [ ] **PIPE-07**: Content completeness monitoring alerts when finished matches have no content
@@ -77,10 +77,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PIPE-01 | Phase 32 | Pending |
-| PIPE-02 | Phase 32 | Pending |
-| PIPE-03 | Phase 32 | Pending |
-| PIPE-04 | Phase 32 | Pending |
+| PIPE-01 | Phase 32 | Complete |
+| PIPE-02 | Phase 32 | Complete |
+| PIPE-03 | Phase 32 | Complete |
+| PIPE-04 | Phase 32 | Complete |
 | PIPE-05 | Phase 34 | Pending |
 | PIPE-06 | Phase 34 | Pending |
 | PIPE-07 | Phase 34 | Pending |
