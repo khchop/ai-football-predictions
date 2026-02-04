@@ -117,11 +117,11 @@ Plans:
   2. Blog content uses same error handling pattern as match content (throws on failure)
   3. Blog content is HTML-sanitized before save
   4. Blog posts include answer-first summary paragraph
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 36-01: Fix blog generation triggers
-- [ ] 36-02: Apply error handling and sanitization patterns to blog pipeline
+- [ ] 36-01-PLAN.md — Answer-first prompts for blog content (league roundups, model reports)
+- [ ] 36-02-PLAN.md — Error handling alignment and job scheduler verification
 
 ## Progress
 
