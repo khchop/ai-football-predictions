@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-04)
 
 **Core value:** Content generation pipeline must reliably trigger and produce SEO/GEO optimized content for all matches
-**Current focus:** Phase 32 - Make Failures Visible
+**Current focus:** Phase 33 - Fix HTML Tags in Content
 
 ## Current Position
 
-Phase: 32 of 36 (Make Failures Visible)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-04 — Completed 32-02-PLAN.md (BullMQ Worker Configuration)
+Phase: 33 of 36 (Fix HTML Tags in Content)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-04 — Completed 33-01-PLAN.md (HTML Sanitization Foundation)
 
-Progress: [█░░░░░░░░░] 9.0% (v2.3)
+Progress: [█░░░░░░░░░] 11.5% (v2.3)
 
 ## Milestone History
 
@@ -33,9 +33,9 @@ Progress: [█░░░░░░░░░] 9.0% (v2.3)
 ## Performance Metrics
 
 **v2.3 Velocity:**
-- Total plans completed: 3
-- Average duration: 4.0 min
-- Total execution time: 0.2 hours
+- Total plans completed: 4
+- Average duration: 4.5 min
+- Total execution time: 0.3 hours
 
 **By Phase:**
 
@@ -43,7 +43,7 @@ Progress: [█░░░░░░░░░] 9.0% (v2.3)
 |-------|-------|-------|----------|
 | 31 | 1/1 | 4min | 4min |
 | 32 | 2/2 | 8min | 4min |
-| 33 | 0/3 | - | - |
+| 33 | 1/3 | 6min | 6min |
 | 34 | 0/2 | - | - |
 | 35 | 0/3 | - | - |
 | 36 | 0/2 | - | - |
@@ -64,6 +64,9 @@ Progress: [█░░░░░░░░░] 9.0% (v2.3)
 | 2026-02-04 | 32-02 | 5 retry attempts with exponential backoff | LLM APIs have transient failures, need multiple chances |
 | 2026-02-04 | 32-02 | Concurrency 3 for content worker | Balance throughput with LLM API rate limits (30 req/min) |
 | 2026-02-04 | 32-02 | DLQ retention 7 days | Failed jobs visible for manual review, auto-cleaned weekly |
+| 2026-02-04 | 33-01 | Use html-to-text and he libraries for sanitization | npm standards with 1344+ and 2535+ dependents respectively |
+| 2026-02-04 | 33-01 | Defense-in-depth: prompts + runtime sanitization | LLMs proven to ignore format instructions, need both layers |
+| 2026-02-04 | 33-01 | buildPostMatchRoundupPrompt switched from HTML to plain text | Aligns with plain-text-only content strategy |
 | v2.3 | - | Investigation before code changes (confirm root cause first) | Diagnostic phase prevents wasted effort on wrong fixes |
 | v2.3 | - | Error throwing over return false (BullMQ retry pattern) | Enable proper error propagation and retry logic |
 
@@ -79,15 +82,15 @@ None.
 - 5 matches missing pre-match and betting content (backfill needed in Phase 34)
 
 **Future Concerns:**
-- HTML tags visible in older match reports — Phase 33 fix
+- HTML tags visible in older match reports — Phase 33-02 and 33-03 address
 - Validation patterns may need tuning based on actual LLM output in production
 - Heartbeat frequency (30s) chosen conservatively, could be optimized
 
 ## Session Continuity
 
-Last session: 2026-02-04 15:26 UTC
-Stopped at: Completed Phase 32 Plan 02 (BullMQ Worker Configuration)
+Last session: 2026-02-04 15:09 UTC
+Stopped at: Completed Phase 33 Plan 01 (HTML Sanitization Foundation)
 Resume file: None
 Resume with: /gsd:execute-phase 33
 
-**Next phase:** 33 (Fix HTML Tags in Content)
+**Next plan:** 33-02 (Integrate sanitization into content generation)
