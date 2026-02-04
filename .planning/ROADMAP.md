@@ -23,7 +23,7 @@ This milestone fixes the broken content generation pipeline that left all matche
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 31: Investigation & Diagnosis** - Confirm root cause and affected scope before making changes
+- [x] **Phase 31: Investigation & Diagnosis** - Confirm root cause and affected scope before making changes
 - [ ] **Phase 32: Make Failures Visible** - Convert silent failures to thrown errors with proper retry
 - [ ] **Phase 33: HTML Sanitization** - Strip HTML from prompts and content before database save
 - [ ] **Phase 34: Pipeline Hardening** - Add circuit breaker, heartbeat monitoring, and completeness alerts
@@ -44,7 +44,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 1 plan
 
 Plans:
-- [ ] 31-01-PLAN.md — Run diagnostic queries and document findings in INVESTIGATION.md
+- [x] 31-01-PLAN.md — Run diagnostic queries and document findings in INVESTIGATION.md
 
 ### Phase 32: Make Failures Visible
 **Goal**: Content generation failures are properly thrown and retried by BullMQ
@@ -130,7 +130,7 @@ Phases execute in numeric order: 31 -> 32 -> 33 -> 34 -> 35 -> 36
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 31. Investigation & Diagnosis | 0/1 | Planned | - |
+| 31. Investigation & Diagnosis | 1/1 | ✓ Complete | 2026-02-04 |
 | 32. Make Failures Visible | 0/2 | Not started | - |
 | 33. HTML Sanitization | 0/3 | Not started | - |
 | 34. Pipeline Hardening | 0/2 | Not started | - |
