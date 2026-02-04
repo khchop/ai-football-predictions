@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-04)
 ## Current Position
 
 Phase: 39 of 39 (Testing & Validation)
-Plan: 1 of 3 (Model Validation Scripts)
-Status: In progress — Synthetic model validation complete
-Last activity: 2026-02-04 — Completed 39-01-PLAN.md (7/13 Synthetic models validated)
+Plan: 2 of 4 (Disable Failing Synthetic Models)
+Status: In progress — 6 failing models disabled from production
+Last activity: 2026-02-04 — Completed 39-02-PLAN.md (7 Synthetic models active)
 
-Progress: [██████████░] 97%
+Progress: [██████████░] 98%
 
 ## Milestone History
 
@@ -48,6 +48,7 @@ Key decisions from v2.3 are archived in milestones/v2.3-ROADMAP.md.
 - Provider registry checks each API key independently (TOGETHER_API_KEY, SYNTHETIC_API_KEY)
 - **39-01:** 7/13 Synthetic models validated for production (deepseek-r1, kimi-k2-thinking, deepseek-v3 variants, minimax variants, qwen3-coder)
 - **39-01:** 6 models fail validation (GLM-4.7 has API bug, 2 timeout, 2 parse failures, 1 invalid output)
+- **39-02:** 6 failing models disabled in code, definitions preserved for future re-testing
 
 ### Pending Todos
 
@@ -74,16 +75,16 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-04T21:22:00Z
-Stopped at: Completed 39-01-PLAN.md (Model Validation Scripts)
+Last session: 2026-02-04T21:38:00Z
+Stopped at: Completed 39-02-PLAN.md (Disable Failing Synthetic Models)
 Resume file: None
-Resume with: Continue with 39-02 (Together AI validation) or 39-03 (Integration testing)
+Resume with: Continue with 39-03 (Integration testing) or 39-04 (Validation Dashboard)
 
 **v2.4 Summary:**
 - 3 phases (37-39), 17 requirements
 - Adds Synthetic.new as second LLM provider
-- 13 new models (3 reasoning + 10 standard)
-- Total models: 29 → 42
+- 7 active models (2 reasoning + 5 standard), 6 disabled pending upstream fixes
+- Total active models: 29 → 36 (6 Synthetic models disabled)
 
 **Phase 37 Complete:**
 - 37-01: Base provider class with OpenAI-compatible API
@@ -96,3 +97,4 @@ Resume with: Continue with 39-02 (Together AI validation) or 39-03 (Integration 
 
 **Phase 39 In Progress:**
 - 39-01: Model validation script created and executed (7/13 Synthetic models validated)
+- 39-02: 6 failing models disabled in SYNTHETIC_PROVIDERS (7 remain active)
