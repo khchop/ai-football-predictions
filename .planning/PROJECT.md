@@ -21,7 +21,7 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 
 ## Current State
 
-**Brownfield project with v2.2 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI, and a complete match lifecycle pipeline. v2.2 Match Page Rewrite milestone completed 2026-02-04 with all 21 requirements shipped.
+**Brownfield project with v2.2 shipped, v2.3 in progress.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI. v2.2 Match Page Rewrite completed 2026-02-04. Currently investigating content generation pipeline issues - all matches from 2026-02-03 missing generated content.
 
 ### Validated (v2.2)
 
@@ -254,13 +254,34 @@ All 131 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, and v2
 - Real-time prediction updates during match (post-kickoff is settled)
 - Model fine-tuning or custom training
 
-## Next Milestone
+## Current Milestone: v2.3 Content Pipeline & SEO
 
-Planning required. Use `/gsd:new-milestone` to start the next milestone cycle.
+**Goal:** Fix broken content generation pipeline (match reports, blogs, FAQ) and ensure all LLM-generated content is SEO/GEO optimized with proper HTML sanitization.
+
+**Target features:**
+- Diagnose and fix worker triggering issues (all matches missing content)
+- Ensure HTML tags are fully sanitized in all content types
+- Add robust fallbacks and retries for content generation
+- Optimize content prompts for SEO/GEO (answer-first, schema-aligned)
+- Validate blog generation pipeline end-to-end
+
+### Active
+
+- [ ] Content workers trigger reliably for all match lifecycle events
+- [ ] Pre-match content generates for upcoming matches
+- [ ] Post-match content generates for finished matches
+- [ ] Blog posts generate from match data
+- [ ] FAQ content generates with match-specific questions
+- [ ] All content is HTML-sanitized before storage and display
+- [ ] Content prompts produce SEO/GEO optimized output
+- [ ] Retry mechanisms handle transient failures gracefully
+- [ ] Dead letter queue alerts on persistent failures
 
 ## Open Questions
 
-None currently.
+1. What's causing all matches from yesterday to have no content?
+2. Are workers failing silently or not being scheduled at all?
+3. Is the HTML sanitization regression in v2.1 fix or new content paths?
 
 ---
-*Last updated: 2026-02-04 after v2.2 milestone completed*
+*Last updated: 2026-02-04 after v2.3 milestone started*

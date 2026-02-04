@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-04)
 
 **Core value:** Prediction pipeline reliably generates scores from 35 LLMs ~30 minutes before kickoff and accurately calculates Kicktipp quota points when matches complete
-**Current focus:** Planning next milestone
+**Current focus:** v2.3 Content Pipeline & SEO — fixing broken content generation
 
 ## Current Position
 
-Phase: None (milestone complete)
-Plan: None
-Status: Ready for next milestone
-Last activity: 2026-02-04 — v2.2 milestone complete
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-04 — Milestone v2.3 started
 
-Progress: [##########] 100% (v2.2)
+Progress: [░░░░░░░░░░] 0% (v2.3)
 
 ## Milestone History
 
@@ -34,7 +34,7 @@ Progress: [##########] 100% (v2.2)
 
 ### Decisions
 
-Cleared at milestone completion. See .planning/milestones/v2.2-ROADMAP.md for v2.2 decisions.
+None yet for v2.3.
 
 ### Pending Todos
 
@@ -42,14 +42,15 @@ None.
 
 ### Blockers/Concerns
 
-None.
+- All matches from 2026-02-03 have no generated content — needs investigation
+- HTML tags visible in older match reports — may be regression or uncovered path
 
 ## Session Continuity
 
 Last session: 2026-02-04
-Stopped at: v2.2 milestone complete
+Stopped at: Defining v2.3 requirements
 Resume file: None
-Resume with: /gsd:new-milestone
+Resume with: Continue /gsd:new-milestone flow
 
 Config:
 {
