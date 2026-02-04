@@ -7,7 +7,7 @@ import { buildMatchMetadata } from '@/lib/seo/metadata';
 import { mapMatchToSeoData } from '@/lib/seo/types';
 import { generateMatchFAQs } from '@/components/match/MatchFAQSchema';
 import { getMatchFAQContent, getMatchContentTimestamp } from '@/lib/content/match-content';
-import { BreadcrumbsWithSchema } from '@/components/navigation/breadcrumbs';
+import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
 import { buildMatchBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 import { MatchDataProvider } from '@/components/match/match-data-provider';
 import { MatchLayout } from '@/components/match/match-layout';
@@ -154,7 +154,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
         faqs={faqs}
         contentGeneratedAt={contentTimestamp || undefined}
       />
-      <BreadcrumbsWithSchema items={breadcrumbs} />
+      <Breadcrumbs items={breadcrumbs} />
 
       <MatchDataProvider
         match={matchData}
