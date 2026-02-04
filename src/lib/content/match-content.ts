@@ -18,6 +18,7 @@ import { CONTENT_CONFIG, estimateContentCost } from './config';
 import { eq, desc } from 'drizzle-orm';
 import { format } from 'date-fns';
 import { RetryableContentError, FatalContentError } from '@/lib/errors/content-errors';
+import { sanitizeContent, validateNoHtml } from './sanitization';
 
 export interface FAQItem {
   question: string;
@@ -153,11 +154,12 @@ Write flowing prose without headers.`;
        1000
      );
 
-     // Content is already a string
-     const content = result.content;
+     // Content is already a string - sanitize before validation
+     const content = sanitizeContent(result.content);
 
     // Validate content before saving
     validateGeneratedContent(content, 'pre-match', 100);
+    validateNoHtml(content);
 
     // Save to database
     const db2 = getDb();
@@ -348,11 +350,12 @@ Write flowing prose without headers.`;
        1000
      );
 
-     // Content is already a string
-     const content = result.content;
+     // Content is already a string - sanitize before validation
+     const content = sanitizeContent(result.content);
 
     // Validate content before saving
     validateGeneratedContent(content, 'betting', 100);
+    validateNoHtml(content);
 
     // Save to database (upsert to handle cases where matchContent record doesn't exist yet)
     const db2 = getDb();
@@ -555,11 +558,12 @@ Write flowing prose without headers.`;
        1000
      );
 
-     // Content is already a string
-     const content = result.content;
+     // Content is already a string - sanitize before validation
+     const content = sanitizeContent(result.content);
 
     // Validate content before saving
     validateGeneratedContent(content, 'post-match', 100);
+    validateNoHtml(content);
 
     // Save to database (upsert to handle cases where matchContent record doesn't exist yet)
     const db2 = getDb();
@@ -804,10 +808,13 @@ Example format:
       throw new Error('FAQ generation returned invalid format - will retry');
     }
 
-    // Ensure exactly 5 FAQs
-    const faqs = result.content.slice(0, 5);
+    // Ensure exactly 5 FAQs and sanitize each field
+    const faqs = result.content.slice(0, 5).map((faq: FAQItem) => ({
+      question: sanitizeContent(faq.question),
+      answer: sanitizeContent(faq.answer),
+    }));
 
-    // Validate each FAQ answer meets minimum length
+    // Validate each FAQ field meets minimum length and has no HTML
     for (const faq of faqs) {
       if (!faq.question || faq.question.length < 10) {
         throw new Error('FAQ question too short or missing');
@@ -815,6 +822,8 @@ Example format:
       if (!faq.answer || faq.answer.length < 20) {
         throw new Error('FAQ answer too short or missing');
       }
+      validateNoHtml(faq.question);
+      validateNoHtml(faq.answer);
     }
 
     // Save to database
