@@ -949,3 +949,26 @@ export async function getMatchFAQContent(matchId: string): Promise<FAQItem[] | n
     return null;
   }
 }
+
+/**
+ * Get content generation timestamp for a match
+ * Returns the updatedAt timestamp from matchContent table for Article schema dateModified
+ */
+export async function getMatchContentTimestamp(matchId: string): Promise<string | null> {
+  try {
+    const db = getDb();
+    const result = await db
+      .select({ updatedAt: matchContent.updatedAt })
+      .from(matchContent)
+      .where(eq(matchContent.matchId, matchId))
+      .limit(1);
+
+    if (result.length === 0 || !result[0].updatedAt) {
+      return null;
+    }
+
+    return result[0].updatedAt;
+  } catch {
+    return null;
+  }
+}

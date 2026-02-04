@@ -6,7 +6,7 @@ import { MatchPageSchema } from '@/components/MatchPageSchema';
 import { buildMatchMetadata } from '@/lib/seo/metadata';
 import { mapMatchToSeoData } from '@/lib/seo/types';
 import { generateMatchFAQs } from '@/components/match/MatchFAQSchema';
-import { getMatchFAQContent } from '@/lib/content/match-content';
+import { getMatchFAQContent, getMatchContentTimestamp } from '@/lib/content/match-content';
 import { BreadcrumbsWithSchema } from '@/components/navigation/breadcrumbs';
 import { buildMatchBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 import { MatchDataProvider } from '@/components/match/match-data-provider';
@@ -97,7 +97,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const [
     analysisData,
     predictions,
-    aiFaqs
+    aiFaqs,
+    contentTimestamp
   ] = await Promise.all([
     getMatchWithAnalysis(matchData.id).catch(err => {
       console.error('Failed to fetch analysis:', err);
@@ -109,6 +110,10 @@ export default async function MatchPage({ params }: MatchPageProps) {
     }),
     getMatchFAQContent(matchData.id).catch(err => {
       console.error('Failed to fetch FAQ content:', err);
+      return null;
+    }),
+    getMatchContentTimestamp(matchData.id).catch(err => {
+      console.error('Failed to fetch content timestamp:', err);
       return null;
     })
   ]);
@@ -147,6 +152,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
         competition={{ name: competition.name, slug: competitionSlug }}
         url={`https://kroam.xyz/leagues/${competitionSlug}/${matchData.slug}`}
         faqs={faqs}
+        contentGeneratedAt={contentTimestamp || undefined}
       />
       <BreadcrumbsWithSchema items={breadcrumbs} />
 
