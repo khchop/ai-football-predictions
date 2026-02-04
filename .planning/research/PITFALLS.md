@@ -1,418 +1,503 @@
-# Pitfalls Research: v2.2 Match Page Rewrite
+# Pitfalls Research: LLM Content Generation Pipeline
 
-**Domain:** Football prediction platform - match detail pages
-**Researched:** 2026-02-03
-**Confidence:** HIGH (based on project history + verified web research)
+**Domain:** LLM-powered content generation with BullMQ job queues
+**Researched:** 2026-02-04
+**Confidence:** HIGH (codebase analysis + verified web research)
+**Focus:** Diagnosing systemic content failures and preventing recurrence
 
 ## Executive Summary
 
-This is the 3rd attempt at fixing match pages. Previous failures stemmed from:
-1. **Dual-render patterns** (preview + full section = duplicate content)
-2. **Tabs on mobile** (explicitly unwanted by user)
-3. **Section ordering inconsistency** (different layouts per device)
+The current content generation system shows two critical symptoms:
+1. **All matches missing content** - systemic failure pattern
+2. **HTML tags visible in older content** - sanitization gap
 
-This research identifies pitfalls specific to match page rewrites with SEO/GEO optimization focus.
+This research identifies failure modes specific to:
+- BullMQ scheduled job execution
+- Together AI LLM API calls
+- Content parsing and sanitization
+- Silent failure patterns
 
 ---
 
-## Content Duplication Pitfalls
+## Critical Pitfalls (Cause Rewrites)
 
-### Pitfall 1: Dual-Render Pattern (Preview + Full)
+### Pitfall 1: Job Schedule Drift and Missed Triggers
 
-**What goes wrong:** Component renders content twice - once as a truncated preview, once as full content below. User sees identical text repeated on the page.
+**What goes wrong:** Scheduled jobs (cron or delay-based) silently stop executing. Content generation halts across all matches with no errors logged.
 
-**Historical evidence:** Quick Task 008 fixed exactly this. `MatchContent.tsx` previously rendered `NarrativePreview` AND full section for pre-match and post-match content.
+**Root causes:**
+- Redis connection drops without proper reconnection handling
+- Worker process crashes without supervision (no PM2/systemd restart)
+- Cron expressions evaluated in wrong timezone
+- `repeatJobId` collision causing jobs to be deduplicated incorrectly
+- BullMQ scheduler not started (Queue exists but no Worker attached)
 
-**Root cause:** Developer intention to show "teaser then full" but forgetting that both are visible simultaneously on single-page layouts.
-
-**Warning signs:**
-- Component imports both preview and full-render utilities
-- Multiple render calls for same data source
-- Variable names like `showPreview` AND `showFull` for same content type
-
-**Prevention:**
+**Current codebase evidence:**
 ```typescript
-// BAD: renders content twice
-{showPreMatch && <NarrativePreview text={content.preMatchContent} />}
-{showPreMatch && <FullSection content={content.preMatchContent} />}
-
-// GOOD: renders content once
-{showPreMatch && <Section content={content.preMatchContent} />}
-```
-
-**Phase impact:** Architecture phase - establish single-render principle before building components.
-
----
-
-### Pitfall 2: Hydration Mismatch Duplication
-
-**What goes wrong:** Server renders one version of content, client hydration renders a different version, causing flicker or duplicate DOM nodes.
-
-**Root cause:**
-- Using `Date()` or `Math.random()` in render
-- Conditional rendering based on `typeof window`
-- Different data between server and client fetch
-
-**Warning signs:**
-- React console warnings about hydration mismatch
-- Content flickers on page load
-- Different content visible before/after JavaScript loads
-
-**Prevention:**
-- Use Server Components for all static match data
-- Defer client-only logic to `useEffect`
-- Ensure identical data fetching between server and client
-
-**Phase impact:** Component architecture phase - clearly separate server vs client boundaries.
-
----
-
-### Pitfall 3: Multiple Components Fetching Same Data
-
-**What goes wrong:** Header component fetches match data. Score component fetches match data. Events component fetches match data. Same content could render from multiple sources.
-
-**Historical evidence:** Old match page had `MatchHeader`, `MatchOddsPanel`, `PredictionsSection` all potentially displaying score/status.
-
-**Prevention:**
-- Single data fetch at page level, pass as props
-- Use React `cache()` for request deduplication if components must fetch independently
-- Audit: search for all places same field is rendered
-
-**Phase impact:** Data architecture phase - establish single source of truth pattern.
-
----
-
-### Pitfall 4: SEO Duplicate Content from URL Variations
-
-**What goes wrong:** Same match accessible via:
-- `/matches/[id]`
-- `/leagues/[slug]/[match]`
-- Query params: `?tab=predictions`
-
-Google indexes all as separate pages with duplicate content.
-
-**Historical evidence:** Project has both `/matches/[id]` and `/leagues/[slug]/[match]` routes. The old page redirects to new, but redirect must be permanent (308, not 307).
-
-**Warning signs:**
-- Multiple route patterns leading to same content
-- 307 (temporary) redirects instead of 308 (permanent)
-- Missing or incorrect canonical tags
-
-**Prevention:**
-- Permanent redirect (308) from legacy URLs
-- Explicit canonical tag on every page pointing to preferred URL
-- Avoid query params that don't change canonical content
-
-**Phase impact:** SEO phase - implement canonical tags and verify redirects.
-
----
-
-## SEO/GEO Pitfalls
-
-### Pitfall 5: Answer-First Content Buried Below Fold
-
-**What goes wrong:** Key information (final score, prediction) hidden below lengthy headers, navigation, or promotional content. AI search engines can't find the "answer" to extract.
-
-**GEO context:** Opening paragraphs that answer the query upfront get cited 67% more by AI engines. Burying answers reduces citations.
-
-**Warning signs:**
-- Large hero sections before substantive content
-- "Skip to content" links needed
-- First meaningful content below 500px viewport height
-
-**Prevention:**
-- Score/prediction visible in first 300px
-- Lead with answer, follow with context
-- Structure: Answer -> Evidence -> Details
-
-**Phase impact:** Layout phase - define above-fold content requirements.
-
----
-
-### Pitfall 6: FAQ Schema Without Visible Content
-
-**What goes wrong:** FAQ schema markup exists in JSON-LD, but actual FAQ content not visible on page. Google may penalize as structured data spam.
-
-**Current context:** As of 2023 Google update (still valid 2026), FAQ rich results limited to authoritative sites. But schema still helps AI engines understand Q&A structure.
-
-**Warning signs:**
-- `FAQPage` schema in head but no FAQ section in body
-- FAQ questions don't match user-visible content
-- Auto-generated FAQs with generic questions
-
-**Prevention:**
-- Every FAQ schema question MUST be visible on page
-- Use natural language, not robotic phrasing
-- Validate with Google Rich Results Test
-
-**Phase impact:** FAQ generation phase - ensure schema/content parity.
-
----
-
-### Pitfall 7: Auto-Generated FAQ Content Quality
-
-**What goes wrong:** FAQ auto-generation produces:
-- Generic questions not specific to this match
-- Answers that repeat information already on page
-- Questions users don't actually ask
-
-**Example of bad FAQ:**
-- "What time is the match?" (already shown in header)
-- "Who is playing?" (redundant with title)
-
-**Example of good FAQ:**
-- "What is the AI consensus prediction for [Team A] vs [Team B]?"
-- "Which AI model has the best record for [Competition] matches?"
-
-**Prevention:**
-- Generate match-specific questions using team names, competition
-- Answer questions not directly covered elsewhere on page
-- Limit to 3-5 high-value questions
-
-**Phase impact:** Content generation phase - define FAQ quality criteria.
-
----
-
-### Pitfall 8: Missing State-Specific SEO
-
-**What goes wrong:** Same meta title/description for upcoming, live, and finished matches. Misses opportunity for state-appropriate messaging.
-
-**Example:**
-- Upcoming: "AI Predictions for Arsenal vs Chelsea - Feb 15, 2026"
-- Live: "Arsenal vs Chelsea LIVE - Current Score 1-0"
-- Finished: "Arsenal 2-1 Chelsea - Match Result & AI Analysis"
-
-**Warning signs:**
-- Static meta templates that ignore match status
-- No dynamic OG images based on state
-- Title doesn't reflect whether match is live/finished
-
-**Prevention:**
-- State-aware metadata generation (already exists in `buildMatchMetadata`)
-- Verify all 3 states have distinct, appropriate metadata
-- Test OG images for each state
-
-**Phase impact:** SEO phase - audit metadata per state.
-
----
-
-## Component Architecture Pitfalls
-
-### Pitfall 9: Implicit State Dependencies
-
-**What goes wrong:** Component assumes match status but doesn't receive it as prop. Uses internal logic that diverges from page's understanding of status.
-
-**Example:**
-```typescript
-// BAD: Component determines status independently
-function ScoreDisplay({ match }) {
-  const isFinished = match.homeScore !== null; // May differ from page's logic
+// content.worker.ts line 95-100 - limiter configuration
+limiter: {
+  max: 30, // Max 30 requests per minute
+  duration: 60000,
 }
+```
+If worker dies, this limiter state is lost and no jobs process.
 
-// GOOD: Status passed explicitly
-function ScoreDisplay({ match, isFinished }) {
-  // Uses page's authoritative status
+**Warning signs:**
+- Queue dashboard shows jobs in "waiting" state indefinitely
+- `getJobCounts()` returns high "waiting" but zero "active"
+- No worker logs for extended periods
+- Redis KEYS show `bull:content-queue:*` entries but no processing
+
+**Detection strategy:**
+```typescript
+// Heartbeat check - add to monitoring
+const counts = await contentQueue.getJobCounts();
+if (counts.waiting > 10 && counts.active === 0) {
+  // Worker likely dead - alert immediately
+  sendAlert('Content worker appears stalled');
 }
 ```
 
-**Warning signs:**
-- Multiple components computing `isFinished` independently
-- Status derived from different fields in different places
-- Conditional rendering based on data presence vs explicit status
-
 **Prevention:**
-- Compute status ONCE at page level
-- Pass status as explicit prop to all components
-- Components trust prop, don't re-derive
+1. Use process supervisor (PM2, systemd) with auto-restart
+2. Add worker heartbeat monitoring to health checks
+3. Log worker startup/shutdown explicitly
+4. Verify timezone configuration for cron schedules
 
-**Phase impact:** Component architecture phase - establish status prop pattern.
+**Recovery:**
+1. Check Redis connection: `redis-cli PING`
+2. Verify worker process running: `ps aux | grep worker`
+3. Restart worker with explicit logging
+4. Run catch-up scan for missed content
 
 ---
 
-### Pitfall 10: State Machine Gaps
+### Pitfall 2: LLM API Silent Failures (200 OK, Empty Content)
 
-**What goes wrong:** Three states (upcoming, live, finished) but code assumes binary (upcoming vs finished). Live state gets unexpected behavior.
+**What goes wrong:** Together AI returns HTTP 200 but response body is empty, malformed, or contains only whitespace. Code proceeds without content, saves null/empty to database.
 
-**Historical context:** Match lifecycle: `scheduled` -> `live` -> `finished` (also `postponed`, `cancelled`).
+**Root causes:**
+- Model overloaded, returns empty `choices` array
+- Response truncated due to token limit without `finish_reason: "length"`
+- API returns `null` content field silently
+- Network proxy/gateway strips response body
+
+**Current codebase evidence:**
+```typescript
+// together-client.ts line 168-169
+if (!data.choices || data.choices.length === 0) {
+  throw new Error('No response from Together AI API');
+}
+```
+Good check, but doesn't catch `choices[0].message.content === ''`.
 
 **Warning signs:**
-- Binary checks: `isFinished ? X : Y` (what about live?)
-- Missing case in switch statement
-- Different components handling live differently
+- `matchContent` records exist but `preMatchContent`/`bettingContent`/`postMatchContent` is empty string
+- Database has `generatedAt` timestamps but null content fields
+- Logs show "Content generated" but no tokens counted
+
+**Detection strategy:**
+```typescript
+// Add explicit empty check after extraction
+const content = data.choices[0].message.content;
+if (!content || content.trim().length < 50) {
+  throw new Error(`LLM returned insufficient content: ${content?.length || 0} chars`);
+}
+```
 
 **Prevention:**
-- Exhaustive state handling in TypeScript:
-```typescript
-type MatchStatus = 'scheduled' | 'live' | 'finished' | 'postponed' | 'cancelled';
+1. Validate content length BEFORE saving to database
+2. Check `finish_reason` is `"stop"` not `"length"` (truncation)
+3. Add minimum word/character thresholds per content type
+4. Log content length on successful generation
 
-function getLayout(status: MatchStatus) {
-  switch (status) {
-    case 'scheduled': return UpcomingLayout;
-    case 'live': return LiveLayout;
-    case 'finished': return FinishedLayout;
-    case 'postponed':
-    case 'cancelled':
-      return CancelledLayout;
+**Recovery:**
+1. Query for empty content: `SELECT * FROM match_content WHERE preMatchContent = '' OR LENGTH(preMatchContent) < 50`
+2. Add to regeneration backfill queue
+3. Investigate API response logs for pattern
+
+---
+
+### Pitfall 3: JSON Parse Failures Causing Content Loss
+
+**What goes wrong:** LLM returns valid prose wrapped in markdown or with extraneous text. JSON.parse fails, error is caught and logged, but content is lost forever.
+
+**Root causes:**
+- LLM adds "Here's the JSON:" preamble
+- LLM wraps JSON in markdown triple backticks
+- LLM adds trailing explanation after JSON
+- Unescaped newlines/quotes within JSON strings
+- Truncated response missing closing brackets
+
+**Current codebase evidence:**
+```typescript
+// together-client.ts lines 186-227 - extensive JSON cleanup
+// Good practices already in place:
+// - Markdown code block extraction
+// - Newline escaping within strings
+// - Trailing comma removal
+```
+However, `generateTextWithTogetherAI` bypasses this for prose content (correct decision).
+
+**Warning signs:**
+- Logs show "Failed to parse response as JSON"
+- `generateWithTogetherAI` (JSON) fails more than `generateTextWithTogetherAI` (prose)
+- FAQ generation has higher failure rate than narrative content
+
+**Detection strategy:**
+```typescript
+// Log raw content before parse attempt for debugging
+loggers.togetherClient.debug({
+  rawContent: content.substring(0, 200),
+  contentLength: content.length,
+}, 'Attempting JSON parse');
+```
+
+**Prevention:**
+1. Use `generateTextWithTogetherAI` for all prose content (already done for match narratives)
+2. Only use `generateWithTogetherAI` when structured output is required (FAQs)
+3. Implement retry with corrective prompting: include parse error in retry prompt
+4. Consider `json_repair` library as fallback before hard failure
+
+**Recovery:**
+1. Store raw LLM output in separate field for debugging
+2. Manual repair of malformed JSON for critical content
+3. Regenerate with explicit JSON-only prompt
+
+---
+
+### Pitfall 4: Rate Limit Cascade Failure
+
+**What goes wrong:** Single rate limit (429) error triggers exponential backoff. Backoff delay exceeds job timeout. Job fails. All subsequent queued jobs inherit same rate limit state.
+
+**Root causes:**
+- Together AI dynamic rate limits (as of Jan 2026) vary by model and usage
+- Batch of content jobs overwhelms rate limit
+- Retry backoff multiplier too aggressive
+- No circuit breaker to pause queue-wide
+
+**Current codebase evidence:**
+```typescript
+// retry-config.ts line 147-152
+TOGETHER_CONTENT_RETRY: {
+  maxRetries: 3,
+  baseDelayMs: 2000,
+  maxDelayMs: 30000,
+  retryableStatusCodes: [408, 429, 500, 502, 503, 504],
+}
+```
+3 retries with 30s max delay = 90s total. Job timeout is 60s (line 154). Jobs can timeout during retry.
+
+**Warning signs:**
+- Multiple 429 errors in logs within short timeframe
+- Jobs failing with "timeout" after 429 errors
+- Content queue backlog growing during rate limit period
+
+**Detection strategy:**
+```typescript
+// Track rate limit hits per minute
+let rateLimitHits = 0;
+if (errorType === ErrorType.RATE_LIMIT) {
+  rateLimitHits++;
+  if (rateLimitHits > 5) {
+    // Circuit breaker: pause content queue
+    await contentQueue.pause();
+    setTimeout(() => contentQueue.resume(), 60000);
   }
 }
 ```
 
-**Phase impact:** Type definition phase - define exhaustive status handling.
+**Prevention:**
+1. Implement queue-level circuit breaker for rate limits
+2. Increase job timeout to accommodate retry delays
+3. Use BullMQ's built-in rate limiter more conservatively
+4. Batch content generation in off-peak hours
+
+**Recovery:**
+1. Pause content queue immediately on repeated 429s
+2. Wait 60 seconds (full rate limit window)
+3. Resume with lower throughput
+4. Run backfill during low-usage period
 
 ---
 
-### Pitfall 11: Props Drilling Through Deep Hierarchies
+## Moderate Pitfalls (Cause Delays/Tech Debt)
 
-**What goes wrong:** Match data passed through 5+ levels of components. Changes require updating many intermediate components.
+### Pitfall 5: Worker Lock Expiry (Stalled Jobs)
+
+**What goes wrong:** Content generation takes longer than lock duration. BullMQ marks job as stalled. Another worker picks it up. Duplicate content or race conditions occur.
+
+**Root causes:**
+- Lock duration default 30s, LLM call takes 60s+
+- Worker CPU spike prevents lock renewal
+- Redis connection briefly lost during processing
+
+**Current codebase evidence:**
+```typescript
+// index.ts line 196-207 - Lock durations defined
+WORKER_LOCK_DURATIONS = {
+  [QUEUE_NAMES.PREDICTIONS]: 10 * 60 * 1000,
+  // ... but CONTENT queue uses default 30s
+  default: 30 * 1000,
+}
+```
+Content queue using default 30s lock, but content generation can take 60s+.
 
 **Warning signs:**
-- Components receiving props they don't use, just pass through
-- Same prop name appearing in many component interfaces
-- Difficulty adding new data because of intermediate components
+- "Missing lock for job X" errors in logs
+- Same content generated twice for same match
+- Jobs marked as "stalled" then completed
 
 **Prevention:**
-- Flatten component hierarchy for match pages
-- Use composition over deep nesting
-- Consider React Context for truly global match data (but prefer props for most cases)
+1. Add explicit lock duration for content queue (at least 120s)
+2. Use `extendLock()` in long-running jobs
+3. Monitor stall rate as metric
 
-**Phase impact:** Component architecture phase - design flat hierarchy.
+**Recovery:**
+1. Check for duplicate content entries per match
+2. Deduplicate in database
+3. Adjust lock duration configuration
 
 ---
 
-## Mobile UX Pitfalls
+### Pitfall 6: HTML in LLM Output (Sanitization Gap)
 
-### Pitfall 12: Tabs on Mobile (User Explicitly Rejected)
+**What goes wrong:** LLM generates content with HTML tags (bold, lists, headers). Content stored raw in database. Frontend displays visible tags or XSS vulnerability.
 
-**What goes wrong:** Developer implements tabs "for mobile UX" but user has explicitly stated NO TABS.
+**Root causes:**
+- Prompt doesn't explicitly forbid HTML
+- LLM interprets "flowing prose" as including markup
+- Markdown-to-HTML conversion somewhere in pipeline
+- Historical content generated before sanitization implemented
 
-**Historical evidence:** v1.3 implemented `MatchTabsMobile` with swipe gestures. v2.1 removed them per user requirement.
+**Current codebase evidence:**
+```typescript
+// strip-html.ts - sanitization exists but must be called
+export function stripHtml(html: string | null | undefined): string {
+  const clean = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [],
+    KEEP_CONTENT: true,
+  });
+  return clean.replace(/\s+/g, ' ').trim();
+}
 
-**Why tabs fail here:**
-- Horizontal scroll + vertical scroll = confusing
-- Hidden content not discoverable
-- User prefers single scrollable page
+// MatchContent.tsx - stripHtml called on render
+{stripHtml(content.preMatchContent)}
+```
+Sanitization at render time, but older content in DB still has tags.
+
+**Historical context in project:**
+- "HTML tags visible in older content" is documented symptom
+- Suggests content was stored with HTML before sanitization was added to render
 
 **Warning signs:**
-- Component names containing "Tab" or "TabMobile"
-- `hidden md:block` / `md:hidden` responsive classes
-- Swipeable containers
+- `<p>`, `<strong>`, `<ul>` visible in rendered content
+- Content contains markdown like `**bold**` or `### Header`
+- Database content length much longer than rendered text
+
+**Detection strategy:**
+```sql
+-- Find content with HTML tags
+SELECT id, matchId
+FROM match_content
+WHERE preMatchContent LIKE '%<%>%'
+   OR bettingContent LIKE '%<%>%'
+   OR postMatchContent LIKE '%<%>%';
+```
 
 **Prevention:**
-- NO TABS. Single scrollable layout.
-- Same sections visible on all screen sizes
-- Use collapsible sections only if content is very long (500+ words)
+1. Add to prompt: "Write plain text only. Do not use HTML tags, markdown formatting, or special characters."
+2. Sanitize BEFORE storing to database, not just on render
+3. Validate content doesn't contain `<` or `>` characters before save
 
-**Phase impact:** ALL phases - reject any tab-based proposals.
+**Recovery:**
+1. Query for affected content records
+2. Run batch sanitization on existing data
+3. Update prompts to prevent future occurrences
 
 ---
 
-### Pitfall 13: Sticky Elements Interfering with Scroll
+### Pitfall 7: Timezone Confusion in Scheduled Jobs
 
-**What goes wrong:** Sticky header/footer consumes viewport space. User can't see full content. Scroll feels constrained.
+**What goes wrong:** Match kickoff is 15:00 local time. Job scheduled for "6 hours before" calculates wrong time due to UTC vs local timezone mismatch.
 
-**Historical evidence:** v2.1 removed sticky header per user feedback.
+**Root causes:**
+- `kickoffTime` stored in ISO/UTC
+- Delay calculated using local system time
+- Daylight saving time transitions
+- Server in different timezone than expected
+
+**Current codebase evidence:**
+```typescript
+// scheduler.ts line 109-110
+const kickoff = new Date(match.kickoffTime).getTime();
+const now = Date.now();
+// delay calculation is timezone-agnostic (milliseconds)
+```
+This is correct approach (using timestamps), but any code using formatted dates could have issues.
 
 **Warning signs:**
-- `position: sticky` or `position: fixed` on headers
-- Components using `useIntersectionObserver` for sticky behavior
-- CSS classes like `sticky`, `fixed`, `top-0`
+- Jobs run 1 hour early/late after DST changes
+- Logs show job scheduled for unexpected times
+- Content generated at wrong time relative to kickoff
 
 **Prevention:**
-- Header scrolls naturally with page
-- No fixed elements except maybe bottom nav
-- Test: can user see full content section without scrolling past fixed elements?
+1. Always use Unix timestamps for scheduling calculations
+2. Never format dates for scheduling purposes
+3. Log both scheduled time and current time in UTC
+4. Test scheduling across DST boundary
 
-**Phase impact:** Layout phase - audit for sticky elements.
+**Recovery:**
+1. Audit all date calculations for timezone handling
+2. Add explicit UTC logging to scheduler
+3. Reschedule affected jobs
 
 ---
 
-### Pitfall 14: Touch Target Size
+### Pitfall 8: Memory Leak in Long-Running Worker
 
-**What goes wrong:** Buttons, links too small for finger taps. Accessibility failure, frustrating UX.
+**What goes wrong:** Content worker runs for days/weeks. Memory usage grows. Eventually OOM killed. All in-progress jobs become stalled.
 
-**Standard:** 44x44px minimum touch target (Apple HIG, WCAG).
+**Root causes:**
+- Closure retaining references to large objects
+- Accumulating event listeners
+- Growing internal caches
+- Memory not released between jobs
 
 **Warning signs:**
-- Links with only icon, no padding
-- Inline text links without adequate tap area
-- Buttons with height < 44px
+- Worker memory usage grows over time
+- Periodic OOM kills in container logs
+- Performance degrades over worker uptime
 
 **Prevention:**
-- `min-h-11 min-w-11` (44px) on all interactive elements
-- Adequate padding around inline links
-- Test on actual mobile device, not just DevTools
+1. Implement worker recycling (restart after N jobs or N hours)
+2. Use memory profiling in development
+3. Clear large objects after job completion
+4. Set memory limits with graceful shutdown
 
-**Phase impact:** Component styling phase - enforce touch targets.
+**Recovery:**
+1. Restart worker process
+2. Investigate memory profile
+3. Add recycling configuration
 
 ---
 
-## Rewrite-Specific Pitfalls
+## Minor Pitfalls (Cause Annoyance)
 
-### Pitfall 15: Losing Existing Functionality in Rewrite
+### Pitfall 9: Inconsistent Content Quality
 
-**What goes wrong:** Rewrite focuses on "new" design, forgets to port working features from old implementation.
+**What goes wrong:** Some content is excellent, some is generic or repetitive. No consistent quality baseline.
 
-**Historical evidence:** Previous rewrites lost:
-- Entity linking in narrative content
-- Match events display for finished matches
-- OG image generation
-
-**Prevention:**
-- Before rewriting, create feature inventory from existing code
-- Checklist: each existing feature must be in new code OR explicitly deprecated
-- Test coverage for critical features before rewriting
-
-**Phase impact:** Planning phase - create feature inventory before starting.
-
----
-
-### Pitfall 16: Big Bang Rewrite
-
-**What goes wrong:** Attempt to rewrite entire page in one PR. Review is overwhelming, bugs hide, rollback is all-or-nothing.
-
-**Best practice:** "Rewrites succeed when they are incremental, not heroic." Even in a rewrite, ship in phases.
+**Root causes:**
+- Temperature too high (0.7) causes variability
+- Prompt doesn't specify tone/style strictly
+- Different data availability per match affects output
+- Model version changes affect quality
 
 **Warning signs:**
-- PR touching 20+ files
-- Rewrite branch open for weeks
-- "Just one more thing" syndrome
+- User complaints about content quality variance
+- Some content reads like template fill-in
+- Lack of match-specific insights
 
 **Prevention:**
-- Ship new layout structure first (empty sections)
-- Add sections one at a time
-- Each PR is independently reviewable and deployable
-
-**Phase impact:** ALL phases - structure as incremental PRs.
+1. Add explicit quality criteria to prompts
+2. Consider lower temperature (0.5) for consistency
+3. Add post-generation quality checks
+4. A/B test prompt variations
 
 ---
 
-### Pitfall 17: Not Preserving Encapsulated Knowledge
+### Pitfall 10: Cost Tracking Drift
 
-**What goes wrong:** Old code had edge case handling developed over months. Rewrite removes it because developer didn't understand why it existed.
+**What goes wrong:** Token counting and cost estimation become inaccurate. Budget surprises.
 
-**Example edge cases in this project:**
-- `stripHtml()` for database content with HTML tags
-- Redirect from `/matches/[id]` to `/leagues/[slug]/[match]`
-- Empty section hiding (return null when no data)
+**Root causes:**
+- Pricing changes not reflected in config
+- Token counting differs from billing
+- Retry attempts not counted
+
+**Current codebase evidence:**
+```typescript
+// config.ts line 23-26
+pricing: {
+  inputCostPerMillion: 0.27,  // USD
+  outputCostPerMillion: 0.85, // USD
+}
+```
+These prices need verification against current Together AI pricing.
 
 **Prevention:**
-- Read old code thoroughly before replacing
-- If unclear why something exists, ask before removing
-- Comment non-obvious logic in new code
-
-**Phase impact:** Architecture phase - document edge cases to preserve.
+1. Monthly audit of pricing against provider docs
+2. Compare estimated vs actual billing
+3. Include retry tokens in cost tracking
 
 ---
 
-## Confidence Assessment
+### Pitfall 11: Log Noise Obscuring Real Errors
 
-| Pitfall Category | Confidence | Basis |
-|-----------------|------------|-------|
-| Content Duplication | HIGH | Project history (quick-008, phase-25) confirms these exact issues occurred |
-| SEO/GEO | MEDIUM | Web research verified; project-specific application extrapolated |
-| Component Architecture | HIGH | React/Next.js established patterns; project history shows state issues |
-| Mobile UX | HIGH | User requirements explicitly documented; previous failures documented |
-| Rewrite-Specific | MEDIUM | Industry research verified; project-specific application extrapolated |
+**What goes wrong:** Every content generation logs extensively. Real errors buried in noise. Alert fatigue.
+
+**Warning signs:**
+- Hundreds of log lines per minute
+- "Error" level used for expected conditions
+- Can't find relevant logs during incident
+
+**Prevention:**
+1. Use debug level for routine operations
+2. Reserve error level for actionable issues
+3. Add correlation IDs to track job lifecycle
+4. Implement log sampling for high-volume operations
+
+---
+
+## Silent Failure Patterns
+
+These are the most dangerous failures - no error thrown, no content generated.
+
+### Pattern A: Non-Blocking Function Returns False
+
+**Current implementation:**
+```typescript
+// match-content.ts line 142-152
+} catch (error) {
+  log.error({ matchId, err: error.message }, 'Pre-match content generation failed');
+  return false; // Non-blocking: don't throw
+}
+```
+
+**The risk:** Caller logs warning and continues. No retry. No alert. Content missing.
+
+**Mitigation:**
+1. Track `false` returns as metric, not just errors
+2. Alert if false-return rate exceeds threshold
+3. Ensure backfill scan catches these misses
+
+### Pattern B: Empty Query Results Skip Processing
+
+**Current implementation:**
+```typescript
+// content.worker.ts line 157-160
+if (matchesNeedingPreviews.length === 0) {
+  log.info('No matches need previews at this time');
+  return { scanned: 0, queued: 0, failed: 0 };
+}
+```
+
+**The risk:** Query bug returns empty results. Worker reports "nothing to do." Content never generated.
+
+**Mitigation:**
+1. Log query parameters, not just result count
+2. Alert if zero results for extended period during active match days
+3. Sanity check: if matches exist in window, something should need content
+
+### Pattern C: Successful Job With No Database Update
+
+**The risk:** LLM call succeeds. Database write fails. Job completes successfully. Content lost.
+
+**Mitigation:**
+1. Verify database write after insert
+2. Read-after-write validation for critical content
+3. Alert on discrepancy between generation logs and database state
 
 ---
 
@@ -420,44 +505,100 @@ function getLayout(status: MatchStatus) {
 
 | Phase | Critical Pitfalls | Mitigation |
 |-------|------------------|------------|
-| Planning | #15 (losing features), #16 (big bang) | Feature inventory, incremental PRs |
-| Architecture | #1 (dual-render), #9 (implicit state), #10 (state gaps) | Single-render principle, explicit status prop |
-| Layout | #5 (answer buried), #12 (tabs), #13 (sticky) | Answer-first, single scroll, no sticky |
-| Components | #3 (multiple fetches), #11 (props drilling), #14 (touch targets) | Single fetch, flat hierarchy, 44px targets |
-| SEO | #4 (URL duplicates), #8 (state-specific meta) | Canonical tags, state-aware metadata |
-| FAQ | #6 (schema mismatch), #7 (quality) | Schema/content parity, match-specific questions |
-| Content | #2 (hydration mismatch) | Server Component boundaries |
+| Job Scheduling | #1 (drift), #7 (timezone) | Worker monitoring, UTC timestamps |
+| LLM Integration | #2 (silent empty), #3 (JSON parse), #4 (rate limit) | Content validation, retry strategy, circuit breaker |
+| Content Storage | #6 (HTML sanitization) | Sanitize before save, validate on write |
+| Worker Management | #5 (lock expiry), #8 (memory leak) | Lock duration config, worker recycling |
+| Monitoring | #11 (log noise), Silent Patterns | Structured logging, false-return tracking |
+
+---
+
+## Immediate Actions for Current Symptoms
+
+### For "All matches missing content":
+
+1. **Check worker status:**
+   ```bash
+   # Is worker running?
+   pm2 status
+   # Are jobs processing?
+   redis-cli LLEN bull:content-queue:waiting
+   ```
+
+2. **Check for errors in last 24h:**
+   ```bash
+   grep -i "error\|fail" /var/log/content-worker.log | tail -100
+   ```
+
+3. **Verify scan job is running:**
+   - Check if `scan_match_content` job exists in queue
+   - Verify cron schedule is active
+
+### For "HTML tags in older content":
+
+1. **Identify affected records:**
+   ```sql
+   SELECT COUNT(*) FROM match_content
+   WHERE preMatchContent LIKE '%<%>%';
+   ```
+
+2. **Run batch sanitization:**
+   ```typescript
+   // One-time migration script
+   const affected = await db.select().from(matchContent)
+     .where(sql`preMatchContent LIKE '%<%>%'`);
+
+   for (const row of affected) {
+     await db.update(matchContent)
+       .set({ preMatchContent: stripHtml(row.preMatchContent) })
+       .where(eq(matchContent.id, row.id));
+   }
+   ```
+
+---
+
+## Confidence Assessment
+
+| Pitfall Category | Confidence | Basis |
+|-----------------|------------|-------|
+| Job Scheduling | HIGH | BullMQ docs + codebase analysis |
+| LLM API Failures | HIGH | Together AI docs + common patterns |
+| JSON Parsing | HIGH | Codebase shows existing handling, known LLM issue |
+| Rate Limiting | HIGH | Together AI docs confirm dynamic limits |
+| Worker Management | MEDIUM | General BullMQ patterns, needs production validation |
+| Silent Failures | HIGH | Codebase analysis shows non-blocking patterns |
 
 ---
 
 ## Sources
 
-**Project History:**
-- `/Users/pieterbos/Documents/bettingsoccer/.planning/quick/008-fix-duplicate-match-content/008-SUMMARY.md`
-- `/Users/pieterbos/Documents/bettingsoccer/.planning/phases/24-match-page-cleanup/24-VERIFICATION.md`
-- `/Users/pieterbos/Documents/bettingsoccer/.planning/phases/25-content-rendering-fix/25-VERIFICATION.md`
+**BullMQ Documentation:**
+- [Going to Production](https://docs.bullmq.io/guide/going-to-production) - Production best practices
+- [Troubleshooting](https://docs.bullmq.io/guide/troubleshooting) - Common errors and solutions
+- [Retrying Failing Jobs](https://docs.bullmq.io/guide/retrying-failing-jobs) - Retry configuration
+- [Failing Fast When Redis is Down](https://docs.bullmq.io/patterns/failing-fast-when-redis-is-down) - Connection handling
 
-**SEO/GEO Research:**
-- [Next.js SEO: How to solve Duplicate Content](https://akoskm.com/nextjs-seo-how-to-solve-duplicate-google-chose-different-canonical-than-user/)
-- [SEO for AI Engines: A 2026 Guide to AI Search Optimization & GEO](https://blog.brandsatplayllc.com/blog/seo-for-ai-engines-a-2026-guide-to-ai-search-optimization-geo)
-- [The rise and fall of FAQ schema](https://searchengineland.com/faq-schema-rise-fall-seo-today-463993)
-- [Schema Markup in 2026](https://almcorp.com/blog/schema-markup-detailed-guide-2026-serp-visibility/)
+**BullMQ Production Issues:**
+- [How to Handle Worker Crashes in BullMQ](https://oneuptime.com/blog/post/2026-01-21-bullmq-worker-crashes-recovery/view)
+- [How to Handle Stalled Jobs in BullMQ](https://oneuptime.com/blog/post/2026-01-21-bullmq-stalled-jobs/view)
 
-**React/Component Research:**
-- [React Strict Mode - Official Docs](https://react.dev/reference/react/StrictMode)
-- [State Machines in React](https://mastery.games/post/state-machines-in-react/)
-- [Next.js Server and Client Components](https://nextjs.org/docs/app/getting-started/server-and-client-components)
+**Together AI:**
+- [Inference Rate Limits](https://docs.together.ai/docs/rate-limits) - Rate limit documentation
+- [Together AI Rate Limit Exceeded](https://drdroid.io/integration-diagnosis-knowledge/together-ai-rate-limit-exceeded) - Error handling
 
-**Mobile UX Research:**
-- [Tabs UX: Best Practices and When to Avoid](https://www.eleken.co/blog-posts/tabs-ux)
-- [Mobile Navigation UX Best Practices 2026](https://www.designstudiouiux.com/blog/mobile-navigation-ux/)
-- [Scrolling is Faster than Paging](https://www.freshconsulting.com/insights/blog/uiux-principle-33-scrolling-is-faster-than-paging/)
+**LLM Output Handling:**
+- [Handling LLM Output Parsing Errors](https://apxml.com/courses/prompt-engineering-llm-application-development/chapter-7-output-parsing-validation-reliability/handling-parsing-errors)
+- [Handle Invalid JSON Output for Small Size LLM](https://watchsound.medium.com/handle-invalid-json-output-for-small-size-llm-a2dc455993bd)
+- [Handling and Fixing Malformed JSON in LLM-Generated Responses](https://medium.com/@sd24chakraborty/handling-and-fixing-malformed-json-in-llm-generated-responses-f6907d1d1aa7)
+- [Why Your LLM Returns "Sure! Here's the JSON" and How to Fix It](https://dev.to/acartag7/why-your-llm-returns-sure-heres-the-json-and-how-to-fix-it-2b1g)
 
-**Rewrite vs Refactor:**
-- [Refactor vs Rewrite vs Replatform 2026](https://devoxsoftware.com/blog/refactor-vs-rewrite-vs-replatform-what-s-right-for-your-business-in-2026/)
-- [Why refactoring is almost always better than rewriting](https://www.ben-morris.com/why-refactoring-code-is-almost-always-better-than-rewriting-it/)
+**LLM Pipeline Patterns:**
+- [Common Errors in LLM Pipelines and How to Fix Them](https://www.newline.co/@zaoyang/common-errors-in-llm-pipelines-and-how-to-fix-them--be9a72b6)
+- [How to Debug LLM Failures: A Complete Guide](https://dev.to/kuldeep_paul/how-to-debug-llm-failures-a-complete-guide-3iil)
+- [AI System Design Patterns for 2026](https://zenvanriel.nl/ai-engineer-blog/ai-system-design-patterns-2026/)
 
 ---
 
-*Researched: 2026-02-03*
+*Researched: 2026-02-04*
 *Researcher: Claude (gsd-researcher)*
+*Focus: Content generation pipeline failure modes*

@@ -1,198 +1,200 @@
-# Features Research: v2.2 Match Page Rewrite
+# Features Research: SEO/GEO Optimized Content
 
-**Domain:** Football match detail pages for AI prediction platform
-**Researched:** 2026-02-03
-**Confidence:** HIGH (verified against multiple authoritative sources)
-**Focus:** SEO/GEO optimization, mobile-first single-scroll design, auto-generated FAQ
+**Domain:** Football predictions platform with AI-generated content
+**Researched:** 2026-02-04
+**Confidence:** HIGH (verified against multiple authoritative 2026 sources)
+**Focus:** SEO/GEO optimization for AI-generated match content, FAQs, and narratives
+
+---
+
+## Executive Summary
+
+The 2026 search landscape has fundamentally shifted. Gartner predicts a 25% drop in traditional search volumes due to AI chatbots. Google AI Overviews now reach 1.5 billion users monthly. Content must optimize for two audiences: traditional search crawlers AND generative AI engines (ChatGPT, Perplexity, Google AI Overviews).
+
+For a football predictions platform generating match previews, reports, and blogs, this means:
+1. **Structured for extraction** - AI engines need to pull clean answers
+2. **Authoritative for trust** - E-E-A-T signals determine if content gets cited
+3. **Fresh for relevance** - Sports content has high freshness requirements
+4. **Answer-first for AI** - Direct answers in 30-60 words before elaboration
+
+**Key 2026 statistic:** Sites with FAQ schema are 3.2x more likely to appear in AI Overviews. Clustered content drives 30% more organic traffic and 3.2x more AI citations.
 
 ---
 
 ## Table Stakes (Must Have)
 
-Essential features for SEO and GEO (Generative Engine Optimization). Missing any of these means losing visibility in both traditional search and AI-generated responses.
-
-### Structured Data / Schema Markup
-
-| Feature | Why Essential | Complexity | Notes |
-|---------|---------------|------------|-------|
-| **SportsEvent schema** | Google recognizes page as sports event; enables rich results | Low | Already have via MatchPageSchema; verify homeTeam/awayTeam/competitor properties |
-| **FAQPage schema** | 3.2x more likely to appear in AI Overviews; 28% more AI citations | Low | Already have via MatchFAQSchema; expand question coverage |
-| **BreadcrumbList schema** | Navigation context for search engines; already implemented | Low | Keep; validates page hierarchy |
-| **Article schema for narratives** | Pre/post-match content recognized as editorial content | Low | Add for narrative sections; improves E-E-A-T signals |
-| **JSON-LD @graph consolidation** | Single structured data block; avoids fragmentation | Medium | Consolidate all schemas into one @graph array |
+Features users and search engines expect. Missing = content underperforms or fails to rank.
 
 ### Content Structure for AI Citation
 
 | Feature | Why Essential | Complexity | Notes |
 |---------|---------------|------------|-------|
-| **Answer-first content** | AI engines extract first paragraph as citation; 4.1x more citations for original research | Low | Lead with TL;DR/summary; already have MatchTLDR |
-| **Clear H1 with match teams** | Crawlers and AI need unambiguous page topic | Low | Already have via MatchH1 |
-| **Semantic heading hierarchy** | H1 -> H2 -> H3 flow; AI systems parse structure | Low | Audit current page; ensure no skipped levels |
-| **Publication/update timestamps** | Freshness signal; content updated within 30 days gets 3.2x more citations | Low | Add dateModified to schema; show "Last updated" on page |
-| **Author/source attribution** | E-E-A-T signal; AI engines prioritize authoritative sources | Medium | "Analysis by AI models" attribution; methodology link |
+| **Answer-First Content Structure** | AI engines extract 30-60 word answer blocks. Without clear answers, content won't be cited. 4.1x more citations for original research. | Low | Lead every section with direct answer, then elaborate. "Who will win? [Team A] is favored to win because..." |
+| **Clear H1 with Match Context** | Crawlers and AI need unambiguous page topic | Low | "[Home] vs [Away] Prediction" or "Match Report: [Home] [Score] [Away]" |
+| **Semantic Heading Hierarchy** | Content with clear H2/H3 structure is 28-40% more likely to be cited by AI | Low | H1 -> H2 -> H3 flow; no skipped levels |
+| **Publication/Update Timestamps** | Freshness signal; content updated within 30 days gets 3.2x more citations | Low | Add dateModified to schema; show "Last updated" on page |
+| **Author/Source Attribution** | E-E-A-T signal; AI engines prioritize authoritative sources | Medium | "Analysis by AI models" with methodology link; editor attribution |
 
-### Mobile-First Single-Scroll Design
-
-| Feature | Why Essential | Complexity | Notes |
-|---------|---------------|------------|-------|
-| **Linear vertical scroll** | 64% of sports fans on mobile; single scroll = no hidden content | Low | Remove tabs entirely; stack all content vertically |
-| **Touch targets 44x44px** | Accessibility standard; already validated v1.3 | Low | Maintain on all interactive elements |
-| **Fast LCP (<2.5s)** | Core Web Vitals threshold; affects ranking | Medium | Priority on above-fold images; lazy load below |
-| **No horizontal scrolling** | Unexpected on mobile; breaks mental model | Low | Responsive tables; wrap or truncate wide content |
-| **Readable on small screens** | 320px minimum viewport support | Low | Test on iPhone SE size; ensure no overflow |
-
-### Core Match Information
+### Structured Data / Schema Markup
 
 | Feature | Why Essential | Complexity | Notes |
 |---------|---------------|------------|-------|
-| **Score prominently displayed** | #1 user intent for match pages; 92% say most important | Low | Already have; single display location (no duplication) |
-| **Match status indicator** | Upcoming/Live/Finished immediately clear | Low | Already have; keep in header area |
-| **Kickoff time with timezone** | Critical user information; avoids confusion | Low | Already have; ensure ISO format in schema |
-| **Competition context** | Users need to know league/round | Low | Already have via breadcrumbs and header |
-| **Team names unambiguous** | Home vs Away clearly distinguished | Low | Already have; maintain visual distinction |
+| **SportsEvent Schema** | Google recognizes page as sports event; enables rich results. 20-30% higher CTR. | Low | Already have via MatchPageSchema; verify homeTeam/awayTeam/competitor properties |
+| **FAQPage Schema** | 3.2x more likely to appear in AI Overviews; 28% more AI citations | Low | Already have via MatchFAQSchema; expand question coverage |
+| **Article Schema** | Pre/post-match content recognized as editorial content | Low | Add for narrative sections; improves E-E-A-T signals |
+| **BreadcrumbList Schema** | Navigation context for search engines | Low | Already implemented |
+| **JSON-LD @graph Consolidation** | Single structured data block; avoids fragmentation | Medium | Consolidate all schemas into one @graph array |
+| **datePublished/dateModified** | Required freshness signals. Google penalizes fake freshness. | Low | Always include both. Only update dateModified for substantive changes. |
+
+### Mobile-First Performance
+
+| Feature | Why Essential | Complexity | Notes |
+|---------|---------------|------------|-------|
+| **Core Web Vitals Passing** | Ranking tiebreaker in 2026. 53% users abandon pages >3 seconds. | Medium | Target <2.5s LCP, <100ms INP, <0.1 CLS |
+| **Linear Vertical Scroll** | 64% of sports fans on mobile; single scroll = no hidden content | Low | Remove tabs entirely; stack all content vertically |
+| **Touch Targets 44x44px** | Accessibility standard | Low | Maintain on all interactive elements |
+| **No Horizontal Scrolling** | Unexpected on mobile; breaks mental model | Low | Responsive tables; wrap or truncate wide content |
+
+### FAQ Optimization
+
+| Feature | Why Essential | Complexity | Notes |
+|---------|---------------|------------|-------|
+| **3-5 FAQs Per Page** | Quality over quantity. Too many dilutes impact. | Low | Focus on genuine user questions |
+| **Questions <80 Characters** | Concise, extractable by AI | Low | "Who will win Manchester United vs Liverpool?" not verbose |
+| **Answers 30-50 Words** | Direct first, context second. Long answers truncated by AI. | Low | Lead with answer, not preamble |
+| **Match-Specific Answers** | Generic answers don't get cited | Medium | Include data: "23/35 models predicted..." not "AI predictions are..." |
 
 ---
 
 ## Differentiators (Competitive Advantages)
 
-Features that distinguish the platform from competitors and maximize AI citation potential.
+Features that create competitive advantage. Not expected, but valued by search engines and users.
 
-### Advanced GEO Optimization
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| **Match-state-specific FAQ** | Different questions for upcoming/live/finished; more relevant citations | Medium | Expand existing generateMatchFAQs(); add 3-5 more per state |
-| **Prediction accuracy FAQ** | "How accurate were predictions?" with actual data | Medium | Calculate and include post-match; unique data = citations |
-| **Statistical comparison FAQ** | "What were the key stats?" from match data | Medium | Auto-generate from MatchStats data |
-| **Hub-and-spoke content model** | Match page links to team, league, model pages; topical authority | Low | Already have; ensure bidirectional linking |
-| **Entity consistency** | Same team names everywhere; AI recognizes entities | Low | Audit for variations (e.g., "Man United" vs "Manchester United") |
-
-### Narrative Content Excellence
+### GEO / AI Citation Optimization
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **Pre-match preview narrative** | Context before predictions; improves engagement | Low | Already have via MatchContentSection |
-| **Post-match analysis narrative** | Unique editorial content; E-E-A-T signal | Low | Already have via roundup; ensure prominent display |
-| **Prediction performance summary** | "X models predicted correctly"; original data | Low | Calculate from predictions array |
-| **Quotable blockquotes** | AI engines extract quotes as citations | Low | Already have PredictionInsightsBlockquote |
+| **Match-State-Specific FAQ** | Different questions for upcoming/live/finished; more relevant citations | Medium | Expand existing generateMatchFAQs(); add 3-5 per state |
+| **Prediction Accuracy FAQ** | "How accurate were predictions?" with actual data - unique citable content | Medium | Calculate post-match; "X of 35 models predicted correctly" |
+| **Extractable Answer Blocks** | 40-60 word paragraphs that directly answer questions are preferred by LLMs | Low | Format key predictions in standalone paragraphs |
+| **Statistics with Attribution** | LLMs prefer stats with clear sources. Citation-worthy. | Low | "According to Opta..." or "AI models show 65% confidence..." |
+| **Entity Consistency** | AI engines reward consistent entity naming. Same team names everywhere. | Medium | Always "Manchester United" not sometimes "Man Utd", "MUFC" |
 
-### Prediction Table Enhancements
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| **35 models displayed** | Unique value proposition; no competitor has this | Low | Already have; preserve |
-| **Model accuracy indicators** | Trust signal; shows which models perform well | Low | Points already shown; add visual accuracy tier |
-| **Consensus prediction** | "Most models predict X"; citation-worthy statement | Low | Already calculate average; make it a standalone statement |
-| **Sort by accuracy (post-match)** | Shows best performers; engagement value | Low | Already implemented |
-
-### Internal Linking Strategy
+### Topical Authority Architecture
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **Related matches widget** | Already implemented; drives page discovery | Low | Keep; validates SEO value |
-| **Model profile links** | Each model in table links to /models/[id] | Low | Already have |
-| **Competition page link** | Prominent link back to league | Low | Already have; keep prominent |
-| **Team entity linking** | Link team names to team pages when available | Medium | Future enhancement; requires team pages |
+| **Pillar + Cluster Content** | Clustered content drives 30% more traffic, holds rankings 2.5x longer, 3.2x more AI citations | High | League overview pillars (2500-4000 words) + match preview clusters (800-1500 words) |
+| **Hub-and-Spoke Linking** | 23% organic visibility gain in Dec 2025 update for sites with clear topic authority | Medium | Match pages link to team/league pillars; pillars link to matches |
+| **8-12 Cluster Pages Per Pillar** | HubSpot recommended range for topical authority | Medium | E.g., Premier League pillar with 10 team pages + match previews |
 
-### Performance Optimization
+### E-E-A-T Signal Enhancement
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **Single data fetch pattern** | Eliminate query waterfall; faster TTFB | Medium | Already have Promise.all(); verify no sequential deps |
-| **Skeleton loading states** | Perceived performance while data loads | Low | Add for predictions table |
-| **Image optimization** | WebP format; responsive sizes | Low | Next.js Image component |
-| **Minimal client JS** | Server-render everything possible | Medium | Audit 'use client' directives |
+| **Expert Commentary Layer** | Experience signals differentiate from pure AI content. Key E-E-A-T factor. | Medium | Add analyst insights, injury context, historical analysis AI cannot generate |
+| **Methodology Transparency** | Trust signal; shows how predictions are generated | Low | Link to /methodology from predictions |
+| **Author Profiles** | Credentials visible; linked profiles | Low | Editor/analyst attribution with bio pages |
+| **Source Attribution** | External citations signal thorough research | Low | Cite statistics sources, news sources |
+
+### Multi-Platform Citation Optimization
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| **Wikipedia-Style Factual Content** | ChatGPT's most cited source type (7.8% of citations) | Medium | Encyclopedic match facts, team histories |
+| **Community Engagement** | Reddit is top source for Perplexity (6.6%) and Google AI (2.2%) | Medium | Authentic community presence, not spam |
+| **Video/Multimedia** | YouTube shows up disproportionately in AI answers | High | Video previews complement written content |
+| **Real-Time Content Updates** | Perplexity searches real-time; fresh content cited within hours | High | Update previews when lineups announced |
+
+### Internal Linking Excellence
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| **3-Click Depth Maximum** | Google's John Mueller recommendation; improves crawlability | Medium | All match pages reachable from homepage in 3 clicks |
+| **Descriptive Anchor Text** | Context for users and search engines | Low | "Manchester United season analysis" not "click here" |
+| **Diverse Anchor Text** | John Mueller warns against same exact-match anchor everywhere | Low | Vary anchor text naturally |
+| **Bidirectional Linking** | Match pages link to teams; teams link to matches | Medium | Strengthen topical authority signals |
 
 ---
 
 ## Anti-Features (Do NOT Build)
 
-Features to explicitly avoid. These are common patterns that harm SEO, GEO, or user experience for this page type.
-
-### Navigation Anti-Patterns
-
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| **Tabbed content on mobile** | Hides content from crawlers; requires interaction to see predictions; SEO penalty for hidden content | Single-scroll layout; all content visible on load |
-| **Accordion-only content** | Similar to tabs; content hidden by default | Use accordions only for optional deep-dive (e.g., all 35 models vs top 5) |
-| **Infinite scroll** | No unique URLs for content sections; hard to bookmark | Finite page with anchor links |
-| **Horizontal tab bars** | Requires scrolling to see all tabs on mobile; 73% miss tabs outside viewport | Stack sections vertically |
+Features to explicitly avoid. Common mistakes that hurt SEO/GEO performance.
 
 ### Content Anti-Patterns
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| **Duplicate score display** | Current page shows score 3+ times; redundant; confusing | Single authoritative score location (MatchPageHeader) |
-| **Auto-playing video** | Bandwidth intensive; unexpected; accessibility issue | User-initiated only if video added |
-| **Generic FAQ answers** | "AI predictions are..." without match-specific data | Match-specific answers: "For this match, 23/35 models predicted..." |
-| **Keyword stuffing** | "Man City vs Arsenal predictions Man City Arsenal betting tips" | Natural language; entity mentions feel editorial |
-| **Thin content sections** | Empty cards when no data available | Hide sections with no data; or show meaningful "no data" message |
+| **Keyword Stuffing** | 34% higher bounce rates, 48s less time-on-page. Google algorithms detect and penalize. | Write naturally. Context and intent matter more than keyword density. |
+| **Thin AI Content at Scale** | Sites with thin AI content lost average 17% traffic, dropped 8 positions. January 2026 penalty wave. | Quality over quantity. Expert review required. 800+ words minimum. |
+| **Fake Freshness (Date Manipulation)** | Google detects cosmetic date changes. Results in trustworthiness reduction and ranking demotion. | Only update dateModified for genuine content changes. |
+| **Generic AI Predictions** | No differentiation. No E-E-A-T signals. Cannot compete. | Add unique data analysis, historical context, expert insight layer. |
+| **Exact-Match Anchor Text Overuse** | Flagged as spam. John Mueller warns against it. | Diverse, descriptive anchor text. |
+| **Click-Here Anchors** | Wastes anchor text opportunity. No context. | Descriptive: "See our Manchester United season analysis" |
+
+### Navigation Anti-Patterns
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| **Tabbed Content on Mobile** | Hides content from crawlers; requires interaction; SEO penalty for hidden content | Single-scroll layout; all content visible on load |
+| **Accordion-Only Content** | Similar to tabs; content hidden by default | Use accordions only for optional deep-dive |
+| **Horizontal Tab Bars** | 73% miss tabs outside viewport on mobile | Stack sections vertically |
+| **Infinite Scroll** | No unique URLs for content sections; hard to bookmark | Finite page with anchor links |
 
 ### Technical Anti-Patterns
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| **Client-side rendering for content** | AI crawlers struggle; content not in initial HTML | Server-render all match data; client only for interactivity |
-| **Separate mobile/desktop pages** | Duplicate content; maintenance burden | Single responsive page |
-| **Lazy-load above-fold content** | LCP regression; visible content delay | Eager load hero/score; lazy load below fold |
-| **Multiple JSON-LD script blocks** | Schema fragmentation; harder for crawlers | Single @graph structure |
-| **Redirect chains** | Slow; loses link equity | Direct links only |
+| **Client-Side Rendering for Content** | AI crawlers struggle; content not in initial HTML | Server-render all match data |
+| **Hidden Text/Links** | Black hat SEO. Manual action risk. | Never hide content from users |
+| **Lazy-Load Above-Fold Content** | LCP regression; visible content delay | Eager load hero/score; lazy load below fold |
+| **Multiple JSON-LD Script Blocks** | Schema fragmentation; harder for crawlers | Single @graph structure |
+| **AMP Pages** | No longer provides ranking advantages in 2026 | Standard HTML with good Core Web Vitals |
+| **Redirect Chains** | Slow; loses link equity | Direct links only |
+
+### FAQ Anti-Patterns
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| **Overly Long FAQ Sections** | Dilutes impact. May appear manipulative. | 3-5 carefully selected FAQs per page |
+| **Generic FAQ Answers** | Don't get cited. No unique value. | Match-specific: "23/35 models predicted..." |
+| **Promotional FAQ Content** | Google prohibits. May lose rich results. | Only genuine informational questions |
+| **Poor-Quality Responses** | Rich snippets removed. Google penalizes. | Clear, original answers to relevant questions |
 
 ### UX Anti-Patterns
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| **Pop-ups or interstitials** | View-only platform; creates friction | No pop-ups |
-| **Sticky bottom banners** | Reduces readable area on mobile | Minimal fixed elements |
-| **Social share pop-ups** | Unexpected; breaks flow | Inline share buttons if needed |
-| **Loading spinners for critical content** | User sees spinner, not content; bad perceived perf | Skeleton with content shape |
-| **"Load more" for predictions** | Hides unique value (35 models) behind interaction | Show all by default; optionally collapse to top 5 with "show all" |
+| **Pop-ups/Interstitials** | Creates friction; penalized by Google | No pop-ups |
+| **Sticky Bottom Banners** | Reduces readable area on mobile | Minimal fixed elements |
+| **Loading Spinners for Critical Content** | Bad perceived performance | Skeleton with content shape |
+| **Auto-Playing Video** | Bandwidth intensive; unexpected | User-initiated only |
+| **Duplicate Score Display** | Redundant; confusing | Single authoritative location |
 
 ---
 
 ## FAQ Auto-Generation Patterns
 
-The existing `generateMatchFAQs()` function provides a foundation. Expand it for maximum GEO value.
+The existing `generateMatchFAQs()` provides a foundation. Expand for maximum GEO value.
 
 ### State-Specific FAQ Templates
 
 **Upcoming Match (scheduled)**
 ```
 1. Who is predicted to win [Home] vs [Away]?
-   → "AI models predict..." + consensus + kickoff time
+   → "AI models predict [Team] to win with X% consensus..."
 
 2. When is [Home] vs [Away]?
-   → Full date/time + venue
+   → Full date/time + venue + timezone
 
-3. What competition is this match in?
-   → Competition name + round
+3. What is [Home]'s recent form?
+   → Last 5 results with W/D/L summary
 
-4. How do AI models make predictions?
-   → Methodology explanation + link to /methodology
-
-5. What is [Home]'s recent form?
-   → Last 5 results if available
-
-6. What is [Away]'s recent form?
-   → Last 5 results if available
-```
-
-**Live Match (live)**
-```
-1. What is the current score of [Home] vs [Away]?
-   → Current score + minute
-
-2. Who scored in [Home] vs [Away]?
-   → Goal scorers if available
-
-3. What were the pre-match predictions?
-   → Consensus prediction + accuracy so far
-
-4. When did this match start?
-   → Kickoff time
+4. What is [Away]'s recent form?
+   → Last 5 results with W/D/L summary
 
 5. What competition is this match in?
-   → Competition + round
+   → Competition name + round/matchday
 ```
 
 **Finished Match (finished)**
@@ -202,7 +204,6 @@ The existing `generateMatchFAQs()` function provides a foundation. Expand it for
 
 2. How accurate were AI predictions for this match?
    → "X out of 35 models predicted the correct result"
-   → "The consensus prediction was X-Y; actual was A-B"
 
 3. Which AI model predicted this match best?
    → Top performer + their prediction + points earned
@@ -210,14 +211,8 @@ The existing `generateMatchFAQs()` function provides a foundation. Expand it for
 4. What were the key statistics?
    → Possession, shots, cards from MatchStats
 
-5. What happened in the match?
-   → Brief narrative from roundup or "Key events: [goals, cards]"
-
-6. When was [Home] vs [Away] played?
+5. When was [Home] vs [Away] played?
    → Full date + venue
-
-7. What competition was this match in?
-   → Competition + round
 ```
 
 ### FAQ Generation Best Practices
@@ -226,31 +221,75 @@ The existing `generateMatchFAQs()` function provides a foundation. Expand it for
 |----------|-----------|
 | **Include match data in answers** | AI engines need data to cite; generic answers don't get cited |
 | **Use full team names in questions** | "Manchester City vs Arsenal" not "Man City vs Arsenal" for SEO |
-| **Keep answers 1-3 sentences** | Long answers get truncated by AI; concise = more citations |
+| **Keep answers 30-50 words** | Long answers truncated by AI; concise = more citations |
 | **Lead with the answer** | "The final score was 2-1" not "The match, which was played on..." |
 | **Include dates** | Temporal context helps AI understand freshness |
-| **Link to related pages** | "View the model leaderboard at kroam.xyz/leaderboard" in answers |
-
-### Implementation Notes
-
-The current `MatchFAQSchema.tsx` generates 4 FAQs. Expand to 5-7 per state:
-
-```typescript
-// Example expansion for finished matches
-if (isFinished && predictions.length > 0) {
-  const correctPredictions = predictions.filter(p => wasCorrect(p, match));
-  faqs.push({
-    question: `How accurate were AI predictions for ${match.homeTeam} vs ${match.awayTeam}?`,
-    answer: `${correctPredictions.length} out of ${predictions.length} AI models predicted the correct result. The consensus prediction was ${consensusHome}-${consensusAway}, while the actual score was ${match.homeScore}-${match.awayScore}.`
-  });
-}
-```
 
 ---
 
-## Layout Specification
+## Content Type Specifications
 
-The required layout: **Match Info -> Narrative -> Predictions Table -> FAQ**
+### Match Previews (Upcoming Matches)
+
+**Table Stakes:**
+- Answer-first prediction (30-60 words)
+- Team form data (last 5 matches)
+- Head-to-head record
+- SportsEvent schema with startDate, teams
+- FAQ section (3-5 questions)
+- datePublished timestamp
+
+**Differentiators:**
+- Injury news with source attribution
+- Expert analyst insight
+- Historical rivalry context
+- Prediction consensus statement
+- Update with lineup information when available
+
+**Freshness Strategy:**
+- Publish 2-3 days before match
+- Update dateModified when lineups announced
+- Clear indication of last update time
+
+### Match Reports (Finished Matches)
+
+**Table Stakes:**
+- Clear result statement in first paragraph
+- Key match events (goals, cards)
+- Schema with final score
+- Updated from preview (if existed)
+
+**Differentiators:**
+- Prediction accuracy analysis ("23/35 models correct")
+- Best-performing model highlight
+- Post-match statistics
+- Next fixture implications
+
+**Freshness Strategy:**
+- Publish within 2 hours of final whistle
+- Earlier = better for Perplexity real-time citations
+
+### Blog Articles (Analysis, Roundups)
+
+**Table Stakes:**
+- Clear thesis statement
+- Supporting data with attribution
+- Author byline and credentials
+- Article schema with full metadata
+
+**Differentiators:**
+- Original analysis not found elsewhere
+- Data from 35-model predictions (unique dataset)
+- Pillar content linking to multiple matches
+
+**Topical Authority:**
+- Create pillar articles for leagues, teams, competitions
+- Blog articles should link to related match previews/reports
+- 8-12 cluster pages per pillar topic
+
+---
+
+## Layout Specification (Match Pages)
 
 ### Single-Scroll Section Order
 
@@ -258,108 +297,133 @@ The required layout: **Match Info -> Narrative -> Predictions Table -> FAQ**
 1. BREADCRUMBS
    └── Leagues > [Competition] > [Match]
 
-2. H1 (MatchH1)
+2. H1 (Match Title)
    └── "[Home] vs [Away]" with score if finished
 
-3. MATCH INFO (MatchPageHeader)
-   └── Score/time, status, competition badge
+3. MATCH INFO
+   └── Score/time, status, competition
    └── Single authoritative score display
 
-4. TL;DR SUMMARY (MatchTLDR)
-   └── State-aware summary (upcoming/live/finished)
-   └── GEO answer-first content
+4. TL;DR SUMMARY
+   └── State-aware summary (upcoming/finished)
+   └── Answer-first GEO content
 
-5. MATCH EVENTS (if live/finished with events)
-   └── Goals, cards, substitutions timeline
-
-6. NARRATIVE CONTENT (MatchContentSection)
+5. NARRATIVE CONTENT
    └── Pre-match preview OR post-match analysis
-   └── Full editorial content visible (no "read more" truncation for above-fold)
+   └── Full content visible (no truncation)
 
-7. MATCH STATS (MatchStats)
+6. MATCH STATS (if available)
    └── Key statistics comparison
-   └── Only show if data available
 
-8. PREDICTIONS TABLE
+7. PREDICTIONS TABLE
    └── All 35 models visible
    └── Sort controls
    └── Consensus summary
-   └── Top performers (post-match)
 
-9. RELATED MATCHES (RelatedMatchesWidget)
+8. RELATED MATCHES
    └── Internal linking for SEO
    └── Next fixtures for these teams
 
-10. FAQ SECTION (MatchFAQ)
-    └── Expanded state-specific questions
-    └── FAQPage schema for AI citation
-    └── Accordion UI for visual display
+9. FAQ SECTION
+   └── 5-7 state-specific questions
+   └── FAQPage schema
+   └── Accordion UI
 
-11. EXPLORE MORE
+10. EXPLORE MORE
     └── Links to competition, team pages
-    └── Cross-linking for SEO
 ```
-
-### Mobile Considerations
-
-| Section | Mobile Treatment |
-|---------|------------------|
-| Breadcrumbs | Truncate if needed; always visible |
-| H1 | Full width; may wrap to 2 lines |
-| Match Info | Centered; score prominent |
-| TL;DR | Full width; 16px+ font |
-| Events | Timeline stacked vertically |
-| Narrative | Full width; comfortable reading width |
-| Stats | 2-column grid or stacked |
-| Predictions | Horizontally scrollable table OR card layout |
-| Related | Full-width cards |
-| FAQ | Accordion pattern |
-| Explore | Stacked links |
 
 ---
 
-## Content Preservation Requirements
+## Measuring Success (2026 Metrics)
 
-From milestone context - features to PRESERVE:
+### Traditional SEO
+- Organic traffic (Google Search Console)
+- Click-through rate from SERPs
+- Keyword rankings
+- Core Web Vitals scores
 
-| Feature | Current Location | Status |
-|---------|------------------|--------|
-| 35 LLM predictions displayed | PredictionTable | Keep; core value prop |
-| Pre-match narratives | MatchContentSection | Keep; GEO value |
-| Post-match narratives | MatchContentSection + roundup | Keep; E-E-A-T signal |
-| Live score updates | MatchPageHeader + polling | Keep; user expectation |
-| Schema.org structured data | MatchPageSchema + MatchFAQSchema | Keep; expand |
+### AI/GEO Metrics
+- AI referral traffic (GA4 custom channel for chatgpt.com, perplexity.ai)
+- Citation tracking (manual auditing or tools like Otterly.ai)
+- AI Overviews appearances
+- Brand mention monitoring in AI responses
+
+**Key Insight:** Ahrefs reports AI traffic as highest converting channel (>10% conversion) despite being <1% of total traffic. Quality over quantity.
+
+---
+
+## Implementation Priority
+
+### Phase 1: Foundation (Must Have)
+1. Answer-first content restructuring
+2. Complete schema.org implementation (Article, SportsEvent, FAQPage)
+3. Mobile performance optimization (Core Web Vitals)
+4. Publication date handling (datePublished/dateModified)
+5. Author attribution on all content
+
+### Phase 2: Authority Building
+1. Internal linking strategy
+2. Topic cluster architecture (pillar + cluster pages)
+3. FAQ expansion with match-specific data
+
+### Phase 3: AI Citation Optimization
+1. Entity consistency audit
+2. Extractable answer block formatting
+3. Statistics attribution protocol
+4. Real-time content update workflows
+
+### Defer to Post-Milestone
+- Video/audio content (high complexity)
+- Multi-platform citation optimization (needs traffic first)
+- Advanced AI tracking tools (needs baseline first)
 
 ---
 
 ## Sources
 
-### SEO/GEO Optimization
-- [Generative Engine Optimization Guide 2026](https://www.digitalapplied.com/blog/geo-guide-generative-engine-optimization-2026) - GEO fundamentals, citation patterns
-- [GEO Best Practices 2026](https://www.firebrand.marketing/2025/12/geo-best-practices-2026/) - Content structure for AI citation
-- [FAQ Schema for AI Search](https://www.frase.io/blog/faq-schema-ai-search-geo-aeo) - 3.2x AI Overview appearances with FAQ
-- [10-Step GEO Framework 2025](https://www.tryprofound.com/guides/generative-engine-optimization-geo-guide-2025) - Citation optimization strategies
+### GEO and AI Search
+- [Generative Engine Optimization Best Practices For 2026](https://www.digitalauthority.me/resources/generative-engine-optimization-best-practices/)
+- [GEO vs. SEO: Everything to Know in 2026 | WordStream](https://www.wordstream.com/blog/generative-engine-optimization)
+- [How to Get Content Cited by ChatGPT & Perplexity](https://geneo.app/blog/ai-optimized-content-cited-chatgpt-perplexity-best-practices/)
+- [AI Platform Citation Patterns](https://www.tryprofound.com/blog/ai-platform-citation-patterns)
+- [GEO Best Practices 2026](https://www.firebrand.marketing/2025/12/geo-best-practices-2026/)
 
-### Sports Betting SEO
-- [Sports Betting SEO 2026](https://tentenseven.com/sports-betting-seo/) - Sports-specific SEO patterns
-- [iGaming SEO 2025](https://affpapa.com/igaming-seo-strategies-you-need-a-practical-guide/) - E-E-A-T for betting content
-- [Top Gambling SEO Strategies 2026](https://ambeywebmedia.com/top-gambling-seo-strategies-2026/) - Schema markup importance
+### Answer Engine Optimization
+- [Answer Engine Optimization: The Ultimate AI Search Survival Guide (2026)](https://www.clickrank.ai/answer-engine-optimization-guide/)
+- [Answer Engine Optimization (AEO): A Strategic Framework for 2026](https://thedigitalelevator.com/blog/answer-engine-optimization-aeo/)
+- [AEO Best Practices for AI Search 2026](https://www.revvgrowth.com/aeo/answer-engine-optimization-best-practices)
 
-### Mobile UX
-- [Tabs UX Best Practices](https://www.eleken.co/blog-posts/tabs-ux) - When tabs fail on mobile
-- [Mobile First Design 2025](https://wpbrigade.com/mobile-first-design-strategy/) - Single-scroll patterns
-- [Mobile SEO 2025](https://www.upskillist.com/blog/seo-in-2025-mobile-first-tactics-that-will-keep-dominating/) - 64% mobile traffic
+### E-E-A-T and Content Quality
+- [E-E-A-T In 2026: How To Build Real Experience Into Your Content](https://whitebunnie.com/blog/e-e-a-t-in-2026-how-to-build-real-experience-into-your-content/)
+- [Google And AI Content Guide: Navigating 2026 SEO Trends](https://rankpill.com/blog/google-and-ai-content)
+- [Does Google Penalize AI Content? Myths & Facts](https://www.revvgrowth.com/ai-seo/google-penalize-ai-content)
+- [Google Search's guidance about AI-generated content](https://developers.google.com/search/blog/2023/02/google-search-and-ai-content)
 
-### Structured Data
-- [Schema.org SportsEvent](https://schema.org/SportsEvent) - Official schema properties
-- [Schema.org FAQPage](https://schema.org/FAQPage) - FAQ schema structure
-- [Schema Markup 2026](https://almcorp.com/blog/schema-markup-detailed-guide-2026-serp-visibility/) - Implementation best practices
-- [Structured Data for AI SEO 2026](https://www.digidop.com/blog/structured-data-secret-weapon-seo) - GPT-4 improves 16% to 54% with structured content
+### Schema and Structured Data
+- [Schema Markup in 2026: Why It's Now Critical for SERP Visibility](https://almcorp.com/blog/schema-markup-detailed-guide-2026-serp-visibility/)
+- [FAQ Schema for SEO: How to Improve Search Visibility in 2026](https://wellows.com/blog/improve-search-visibility-with-faq-schema/)
+- [Google FAQ Schema Documentation](https://developers.google.com/search/docs/appearance/structured-data/faqpage)
+- [Schema.org SportsEvent](https://schema.org/SportsEvent)
 
-### E-E-A-T & Authority
-- [SEO 2026 Predictions](https://yoast.com/2026-seo-predictions-by-yoast-experts/) - E-E-A-T as ranking filter
-- [AI SEO Trends 2026](https://www.techmagnate.com/blog/ai-seo-trends-2026/) - Authority as currency
+### Content Freshness
+- [Published Date vs. Last Updated: Which One Boosts SEO in 2026?](https://www.clickrank.ai/published-date-vs-last-updated/)
+- [Byline Dates in SEO: What They Mean, What Google Actually Uses](https://searchengineland.com/guide/byline-dates)
+
+### Topical Authority and Site Structure
+- [Topic Clusters for SEO: Build Content That Ranks (2026 Guide)](https://whitehat-seo.co.uk/blog/understanding-topic-clusters)
+- [Internal Linking Best Practices to Maximize SEO Results in 2026](https://www.stanventures.com/blog/internal-links/)
+- [Pillar Cluster Content Model: A Complete Guide (2026)](https://www.stanventures.com/blog/pillar-cluster-content-model/)
+
+### Technical SEO
+- [Core Web Vitals 2026: Technical SEO That Actually Moves the Needle](https://almcorp.com/blog/core-web-vitals-2026-technical-seo-guide/)
+- [Mobile-First Indexing in 2026](https://seohq.github.io/mobile-first-indexing-2026)
+
+### Anti-Patterns
+- [SEO Mistakes and Common Errors to Avoid in 2026](https://content-whale.com/blog/seo-mistakes-and-common-errors-to-avoid-in-2026/)
+- [15 Bad SEO Practices You Should Avoid in 2026](https://www.omnius.so/blog/bad-seo-practices)
+- [Google Spam Policies](https://developers.google.com/search/docs/essentials/spam-policies)
 
 ---
 
-*Confidence: HIGH - Cross-referenced multiple sources; patterns consistent across GEO literature, sports SEO guides, and mobile UX research. Existing implementation already validates many patterns (v1.3 requirements, current FAQ schema).*
+*Confidence: HIGH - Cross-referenced multiple 2026 sources; patterns consistent across GEO literature, sports SEO guides, and mobile UX research. Existing implementation already validates many patterns.*
