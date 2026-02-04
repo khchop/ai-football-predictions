@@ -12,6 +12,7 @@
  */
 
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 
 interface BlogContentProps {
@@ -104,17 +105,17 @@ const components = {
     <p className="text-foreground leading-relaxed mb-4">{children}</p>
   ),
   ul: ({ children }: { children?: React.ReactNode }) => (
-    <ul className="list-disc list-inside space-y-2 mb-4 text-foreground pl-2">
+    <ul className="list-disc space-y-2 mb-5 text-foreground pl-6 marker:text-primary/60">
       {children}
     </ul>
   ),
   ol: ({ children }: { children?: React.ReactNode }) => (
-    <ol className="list-decimal list-inside space-y-2 mb-4 text-foreground pl-2">
+    <ol className="list-decimal space-y-2 mb-5 text-foreground pl-6 marker:text-primary/60">
       {children}
     </ol>
   ),
   li: ({ children }: { children?: React.ReactNode }) => (
-    <li className="text-foreground">{children}</li>
+    <li className="text-foreground/90 leading-relaxed pl-1">{children}</li>
   ),
   blockquote: ({ children }: { children?: React.ReactNode }) => (
     <blockquote className="border-l-4 border-primary/30 pl-4 italic text-muted-foreground my-4">
@@ -172,26 +173,26 @@ const components = {
     </a>
   ),
   table: ({ children }: { children?: React.ReactNode }) => (
-    <div className="overflow-x-auto my-4">
-      <table className="w-full border-collapse border border-border/30">
+    <div className="overflow-x-auto my-6 rounded-lg border border-border/40 bg-card/30">
+      <table className="w-full border-collapse text-sm">
         {children}
       </table>
     </div>
   ),
   thead: ({ children }: { children?: React.ReactNode }) => (
-    <thead className="bg-muted/50">{children}</thead>
+    <thead className="bg-muted/60 border-b border-border/40">{children}</thead>
   ),
   tbody: ({ children }: { children?: React.ReactNode }) => (
-    <tbody>{children}</tbody>
+    <tbody className="divide-y divide-border/20">{children}</tbody>
   ),
   tr: ({ children }: { children?: React.ReactNode }) => (
-    <tr className="border border-border/30">{children}</tr>
+    <tr className="hover:bg-muted/30 transition-colors">{children}</tr>
   ),
   td: ({ children }: { children?: React.ReactNode }) => (
-    <td className="border border-border/30 p-3">{children}</td>
+    <td className="px-4 py-3 text-foreground/90">{children}</td>
   ),
   th: ({ children }: { children?: React.ReactNode }) => (
-    <th className="border border-border/30 p-3 text-left font-semibold">
+    <th className="px-4 py-3 text-left font-semibold text-foreground">
       {children}
     </th>
   ),
@@ -209,7 +210,9 @@ export function BlogContent({ content, className }: BlogContentProps) {
         className
       )}
     >
-      <ReactMarkdown components={components}>{content}</ReactMarkdown>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+        {content}
+      </ReactMarkdown>
     </div>
   );
 }
