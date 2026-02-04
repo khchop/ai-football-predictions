@@ -530,6 +530,20 @@ export async function generatePostMatchContent(matchId: string): Promise<void> {
 
     const prompt = `Write 4-5 sentences (~150-200 words) about ${match.homeTeam} ${match.homeScore}-${match.awayScore} ${match.awayTeam}.
 
+ANSWER-FIRST REQUIREMENT (CRITICAL):
+Your FIRST sentence MUST state the final score and winner.
+Include in first 30-60 words: the score, who won (or draw), and AI model prediction accuracy.
+
+CORRECT EXAMPLE:
+"${match.homeTeam} defeated ${match.awayTeam} ${match.homeScore}-${match.awayScore}, with ${correctTendency} of ${predictionsWithModels.length} AI models correctly predicting the result."
+
+INCORRECT EXAMPLE (DO NOT USE):
+"In a thrilling match, ${match.homeTeam} hosted ${match.awayTeam} at their home ground on this exciting matchday..."
+
+ENTITY NAME CONSISTENCY:
+- Always use "${match.homeTeam}" (never abbreviate to nicknames or acronyms)
+- Always use "${match.awayTeam}" (never abbreviate to nicknames or acronyms)
+
 Final Score: ${match.homeScore}-${match.awayScore}
 Status: ${match.status}
 Quotas: Home=${match.quotaHome}, Draw=${match.quotaDraw}, Away=${match.quotaAway}
@@ -546,8 +560,7 @@ ${topPerformers || 'No correct predictions'}
 All Predictions (top 10 by points):
 ${predictionsWithModels.slice(0, 10).map(p => `- ${p.modelName}: ${p.predictedHome}-${p.predictedAway} (${p.totalPoints ?? 0} pts)`).join('\n')}
 
-Include:
-- Match result summary
+Include (after the answer-first opening):
 - How AI models performed (use actual model names like "Llama 3.3 70B", "DeepSeek R1", "Qwen 2.5 72B", etc.)
 - Name the top scoring models specifically with their predictions
 - Notable predictions that hit or missed (with model names)
