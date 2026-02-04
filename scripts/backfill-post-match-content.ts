@@ -63,16 +63,9 @@ async function backfillAllPostMatchContent() {
     for (const match of batch) {
       try {
         console.log(`  - ${match.homeTeam} ${match.homeScore}-${match.awayScore} ${match.awayTeam}...`);
-        const success = await generatePostMatchContent(match.matchId);
-        
-        if (success) {
-          successCount++;
-          console.log(`    ✓ Generated`);
-        } else {
-          failCount++;
-          failed.push(`${match.homeTeam} vs ${match.awayTeam}`);
-          console.log(`    ✗ Failed (returned false)`);
-        }
+        await generatePostMatchContent(match.matchId);
+        successCount++;
+        console.log(`    ✓ Generated`);
       } catch (error: any) {
         failCount++;
         failed.push(`${match.homeTeam} vs ${match.awayTeam}`);

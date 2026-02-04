@@ -1,13 +1,13 @@
 /**
  * Match Content Generation
- * 
+ *
  * Generates 3-section narrative content for match pages:
  * 1. Pre-match (~150-200 words) - generated after odds refresh
  * 2. Betting (~150-200 words) - generated after AI predictions
  * 3. Post-match (~150-200 words) - generated after scoring
- * 
+ *
  * Uses Together AI (Llama 4 Maverick) for consistent quality.
- * All functions are non-blocking (failures logged, not thrown).
+ * All functions throw errors on failure to enable BullMQ retry and DLQ tracking.
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -17,6 +17,7 @@ import { generateTextWithTogetherAI, generateWithTogetherAI } from './together-c
 import { CONTENT_CONFIG, estimateContentCost } from './config';
 import { eq, desc } from 'drizzle-orm';
 import { format } from 'date-fns';
+import { RetryableContentError, FatalContentError } from '@/lib/errors/content-errors';
 
 export interface FAQItem {
   question: string;
@@ -27,13 +28,15 @@ const log = loggers.content;
 
 /**
  * Generate pre-match content (~150-200 words)
- * 
+ *
  * Triggered: After odds refresh (~6h before kickoff)
  * Content: Market expectations, bookmaker favors, key odds insights
- * 
- * Returns: true if content generated and saved, false if failed (non-blocking)
+ *
+ * Throws: FatalContentError if match not found, RetryableContentError on API failures
  */
-export async function generatePreMatchContent(matchId: string): Promise<boolean> {
+export async function generatePreMatchContent(matchId: string): Promise<void> {
+  let match: typeof matches.$inferSelect | undefined;
+
   try {
     const db = getDb();
 
@@ -50,10 +53,18 @@ export async function generatePreMatchContent(matchId: string): Promise<boolean>
 
      if (matchData.length === 0) {
        log.warn({ matchId }, 'Match not found for pre-match content generation');
-       return false;
+       throw new FatalContentError(
+         `Match not found for pre-match content generation: ${matchId}`,
+         {
+           matchId,
+           reason: 'match_not_found',
+           timestamp: new Date().toISOString(),
+         }
+       );
      }
 
-    const { match, analysis } = matchData[0];
+    ({ match } = matchData[0]);
+    const { analysis } = matchData[0];
 
     // Build prompt for pre-match content
     const prompt = `Write 4-5 sentences (~150-200 words) summarizing bookmaker expectations for ${match.homeTeam} vs ${match.awayTeam}.
@@ -139,8 +150,12 @@ Write flowing prose without headers.`;
        },
        '✓ Pre-match content generated'
      );
-     return true;
    } catch (error) {
+     // Re-throw FatalContentError as-is
+     if (error instanceof FatalContentError) {
+       throw error;
+     }
+
      log.error(
        {
          matchId,
@@ -148,20 +163,32 @@ Write flowing prose without headers.`;
        },
        'Pre-match content generation failed'
      );
-     // Non-blocking: don't throw, return false
-     return false;
+
+     throw new RetryableContentError(
+       `Pre-match content generation failed for ${matchId}`,
+       {
+         matchId,
+         homeTeam: match?.homeTeam || 'Unknown',
+         awayTeam: match?.awayTeam || 'Unknown',
+         contentType: 'pre-match',
+         timestamp: new Date().toISOString(),
+         originalError: error,
+       }
+     );
    }
 }
 
 /**
  * Generate betting content (~150-200 words)
- * 
+ *
  * Triggered: After AI predictions (~30m before kickoff)
  * Content: AI model consensus, prediction distribution, confidence
- * 
- * Returns: true if content generated and saved, false if failed (non-blocking)
+ *
+ * Throws: FatalContentError if match not found, RetryableContentError on API failures
  */
-export async function generateBettingContent(matchId: string): Promise<boolean> {
+export async function generateBettingContent(matchId: string): Promise<void> {
+   let match: typeof matches.$inferSelect | undefined;
+
    try {
      const db = getDb();
 
@@ -176,10 +203,17 @@ export async function generateBettingContent(matchId: string): Promise<boolean> 
 
       if (matchData.length === 0) {
         log.warn({ matchId }, 'Match not found for betting content generation');
-        return false;
+        throw new FatalContentError(
+          `Match not found for betting content generation: ${matchId}`,
+          {
+            matchId,
+            reason: 'match_not_found',
+            timestamp: new Date().toISOString(),
+          }
+        );
       }
 
-      const match = matchData[0].match;
+      match = matchData[0].match;
 
      // Get AI model predictions for this match
      const modelPredictions = await db
@@ -303,8 +337,12 @@ Write flowing prose without headers.`;
        },
        '✓ Betting content generated'
      );
-     return true;
    } catch (error) {
+     // Re-throw FatalContentError as-is
+     if (error instanceof FatalContentError) {
+       throw error;
+     }
+
      log.error(
        {
          matchId,
@@ -312,20 +350,32 @@ Write flowing prose without headers.`;
        },
        'Betting content generation failed'
      );
-     // Non-blocking: don't throw, return false
-     return false;
+
+     throw new RetryableContentError(
+       `Betting content generation failed for ${matchId}`,
+       {
+         matchId,
+         homeTeam: match?.homeTeam || 'Unknown',
+         awayTeam: match?.awayTeam || 'Unknown',
+         contentType: 'betting',
+         timestamp: new Date().toISOString(),
+         originalError: error,
+       }
+     );
    }
 }
 
 /**
  * Generate post-match content (~150-200 words)
- * 
+ *
  * Triggered: After match scoring complete
  * Content: Result summary, how AI models performed, top scorers
- * 
- * Returns: true if content generated and saved, false if failed (non-blocking)
+ *
+ * Throws: FatalContentError if match not found or not finished, RetryableContentError on API failures
  */
-export async function generatePostMatchContent(matchId: string): Promise<boolean> {
+export async function generatePostMatchContent(matchId: string): Promise<void> {
+  let match: typeof matches.$inferSelect | undefined;
+
   try {
     const db = getDb();
 
@@ -340,17 +390,31 @@ export async function generatePostMatchContent(matchId: string): Promise<boolean
 
      if (matchData.length === 0) {
        log.warn({ matchId }, 'Match not found for post-match content generation');
-       return false;
+       throw new FatalContentError(
+         `Match not found for post-match content generation: ${matchId}`,
+         {
+           matchId,
+           reason: 'match_not_found',
+           timestamp: new Date().toISOString(),
+         }
+       );
      }
 
-     const match = matchData[0].match;
+     match = matchData[0].match;
 
      if (match.status !== 'finished' || match.homeScore === null || match.awayScore === null) {
        log.warn(
          { matchId, status: match.status },
          'Match not finished, skipping post-match content'
        );
-       return false;
+       throw new FatalContentError(
+         `Match not finished, cannot generate post-match content: ${matchId}`,
+         {
+           matchId,
+           reason: 'match_not_finished',
+           timestamp: new Date().toISOString(),
+         }
+       );
      }
 
     // Get predictions with model names
@@ -472,8 +536,12 @@ Write flowing prose without headers.`;
        },
        '✓ Post-match content generated'
      );
-     return true;
    } catch (error) {
+     // Re-throw FatalContentError as-is
+     if (error instanceof FatalContentError) {
+       throw error;
+     }
+
      log.error(
        {
          matchId,
@@ -481,8 +549,18 @@ Write flowing prose without headers.`;
        },
        'Post-match content generation failed'
      );
-     // Non-blocking: don't throw, return false
-     return false;
+
+     throw new RetryableContentError(
+       `Post-match content generation failed for ${matchId}`,
+       {
+         matchId,
+         homeTeam: match?.homeTeam || 'Unknown',
+         awayTeam: match?.awayTeam || 'Unknown',
+         contentType: 'post-match',
+         timestamp: new Date().toISOString(),
+         originalError: error,
+       }
+     );
    }
 }
 
@@ -492,10 +570,12 @@ Write flowing prose without headers.`;
  * Triggered: After pre-match content (upcoming) or post-match content (finished)
  * Content: Match-specific FAQ with AI-generated answers
  *
- * Returns: true if content generated and saved, false if failed (non-blocking)
+ * Throws: FatalContentError if match not found, RetryableContentError on API failures or invalid format
  */
-export async function generateFAQContent(matchId: string): Promise<boolean> {
+export async function generateFAQContent(matchId: string): Promise<void> {
   console.log('[generateFAQContent] Starting for match:', matchId);
+  let match: typeof matches.$inferSelect | undefined;
+
   try {
     const db = getDb();
 
@@ -512,10 +592,18 @@ export async function generateFAQContent(matchId: string): Promise<boolean> {
 
     if (matchData.length === 0) {
       log.warn({ matchId }, 'Match not found for FAQ content generation');
-      return false;
+      throw new FatalContentError(
+        `Match not found for FAQ content generation: ${matchId}`,
+        {
+          matchId,
+          reason: 'match_not_found',
+          timestamp: new Date().toISOString(),
+        }
+      );
     }
 
-    const { match, analysis } = matchData[0];
+    ({ match } = matchData[0]);
+    const { analysis } = matchData[0];
     const isFinished = match.status === 'finished';
     const kickoffDate = new Date(match.kickoffTime);
     const formattedDate = format(kickoffDate, 'MMMM d, yyyy');
@@ -542,7 +630,7 @@ export async function generateFAQContent(matchId: string): Promise<boolean> {
       // Finished match context
       const correctPredictions = modelPredictions.filter(p => p.totalPoints !== null && p.totalPoints > 0);
       const exactScoreHits = modelPredictions.filter(p =>
-        p.predictedHome === match.homeScore && p.predictedAway === match.awayScore
+        p.predictedHome === match!.homeScore && p.predictedAway === match!.awayScore
       );
 
       matchContext = `
@@ -641,11 +729,11 @@ Example format:
 
     console.log('[generateFAQContent] Together AI response received, validating...');
 
-    // Validate we got an array of FAQs
+    // Validate we got an array of FAQs (LLM may produce valid format on retry)
     if (!Array.isArray(result.content) || result.content.length === 0) {
       log.warn({ matchId, content: result.content }, 'FAQ generation returned invalid format');
       console.log('[generateFAQContent] Invalid format:', typeof result.content, result.content);
-      return false;
+      throw new Error('FAQ generation returned invalid format - will retry');
     }
 
     // Ensure exactly 5 FAQs
@@ -695,8 +783,12 @@ Example format:
       },
       '✓ FAQ content generated'
     );
-    return true;
   } catch (error) {
+    // Re-throw FatalContentError as-is
+    if (error instanceof FatalContentError) {
+      throw error;
+    }
+
     const errMsg = error instanceof Error ? error.message : String(error);
     console.error('[generateFAQContent] Error:', errMsg);
     log.error(
@@ -706,8 +798,18 @@ Example format:
       },
       'FAQ content generation failed'
     );
-    // Non-blocking: don't throw, return false
-    return false;
+
+    throw new RetryableContentError(
+      `FAQ content generation failed for ${matchId}`,
+      {
+        matchId,
+        homeTeam: match?.homeTeam || 'Unknown',
+        awayTeam: match?.awayTeam || 'Unknown',
+        contentType: 'faq',
+        timestamp: new Date().toISOString(),
+        originalError: error,
+      }
+    );
   }
 }
 

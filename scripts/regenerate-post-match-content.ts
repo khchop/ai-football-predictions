@@ -111,16 +111,10 @@ async function regenerateContent() {
     for (const match of matchesToProcess) {
       try {
         console.log(`  🔄 ${match.homeTeam} vs ${match.awayTeam}...`);
-        const success = await generatePostMatchContent(match.id);
-        
-        if (success) {
-          console.log(`  ✅ Success`);
-          successCount++;
-        } else {
-          console.log(`  ❌ Failed (check logs for details)`);
-          failCount++;
-        }
-        
+        await generatePostMatchContent(match.id);
+        console.log(`  ✅ Success`);
+        successCount++;
+
         // Add a small delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (error) {
