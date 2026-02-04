@@ -55,11 +55,11 @@ Plans:
   2. Failed jobs appear in BullMQ dead letter queue after retry exhaustion
   3. Lock duration prevents stalled job detection during normal operation
   4. Invalid content (too short, placeholder text) is rejected before save
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 32-01: Convert return false to throw error in match-content.ts
-- [ ] 32-02: Configure lock duration and content validation
+- [ ] 32-01-PLAN.md — Create error classes and convert return false to throw error
+- [ ] 32-02-PLAN.md — Configure lock duration, DLQ handling, and content validation
 
 ### Phase 33: HTML Sanitization
 **Goal**: All LLM-generated content is plain text without HTML artifacts
