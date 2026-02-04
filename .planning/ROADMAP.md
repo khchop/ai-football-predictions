@@ -11,7 +11,7 @@
 |-------|------|------|--------------|------------------|--------|
 | 37 | Synthetic Provider | Create provider class and model configurations | PROV-01-04, MODL-01-04, ERRH-01-03 | Provider makes successful API call | Complete |
 | 38 | Database Integration | Register models in database | DATA-01-03 | Models appear in predictions table | Complete |
-| 39 | Testing & Validation | Test all 13 models in production | TEST-01-03 | 7 models validated, 6 disabled, fallbacks configured | In Progress |
+| 39 | Testing & Validation | Validate working models, disable failing models, add fallback configuration | TEST-01-03 | 7 models validated, 6 disabled, fallbacks configured | In Progress |
 
 ---
 
@@ -77,7 +77,7 @@ Phase 38 was already implemented by Phase 37's registry integration. The existin
 ## Phase 39: Testing & Validation
 
 **Status:** In Progress
-**Goal:** Validate all 13 models produce usable predictions; disable non-working models; add Together AI fallbacks
+**Goal:** Validate working models, disable failing models, add fallback configuration
 **Plans:** 4 plans
 
 **Requirements:**
@@ -119,9 +119,9 @@ Phase 39 (Testing)
     |
     +-- 39-02 (Disable failing models) [Wave 1]
     |
-    +-- 39-03 (Together AI fallbacks) [Wave 1]
+    +-- 39-03 (Together AI fallbacks) [Wave 2, depends on 39-02]
     |
-    +-- 39-04 (Production validation) [Wave 2, depends on 39-02]
+    +-- 39-04 (Production validation) [Wave 3, depends on 39-02]
 ```
 
 ---
