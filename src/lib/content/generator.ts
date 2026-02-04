@@ -30,6 +30,7 @@ import {
   DEDUPLICATION_CONFIG,
 } from './deduplication';
 import { sanitizeContent, validateNoHtml } from './sanitization';
+import { RetryableContentError, FatalContentError } from '@/lib/errors/content-errors';
 
 function normalizePhrase(value: string) {
   return value
@@ -338,7 +339,22 @@ export async function generateLeagueRoundup(roundupData: {
     standingsTop5: roundupData.standings?.slice(0, 5),
   });
 
-  const result = await generateWithTogetherAI<ArticleResponse>(systemPrompt, userPrompt);
+  let result: Awaited<ReturnType<typeof generateWithTogetherAI<ArticleResponse>>>;
+  try {
+    result = await generateWithTogetherAI<ArticleResponse>(systemPrompt, userPrompt);
+  } catch (error: any) {
+    throw new RetryableContentError(
+      `League roundup generation failed: ${error.message}`,
+      {
+        matchId: 'N/A',
+        homeTeam: roundupData.competition,
+        awayTeam: '',
+        contentType: 'post-match' as const,
+        timestamp: new Date().toISOString(),
+        originalError: error,
+      }
+    );
+  }
 
   const activeModelRows = await getDb()
     .select({ modelName: models.displayName })
@@ -378,7 +394,14 @@ export async function generateLeagueRoundup(roundupData: {
       },
       'Generated league roundup failed validation'
     );
-    throw new Error(validation.error);
+    throw new FatalContentError(
+      validation.error || 'League roundup validation failed',
+      {
+        matchId: 'N/A',
+        reason: 'invalid_data' as const,
+        timestamp: new Date().toISOString(),
+      }
+    );
   }
 
   // Sanitize all text fields before save
@@ -473,7 +496,22 @@ export async function generateModelReport(reportData: {
     overallStats: reportData.overallStats,
   });
 
-  const result = await generateWithTogetherAI<ArticleResponse>(systemPrompt, userPrompt);
+  let result: Awaited<ReturnType<typeof generateWithTogetherAI<ArticleResponse>>>;
+  try {
+    result = await generateWithTogetherAI<ArticleResponse>(systemPrompt, userPrompt);
+  } catch (error: any) {
+    throw new RetryableContentError(
+      `Model report generation failed: ${error.message}`,
+      {
+        matchId: 'N/A',
+        homeTeam: reportData.period,
+        awayTeam: '',
+        contentType: 'post-match' as const,
+        timestamp: new Date().toISOString(),
+        originalError: error,
+      }
+    );
+  }
 
   // Sanitize all text fields before save
   const title = sanitizeContent(result.content.title);
