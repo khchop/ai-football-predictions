@@ -112,7 +112,21 @@ export async function generatePreMatchContent(matchId: string): Promise<void> {
     const { analysis } = matchData[0];
 
     // Build prompt for pre-match content
-    const prompt = `Write 4-5 sentences (~150-200 words) summarizing bookmaker expectations for ${match.homeTeam} vs ${match.awayTeam}.
+    const prompt = `Write 4-5 sentences (~150-200 words) about ${match.homeTeam} vs ${match.awayTeam}.
+
+ANSWER-FIRST REQUIREMENT (CRITICAL):
+Your FIRST sentence MUST state who bookmakers favor to win.
+Include in first 30-60 words: the favored team, predicted outcome, and odds.
+
+CORRECT EXAMPLE:
+"${match.homeTeam} are favored to beat ${match.awayTeam} at odds of ${analysis?.oddsHome || 'X.XX'} in this match, with bookmakers giving them a clear edge based on recent form."
+
+INCORRECT EXAMPLE (DO NOT USE):
+"This exciting fixture sees ${match.homeTeam} take on ${match.awayTeam} this weekend in what promises to be a thrilling encounter..."
+
+ENTITY NAME CONSISTENCY:
+- Always use "${match.homeTeam}" (never abbreviate to nicknames or acronyms)
+- Always use "${match.awayTeam}" (never abbreviate to nicknames or acronyms)
 
 Match Details:
 - Competition: (Match ID: ${matchId})
@@ -132,10 +146,10 @@ Team Form:
 - ${match.homeTeam}: ${analysis?.homeTeamForm || 'N/A'} (${analysis?.homeGoalsScored}F/${analysis?.homeGoalsConceded}A)
 - ${match.awayTeam}: ${analysis?.awayTeamForm || 'N/A'} (${analysis?.awayGoalsScored}F/${analysis?.awayGoalsConceded}A)
 
-Include:
-- Who bookmakers favor and the odds
+Include (after the answer-first opening):
 - Key market insights (over/under, BTTS trends)
 - Any notable value or pricing anomalies
+- Brief form context
 
 OUTPUT FORMAT:
 - Plain text only, no HTML tags
