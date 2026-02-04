@@ -85,11 +85,11 @@ Plans:
   1. Queue pauses automatically after 5 consecutive rate limit errors
   2. Worker heartbeat monitoring detects process death
   3. Finished matches without content trigger alerts
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 34-01: Implement circuit breaker for rate limits
-- [ ] 34-02: Add heartbeat monitoring and completeness alerts
+- [ ] 34-01-PLAN.md — Queue-level circuit breaker for rate limits
+- [ ] 34-02-PLAN.md — Worker health monitoring and content completeness alerts
 
 ### Phase 35: SEO/GEO Content Quality
 **Goal**: Content prompts produce answer-first, match-specific content optimized for AI search visibility
