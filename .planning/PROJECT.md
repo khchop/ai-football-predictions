@@ -19,9 +19,19 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 - **Model developers** seeking benchmarks beyond traditional NLP tasks
 - **Casual users** who enjoy comparing "AI vs AI" predictions
 
+## Current Milestone: v2.4 Synthetic.new Integration
+
+**Goal:** Add Synthetic.new as second LLM provider with 14 new models (reasoning + standard), expanding total from 29 to 43 models.
+
+**Target features:**
+- SyntheticProvider class using OpenAI-compatible API
+- 14 Synthetic-exclusive models (DeepSeek R1-0528, Kimi K2-Thinking, Qwen3-Thinking, DeepSeek V3 variants, MiniMax, GLM, etc.)
+- Database registration and seed scripts
+- Model testing and validation
+
 ## Current State
 
-**Brownfield project with v2.3 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI. v2.3 Content Pipeline & SEO completed 2026-02-04, fixing content generation reliability and optimizing for SEO/GEO visibility.
+**Brownfield project with v2.3 shipped.** The platform is operational with 17 leagues integrated, 29 LLM models connected via Together AI. v2.3 Content Pipeline & SEO completed 2026-02-04, fixing content generation reliability and optimizing for SEO/GEO visibility.
 
 ### Validated (v2.3)
 
@@ -224,7 +234,7 @@ The following requirements were validated in v1.0:
 The following capabilities are built and operational:
 
 - **Match Data Pipeline**: Automated fetching of fixtures, live scores, lineups, and statistics from API-Football for 17 leagues
-- **LLM Integration**: 35 open-source models via Together AI API with automatic retry and failure handling
+- **LLM Integration**: 29 open-source models via Together AI API with automatic retry and failure handling
 - **Prediction Generation**: Context-rich prompts incorporating team form, H2H, standings, and lineups, generating exact score predictions
 - **Kicktipp Scoring**: Quota-based scoring system where rare correct predictions earn 2-6 points, exact scores earn +3 bonus (max 10 points)
 - **Real-time Live Scores**: WebSocket/polling updates during matches with minute-by-minute tracking
@@ -276,16 +286,16 @@ All 155 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, 
 **Explicitly Not Building:**
 - User prediction submission (view-only platform)
 - Betting integration or odds comparison
-- Additional LLM providers (sticking with Together AI)
 - New leagues or competitions (maintain existing 17)
 - New prediction types (stay with exact scores only)
 - Mobile native apps (web-only)
 - Real-time prediction updates during match (post-kickoff is settled)
 - Model fine-tuning or custom training
+- Vision models (Qwen3-VL) - not useful for text-only predictions
 
 ## Next Milestone
 
-Ready for `/gsd:new-milestone` to define next milestone goals.
+v2.4 Synthetic.new Integration in progress.
 
 ---
-*Last updated: 2026-02-04 after v2.3 milestone complete*
+*Last updated: 2026-02-04 after v2.4 milestone started*
