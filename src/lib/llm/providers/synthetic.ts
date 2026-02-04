@@ -254,44 +254,45 @@ export const GPTOSS120B_SynProvider = new SyntheticProvider(
 );
 
 // ============================================================================
-// Export all Synthetic providers (13 exclusive models)
+// DISABLED MODELS - Kept for future re-testing
+// These models failed validation (2026-02-04) and are excluded from production
+// To re-test: move from here back to SYNTHETIC_PROVIDERS array
+// ============================================================================
+//
+// Qwen3_235BThinking_SynProvider - Parse failure: returns natural language instead of JSON
+// DeepSeekV32_SynProvider - Parse failure: returns natural language instead of JSON
+// KimiK25_SynProvider - Timeout: 30s timeout, needs investigation
+// GLM46_SynProvider - Timeout: 30s timeout, needs investigation
+// GLM47_SynProvider - API bug: SGLang structured output not supported (Synthetic.new confirmed)
+// GPTOSS120B_SynProvider - Invalid response: returns {"type":"object"} instead of predictions
+
+// ============================================================================
+// Export active Synthetic providers (7 validated models)
 // ============================================================================
 
 export const SYNTHETIC_PROVIDERS = [
-  // Reasoning models (3) - Premium
+  // Reasoning models (2) - Premium (1 disabled: qwen3-235b-thinking)
   DeepSeekR1_0528_SynProvider,        // 1  - $3.00/$7.00 (premium, reasoning)
   KimiK2Thinking_SynProvider,         // 2  - $2.00/$6.00 (premium, reasoning)
-  Qwen3_235BThinking_SynProvider,     // 3  - $2.50/$6.00 (premium, reasoning)
 
-  // DeepSeek family (3) - Budget
-  DeepSeekV3_0324_SynProvider,        // 4  - $0.60/$1.25
-  DeepSeekV31_Terminus_SynProvider,   // 5  - $0.70/$1.40
-  DeepSeekV32_SynProvider,            // 6  - $0.65/$1.30
+  // DeepSeek family (2) - Budget (1 disabled: deepseek-v3.2)
+  DeepSeekV3_0324_SynProvider,        // 3  - $0.60/$1.25
+  DeepSeekV31_Terminus_SynProvider,   // 4  - $0.70/$1.40
 
   // MiniMax (2) - Budget
-  MiniMaxM2_SynProvider,              // 7  - $0.50/$1.00
-  MiniMaxM21_SynProvider,             // 8  - $0.55/$1.10
-
-  // Moonshot (1) - Budget
-  KimiK25_SynProvider,                // 9  - $1.00/$3.00
-
-  // GLM (2) - Budget (may output Chinese)
-  GLM46_SynProvider,                  // 10 - $0.40/$0.80
-  GLM47_SynProvider,                  // 11 - $0.45/$0.90
+  MiniMaxM2_SynProvider,              // 5  - $0.50/$1.00
+  MiniMaxM21_SynProvider,             // 6  - $0.55/$1.10
 
   // Qwen Coder (1) - Premium
-  Qwen3Coder480B_SynProvider,         // 12 - $3.00/$6.00 (premium)
-
-  // OpenAI OSS (1) - Budget
-  GPTOSS120B_SynProvider,             // 13 - $1.20/$2.40
+  Qwen3Coder480B_SynProvider,         // 7  - $3.00/$6.00 (premium)
 ];
 
 // ============================================================================
 // Summary (February 2026):
-// - 13 Synthetic-exclusive models (not available on Together AI)
-// - 4 premium models: 3 reasoning + 1 large coder
-// - 9 budget models: DeepSeek variants, MiniMax, GLM, OpenAI OSS
+// - 13 Synthetic-exclusive models defined (not all available on Together AI)
+// - 7 models ACTIVE: 2 reasoning + 4 budget + 1 coder premium
+// - 6 models DISABLED: 1 reasoning (parse), 1 budget (parse), 2 timeout, 1 API bug, 1 invalid response
 // - All use hf:org/model format for Synthetic.new API
 // - Pricing: Placeholder estimates (actual pricing TBD)
-// - Note: GLM models may output Chinese text
+// - Disabled models kept in code for future re-testing
 // ============================================================================
