@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-04)
 ## Current Position
 
 Phase: 35 of 36 (SEO/GEO Content Quality)
-Plan: 0 of 3 in current phase
-Status: Phase 34 complete, verified
-Last activity: 2026-02-04 — Phase 34 verified (8/8 must-haves)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-04 — Completed 35-01-PLAN.md
 
-Progress: [█████░░░░░] 50% (v2.3)
+Progress: [█████░░░░░] 51% (v2.3)
 
 ## Milestone History
 
@@ -45,7 +45,7 @@ Progress: [█████░░░░░] 50% (v2.3)
 | 32 | 2/2 | 8min | 4min |
 | 33 | 3/3 | 14min | 4.7min |
 | 34 | 2/2 | 6min | 3min |
-| 35 | 0/3 | - | - |
+| 35 | 1/3 | 4min | 4min |
 | 36 | 0/2 | - | - |
 
 ## Accumulated Context
@@ -74,6 +74,9 @@ Progress: [█████░░░░░] 50% (v2.3)
 | 2026-02-04 | 34-01 | 5 consecutive errors, 60s cooldown for rate limit protection | Match Together AI rate limit window (~30 req/min) |
 | 2026-02-04 | 34-02 | 5-minute stalled threshold for worker health detection | 2x safety margin over 2-min lock duration |
 | 2026-02-04 | 34-02 | Sentry warning level for missing content (not error) | Self-healing via backfill, avoid alert fatigue |
+| 2026-02-04 | 35-01 | Answer-first prompts with positive/negative examples | LLMs respond better to concrete examples than abstract rules |
+| 2026-02-04 | 35-01 | 30-60 word constraint for opening | Specific word count helps LLM understand expected length |
+| 2026-02-04 | 35-01 | Entity name consistency rules in prompts | Prevents LLM from abbreviating team names |
 | v2.3 | - | Investigation before code changes (confirm root cause first) | Diagnostic phase prevents wasted effort on wrong fixes |
 | v2.3 | - | Error throwing over return false (BullMQ retry pattern) | Enable proper error propagation and retry logic |
 
@@ -93,9 +96,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-04 17:21 UTC
-Stopped at: Phase 34 complete and verified
+Last session: 2026-02-04 17:35 UTC
+Stopped at: Completed 35-01-PLAN.md
 Resume file: None
-Resume with: /gsd:plan-phase 35
+Resume with: /gsd:execute-plan 35-02
 
-**Next phase:** 35 - SEO/GEO Content Quality
+**Next plan:** 35-02 (H1/H2 Heading Optimization)
