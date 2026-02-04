@@ -21,7 +21,36 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 
 ## Current State
 
-**Brownfield project with v2.2 shipped, v2.3 in progress.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI. v2.2 Match Page Rewrite completed 2026-02-04. Currently investigating content generation pipeline issues - all matches from 2026-02-03 missing generated content.
+**Brownfield project with v2.3 shipped.** The platform is operational with 17 leagues integrated, 35 LLM models connected via Together AI. v2.3 Content Pipeline & SEO completed 2026-02-04, fixing content generation reliability and optimizing for SEO/GEO visibility.
+
+### Validated (v2.3)
+
+The following requirements were validated in v2.3:
+
+- ✓ **PIPE-01**: Content generation functions throw errors on failure instead of returning false — v2.3
+- ✓ **PIPE-02**: Content queue uses 120-second lock duration for long-running jobs — v2.3
+- ✓ **PIPE-03**: Content validation runs before database save (min 100 chars, no placeholder text) — v2.3
+- ✓ **PIPE-04**: Failed jobs reach dead letter queue for visibility — v2.3
+- ✓ **PIPE-05**: Circuit breaker pauses queue after 5 consecutive rate limit errors — v2.3
+- ✓ **PIPE-06**: Worker heartbeat monitoring detects process death — v2.3
+- ✓ **PIPE-07**: Content completeness monitoring alerts when finished matches have no content — v2.3
+- ✓ **PIPE-08**: Blog generation pipeline triggers reliably — v2.3
+- ✓ **HTML-01**: LLM prompts include explicit "plain text only, no HTML" instruction — v2.3
+- ✓ **HTML-02**: HTML tags stripped before database save (not just at render) — v2.3
+- ✓ **HTML-03**: One-time migration cleans HTML from existing content — v2.3
+- ✓ **HTML-04**: Content rendered without visible HTML artifacts — v2.3
+- ✓ **SGEO-01**: Pre-match content uses answer-first structure (prediction in first 30-60 words) — v2.3
+- ✓ **SGEO-02**: Post-match content uses answer-first structure (result in first 30-60 words) — v2.3
+- ✓ **SGEO-03**: FAQ questions are match-specific with actual data (not generic) — v2.3
+- ✓ **SGEO-04**: Upcoming matches generate 5 state-specific FAQ questions — v2.3
+- ✓ **SGEO-05**: Finished matches generate 5 state-specific FAQ questions including accuracy — v2.3
+- ✓ **SGEO-06**: Finished match FAQ includes "How accurate were AI predictions?" with X/35 data — v2.3
+- ✓ **SGEO-07**: Content includes datePublished and dateModified schema properties — v2.3
+- ✓ **SGEO-08**: Entity names consistent throughout content (full team names, not abbreviations) — v2.3
+- ✓ **BLOG-01**: Blog generation jobs trigger reliably for eligible matches — v2.3
+- ✓ **BLOG-02**: Blog content uses same error handling pattern as match content — v2.3
+- ✓ **BLOG-03**: Blog content sanitized before save — v2.3
+- ✓ **BLOG-04**: Blog posts include answer-first summary paragraph — v2.3
 
 ### Validated (v2.2)
 
@@ -207,9 +236,9 @@ The following capabilities are built and operational:
 
 ### Context
 
-Shipped v2.2 with 47,251 LOC TypeScript.
-Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, Radix UI, next-themes, isomorphic-dompurify.
-All 131 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, and v2.2 milestones.
+Shipped v2.3 with 193,767 LOC TypeScript.
+Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, Radix UI, next-themes, isomorphic-dompurify, html-to-text, he.
+All 155 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, and v2.3 milestones.
 
 ## Constraints
 
@@ -254,34 +283,9 @@ All 131 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, and v2
 - Real-time prediction updates during match (post-kickoff is settled)
 - Model fine-tuning or custom training
 
-## Current Milestone: v2.3 Content Pipeline & SEO
+## Next Milestone
 
-**Goal:** Fix broken content generation pipeline (match reports, blogs, FAQ) and ensure all LLM-generated content is SEO/GEO optimized with proper HTML sanitization.
-
-**Target features:**
-- Diagnose and fix worker triggering issues (all matches missing content)
-- Ensure HTML tags are fully sanitized in all content types
-- Add robust fallbacks and retries for content generation
-- Optimize content prompts for SEO/GEO (answer-first, schema-aligned)
-- Validate blog generation pipeline end-to-end
-
-### Active
-
-- [ ] Content workers trigger reliably for all match lifecycle events
-- [ ] Pre-match content generates for upcoming matches
-- [ ] Post-match content generates for finished matches
-- [ ] Blog posts generate from match data
-- [ ] FAQ content generates with match-specific questions
-- [ ] All content is HTML-sanitized before storage and display
-- [ ] Content prompts produce SEO/GEO optimized output
-- [ ] Retry mechanisms handle transient failures gracefully
-- [ ] Dead letter queue alerts on persistent failures
-
-## Open Questions
-
-1. What's causing all matches from yesterday to have no content?
-2. Are workers failing silently or not being scheduled at all?
-3. Is the HTML sanitization regression in v2.1 fix or new content paths?
+Ready for `/gsd:new-milestone` to define next milestone goals.
 
 ---
-*Last updated: 2026-02-04 after v2.3 milestone started*
+*Last updated: 2026-02-04 after v2.3 milestone complete*

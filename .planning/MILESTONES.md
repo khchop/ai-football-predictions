@@ -1,5 +1,33 @@
 # Project Milestones: AI Football Predictions Platform
 
+## v2.3 Content Pipeline & SEO (Shipped: 2026-02-04)
+
+**Delivered:** Fixed content generation pipeline reliability with proper error handling, HTML sanitization, circuit breaker protection, SEO/GEO optimized prompts with answer-first structure, and aligned blog generation patterns.
+
+**Phases completed:** 31-36 (13 plans total)
+
+**Key accomplishments:**
+
+- Diagnosed root cause — Application server not running since 2026-02-01, all workers halted
+- Error handling overhaul — Content generation throws errors with BullMQ retry/DLQ integration
+- HTML sanitization pipeline — Defense-in-depth with prompt instructions + runtime html-to-text/he sanitization
+- Pipeline hardening — Queue-level circuit breaker (pauses after 5 rate limits), worker health monitoring, content completeness alerts
+- SEO/GEO optimization — Answer-first prompts ensure prediction/result in first 30-60 words, match-specific FAQs with exact accuracy data
+- Blog generation alignment — Same error handling and answer-first patterns for league roundups and model reports
+
+**Stats:**
+
+- 57 files changed, +8,389 / -402 lines
+- 193,767 lines of TypeScript (total codebase)
+- 6 phases, 13 plans, 24 requirements
+- 1 day from start to ship (2026-02-04)
+
+**Git range:** `feat(31-01)` → `docs(36)`
+
+**What's next:** New milestone planning with `/gsd:new-milestone`
+
+---
+
 ## v2.2 Match Page Rewrite (Shipped: 2026-02-04)
 
 **Delivered:** Complete rewrite of match detail pages with context-driven architecture, single authoritative hero, state-aware content sections, AI-generated FAQ with Schema.org markup, and deprecated component cleanup.
