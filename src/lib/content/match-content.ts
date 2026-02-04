@@ -27,6 +27,50 @@ export interface FAQItem {
 const log = loggers.content;
 
 /**
+ * Validate generated content meets quality thresholds
+ * Throws if content is invalid (retryable - LLM may produce valid content on retry)
+ */
+function validateGeneratedContent(
+  content: string,
+  contentType: 'pre-match' | 'betting' | 'post-match' | 'faq',
+  minLength: number = 100
+): void {
+  // Length check
+  if (content.length < minLength) {
+    throw new Error(
+      `Content too short: ${content.length} chars (min: ${minLength}) for ${contentType}`
+    );
+  }
+
+  // Empty/whitespace check
+  if (content.trim().length === 0) {
+    throw new Error(`Content is empty or whitespace only for ${contentType}`);
+  }
+
+  // Placeholder detection
+  const placeholders = [
+    /\[TEAM NAME\]/gi,
+    /\[PLACEHOLDER\]/gi,
+    /lorem ipsum/gi,
+    /\bTODO\b/gi,
+    /\bFIXME\b/gi,
+    /\{\{.*?\}\}/g,
+    /\[Insert.*?\]/gi,
+    /I cannot generate/gi,
+    /As an AI/gi,
+    /I'm unable to/gi,
+  ];
+
+  for (const pattern of placeholders) {
+    if (pattern.test(content)) {
+      throw new Error(
+        `Placeholder detected in ${contentType} content: ${pattern.source}`
+      );
+    }
+  }
+}
+
+/**
  * Generate pre-match content (~150-200 words)
  *
  * Triggered: After odds refresh (~6h before kickoff)
@@ -106,6 +150,9 @@ Write flowing prose without headers.`;
 
      // Content is already a string
      const content = result.content;
+
+    // Validate content before saving
+    validateGeneratedContent(content, 'pre-match', 100);
 
     // Save to database
     const db2 = getDb();
@@ -293,6 +340,9 @@ Write flowing prose without headers.`;
 
      // Content is already a string
      const content = result.content;
+
+    // Validate content before saving
+    validateGeneratedContent(content, 'betting', 100);
 
     // Save to database (upsert to handle cases where matchContent record doesn't exist yet)
     const db2 = getDb();
@@ -492,6 +542,9 @@ Write flowing prose without headers.`;
 
      // Content is already a string
      const content = result.content;
+
+    // Validate content before saving
+    validateGeneratedContent(content, 'post-match', 100);
 
     // Save to database (upsert to handle cases where matchContent record doesn't exist yet)
     const db2 = getDb();
@@ -738,6 +791,16 @@ Example format:
 
     // Ensure exactly 5 FAQs
     const faqs = result.content.slice(0, 5);
+
+    // Validate each FAQ answer meets minimum length
+    for (const faq of faqs) {
+      if (!faq.question || faq.question.length < 10) {
+        throw new Error('FAQ question too short or missing');
+      }
+      if (!faq.answer || faq.answer.length < 20) {
+        throw new Error('FAQ answer too short or missing');
+      }
+    }
 
     // Save to database
     const db2 = getDb();
