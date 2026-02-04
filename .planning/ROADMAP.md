@@ -11,7 +11,7 @@
 |-------|------|------|--------------|------------------|--------|
 | 37 | Synthetic Provider | Create provider class and model configurations | PROV-01-04, MODL-01-04, ERRH-01-03 | Provider makes successful API call | Complete |
 | 38 | Database Integration | Register models in database | DATA-01-03 | Models appear in predictions table | Complete |
-| 39 | Testing & Validation | Test all 13 models in production | TEST-01-03 | All models generate valid predictions | Pending |
+| 39 | Testing & Validation | Test all 13 models in production | TEST-01-03 | 7 models validated, 6 disabled, fallbacks configured | In Progress |
 
 ---
 
@@ -76,9 +76,9 @@ Phase 38 was already implemented by Phase 37's registry integration. The existin
 
 ## Phase 39: Testing & Validation
 
-**Status:** Pending
-**Goal:** Validate all 13 models produce usable predictions
-**Plans:** 1 plan
+**Status:** In Progress
+**Goal:** Validate all 13 models produce usable predictions; disable non-working models; add Together AI fallbacks
+**Plans:** 4 plans
 
 **Requirements:**
 - TEST-01: Each model tested with sample prediction
@@ -86,18 +86,23 @@ Phase 38 was already implemented by Phase 37's registry integration. The existin
 - TEST-03: GLM models monitored for Chinese output
 
 **Success Criteria:**
-1. All 13 models return parseable JSON predictions
-2. DeepSeek R1, Kimi K2-Thinking, Qwen3-Thinking correctly parsed (thinking tags stripped)
-3. GLM models produce English output (or auto-disabled if not)
-4. No models stuck in permanent failure state
-5. First full prediction cycle completes with Synthetic models included
+1. ~~All 13 models return parseable JSON predictions~~ **7/13 models validated (6 disabled)**
+2. DeepSeek R1, Kimi K2-Thinking, Qwen3-Thinking correctly parsed (thinking tags stripped) **2/3 work**
+3. GLM models produce English output (or auto-disabled if not) **Both disabled (timeout/API bug)**
+4. No models stuck in permanent failure state **6 models disabled with documented reasons**
+5. First full prediction cycle completes with Synthetic models included **Pending 39-04**
 
 **Deliverables:**
-- Test results documented
-- Any non-working models disabled with reason logged
+- Validation script created (39-01)
+- 6 failing models disabled (39-02)
+- Together AI fallback mapping (39-03)
+- Production prediction cycle verified (39-04)
 
 Plans:
-- [ ] 39-01-PLAN.md — Create validation script and test all 13 models
+- [x] 39-01-PLAN.md — Create validation script and test all 13 models
+- [ ] 39-02-PLAN.md — Disable 6 failing Synthetic models (gap closure)
+- [ ] 39-03-PLAN.md — Add Together AI fallback mapping (gap closure)
+- [ ] 39-04-PLAN.md — Run production prediction cycle with Synthetic models (gap closure)
 
 ---
 
@@ -109,29 +114,37 @@ Phase 37 (Provider)
 Phase 38 (Database)
     |
 Phase 39 (Testing)
+    |
+    +-- 39-01 (Validation script) [Complete]
+    |
+    +-- 39-02 (Disable failing models) [Wave 1]
+    |
+    +-- 39-03 (Together AI fallbacks) [Wave 1]
+    |
+    +-- 39-04 (Production validation) [Wave 2, depends on 39-02]
 ```
-
-All phases are sequential - provider must exist before database registration, database must be populated before testing.
 
 ---
 
-## Models to Add (13)
+## Models Summary (13)
 
-| # | ID | Model | Type |
-|---|-----|-------|------|
-| 1 | deepseek-r1-0528-syn | hf:deepseek-ai/DeepSeek-R1-0528 | Reasoning |
-| 2 | kimi-k2-thinking-syn | hf:moonshotai/Kimi-K2-Thinking | Reasoning |
-| 3 | qwen3-235b-thinking-syn | hf:Qwen/Qwen3-235B-A22B-Thinking-2507 | Reasoning |
-| 4 | deepseek-v3-0324-syn | hf:deepseek-ai/DeepSeek-V3-0324 | Standard |
-| 5 | deepseek-v3.1-terminus-syn | hf:deepseek-ai/DeepSeek-V3.1-Terminus | Standard |
-| 6 | deepseek-v3.2-syn | hf:deepseek-ai/DeepSeek-V3.2 | Standard |
-| 7 | minimax-m2-syn | hf:MiniMaxAI/MiniMax-M2 | Standard |
-| 8 | minimax-m2.1-syn | hf:MiniMaxAI/MiniMax-M2.1 | Standard |
-| 9 | kimi-k2.5-syn | hf:moonshotai/Kimi-K2.5 | Standard |
-| 10 | glm-4.6-syn | hf:zai-org/GLM-4.6 | Standard |
-| 11 | glm-4.7-syn | hf:zai-org/GLM-4.7 | Standard |
-| 12 | qwen3-coder-480b-syn | hf:Qwen/Qwen3-Coder-480B-A35B-Instruct | Standard |
-| 13 | gpt-oss-120b-syn | hf:openai/gpt-oss-120b | Standard |
+| # | ID | Type | Status |
+|---|-----|------|--------|
+| 1 | deepseek-r1-0528-syn | Reasoning | **Active** |
+| 2 | kimi-k2-thinking-syn | Reasoning | **Active** |
+| 3 | qwen3-235b-thinking-syn | Reasoning | Disabled (parse failure) |
+| 4 | deepseek-v3-0324-syn | Standard | **Active** |
+| 5 | deepseek-v3.1-terminus-syn | Standard | **Active** |
+| 6 | deepseek-v3.2-syn | Standard | Disabled (parse failure) |
+| 7 | minimax-m2-syn | Standard | **Active** |
+| 8 | minimax-m2.1-syn | Standard | **Active** |
+| 9 | kimi-k2.5-syn | Standard | Disabled (timeout) |
+| 10 | glm-4.6-syn | Standard | Disabled (timeout) |
+| 11 | glm-4.7-syn | Standard | Disabled (API bug) |
+| 12 | qwen3-coder-480b-syn | Standard | **Active** |
+| 13 | gpt-oss-120b-syn | Standard | Disabled (invalid response) |
+
+**Summary:** 7 active, 6 disabled
 
 ---
 
