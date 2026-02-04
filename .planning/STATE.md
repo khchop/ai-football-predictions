@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-04)
 
 ## Current Position
 
-Phase: 34 of 36 (Backfill Missing Content)
-Plan: 0 of 2 in current phase
-Status: Phase complete (33)
-Last activity: 2026-02-04 — Completed 33-03-PLAN.md (HTML Cleanup Migration)
+Phase: 34 of 36 (Pipeline Hardening)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-04 — Completed 34-01-PLAN.md (Queue Circuit Breaker)
 
-Progress: [██░░░░░░░░] 17.7% (v2.3)
+Progress: [███░░░░░░░] 18.5% (v2.3)
 
 ## Milestone History
 
@@ -44,7 +44,7 @@ Progress: [██░░░░░░░░] 17.7% (v2.3)
 | 31 | 1/1 | 4min | 4min |
 | 32 | 2/2 | 8min | 4min |
 | 33 | 3/3 | 14min | 4.7min |
-| 34 | 0/2 | - | - |
+| 34 | 1/2 | 3min | 3min |
 | 35 | 0/3 | - | - |
 | 36 | 0/2 | - | - |
 
@@ -70,6 +70,8 @@ Progress: [██░░░░░░░░] 17.7% (v2.3)
 | 2026-02-04 | 33-02 | Sanitize after LLM response, before validation and database save | Ensures clean content before any storage |
 | 2026-02-04 | 33-02 | PostMatchRoundup HTML template preserved, text content inside sanitized | HTML structure intentional for rendering, LLM text sanitized |
 | 2026-02-04 | 33-03 | Run migration script for existing content cleanup | 341 records across 4 tables sanitized |
+| 2026-02-04 | 34-01 | In-memory state for queue circuit breaker (no Redis persistence) | Transient state acceptable, resets on worker restart |
+| 2026-02-04 | 34-01 | 5 consecutive errors, 60s cooldown for rate limit protection | Match Together AI rate limit window (~30 req/min) |
 | v2.3 | - | Investigation before code changes (confirm root cause first) | Diagnostic phase prevents wasted effort on wrong fixes |
 | v2.3 | - | Error throwing over return false (BullMQ retry pattern) | Enable proper error propagation and retry logic |
 
@@ -90,9 +92,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-04 15:13 UTC
-Stopped at: Completed Phase 33 Plan 03 (HTML Cleanup Migration)
+Last session: 2026-02-04 16:20 UTC
+Stopped at: Completed Phase 34 Plan 01 (Queue Circuit Breaker)
 Resume file: None
 Resume with: /gsd:execute-phase 34
 
-**Next plan:** 34-01 (Backfill missing pre-match and betting content)
+**Next plan:** 34-02 (Monitoring and observability)
