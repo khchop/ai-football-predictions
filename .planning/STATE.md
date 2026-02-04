@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-04)
 Phase: 36 of 36 complete (v2.3 Content Pipeline & SEO)
 Plan: All plans complete
 Status: v2.3 milestone shipped
-Last activity: 2026-02-04 - Completed quick task 009: Fix HierarchyRequestError on new tab open
+Last activity: 2026-02-04 - Completed quick task 010: Improve blog methodology, SEO/GEO, FAQ
 
 Progress: [██████████] 100% (v2.3 shipped)
 
@@ -55,6 +55,7 @@ None.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 009 | Fix HierarchyRequestError on new tab open | 2026-02-04 | 58330f2 | [009-fix-new-tab-hierarchy-error](./quick/009-fix-new-tab-hierarchy-error/) |
+| 010 | Improve blog methodology, SEO/GEO, FAQ | 2026-02-04 | da9db4a | [010-blog-seo-methodology-faq](./quick/010-blog-seo-methodology-faq/) |
 
 ## Session Continuity
 
