@@ -343,18 +343,26 @@ Overall Statistics:
 
 Write a comprehensive AI model performance report with:
 
-1. Executive Summary (150-200 words)
-   - Key findings and standout performers
-   - Overall market trends
-2. Detailed Model Analysis (400-500 words)
+1. **Opening Summary (CRITICAL - Answer-First)**
+   First 30-60 words MUST directly answer: Which model won? What was their ROI? How many models were profitable?
+
+   GOOD EXAMPLE:
+   "${topModels[0]?.name || 'Top model'} dominated ${period} with ${topModels[0]?.roi?.toFixed(1) || 'N/A'}% ROI, significantly outperforming the field average of ${overallStats.averageROI.toFixed(1)}%. ${topModels.filter(m => m.roi > 0).length} of ${topModels.length} tracked models finished profitable this period."
+
+   BAD EXAMPLE (DO NOT USE):
+   "This comprehensive report examines the performance of AI betting models during ${period}. We'll analyze various metrics including ROI, win rate, and betting patterns to understand what drove success."
+
+2. **Detailed Model Analysis** (400-500 words)
    - Break down each top model's strategy
    - What makes the winners successful
    - Notable patterns and insights
-3. Market Insights (200-250 words)
+
+3. **Market Insights** (200-250 words)
    - Which types of bets performed best
    - Competition difficulty analysis
    - ROI trends over the period
-4. Looking Forward (150-200 words)
+
+4. **Looking Forward** (150-200 words)
    - Predictions for next period
    - Models to watch
    - Market opportunities
@@ -362,8 +370,8 @@ Write a comprehensive AI model performance report with:
 Return as JSON:
 {
   "title": "Article headline (60 chars max)",
-  "excerpt": "Brief summary (150-160 characters)",
-  "content": "Full report in markdown format (900-1200 words)",
+  "excerpt": "Opening summary (30-60 words, answer-first: top model name + ROI + profitable count)",
+  "content": "Full report in markdown format (900-1200 words). Start with opening summary.",
   "metaTitle": "SEO title (60 chars)",
   "metaDescription": "Meta description (150-160 chars)",
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
