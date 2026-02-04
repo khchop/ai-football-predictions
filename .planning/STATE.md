@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-04)
 ## Current Position
 
 Phase: 35 of 36 (SEO/GEO Content Quality)
-Plan: 1 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-04 — Completed 35-01-PLAN.md
+Plan: 3 of 3 in current phase
+Status: Phase 35 complete
+Last activity: 2026-02-04 — Completed 35-03-PLAN.md
 
-Progress: [█████░░░░░] 51% (v2.3)
+Progress: [█████░░░░░] 53% (v2.3)
 
 ## Milestone History
 
@@ -45,7 +45,7 @@ Progress: [█████░░░░░] 51% (v2.3)
 | 32 | 2/2 | 8min | 4min |
 | 33 | 3/3 | 14min | 4.7min |
 | 34 | 2/2 | 6min | 3min |
-| 35 | 1/3 | 4min | 4min |
+| 35 | 3/3 | 8min | 2.7min |
 | 36 | 0/2 | - | - |
 
 ## Accumulated Context
@@ -77,6 +77,8 @@ Progress: [█████░░░░░] 51% (v2.3)
 | 2026-02-04 | 35-01 | Answer-first prompts with positive/negative examples | LLMs respond better to concrete examples than abstract rules |
 | 2026-02-04 | 35-01 | 30-60 word constraint for opening | Specific word count helps LLM understand expected length |
 | 2026-02-04 | 35-01 | Entity name consistency rules in prompts | Prevents LLM from abbreviating team names |
+| 2026-02-04 | 35-03 | Use kickoffTime as datePublished | Consistent baseline for content creation date |
+| 2026-02-04 | 35-03 | 3-level fallback for dateModified | contentGeneratedAt -> match.updatedAt -> kickoffTime |
 | v2.3 | - | Investigation before code changes (confirm root cause first) | Diagnostic phase prevents wasted effort on wrong fixes |
 | v2.3 | - | Error throwing over return false (BullMQ retry pattern) | Enable proper error propagation and retry logic |
 
@@ -96,9 +98,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-04 17:35 UTC
-Stopped at: Completed 35-01-PLAN.md
+Last session: 2026-02-04 17:18 UTC
+Stopped at: Completed 35-03-PLAN.md
 Resume file: None
-Resume with: /gsd:execute-plan 35-02
+Resume with: /gsd:plan-phase 36
 
-**Next plan:** 35-02 (H1/H2 Heading Optimization)
+**Next phase:** 36 - Final Verification
