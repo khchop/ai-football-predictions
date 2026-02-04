@@ -77,6 +77,9 @@ Progress: [█████░░░░░] 53% (v2.3)
 | 2026-02-04 | 35-01 | Answer-first prompts with positive/negative examples | LLMs respond better to concrete examples than abstract rules |
 | 2026-02-04 | 35-01 | 30-60 word constraint for opening | Specific word count helps LLM understand expected length |
 | 2026-02-04 | 35-01 | Entity name consistency rules in prompts | Prevents LLM from abbreviating team names |
+| 2026-02-04 | 35-02 | FAQ #2 mandatory accuracy question for finished matches | Ensures consistent "X of Y models (Z%)" format for GEO citations |
+| 2026-02-04 | 35-02 | Consensus prediction calculation for upcoming matches | Determine most favored outcome for specific citation-worthy data |
+| 2026-02-04 | 35-02 | CRITICAL instruction to use exact numbers in FAQ answers | Prevents LLM from using placeholders like "check the table" |
 | 2026-02-04 | 35-03 | Use kickoffTime as datePublished | Consistent baseline for content creation date |
 | 2026-02-04 | 35-03 | 3-level fallback for dateModified | contentGeneratedAt -> match.updatedAt -> kickoffTime |
 | v2.3 | - | Investigation before code changes (confirm root cause first) | Diagnostic phase prevents wasted effort on wrong fixes |
@@ -98,8 +101,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-04 17:18 UTC
-Stopped at: Completed 35-03-PLAN.md
+Last session: 2026-02-04 17:23 UTC
+Stopped at: Completed 35-02-PLAN.md
 Resume file: None
 Resume with: /gsd:plan-phase 36
 
