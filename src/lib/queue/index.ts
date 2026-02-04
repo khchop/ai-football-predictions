@@ -337,6 +337,13 @@ export function getContentQueue(): Queue {
 }
 export const contentQueue = createLazyQueueProxy(getContentQueue);
 
+let _contentDlqQueue: Queue | null = null;
+export function getContentDlqQueue(): Queue {
+  if (!_contentDlqQueue) _contentDlqQueue = createQueue(QUEUE_NAMES.CONTENT_DLQ);
+  return _contentDlqQueue;
+}
+export const contentDlqQueue = createLazyQueueProxy(getContentDlqQueue);
+
 let _modelRecoveryQueue: Queue | null = null;
 export function getModelRecoveryQueue(): Queue {
   if (!_modelRecoveryQueue) _modelRecoveryQueue = createQueue(QUEUE_NAMES.MODEL_RECOVERY);
@@ -387,6 +394,8 @@ export function getQueue(queueName: string): Queue {
       return backfillQueue;
     case QUEUE_NAMES.CONTENT:
       return contentQueue;
+    case QUEUE_NAMES.CONTENT_DLQ:
+      return contentDlqQueue;
     case QUEUE_NAMES.MODEL_RECOVERY:
       return modelRecoveryQueue;
     case QUEUE_NAMES.STANDINGS:
