@@ -35,10 +35,24 @@ export function createContentWorker() {
     async (job: Job<GenerateContentPayload>) => {
       const { type, data } = job.data;
       const log = loggers.contentWorker.child({ jobId: job.id, jobName: job.name });
-      
-      log.info(`Generating ${type} content`);
-      
+
+      // Setup heartbeat to extend lock for long-running jobs
+      const heartbeatInterval = setInterval(async () => {
+        try {
+          if (job.token) {
+            await job.extendLock(job.token, 120000);
+            log.debug({ jobId: job.id }, 'Extended job lock');
+          }
+        } catch (err) {
+          log.warn({ jobId: job.id, err }, 'Lock extension failed');
+        }
+      }, 30000); // Every 30s (well before 120s lock expiry)
+
       try {
+        log.info(`Generating ${type} content`);
+
+        // Existing job processing
+        return await (async () => {
         if (type === 'match_preview') {
           return await generateMatchPreviewContent(data as {
             matchId: string;
@@ -75,29 +89,36 @@ export function createContentWorker() {
           } else {
             throw new Error(`Unknown content type: ${type}`);
           }
-        } catch (error) {
-          log.error({ err: error }, `Error generating ${type}`);
-          Sentry.captureException(error, {
-            level: 'error',
-            tags: {
-              worker: 'content',
-              content_type: type,
-            },
-            extra: {
-              jobId: job.id,
-              data,
-            },
-          });
-          throw error;
-        }
+        })();
+      } catch (error) {
+        log.error({ err: error }, `Error generating ${type}`);
+        Sentry.captureException(error, {
+          level: 'error',
+          tags: {
+            worker: 'content',
+            content_type: type,
+          },
+          extra: {
+            jobId: job.id,
+            data,
+          },
+        });
+        throw error;
+      } finally {
+        clearInterval(heartbeatInterval);
+      }
     },
     {
       connection: getQueueConnection(),
-      concurrency: 1, // Process one at a time to avoid rate limits
+      concurrency: 3, // 3 parallel jobs (per CONTEXT.md decision)
       limiter: {
         max: 30, // Max 30 requests per minute (Together AI limit)
         duration: 60000, // Per minute
       },
+      // Lock configuration (PIPE-02)
+      lockDuration: 120000, // 2 minutes before job considered stalled
+      stalledInterval: 30000, // Check for stalled jobs every 30s
+      maxStalledCount: 1, // Fail after 1 stall detection
     }
   );
 }
@@ -494,17 +515,48 @@ async function scanAndGenerateLeagueRoundups() {
 
 // Worker event handlers
 export function setupContentWorkerEvents(worker: Worker) {
-   const log = loggers.contentWorker;
-   
-   worker.on('completed', (job) => {
-     log.info({ jobId: job.id }, `Job completed`);
-   });
+  const log = loggers.contentWorker;
+  const dlqQueue = getQueue(QUEUE_NAMES.CONTENT_DLQ);
 
-   worker.on('failed', (job, err) => {
-     log.error({ jobId: job?.id, err }, `Job failed`);
-   });
+  worker.on('completed', (job) => {
+    log.info({ jobId: job.id }, 'Job completed');
+  });
 
-   worker.on('error', (err) => {
-     log.error({ err }, `Worker error`);
-   });
+  worker.on('failed', async (job, err) => {
+    if (!job) return;
+
+    log.error({ jobId: job.id, err }, 'Job failed');
+
+    // Move to DLQ if retries exhausted
+    if (job.attemptsMade >= (job.opts.attempts || 1)) {
+      try {
+        await dlqQueue.add('dlq-job', {
+          originalJob: {
+            id: job.id,
+            name: job.name,
+            data: job.data,
+            attemptsMade: job.attemptsMade,
+            failedReason: err.message,
+            stackTrace: err.stack,
+            timestamp: new Date().toISOString(),
+          },
+        }, {
+          removeOnComplete: {
+            age: 604800, // Keep DLQ jobs 7 days
+          },
+        });
+        log.warn({ jobId: job.id }, 'Job moved to DLQ after retry exhaustion');
+      } catch (dlqErr) {
+        log.error({ jobId: job.id, err: dlqErr }, 'Failed to move job to DLQ');
+      }
+    }
+  });
+
+  worker.on('stalled', (jobId) => {
+    log.warn({ jobId }, 'Job stalled');
+  });
+
+  worker.on('error', (err) => {
+    log.error({ err }, 'Worker error');
+  });
 }

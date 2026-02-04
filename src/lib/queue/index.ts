@@ -179,6 +179,7 @@ export const QUEUE_NAMES = {
   LIVE: 'live-queue',
   SETTLEMENT: 'settlement-queue',
   CONTENT: 'content-queue',
+  CONTENT_DLQ: 'content-dlq',
   FIXTURES: 'fixtures-queue',
   BACKFILL: 'backfill-queue',
   MODEL_RECOVERY: 'model-recovery-queue',
