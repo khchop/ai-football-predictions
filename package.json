@@ -23,7 +23,10 @@
     "test:ui": "vitest --ui",
     "test:integration": "vitest run src/__tests__/integration/",
     "validate:models": "npx tsx scripts/validate-all-models.ts",
-    "validate:synthetic": "npx tsx scripts/validate-synthetic-models.ts"
+    "validate:synthetic": "npx tsx scripts/validate-synthetic-models.ts",
+    "check:fallback": "npx tsx scripts/check-fallback-rate.ts",
+    "validate:production": "npm run check:fallback",
+    "validate:all": "npm run validate:models && npm run check:fallback"
   },
   "dependencies": {
     "@bull-board/api": "^6.16.2",
