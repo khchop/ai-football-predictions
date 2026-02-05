@@ -2,21 +2,21 @@
 
 ## Milestones
 
-- ✅ **v1.0 Bug Fix Stabilization** - Phases 1-4 (shipped 2026-02-01)
-- ✅ **v1.1 Stats Accuracy & SEO** - Phases 5-8 (shipped 2026-02-02)
-- ✅ **v1.2 Technical SEO Fixes** - Phases 9-12 (shipped 2026-02-02)
-- ✅ **v1.3 Match Page Refresh** - Phases 13-16 (shipped 2026-02-02)
-- ✅ **v2.0 UI/UX Overhaul** - Phases 17-23 (shipped 2026-02-03)
-- ✅ **v2.1 Match Page Simplification** - Phases 24-25 (shipped 2026-02-03)
-- ✅ **v2.2 Match Page Rewrite** - Phases 26-30 (shipped 2026-02-04)
-- ✅ **v2.3 Content Pipeline & SEO** - Phases 31-36 (shipped 2026-02-04)
-- ✅ **v2.4 Synthetic.new Integration** - Phases 37-39 (shipped 2026-02-05)
-- 🚧 **v2.5 Model Reliability & Dynamic Counts** - Phases 40-43 (in progress)
+- **v1.0 Bug Fix Stabilization** - Phases 1-4 (shipped 2026-02-01)
+- **v1.1 Stats Accuracy & SEO** - Phases 5-8 (shipped 2026-02-02)
+- **v1.2 Technical SEO Fixes** - Phases 9-12 (shipped 2026-02-02)
+- **v1.3 Match Page Refresh** - Phases 13-16 (shipped 2026-02-02)
+- **v2.0 UI/UX Overhaul** - Phases 17-23 (shipped 2026-02-03)
+- **v2.1 Match Page Simplification** - Phases 24-25 (shipped 2026-02-03)
+- **v2.2 Match Page Rewrite** - Phases 26-30 (shipped 2026-02-04)
+- **v2.3 Content Pipeline & SEO** - Phases 31-36 (shipped 2026-02-04)
+- **v2.4 Synthetic.new Integration** - Phases 37-39 (shipped 2026-02-05)
+- **v2.5 Model Reliability & Dynamic Counts** - Phases 40-43 (in progress)
 
 ## Phases
 
 <details>
-<summary>✅ v1.0 Bug Fix Stabilization (Phases 1-4) - SHIPPED 2026-02-01</summary>
+<summary>v1.0 Bug Fix Stabilization (Phases 1-4) - SHIPPED 2026-02-01</summary>
 
 ### Phase 1: Database Resilience
 **Goal**: Database connections stable under load
@@ -41,7 +41,7 @@
 </details>
 
 <details>
-<summary>✅ v1.1 Stats Accuracy & SEO (Phases 5-8) - SHIPPED 2026-02-02</summary>
+<summary>v1.1 Stats Accuracy & SEO (Phases 5-8) - SHIPPED 2026-02-02</summary>
 
 ### Phase 5: Stats Correction
 **Goal**: Accuracy calculations match reality
@@ -66,7 +66,7 @@
 </details>
 
 <details>
-<summary>✅ v1.2 Technical SEO Fixes (Phases 9-12) - SHIPPED 2026-02-02</summary>
+<summary>v1.2 Technical SEO Fixes (Phases 9-12) - SHIPPED 2026-02-02</summary>
 
 ### Phase 9: Critical Errors
 **Goal**: No 500 errors or 404s
@@ -91,7 +91,7 @@
 </details>
 
 <details>
-<summary>✅ v1.3 Match Page Refresh (Phases 13-16) - SHIPPED 2026-02-02</summary>
+<summary>v1.3 Match Page Refresh (Phases 13-16) - SHIPPED 2026-02-02</summary>
 
 ### Phase 13: Content Integration
 **Goal**: LLM content displays on match pages
@@ -116,7 +116,7 @@
 </details>
 
 <details>
-<summary>✅ v2.0 UI/UX Overhaul (Phases 17-23) - SHIPPED 2026-02-03</summary>
+<summary>v2.0 UI/UX Overhaul (Phases 17-23) - SHIPPED 2026-02-03</summary>
 
 ### Phase 17: Design System
 **Goal**: Foundation with semantic tokens
@@ -156,7 +156,7 @@
 </details>
 
 <details>
-<summary>✅ v2.1 Match Page Simplification (Phases 24-25) - SHIPPED 2026-02-03</summary>
+<summary>v2.1 Match Page Simplification (Phases 24-25) - SHIPPED 2026-02-03</summary>
 
 ### Phase 24: Layout Simplification
 **Goal**: Natural scrolling without tabs
@@ -171,7 +171,7 @@
 </details>
 
 <details>
-<summary>✅ v2.2 Match Page Rewrite (Phases 26-30) - SHIPPED 2026-02-04</summary>
+<summary>v2.2 Match Page Rewrite (Phases 26-30) - SHIPPED 2026-02-04</summary>
 
 ### Phase 26: Context Architecture
 **Goal**: Single data provider
@@ -201,7 +201,7 @@
 </details>
 
 <details>
-<summary>✅ v2.3 Content Pipeline & SEO (Phases 31-36) - SHIPPED 2026-02-04</summary>
+<summary>v2.3 Content Pipeline & SEO (Phases 31-36) - SHIPPED 2026-02-04</summary>
 
 ### Phase 31: Error Handling
 **Goal**: Content generation throws errors
@@ -236,7 +236,7 @@
 </details>
 
 <details>
-<summary>✅ v2.4 Synthetic.new Integration (Phases 37-39) - SHIPPED 2026-02-05</summary>
+<summary>v2.4 Synthetic.new Integration (Phases 37-39) - SHIPPED 2026-02-05</summary>
 
 ### Phase 37: Provider Infrastructure
 **Goal**: Synthetic provider implemented
@@ -255,7 +255,7 @@
 
 </details>
 
-### 🚧 v2.5 Model Reliability & Dynamic Counts (In Progress)
+### v2.5 Model Reliability & Dynamic Counts (In Progress)
 
 **Milestone Goal:** Make all models work reliably with model-specific prompts and Together.ai fallbacks, and display model counts dynamically everywhere.
 
@@ -272,8 +272,8 @@
 **Plans**: 2 plans
 
 Plans:
-- [x] 40-01-PLAN.md — Create prompt variant and response handler infrastructure
-- [x] 40-02-PLAN.md — Integrate into providers and configure failing models
+- [x] 40-01-PLAN.md - Create prompt variant and response handler infrastructure
+- [x] 40-02-PLAN.md - Integrate into providers and configure failing models
 
 #### Phase 41: Together AI Fallbacks
 **Goal**: Synthetic model failures automatically fall back to Together AI equivalents with cycle detection and cost tracking
@@ -288,10 +288,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [x] 41-01-PLAN.md — Add usedFallback column and startup validation
-- [x] 41-02-PLAN.md — Implement callAPIWithFallback wrapper
-- [x] 41-03-PLAN.md — Add fallback metrics to admin dashboard
-- [x] 41-04-PLAN.md — Gap closure: add K2.5 mapping, correct criteria
+- [x] 41-01-PLAN.md - Add usedFallback column and startup validation
+- [x] 41-02-PLAN.md - Implement callAPIWithFallback wrapper
+- [x] 41-03-PLAN.md - Add fallback metrics to admin dashboard
+- [x] 41-04-PLAN.md - Gap closure: add K2.5 mapping, correct criteria
 
 #### Phase 42: Dynamic Model Counts
 **Goal**: Model counts displayed dynamically throughout the application with single source of truth
@@ -306,27 +306,29 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [x] 42-01-PLAN.md — Create getActiveModelCount() and cache invalidation infrastructure
-- [x] 42-02-PLAN.md — Replace all hardcoded "35 models" with dynamic counts
+- [x] 42-01-PLAN.md - Create getActiveModelCount() and cache invalidation infrastructure
+- [x] 42-02-PLAN.md - Replace all hardcoded "35 models" with dynamic counts
 
 #### Phase 43: Testing & Validation
-**Goal**: All 36+ models validated with comprehensive integration tests and gradual rollout
+**Goal**: All 42 models validated with comprehensive integration tests and production monitoring
 **Depends on**: Phase 41, Phase 42
 **Requirements**: JSON-04
 **Success Criteria** (what must be TRUE):
-  1. Integration test suite validates JSON output for all 36+ models
+  1. Integration test suite validates JSON output for all 42 models
   2. 6 previously disabled Synthetic models re-enabled with >90% success rate
   3. Fallback frequency monitored and remains <5% of total predictions
   4. Production validation confirms no regressions in working models
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 43-01: TBD
+- [ ] 43-01-PLAN.md - Set up Vitest framework and Zod validation schemas
+- [ ] 43-02-PLAN.md - Create integration tests for all 42 models
+- [ ] 43-03-PLAN.md - Add production fallback rate monitoring script
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 40 → 41 → 42 → 43
+Phases execute in numeric order: 40 -> 41 -> 42 -> 43
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -372,7 +374,7 @@ Phases execute in numeric order: 40 → 41 → 42 → 43
 | 40. Model-Specific Prompt Selection | v2.5 | 2/2 | Complete | 2026-02-05 |
 | 41. Together AI Fallbacks | v2.5 | 4/4 | Complete | 2026-02-05 |
 | 42. Dynamic Model Counts | v2.5 | 2/2 | Complete | 2026-02-05 |
-| 43. Testing & Validation | v2.5 | 0/1 | Not started | - |
+| 43. Testing & Validation | v2.5 | 0/3 | Not started | - |
 
 ---
-*Last updated: 2026-02-05 after Phase 42 execution complete*
+*Last updated: 2026-02-05 after Phase 43 planning complete*
