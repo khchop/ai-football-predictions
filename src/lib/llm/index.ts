@@ -57,6 +57,53 @@ export function getFallbackProvider(syntheticModelId: string): LLMProvider | und
   return ALL_PROVIDERS.find(p => p.id === fallbackId);
 }
 
+/**
+ * Validate fallback mapping at startup
+ * Checks:
+ * 1. All fallback target models exist in ALL_PROVIDERS
+ * 2. No cycles in fallback chain (though with max depth 1, cycles are unlikely but still bad config)
+ */
+function validateFallbackMapping(): void {
+  const providerIds = new Set(ALL_PROVIDERS.map(p => p.id));
+
+  for (const [syntheticId, fallbackId] of Object.entries(MODEL_FALLBACKS)) {
+    // Check fallback target exists
+    if (!providerIds.has(fallbackId)) {
+      throw new Error(
+        `Invalid fallback mapping: ${syntheticId} -> ${fallbackId}. ` +
+        `Target model "${fallbackId}" not found in ALL_PROVIDERS. ` +
+        `Available providers: ${[...providerIds].join(', ')}`
+      );
+    }
+
+    // Check for direct self-reference (model can't be its own fallback)
+    if (syntheticId === fallbackId) {
+      throw new Error(
+        `Invalid fallback mapping: ${syntheticId} -> ${fallbackId}. ` +
+        `Model cannot be its own fallback.`
+      );
+    }
+
+    // Check for simple cycle (A -> B -> A)
+    // With max depth 1 this is the only cycle pattern that matters
+    const fallbackOfFallback = MODEL_FALLBACKS[fallbackId];
+    if (fallbackOfFallback === syntheticId) {
+      throw new Error(
+        `Cycle detected in fallback mapping: ${syntheticId} -> ${fallbackId} -> ${syntheticId}. ` +
+        `Fallback chains must not form cycles.`
+      );
+    }
+  }
+
+  loggers.llm.info({
+    mappingCount: Object.keys(MODEL_FALLBACKS).length,
+    mappings: MODEL_FALLBACKS,
+  }, 'Fallback mapping validated successfully');
+}
+
+// Run validation at module load time (fails fast if config is invalid)
+validateFallbackMapping();
+
 // ============================================================================
 // USAGE NOTES:
 // - Call getFallbackProvider(modelId) when a Synthetic model fails
