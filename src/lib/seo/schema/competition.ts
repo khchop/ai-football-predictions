@@ -2,6 +2,9 @@ import type { SportsOrganization } from 'schema-dts';
 import { BASE_URL } from '../constants';
 import { COMPETITIONS, type CompetitionConfig } from '@/lib/football/competitions';
 
+// Default model count fallback (kept in sync with actual count via dynamic queries)
+const DEFAULT_MODEL_COUNT = 35;
+
 /**
  * Enhanced competition data including optional stats
  */
@@ -12,6 +15,7 @@ export interface EnhancedCompetitionData {
     finishedMatches: number;
     avgGoalsPerMatch: number;
   };
+  activeModels?: number;
 }
 
 /**
@@ -60,12 +64,13 @@ export function buildCompetitionSchema(competition: CompetitionConfig): SportsOr
  * Enhanced competition schema with areaServed and dynamic description
  */
 export function buildEnhancedCompetitionSchema(data: EnhancedCompetitionData): SportsOrganization {
-  const { competition, stats } = data;
+  const { competition, stats, activeModels } = data;
+  const modelCount = activeModels ?? DEFAULT_MODEL_COUNT;
 
   // Build dynamic description based on stats availability
   const description = stats && stats.finishedMatches > 0
-    ? `${competition.name} football competition with ${stats.finishedMatches} matches tracked and AI predictions from 35 models.`
-    : `${competition.name} football competition with AI predictions from 35 models. Track model accuracy and compare predictions.`;
+    ? `${competition.name} football competition with ${stats.finishedMatches} matches tracked and AI predictions from ${modelCount} models.`
+    : `${competition.name} football competition with AI predictions from ${modelCount} models. Track model accuracy and compare predictions.`;
 
   return {
     '@type': 'SportsOrganization',

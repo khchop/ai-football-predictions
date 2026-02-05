@@ -3,6 +3,7 @@ import { BASE_URL, SITE_NAME, MAX_TITLE_LENGTH, MAX_META_DESCRIPTION_LENGTH, MAX
 import type { MatchSeoData, MatchStatus } from './types';
 import { isMatchFinished, isMatchLive, isMatchUpcoming } from './types';
 import { abbreviateTeam, abbreviateCompetition } from './abbreviations';
+import { getOverallStats } from '@/lib/db/queries';
 
 /**
  * Truncate text to maximum length at last word boundary
@@ -37,12 +38,14 @@ export function createTitle(match: MatchSeoData): string {
   return `${home} vs ${away} Prediction`;
 }
 
-export function createDescription(match: MatchSeoData): string {
+export function createDescription(match: MatchSeoData, activeModels?: number): string {
+  const modelCount = activeModels ?? 35; // Fallback for backwards compatibility
+
   if (isMatchUpcoming(match.status)) {
     // Include predicted score when available
     if (match.predictedHomeScore !== undefined && match.predictedAwayScore !== undefined) {
       const baseMsg = `AI predicts ${match.predictedHomeScore}-${match.predictedAwayScore} for ${match.homeTeam} vs ${match.awayTeam}.`;
-      const modelsMsg = ` 35 models compete - see who's most accurate.`;
+      const modelsMsg = ` ${modelCount} models compete - see who's most accurate.`;
       const full = baseMsg + modelsMsg;
       return truncateWithEllipsis(full, MAX_META_DESCRIPTION_LENGTH);
     }
@@ -59,15 +62,15 @@ export function createDescription(match: MatchSeoData): string {
   const scoreInfo = match.homeScore !== null && match.awayScore !== null
     ? `${match.homeTeam} ${match.homeScore}-${match.awayScore} ${match.awayTeam} match analysis.`
     : `${match.homeTeam} vs ${match.awayTeam} match analysis.`;
-  const modelsMsg = ` AI predictions from 35 models with accuracy tracking.`;
+  const modelsMsg = ` AI predictions from ${modelCount} models with accuracy tracking.`;
   const full = scoreInfo + modelsMsg;
 
   return truncateWithEllipsis(full, MAX_META_DESCRIPTION_LENGTH);
 }
 
-export function buildMatchMetadata(match: MatchSeoData): Metadata {
+export function buildMatchMetadata(match: MatchSeoData, activeModels?: number): Metadata {
   const title = truncateWithEllipsis(createTitle(match), MAX_TITLE_LENGTH);
-  const description = createDescription(match); // Already truncated in createDescription
+  const description = createDescription(match, activeModels); // Already truncated in createDescription
 
   const url = `/matches/${match.id}`;
   const ogImageUrl = `${BASE_URL}${url}/opengraph-image`;
@@ -192,11 +195,13 @@ export function generateArticleMetadata(
 }
 
 export function generateLeaderboardMetadata(
-  competition?: string
+  competition?: string,
+  activeModels?: number
 ): Metadata {
+  const modelCount = activeModels ?? 35; // Fallback for backwards compatibility
   const title = competition
     ? `${competition} Leaderboard | AI Model Rankings | kroam.xyz`
-    : `AI Model Leaderboard | Compare 35 Models | kroam.xyz`;
+    : `AI Model Leaderboard | Compare ${modelCount} Models | kroam.xyz`;
 
   const description = competition
     ? `Compare ${competition} predictions across all AI models. See which model performs best with real-time accuracy tracking.`
@@ -271,9 +276,10 @@ export interface Competition {
   name: string;
 }
 
-export function generateCompetitionMetadata(competition: Competition): Metadata {
+export function generateCompetitionMetadata(competition: Competition, activeModels?: number): Metadata {
+  const modelCount = activeModels ?? 35; // Fallback for backwards compatibility
   const title = `${competition.name} Predictions | AI Models Compete | kroam.xyz`;
-  const description = `AI predictions for ${competition.name} from 35 models. Track accuracy, compare predictions, and see which AI performs best.`;
+  const description = `AI predictions for ${competition.name} from ${modelCount} models. Track accuracy, compare predictions, and see which AI performs best.`;
   const url = `${BASE_URL}/leagues/${competition.id}`;
 
   const ogImageUrl = new URL(`${BASE_URL}/api/og/league`);
