@@ -3,6 +3,9 @@ import { loggers } from '@/lib/logger/modules';
 import { TOGETHER_PROVIDERS } from './providers/together';
 import { SYNTHETIC_PROVIDERS } from './providers/synthetic';
 import { getAutoDisabledModelIds } from '@/lib/db/queries';
+import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
+import { getDb, models } from '@/lib/db';
+import { eq, sql } from 'drizzle-orm';
 
 // All available providers - Together AI + Synthetic.new
 // Together: 29 models, Synthetic: 13 exclusive models = 42 total
@@ -183,6 +186,30 @@ export function getProviderStats(): {
     together: TOGETHER_PROVIDERS.length,
     synthetic: SYNTHETIC_PROVIDERS.length,
   };
+}
+
+/**
+ * Get active model count from database (cached)
+ * This is the SINGLE SOURCE OF TRUTH for model count in UI/content
+ *
+ * Queries database `models.active = true`, not provider arrays.
+ * Provider arrays show configured models (42), this shows operationally active ones.
+ *
+ * @returns Number of active models from database
+ */
+export async function getActiveModelCount(): Promise<number> {
+  return withCache(
+    cacheKeys.activeModelCount(),
+    CACHE_TTL.STATS, // 60s TTL (same as overall stats)
+    async () => {
+      const db = getDb();
+      const result = await db
+        .select({ count: sql<number>`COUNT(*)::int` })
+        .from(models)
+        .where(eq(models.active, true));
+      return result[0]?.count || 0;
+    }
+  );
 }
 
 // Export providers
