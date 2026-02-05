@@ -360,7 +360,8 @@ export const predictions = pgTable('predictions', {
   
   // Status
   status: text('status').default('pending'), // 'pending' | 'scored' | 'void'
-  
+  usedFallback: boolean('used_fallback').default(false),
+
   // Timestamps
   createdAt: timestamp('created_at').default(sql`now()`),
   scoredAt: timestamp('scored_at'),
