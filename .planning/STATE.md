@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** The prediction pipeline must reliably generate scores from LLMs and accurately calculate Kicktipp quota points when matches complete
-**Current focus:** v2.5 Model Reliability & Dynamic Counts
+**Current focus:** Phase 40 - Model-Specific Prompt Selection
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-02-05 — Milestone v2.5 started
+Phase: 40 of 43 (Model-Specific Prompt Selection)
+Plan: 0 of 2 in current phase
+Status: Ready to plan
+Last activity: 2026-02-05 — Roadmap created for v2.5 milestone
 
-Progress: Ready for requirements definition
+Progress: [████████████████████████████████████████░░░░] 91%
 
 ## Milestone History
 
@@ -29,6 +29,7 @@ Progress: Ready for requirements definition
 | v2.2 Match Page Rewrite | 26-30 | 17 | 21 | 2026-02-04 |
 | v2.3 Content Pipeline & SEO | 31-36 | 13 | 24 | 2026-02-04 |
 | v2.4 Synthetic.new Integration | 37-39 | 7 | 17 | 2026-02-05 |
+| **v2.5 Model Reliability (in progress)** | **40-43** | **7 (TBD)** | **36** | **—** |
 
 **Total shipped:** 39 phases, 114 plans, 172 requirements
 
@@ -36,7 +37,11 @@ Progress: Ready for requirements definition
 
 ### Decisions
 
-Key decisions from v2.4 archived in milestones/v2.4-ROADMAP.md.
+Recent decisions affecting v2.5:
+
+- Model-specific prompts over LangChain/LiteLLM (avoids 10MB+ bundle, 50-200ms latency)
+- Fallback chains with cycle detection and max depth 3 (prevents worker exhaustion)
+- Dynamic model counts via getProviderStats() single source of truth (eliminates hardcoded references)
 
 ### Pending Todos
 
@@ -44,14 +49,11 @@ None.
 
 ### Blockers/Concerns
 
-**Active Blockers:**
-None.
-
 **Known Issues for v2.5:**
-- GLM-4.7 has known SGLang structured output bug (Synthetic.new confirmed) - may need Together.ai fallback
-- kimi-k2.5-syn and glm-4.6-syn timeout consistently - need model-specific prompt or fallback
-- qwen3-235b-thinking and deepseek-v3.2 return natural language instead of JSON - need prompt adjustment
-- 15+ hardcoded "35 models" references across SEO metadata need dynamic replacement
+- Phase 40: Need to validate that custom prompts actually fix GLM, Kimi, Qwen failures
+- Phase 41: Cross-provider API compatibility (Together AI vs Synthetic parameter differences) needs validation
+- Phase 42: Cache invalidation on model enable/disable must be atomic to prevent count inconsistencies
+- Phase 43: 60s timeout may be insufficient for Kimi K2.5, GLM 4.6 (may need 90s)
 
 ### Quick Tasks Completed
 
@@ -63,13 +65,16 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Milestone v2.5 started, defining requirements
-Resume file: None
-Resume with: Continue requirements definition
+Stopped at: Roadmap and STATE.md created for v2.5 milestone
+Resume file: None (ready to start Phase 40 planning with /gsd:plan-phase 40)
 
 **Platform status:**
 - 17 leagues operational
 - 36 active models (29 Together + 7 Synthetic)
 - 6 disabled Synthetic models (target for re-enabling)
-- 172 requirements validated
-- 39 phases complete
+- 172 requirements validated (v1.0-v2.4)
+- 36 new requirements for v2.5
+- 39 phases complete, 4 phases in v2.5
+
+---
+*Last updated: 2026-02-05 after v2.5 roadmap creation*
