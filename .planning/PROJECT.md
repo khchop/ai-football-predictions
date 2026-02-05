@@ -2,11 +2,11 @@
 
 ## What This Is
 
-A production-ready platform where 30+ Open Source LLMs predict exact football match scores, with real-time leaderboards tracking model accuracy using Kicktipp quota scoring. Users view and compare model predictions across 17 leagues including Top 5 European leagues, Champions League, Europa League, Conference League, Eredivisie, Turkish League, and international tournaments.
+A production-ready platform where 42 Open Source LLMs predict exact football match scores, with real-time leaderboards tracking model accuracy using Kicktipp quota scoring. Users view and compare model predictions across 17 leagues including Top 5 European leagues, Champions League, Europa League, Conference League, Eredivisie, Turkish League, and international tournaments.
 
 ## The ONE Thing That Must Work
 
-The prediction pipeline must reliably generate scores from 35 LLMs ~30 minutes before kickoff and accurately calculate Kicktipp quota points when matches complete. This is the core value proposition — without accurate predictions and fair scoring, the platform has no purpose.
+The prediction pipeline must reliably generate scores from 42 LLMs ~30 minutes before kickoff and accurately calculate Kicktipp quota points when matches complete. This is the core value proposition — without accurate predictions and fair scoring, the platform has no purpose.
 
 ## Why This Exists
 
@@ -21,7 +21,48 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 
 ## Current State
 
-**Brownfield project with v2.4 shipped.** 36 active LLM models across Together AI (29) and Synthetic.new (7) providers. 172 requirements validated across 9 milestones (v1.0-v2.4)
+**Brownfield project with v2.5 shipped.** 42 active LLM models across Together AI (29) and Synthetic.new (13) providers. 208 requirements validated across 10 milestones (v1.0-v2.5)
+
+### Validated (v2.5)
+
+The following requirements were validated in v2.5:
+
+- ✓ **PRMT-01**: Model-specific prompt templates exist for failing models — v2.5
+- ✓ **PRMT-02**: GLM models receive English enforcement prompt — v2.5
+- ✓ **PRMT-03**: Thinking models receive tag suppression prompt — v2.5
+- ✓ **PRMT-04**: DeepSeek R1 uses minimal system prompt — v2.5
+- ✓ **PRMT-05**: Prompt selector falls back to base prompt for unmapped models — v2.5
+- ✓ **PRMT-06**: Models returning natural language receive JSON emphasis prompt — v2.5
+- ✓ **JSON-01**: Models that fail JSON parsing receive structured output enforcement — v2.5
+- ✓ **JSON-02**: qwen3-235b-thinking returns valid JSON after prompt adjustment — v2.5
+- ✓ **JSON-03**: deepseek-v3.2 returns valid JSON after prompt adjustment — v2.5
+- ✓ **JSON-04**: Integration test validates JSON output for all 42 models — v2.5
+- ✓ **TIME-01**: Model-specific timeout configuration exists — v2.5
+- ✓ **TIME-02**: Thinking models use 60s+ timeout — v2.5
+- ✓ **TIME-03**: Kimi K2.5 uses 60s timeout — v2.5
+- ✓ **TIME-04**: GLM models use 60s timeout — v2.5
+- ✓ **FALL-01**: Fallback orchestrator wraps callAPI with try-catch + fallback — v2.5
+- ✓ **FALL-02**: Synthetic model failures trigger automatic fallback to Together.ai — v2.5
+- ✓ **FALL-03**: Fallback returns tuple for transparency — v2.5
+- ✓ **FALL-04**: kimi-k2.5-syn falls back to Together.ai equivalent — v2.5
+- ✓ **FALL-05**: glm-4.6-syn: no Together equivalent (by design) — v2.5
+- ✓ **FALL-06**: glm-4.7-syn: no Together equivalent (by design) — v2.5
+- ✓ **CYCL-01**: Fallback mapping validated at startup — v2.5
+- ✓ **CYCL-02**: Runtime cycle detection tracks attemptedModels — v2.5
+- ✓ **CYCL-03**: Max fallback depth limit prevents infinite retries — v2.5
+- ✓ **COST-01**: Fallback logs warning if >2x more expensive — v2.5
+- ✓ **COST-02**: Cost metadata tracked in prediction record — v2.5
+- ✓ **COST-03**: Daily fallback cost visible in admin dashboard — v2.5
+- ✓ **DYNM-01**: Homepage hero displays dynamic model count — v2.5
+- ✓ **DYNM-02**: Leaderboard page displays dynamic model count — v2.5
+- ✓ **DYNM-03**: Match page SEO metadata uses dynamic model count — v2.5
+- ✓ **DYNM-04**: Content generation prompts use dynamic model count — v2.5
+- ✓ **DYNM-05**: System prompts use dynamic model count — v2.5
+- ✓ **DYNM-06**: Single source of truth (getActiveModelCount function) — v2.5
+- ✓ **DYNM-07**: Cache invalidation on model enable/disable — v2.5
+- ✓ **LEAD-01**: New models appear in leaderboard after first prediction — v2.5
+- ✓ **LEAD-02**: Re-enabled models appear without manual intervention — v2.5
+- ✓ **LEAD-03**: Leaderboard query uses active models from database — v2.5
 
 ### Validated (v2.4)
 
@@ -246,7 +287,7 @@ The following requirements were validated in v1.0:
 The following capabilities are built and operational:
 
 - **Match Data Pipeline**: Automated fetching of fixtures, live scores, lineups, and statistics from API-Football for 17 leagues
-- **LLM Integration**: 29 open-source models via Together AI API with automatic retry and failure handling
+- **LLM Integration**: 42 open-source models via Together AI (29) + Synthetic.new (13) with model-specific prompts and fallback chains
 - **Prediction Generation**: Context-rich prompts incorporating team form, H2H, standings, and lineups, generating exact score predictions
 - **Kicktipp Scoring**: Quota-based scoring system where rare correct predictions earn 2-6 points, exact scores earn +3 bonus (max 10 points)
 - **Real-time Live Scores**: WebSocket/polling updates during matches with minute-by-minute tracking
@@ -258,14 +299,14 @@ The following capabilities are built and operational:
 
 ### Context
 
-Shipped v2.4 with ~195,862 LOC TypeScript.
-Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, Synthetic.new, Radix UI, next-themes, isomorphic-dompurify, html-to-text, he.
-All 172 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, and v2.4 milestones.
+Shipped v2.5 with ~206,185 LOC TypeScript.
+Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, Synthetic.new, Vitest, Zod, Radix UI, next-themes, isomorphic-dompurify, html-to-text, he.
+All 208 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, and v2.5 milestones.
 
 ## Constraints
 
 **Technical:**
-- Must maintain Together AI API integration (29 models) + Synthetic.new (7 models)
+- Must maintain Together AI API integration (29 models) + Synthetic.new (13 models)
 - PostgreSQL + Redis infrastructure already deployed
 - Next.js 16 + React 19 + TypeScript stack (no framework changes)
 - API-Football data source (contracted)
@@ -286,7 +327,7 @@ All 172 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, 
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| API-based LLM infrastructure | Cost-effective access to 35+ models without infrastructure overhead | Implemented via Together AI |
+| API-based LLM infrastructure | Cost-effective access to 42 models without infrastructure overhead | Implemented via Together AI + Synthetic.new |
 | Exact score predictions (not 1X2) | More impressive benchmark, demonstrates reasoning capability | Current system predicts 2-1, 0-0, etc. |
 | Kicktipp quota scoring | Rewards rare correct predictions, penalizes herd behavior | 2-6 points based on prediction rarity |
 | 30-minute pre-kickoff prediction window | Lineups available, but close enough to match for relevant context | T-30m with T-5m retry fallback |
@@ -305,16 +346,9 @@ All 172 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, 
 - Model fine-tuning or custom training
 - Vision models (Qwen3-VL) - not useful for text-only predictions
 
-## Current Milestone: v2.5 Model Reliability & Dynamic Counts
+## Completed Milestones
 
-**Goal:** Make all models work reliably with model-specific prompts and Together.ai fallbacks, and display model counts dynamically everywhere.
-
-**Target features:**
-- Model-specific prompts for failing models (Kimi K2.5, GLM 4.7, thinking models)
-- Together.ai fallback chain when model-specific prompts still fail
-- Re-enable currently disabled Synthetic models after fixes
-- Replace hardcoded "35 models" with dynamic counts from provider stats
-- Ensure new models appear in leaderboard automatically
+v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5 — see `.planning/MILESTONES.md` for full history.
 
 ---
-*Last updated: 2026-02-05 after v2.5 milestone started*
+*Last updated: 2026-02-05 after v2.5 milestone complete*

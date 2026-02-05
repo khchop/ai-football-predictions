@@ -1,5 +1,33 @@
 # Project Milestones: AI Football Predictions Platform
 
+## v2.5 Model Reliability & Dynamic Counts (Shipped: 2026-02-05)
+
+**Delivered:** Made all 42 models work reliably with model-specific prompts, Together.ai fallback chains, dynamic model counts everywhere, and comprehensive integration testing with production monitoring.
+
+**Phases completed:** 40-43 (11 plans total)
+
+**Key accomplishments:**
+
+- Model-specific prompt system with 5 prompt variants and 3 response handlers for failing models
+- Re-enabled 6 previously disabled Synthetic models (Qwen3-235B-Thinking, DeepSeek V3.2, Kimi K2.5, GLM 4.6/4.7, GPT-OSS 120B)
+- Together AI fallback chains with cycle detection, max depth 1, and cost tracking
+- Dynamic model counts replacing all hardcoded "35 models" across SEO, pages, content generation
+- Vitest integration tests validating JSON output for all 42 models
+- Admin fallback dashboard with per-model rates and 2x cost warning badges
+
+**Stats:**
+
+- 70 files changed, +10,651 / -328 lines
+- 4 phases, 11 plans, 36 requirements
+- 54 commits
+- 1 day from start to ship (2026-02-05)
+
+**Git range:** `256727c (docs(40))` → `f3754dc (docs(43))`
+
+**What's next:** New milestone planning with `/gsd:new-milestone`
+
+---
+
 ## v2.4 Synthetic.new Integration (Shipped: 2026-02-05)
 
 **Delivered:** Added Synthetic.new as second LLM provider with 7 validated models (2 reasoning + 5 standard), expanding total active models from 29 to 36 with fallback mapping for cross-provider resilience.
@@ -275,4 +303,4 @@
 
 ---
 
-*Last updated: 2026-02-05 after v2.4 milestone*
+*Last updated: 2026-02-05 after v2.5 milestone*
