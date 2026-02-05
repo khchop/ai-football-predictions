@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 
 ## Current Position
 
-Phase: 40 of 43 (Model-Specific Prompt Selection)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-05 — Completed 40-02-PLAN.md (provider integration)
+Phase: 41 of 43 (Together AI Fallbacks)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-05 — Completed 41-01-PLAN.md (foundation)
 
-Progress: [████████████████████████████████████████░░░░] 93%
+Progress: [████████████████████████████████████████░░░░] 95%
 
 ## Milestone History
 
@@ -48,6 +48,8 @@ Recent decisions affecting v2.5:
 - Optional promptConfig property on provider classes (40-02: subclasses only override when needed)
 - Unified content extraction before response handler (40-02: single return path handles all response formats)
 - Model-specific timeouts: 90s for large reasoning models, 60s for medium, 45s for JSON-strict (40-02)
+- Boolean usedFallback tracking only (41-01: modelId stores original model, flag tracks internal fallback usage)
+- Module load time validation for MODEL_FALLBACKS (41-01: fail-fast on invalid configuration)
 
 ### Pending Todos
 
@@ -57,7 +59,8 @@ None.
 
 **Known Issues for v2.5:**
 - Phase 40: COMPLETE - Infrastructure ready, needs integration testing to validate prompt fixes
-- Phase 41: Cross-provider API compatibility (Together AI vs Synthetic parameter differences) needs validation
+- Phase 41: Plan 01 COMPLETE - Database and validation foundation ready for fallback integration
+- Phase 41: Cross-provider API compatibility (Together AI vs Synthetic parameter differences) needs validation in 41-02
 - Phase 42: Cache invalidation on model enable/disable must be atomic to prevent count inconsistencies
 - Phase 43: Timeout validation needed - Qwen3 Thinking at 90s, others at 60s/45s
 
@@ -71,8 +74,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 40-02-PLAN.md (provider integration, phase 40 complete)
-Resume file: None (ready for phase 41)
+Stopped at: Completed 41-01-PLAN.md (fallback foundation, phase 41 plan 1 complete)
+Resume file: None (ready for 41-02)
 
 **Platform status:**
 - 17 leagues operational
@@ -81,6 +84,7 @@ Resume file: None (ready for phase 41)
 - 172 requirements validated (v1.0-v2.4)
 - 36 new requirements for v2.5
 - 40 phases complete, 3 phases remaining in v2.5
+- Phase 41 progress: 1/3 plans complete (foundation ready)
 
 ---
-*Last updated: 2026-02-05 after completing 40-02*
+*Last updated: 2026-02-05 after completing 41-01*
