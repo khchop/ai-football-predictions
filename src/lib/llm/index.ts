@@ -30,6 +30,9 @@ export const MODEL_FALLBACKS: Record<string, string> = {
   // Same base model, different tuning (thinking vs instruction-following)
   'kimi-k2-thinking-syn': 'kimi-k2-instruct',
 
+  // Kimi K2.5 (non-thinking variant)
+  'kimi-k2.5-syn': 'kimi-k2-instruct',
+
   // Note: Most Synthetic models are exclusive and have no Together AI equivalent:
   // - DeepSeek V3 variants (0324, Terminus, V3.2) - not on Together
   // - MiniMax M2/M2.1 - not on Together
@@ -109,7 +112,7 @@ validateFallbackMapping();
 // - Call getFallbackProvider(modelId) when a Synthetic model fails
 // - Returns undefined if no fallback exists or TOGETHER_API_KEY not set
 // - Integration into prediction pipeline is a future enhancement
-// - Currently 2 fallbacks configured (deepseek-r1, kimi-k2)
+// - Currently 3 fallbacks configured (deepseek-r1, kimi-k2-thinking, kimi-k2.5)
 // ============================================================================
 
 // Get active providers (checks if API keys are configured and filters auto-disabled models)
