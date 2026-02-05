@@ -305,9 +305,16 @@ All 172 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, 
 - Model fine-tuning or custom training
 - Vision models (Qwen3-VL) - not useful for text-only predictions
 
-## Next Milestone
+## Current Milestone: v2.5 Model Reliability & Dynamic Counts
 
-Planning next milestone with `/gsd:new-milestone`.
+**Goal:** Make all models work reliably with model-specific prompts and Together.ai fallbacks, and display model counts dynamically everywhere.
+
+**Target features:**
+- Model-specific prompts for failing models (Kimi K2.5, GLM 4.7, thinking models)
+- Together.ai fallback chain when model-specific prompts still fail
+- Re-enable currently disabled Synthetic models after fixes
+- Replace hardcoded "35 models" with dynamic counts from provider stats
+- Ensure new models appear in leaderboard automatically
 
 ---
-*Last updated: 2026-02-05 after v2.4 milestone complete*
+*Last updated: 2026-02-05 after v2.5 milestone started*

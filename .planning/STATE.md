@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** The prediction pipeline must reliably generate scores from LLMs and accurately calculate Kicktipp quota points when matches complete
-**Current focus:** Planning next milestone
+**Current focus:** v2.5 Model Reliability & Dynamic Counts
 
 ## Current Position
 
-Phase: —
+Phase: Not started (defining requirements)
 Plan: —
-Status: Milestone v2.4 complete, ready for next milestone
-Last activity: 2026-02-05 — Completed v2.4 Synthetic.new Integration
+Status: Defining requirements
+Last activity: 2026-02-05 — Milestone v2.5 started
 
-Progress: Ready for v2.5+
+Progress: Ready for requirements definition
 
 ## Milestone History
 
@@ -47,10 +47,11 @@ None.
 **Active Blockers:**
 None.
 
-**Future Concerns (from v2.4):**
-- GLM-4.7 has known SGLang structured output bug (Synthetic.new confirmed) - blocked until upstream fix
-- 2 Synthetic models timeout consistently (kimi-k2.5-syn, glm-4.6-syn) - may need rate limit investigation
-- 2 reasoning models return natural language instead of JSON (qwen3-235b-thinking, deepseek-v3.2) - may need prompt adjustment
+**Known Issues for v2.5:**
+- GLM-4.7 has known SGLang structured output bug (Synthetic.new confirmed) - may need Together.ai fallback
+- kimi-k2.5-syn and glm-4.6-syn timeout consistently - need model-specific prompt or fallback
+- qwen3-235b-thinking and deepseek-v3.2 return natural language instead of JSON - need prompt adjustment
+- 15+ hardcoded "35 models" references across SEO metadata need dynamic replacement
 
 ### Quick Tasks Completed
 
@@ -62,12 +63,13 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: v2.4 milestone complete
+Stopped at: Milestone v2.5 started, defining requirements
 Resume file: None
-Resume with: `/gsd:new-milestone`
+Resume with: Continue requirements definition
 
 **Platform status:**
 - 17 leagues operational
 - 36 active models (29 Together + 7 Synthetic)
+- 6 disabled Synthetic models (target for re-enabling)
 - 172 requirements validated
 - 39 phases complete
