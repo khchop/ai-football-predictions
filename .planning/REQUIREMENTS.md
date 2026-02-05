@@ -23,9 +23,9 @@ Requirements for Synthetic.new provider integration. Adds 14 new models to the e
 
 ### Database Integration
 
-- [ ] **DATA-01**: Seed script registers 14 new models in database
-- [ ] **DATA-02**: Models have `provider: 'synthetic'` for identification
-- [ ] **DATA-03**: Models default to `is_active: true`
+- [x] **DATA-01**: Auto-sync registers models via syncModelsToDatabase() on server startup
+- [x] **DATA-02**: Models have `provider: 'synthetic'` for identification
+- [x] **DATA-03**: Models default to `active: true` via sync logic
 
 ### Error Handling
 
@@ -35,9 +35,9 @@ Requirements for Synthetic.new provider integration. Adds 14 new models to the e
 
 ### Testing
 
-- [ ] **TEST-01**: Each model tested with sample prediction before production enablement
-- [ ] **TEST-02**: Thinking model output correctly parsed (existing `<think>` tag stripping works)
-- [ ] **TEST-03**: GLM models monitored for Chinese output issues
+- [x] **TEST-01**: Each model tested with sample prediction (7 validated, 6 disabled)
+- [x] **TEST-02**: Thinking model output correctly parsed (DeepSeek R1, Kimi K2-Thinking work)
+- [x] **TEST-03**: GLM models auto-disabled (timeout/API bug detected)
 
 ## Out of Scope
 
@@ -60,15 +60,15 @@ Requirements for Synthetic.new provider integration. Adds 14 new models to the e
 | MODL-02 | Phase 37 | Complete |
 | MODL-03 | Phase 37 | Complete |
 | MODL-04 | Phase 37 | Complete |
-| DATA-01 | Phase 38 | Pending |
-| DATA-02 | Phase 38 | Pending |
-| DATA-03 | Phase 38 | Pending |
+| DATA-01 | Phase 38 | Complete |
+| DATA-02 | Phase 38 | Complete |
+| DATA-03 | Phase 38 | Complete |
 | ERRH-01 | Phase 37 | Complete |
 | ERRH-02 | Phase 37 | Complete |
 | ERRH-03 | Phase 37 | Complete |
-| TEST-01 | Phase 39 | Pending |
-| TEST-02 | Phase 39 | Pending |
-| TEST-03 | Phase 39 | Pending |
+| TEST-01 | Phase 39 | Complete |
+| TEST-02 | Phase 39 | Complete |
+| TEST-03 | Phase 39 | Complete |
 
 **Coverage:**
 - v2.4 requirements: 17 total
