@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 41 of 43 (Together AI Fallbacks)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-05 — Completed 41-03-PLAN.md (admin fallback visibility)
+Plan: 4 of 4 in current phase
+Status: Phase complete (gap closure)
+Last activity: 2026-02-05 — Completed 41-04-PLAN.md (gap closure)
 
-Progress: [█████████████████████████████████████████░░░] 95%
+Progress: [█████████████████████████████████████████░░░] 96%
 
 ## Milestone History
 
@@ -54,6 +54,8 @@ Recent decisions affecting v2.5:
 - Max fallback depth 1 with structural enforcement (41-02: Together models have no fallbacks, no cycle detection needed)
 - Cost warning threshold at 2x original cost (41-03: amber badges for expensive fallbacks in admin dashboard)
 - Per-model fallback rate calculated from predictions table (41-03: aggregates usedFallback boolean per modelId)
+- Kimi K2.5-syn maps to kimi-k2-instruct (41-04: same fallback target as K2-thinking)
+- GLM/MiniMax/Qwen3 Coder have no fallbacks (41-04: documented provider limitation, not implementation gap)
 
 ### Pending Todos
 
@@ -63,7 +65,7 @@ None.
 
 **Known Issues for v2.5:**
 - Phase 40: COMPLETE - Infrastructure ready, needs integration testing to validate prompt fixes
-- Phase 41: COMPLETE - Fallback infrastructure, orchestration, and admin visibility shipped
+- Phase 41: COMPLETE - All 4 plans shipped (infrastructure, orchestration, admin visibility, gap closure)
 - Phase 41: Cross-provider API compatibility (Together AI vs Synthetic parameter differences) needs validation
 - Phase 41: Fallback timeout behavior needs testing (does Together AI inherit model-specific timeout?)
 - Phase 42: Cache invalidation on model enable/disable must be atomic to prevent count inconsistencies
@@ -79,7 +81,7 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 41-03-PLAN.md (admin fallback visibility, phase 41 complete)
+Stopped at: Completed 41-04-PLAN.md (gap closure, phase 41 fully complete)
 Resume file: None (ready for phase 42)
 
 **Platform status:**
@@ -89,7 +91,8 @@ Resume file: None (ready for phase 42)
 - 172 requirements validated (v1.0-v2.4)
 - 36 new requirements for v2.5
 - 41 phases complete, 2 phases remaining in v2.5
-- Phase 41: COMPLETE - All 3 plans shipped (infrastructure, orchestration, admin visibility)
+- Phase 41: COMPLETE - All 4 plans shipped (infrastructure, orchestration, admin visibility, gap closure)
+- 3 fallback mappings validated: deepseek-r1-0528-syn, kimi-k2-thinking-syn, kimi-k2.5-syn
 
 ---
-*Last updated: 2026-02-05 after completing 41-03*
+*Last updated: 2026-02-05 after completing 41-04*
