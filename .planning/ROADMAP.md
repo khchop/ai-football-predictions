@@ -306,8 +306,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 42-01-PLAN.md — Create getActiveModelCount() and cache invalidation infrastructure
-- [ ] 42-02-PLAN.md — Replace all hardcoded "35 models" with dynamic counts
+- [x] 42-01-PLAN.md — Create getActiveModelCount() and cache invalidation infrastructure
+- [x] 42-02-PLAN.md — Replace all hardcoded "35 models" with dynamic counts
 
 #### Phase 43: Testing & Validation
 **Goal**: All 36+ models validated with comprehensive integration tests and gradual rollout
@@ -371,8 +371,8 @@ Phases execute in numeric order: 40 → 41 → 42 → 43
 | 39. Testing & Validation | v2.4 | 2/2 | Complete | 2026-02-05 |
 | 40. Model-Specific Prompt Selection | v2.5 | 2/2 | Complete | 2026-02-05 |
 | 41. Together AI Fallbacks | v2.5 | 4/4 | Complete | 2026-02-05 |
-| 42. Dynamic Model Counts | v2.5 | 0/2 | Not started | - |
+| 42. Dynamic Model Counts | v2.5 | 2/2 | Complete | 2026-02-05 |
 | 43. Testing & Validation | v2.5 | 0/1 | Not started | - |
 
 ---
-*Last updated: 2026-02-05 after Phase 42 planning complete*
+*Last updated: 2026-02-05 after Phase 42 execution complete*
