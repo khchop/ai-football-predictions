@@ -285,11 +285,12 @@ Plans:
   3. Fallback loops prevented by cycle detection at startup and max depth limit of 3
   4. Admin dashboard displays daily fallback costs with warnings when fallback >2x more expensive
   5. Prediction records track originalModelId and fallbackModelId for transparency
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 41-01: TBD
-- [ ] 41-02: TBD
+- [ ] 41-01-PLAN.md — Add usedFallback column to schema and startup validation for MODEL_FALLBACKS
+- [ ] 41-02-PLAN.md — Implement callAPIWithFallback wrapper and integrate into predictions worker
+- [ ] 41-03-PLAN.md — Add fallback metrics to admin dashboard
 
 #### Phase 42: Dynamic Model Counts
 **Goal**: Model counts displayed dynamically throughout the application with single source of truth
@@ -368,9 +369,9 @@ Phases execute in numeric order: 40 → 41 → 42 → 43
 | 38. Model Configuration | v2.4 | 2/2 | Complete | 2026-02-05 |
 | 39. Testing & Validation | v2.4 | 2/2 | Complete | 2026-02-05 |
 | 40. Model-Specific Prompt Selection | v2.5 | 2/2 | Complete | 2026-02-05 |
-| 41. Together AI Fallbacks | v2.5 | 0/2 | Not started | - |
+| 41. Together AI Fallbacks | v2.5 | 0/3 | Not started | - |
 | 42. Dynamic Model Counts | v2.5 | 0/2 | Not started | - |
 | 43. Testing & Validation | v2.5 | 0/1 | Not started | - |
 
 ---
-*Last updated: 2026-02-05 after Phase 40 execution complete*
+*Last updated: 2026-02-05 after Phase 41 planning complete*
