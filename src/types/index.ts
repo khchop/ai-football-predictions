@@ -74,6 +74,15 @@ export interface LLMPredictionResult {
   processingTimeMs: number;
 }
 
+export interface BatchPredictionResult {
+  predictions: Map<string, { homeScore: number; awayScore: number }>;
+  rawResponse: string;
+  success: boolean;
+  error?: string;
+  processingTimeMs: number;
+  failedMatchIds?: string[];
+}
+
 export interface LLMProvider {
   id: string;
   name: string;
@@ -81,6 +90,7 @@ export interface LLMProvider {
   displayName: string;
   isPremium: boolean;
   predict(homeTeam: string, awayTeam: string, competition: string, matchDate: string): Promise<LLMPredictionResult>;
+  predictBatch(batchPrompt: string, expectedMatchIds: string[]): Promise<BatchPredictionResult>;
 }
 
 // API Football types

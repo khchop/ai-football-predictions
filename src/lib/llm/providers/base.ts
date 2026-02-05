@@ -1,4 +1,4 @@
-import { LLMPredictionResult, LLMProvider } from '@/types';
+import { LLMPredictionResult, LLMProvider, BatchPredictionResult } from '@/types';
 import {
   SYSTEM_PROMPT,
   BATCH_SYSTEM_PROMPT,
@@ -18,15 +18,8 @@ import { TOGETHER_PREDICTION_RETRY, TOGETHER_PREDICTION_TIMEOUT_MS, TOGETHER_PRE
 import { PromptVariant, PromptConfig, getEnhancedSystemPrompt } from '../prompt-variants';
 import { ResponseHandler, RESPONSE_HANDLERS } from '../response-handlers';
 
-// Result for batch predictions
-export interface BatchPredictionResult {
-  predictions: Map<string, { homeScore: number; awayScore: number }>;
-  rawResponse: string;
-  success: boolean;
-  error?: string;
-  processingTimeMs: number;
-  failedMatchIds?: string[];
-}
+// Re-export for backward compatibility
+export type { BatchPredictionResult } from '@/types';
 
 // Result for fallback-aware API calls
 export interface FallbackAPIResult {
