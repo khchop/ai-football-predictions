@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 
 ## Current Position
 
-Phase: Not started (researching)
+Phase: 44 — Foundation (Redirects, Canonicals & Index Pages)
 Plan: —
-Status: Researching domain
-Last activity: 2026-02-05 — Milestone v2.6 started
+Status: Roadmap complete, ready to plan Phase 44
+Last activity: 2026-02-05 — v2.6 roadmap created (5 phases, 36 requirements)
 
-Progress: [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0% (researching)
+Progress: [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 5% (roadmap done)
 
 ## Milestone History
 
@@ -45,7 +45,7 @@ None.
 
 ### Blockers/Concerns
 
-None — researching for v2.6.
+None — roadmap ready, starting Phase 44.
 
 ### Quick Tasks Completed
 
@@ -60,7 +60,7 @@ None — researching for v2.6.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Starting v2.6 SEO/GEO Site Health milestone
+Stopped at: v2.6 roadmap created, ready to plan Phase 44
 Resume file: None
 
 **Platform status:**
@@ -70,4 +70,4 @@ Resume file: None
 - 208 requirements validated (v1.0-v2.5)
 
 ---
-*Last updated: 2026-02-05 after v2.6 milestone started*
+*Last updated: 2026-02-05 after v2.6 roadmap created*

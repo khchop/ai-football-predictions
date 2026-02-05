@@ -12,6 +12,7 @@
 - **v2.3 Content Pipeline & SEO** - Phases 31-36 (shipped 2026-02-04)
 - **v2.4 Synthetic.new Integration** - Phases 37-39 (shipped 2026-02-05)
 - **v2.5 Model Reliability & Dynamic Counts** - Phases 40-43 (shipped 2026-02-05)
+- **v2.6 SEO/GEO Site Health** - Phases 44-48 (in progress)
 
 ## Phases
 
@@ -328,10 +329,74 @@ Plans:
 
 </details>
 
+### v2.6 SEO/GEO Site Health (Phases 44-48)
+
+**Milestone Goal:** Fix all 24 SEO/GEO issues identified by Ahrefs audit. Eliminate 404s, fix canonical URLs, clean sitemaps, resolve orphan pages, optimize meta tags, fix structured data, and remove broken hreflang — achieving Ahrefs site health score >90.
+
+#### Phase 44: Foundation — Redirects, Canonicals & Index Pages
+**Goal**: Fix critical SEO errors: remove cascading canonical from root layout, remove broken hreflang, create /models and /leagues index pages, fix www/protocol redirects
+**Depends on**: Phase 43
+**Requirements**: REDIR-01, REDIR-02, REDIR-03, REDIR-04, REDIR-05, INDEX-01, INDEX-02, INDEX-03, INDEX-04, I18N-01, I18N-02
+**Success Criteria** (what must be TRUE):
+  1. /models and /leagues return 200 with listing pages (not 404)
+  2. Root layout does not set canonical URL or hreflang alternates
+  3. Match pages at /leagues/{slug}/{match} have self-referential canonical URLs
+  4. www.kroam.xyz and http://kroam.xyz redirect with 301 (not 302)
+  5. No redirect chains exist (single-hop from any entry point)
+**Plans**: TBD
+
+#### Phase 45: Sitemap & Internal Linking
+**Goal**: Clean sitemaps, fix orphan pages, add cross-linking widgets between models/leagues/matches
+**Depends on**: Phase 44
+**Requirements**: SMAP-01, SMAP-02, SMAP-03, SMAP-04, LINK-01, LINK-02, LINK-03, LINK-04, LINK-05, REDIR-06
+**Success Criteria** (what must be TRUE):
+  1. Sitemap index file exists at /sitemap.xml referencing all sub-sitemaps
+  2. No /matches/UUID URLs appear in any sitemap
+  3. All league and model pages appear in sitemap
+  4. Zero orphan model pages (all have 3+ internal links)
+  5. Internal links use short-form league slugs (no links triggering 308 redirects)
+**Plans**: TBD
+
+#### Phase 46: Content Tags & Meta Optimization
+**Goal**: Fix H1 tags, meta descriptions, title lengths, and Open Graph tags across all pages
+**Depends on**: Phase 44
+**Requirements**: CTAG-01, CTAG-02, CTAG-03, CTAG-04, CTAG-05, CTAG-06, INDEX-05, INDEX-06
+**Success Criteria** (what must be TRUE):
+  1. All match pages have H1 tag "{HomeTeam} vs {AwayTeam}"
+  2. Zero meta descriptions shorter than 100 or longer than 160 characters
+  3. Zero title tags longer than 60 characters
+  4. All indexable pages have complete OG tags (title, description, image, url)
+  5. /leagues and /models index pages have CollectionPage structured data
+**Plans**: TBD
+
+#### Phase 47: Structured Data Validation
+**Goal**: Deduplicate schemas, fix SportsEvent/Article/FAQ validation errors
+**Depends on**: Phase 46
+**Requirements**: SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04, SCHEMA-05
+**Success Criteria** (what must be TRUE):
+  1. No duplicate Organization or WebSite schemas on any page
+  2. SportsEvent schema passes Google Rich Results Test
+  3. Article and FAQPage schemas pass validation
+  4. BreadcrumbList schema valid on all page types
+  5. Schema.org validation errors reduced from 4365 to <50
+**Plans**: TBD
+
+#### Phase 48: Performance & Verification
+**Goal**: Optimize TTFB for slow pages, verify all fixes with Ahrefs re-audit
+**Depends on**: Phase 47
+**Requirements**: PERF-01, PERF-02
+**Success Criteria** (what must be TRUE):
+  1. Pages with TTFB >2s are investigated and improved where possible
+  2. /matches/UUID redirect responds within 500ms
+  3. Re-audit with Ahrefs shows site health score >90
+  4. Zero critical or high-severity SEO errors remaining
+**Plans**: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 40 -> 41 -> 42 -> 43
+Phases execute in numeric order: 44 -> 45 -> 46 -> 47 -> 48
+(Phase 45 and 46 can run in parallel after Phase 44)
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -378,6 +443,11 @@ Phases execute in numeric order: 40 -> 41 -> 42 -> 43
 | 41. Together AI Fallbacks | v2.5 | 4/4 | Complete | 2026-02-05 |
 | 42. Dynamic Model Counts | v2.5 | 2/2 | Complete | 2026-02-05 |
 | 43. Testing & Validation | v2.5 | 3/3 | Complete | 2026-02-05 |
+| 44. Foundation — Redirects, Canonicals & Index Pages | v2.6 | 0/TBD | Not started | - |
+| 45. Sitemap & Internal Linking | v2.6 | 0/TBD | Not started | - |
+| 46. Content Tags & Meta Optimization | v2.6 | 0/TBD | Not started | - |
+| 47. Structured Data Validation | v2.6 | 0/TBD | Not started | - |
+| 48. Performance & Verification | v2.6 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-05 after Phase 43 complete*
+*Last updated: 2026-02-05 after v2.6 roadmap created*
