@@ -44,12 +44,19 @@ export const MODEL_FALLBACKS: Record<string, string> = {
   // - GPT-OSS 120B - Together only has 20B
 };
 
+let fallbacksValidated = false;
+
 /**
  * Get fallback provider for a Synthetic model
  * @param syntheticModelId - The Synthetic model ID that failed
  * @returns The equivalent Together AI provider, or undefined if no fallback exists
  */
 export function getFallbackProvider(syntheticModelId: string): LLMProvider | undefined {
+  if (!fallbacksValidated) {
+    validateFallbackMapping();
+    fallbacksValidated = true;
+  }
+
   const fallbackId = MODEL_FALLBACKS[syntheticModelId];
   if (!fallbackId) {
     return undefined;
@@ -106,9 +113,6 @@ function validateFallbackMapping(): void {
     mappings: MODEL_FALLBACKS,
   }, 'Fallback mapping validated successfully');
 }
-
-// Run validation at module load time (fails fast if config is invalid)
-validateFallbackMapping();
 
 // ============================================================================
 // USAGE NOTES:
