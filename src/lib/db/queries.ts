@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { loggers } from '@/lib/logger/modules';
 import { connection } from 'next/server';
 
-import { withCache, cacheKeys, CACHE_TTL, cacheDelete } from '@/lib/cache/redis';
+import { withCache, cacheKeys, CACHE_TTL, cacheDelete, invalidateModelCountCaches } from '@/lib/cache/redis';
 import { calculateQuotaScores } from '@/lib/utils/scoring';
 
 /**
@@ -793,6 +793,9 @@ export async function recordModelSuccess(modelId: string): Promise<void> {
       autoDisabled: false,
     })
     .where(eq(models.id, modelId));
+
+  // Invalidate model count caches (autoDisabled may have changed)
+  await invalidateModelCountCaches();
 }
 
 // Record a failed prediction attempt for a model
@@ -843,6 +846,9 @@ export async function recordModelFailure(
       threshold: DISABLE_THRESHOLD,
       errorType,
     }, 'Model auto-disabled after consecutive failures');
+
+    // Invalidate model count caches when auto-disabled
+    await invalidateModelCountCaches();
   }
 
   return {
@@ -862,6 +868,9 @@ export async function reEnableModel(modelId: string): Promise<void> {
       failureReason: null,
     })
     .where(eq(models.id, modelId));
+
+  // Invalidate model count caches
+  await invalidateModelCountCaches();
 }
 
 // Recover auto-disabled models after cooldown
@@ -897,6 +906,11 @@ export async function recoverDisabledModels(): Promise<number> {
 
       recoveredCount++;
     }
+  }
+
+  // Invalidate model count caches if any models were recovered
+  if (recoveredCount > 0) {
+    await invalidateModelCountCaches();
   }
 
   return recoveredCount;
