@@ -14,6 +14,8 @@ import { loggers } from '@/lib/logger/modules';
 const logger = loggers.llm;
 import { fetchWithRetry, APIError, RateLimitError } from '@/lib/utils/api-client';
 import { TOGETHER_PREDICTION_RETRY, TOGETHER_PREDICTION_TIMEOUT_MS, TOGETHER_PREDICTION_BATCH_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
+import { PromptVariant, PromptConfig, getEnhancedSystemPrompt } from '../prompt-variants';
+import { ResponseHandler, RESPONSE_HANDLERS } from '../response-handlers';
 
 // Result for batch predictions
 export interface BatchPredictionResult {
@@ -187,7 +189,10 @@ Respond with JSON array containing match_id, home_score, away_score for each mat
 export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
   protected abstract endpoint: string;
   protected abstract getHeaders(): Record<string, string>;
-  
+
+  // Model-specific configuration (optional, subclasses can override)
+  protected promptConfig?: PromptConfig;
+
   // Request timeout in milliseconds (configurable via environment)
   // Default: 15 seconds for single, 20 for batch
   // Can be overridden with LLM_REQUEST_TIMEOUT_MS and LLM_BATCH_TIMEOUT_MS
@@ -201,9 +206,15 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
   );
 
   protected async callAPI(systemPrompt: string, userPrompt: string): Promise<string> {
+    // Apply prompt variant to system prompt
+    const variant = this.promptConfig?.promptVariant ?? PromptVariant.BASE;
+    const enhancedSystemPrompt = getEnhancedSystemPrompt(systemPrompt, variant);
+
     // Use longer timeout for batch requests (detected by system prompt)
     const isBatch = systemPrompt === BATCH_SYSTEM_PROMPT;
-    const timeout = isBatch ? this.batchRequestTimeout : this.requestTimeout;
+    // Use model-specific timeout if configured, otherwise default
+    const modelTimeout = this.promptConfig?.timeoutMs;
+    const timeout = modelTimeout ?? (isBatch ? this.batchRequestTimeout : this.requestTimeout);
     
     // OPTIMIZED: Reduced max_tokens since JSON responses are small
     // Single prediction: ~60-80 tokens (with array format and match_id)
@@ -225,7 +236,7 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
            body: JSON.stringify({
              model: this.model,
              messages: [
-               { role: 'system', content: systemPrompt },
+               { role: 'system', content: enhancedSystemPrompt },
                { role: 'user', content: userPrompt },
              ],
               // OPTIMIZED: Moderate temperature for more varied predictions while maintaining coherence
@@ -298,32 +309,41 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
        }
       
       const message = data.choices?.[0]?.message;
-      
+
+      // Extract content from whichever field is available
+      let content: string | undefined;
+
       // Try content first (standard models)
       if (message?.content) {
-        return message.content;
+        content = message.content;
       }
-      
       // For reasoning models, check reasoning field for JSON
-      if (message?.reasoning) {
-        return message.reasoning;
+      else if (message?.reasoning) {
+        content = message.reasoning;
       }
-      
       // For models with reasoning_details array
-      if (message?.reasoning_details) {
+      else if (message?.reasoning_details) {
         for (const detail of message.reasoning_details) {
           if (detail.summary) {
-            return detail.summary;
+            content = detail.summary;
+            break;
           }
         }
       }
-      
-      // No usable content found - throw descriptive error instead of returning empty string
-      throw new APIError(
-        'API response contained no usable content (no content, reasoning, or reasoning_details)',
-        response.status,
-        this.endpoint
-      );
+
+      // No usable content found
+      if (!content) {
+        throw new APIError(
+          'API response contained no usable content (no content, reasoning, or reasoning_details)',
+          response.status,
+          this.endpoint
+        );
+      }
+
+      // Apply response handler AFTER all extraction, BEFORE returning
+      const handler = this.promptConfig?.responseHandler ?? ResponseHandler.DEFAULT;
+      const processedContent = RESPONSE_HANDLERS[handler](content);
+      return processedContent;
     } catch (error) {
       // Re-throw APIError and RateLimitError as-is
       if (error instanceof APIError || error instanceof RateLimitError) {

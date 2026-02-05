@@ -1,6 +1,8 @@
 // Prompt variant configurations for model-specific requirements
 // Phase 40-01: Model-Specific Prompt Selection
 
+import { ResponseHandler } from './response-handlers';
+
 /**
  * Available prompt variants for handling model-specific output requirements
  */
@@ -60,7 +62,7 @@ export interface PromptConfig {
   promptVariant?: PromptVariant;
 
   /** Response handler to apply before JSON parsing */
-  responseHandler?: string; // ResponseHandler from response-handlers.ts
+  responseHandler?: ResponseHandler;
 
   /** Timeout in milliseconds (30000-90000 typical range) */
   timeoutMs?: number;
