@@ -19,19 +19,31 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 - **Model developers** seeking benchmarks beyond traditional NLP tasks
 - **Casual users** who enjoy comparing "AI vs AI" predictions
 
-## Current Milestone: v2.4 Synthetic.new Integration
-
-**Goal:** Add Synthetic.new as second LLM provider with 14 new models (reasoning + standard), expanding total from 29 to 43 models.
-
-**Target features:**
-- SyntheticProvider class using OpenAI-compatible API
-- 14 Synthetic-exclusive models (DeepSeek R1-0528, Kimi K2-Thinking, Qwen3-Thinking, DeepSeek V3 variants, MiniMax, GLM, etc.)
-- Database registration and seed scripts
-- Model testing and validation
-
 ## Current State
 
-**Brownfield project with v2.3 shipped.** The platform is operational with 17 leagues integrated, 29 LLM models connected via Together AI. v2.3 Content Pipeline & SEO completed 2026-02-04, fixing content generation reliability and optimizing for SEO/GEO visibility.
+**Brownfield project with v2.4 shipped.** 36 active LLM models across Together AI (29) and Synthetic.new (7) providers. 172 requirements validated across 9 milestones (v1.0-v2.4)
+
+### Validated (v2.4)
+
+The following requirements were validated in v2.4:
+
+- PROV-01: SyntheticProvider class extends OpenAICompatibleProvider with correct endpoint — v2.4
+- PROV-02: Provider uses `SYNTHETIC_API_KEY` environment variable for authentication — v2.4
+- PROV-03: Provider calls `https://api.synthetic.new/openai/v1/chat/completions` — v2.4
+- PROV-04: Provider handles `hf:org/model` ID format correctly — v2.4
+- MODL-01: 13 Synthetic models defined with ID, name, model, displayName — v2.4
+- MODL-02: Reasoning models (R1-0528, K2-Thinking, Qwen3-Thinking) marked as premium tier — v2.4
+- MODL-03: Models exported in `SYNTHETIC_PROVIDERS` array — v2.4
+- MODL-04: Provider registry includes Synthetic providers alongside Together — v2.4
+- DATA-01: Auto-sync registers models via syncModelsToDatabase() on server startup — v2.4
+- DATA-02: Models have `provider: 'synthetic'` for identification — v2.4
+- DATA-03: Models default to `active: true` via sync logic — v2.4
+- ERRH-01: 429 rate limit errors handled with existing retry logic — v2.4
+- ERRH-02: Missing `SYNTHETIC_API_KEY` throws descriptive error at startup — v2.4
+- ERRH-03: Model failures trigger auto-disable after 3 consecutive failures — v2.4
+- TEST-01: Each model tested with sample prediction (7 validated, 6 disabled) — v2.4
+- TEST-02: Thinking model output correctly parsed (DeepSeek R1, Kimi K2-Thinking work) — v2.4
+- TEST-03: GLM models auto-disabled (timeout/API bug detected) — v2.4
 
 ### Validated (v2.3)
 
@@ -246,14 +258,14 @@ The following capabilities are built and operational:
 
 ### Context
 
-Shipped v2.3 with 193,767 LOC TypeScript.
-Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, Radix UI, next-themes, isomorphic-dompurify, html-to-text, he.
-All 155 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, and v2.3 milestones.
+Shipped v2.4 with ~195,862 LOC TypeScript.
+Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, Synthetic.new, Radix UI, next-themes, isomorphic-dompurify, html-to-text, he.
+All 172 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, and v2.4 milestones.
 
 ## Constraints
 
 **Technical:**
-- Must maintain Together AI API integration (35 models configured)
+- Must maintain Together AI API integration (29 models) + Synthetic.new (7 models)
 - PostgreSQL + Redis infrastructure already deployed
 - Next.js 16 + React 19 + TypeScript stack (no framework changes)
 - API-Football data source (contracted)
@@ -295,7 +307,7 @@ All 155 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, 
 
 ## Next Milestone
 
-v2.4 Synthetic.new Integration in progress.
+Planning next milestone with `/gsd:new-milestone`.
 
 ---
-*Last updated: 2026-02-04 after v2.4 milestone started*
+*Last updated: 2026-02-05 after v2.4 milestone complete*

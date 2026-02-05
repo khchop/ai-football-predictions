@@ -1,5 +1,33 @@
 # Project Milestones: AI Football Predictions Platform
 
+## v2.4 Synthetic.new Integration (Shipped: 2026-02-05)
+
+**Delivered:** Added Synthetic.new as second LLM provider with 7 validated models (2 reasoning + 5 standard), expanding total active models from 29 to 36 with fallback mapping for cross-provider resilience.
+
+**Phases completed:** 37-39 (7 plans total)
+
+**Key accomplishments:**
+
+- SyntheticProvider class created using OpenAI-compatible API pattern
+- 13 Synthetic models configured with -syn ID suffix for disambiguation
+- Provider registry updated to conditionally include both Together + Synthetic
+- 7/13 models validated for production (2 reasoning + 5 standard)
+- 6 failing models disabled (preserving definitions for future re-testing)
+- Together AI fallback mapping added for cross-provider resilience
+
+**Stats:**
+
+- 20 files changed, +3,199 / -117 lines
+- ~195,862 lines of TypeScript (total codebase)
+- 3 phases, 7 plans, 17 requirements
+- 16 days from start to ship (2026-01-20 → 2026-02-05)
+
+**Git range:** `feat(37-01)` → `docs(39)`
+
+**What's next:** New milestone planning with `/gsd:new-milestone`
+
+---
+
 ## v2.3 Content Pipeline & SEO (Shipped: 2026-02-04)
 
 **Delivered:** Fixed content generation pipeline reliability with proper error handling, HTML sanitization, circuit breaker protection, SEO/GEO optimized prompts with answer-first structure, and aligned blog generation patterns.
@@ -247,4 +275,4 @@
 
 ---
 
-*Last updated: 2026-02-03 after v2.1 milestone*
+*Last updated: 2026-02-05 after v2.4 milestone*
