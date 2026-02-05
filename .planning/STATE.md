@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 43 of 43 (Testing & Validation)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-05 — Completed 43-01-PLAN.md (Test Framework Setup)
+Last activity: 2026-02-05 — Completed 43-02-PLAN.md (All Models Integration Tests)
 
-Progress: [██████████████████████████████████████████░░] 98%
+Progress: [███████████████████████████████████████████░] 99%
 
 ## Milestone History
 
@@ -62,6 +62,8 @@ Recent decisions affecting v2.5:
 - Node environment for Vitest over jsdom (43-01: API testing, not browser)
 - 60s default test timeout with maxConcurrency 5 (43-01: LLM rate limit handling)
 - Zod v4 uses .issues not .errors on ZodError (43-01: breaking API change)
+- Vitest 4 test signature: test(name, options, fn) with options as second arg (43-02: API change)
+- Dual threshold exit code for validate:models (43-02: EITHER overall OR previously disabled <90% fails)
 
 ### Pending Todos
 
@@ -87,8 +89,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 43-01-PLAN.md (Test Framework Setup)
-Resume file: None (continue with 43-02)
+Stopped at: Completed 43-02-PLAN.md (All Models Integration Tests)
+Resume file: None (continue with 43-03)
 
 **Platform status:**
 - 17 leagues operational
@@ -96,10 +98,11 @@ Resume file: None (continue with 43-02)
 - 0 disabled models (all 6 previously disabled models re-enabled with configurations)
 - 172 requirements validated (v1.0-v2.4)
 - 36 new requirements for v2.5
-- Phase 43 in progress: Testing & Validation (1/3 plans complete)
+- Phase 43 in progress: Testing & Validation (2/3 plans complete)
 - Phase 42: COMPLETE - Dynamic model count infrastructure and UI integration verified
 - 3 fallback mappings validated: deepseek-r1-0528-syn, kimi-k2-thinking-syn, kimi-k2.5-syn
-- Vitest framework installed with Zod validation schemas ready for model integration tests
+- Integration tests ready: npm run test:integration for 42-model validation
+- Validation script ready: npm run validate:models with PREVIOUSLY_DISABLED_MODELS tracking
 
 ---
-*Last updated: 2026-02-05 after 43-01-PLAN.md completed*
+*Last updated: 2026-02-05 after 43-02-PLAN.md completed*
