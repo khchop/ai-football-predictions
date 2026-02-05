@@ -54,11 +54,12 @@ None — ready for next milestone.
 | 009 | Fix HierarchyRequestError on new tab open | 2026-02-04 | 58330f2 | [009-fix-new-tab-hierarchy-error](./quick/009-fix-new-tab-hierarchy-error/) |
 | 010 | Improve blog methodology, SEO/GEO, FAQ | 2026-02-04 | da9db4a | [010-blog-seo-methodology-faq](./quick/010-blog-seo-methodology-faq/) |
 | 011 | Fix predictBatch type error breaking production build | 2026-02-05 | 8625f5d | [011-fix-predictbatch-type-error](./quick/011-fix-predictbatch-type-error/) |
+| 012 | Fix circular dependency build error in LLM module | 2026-02-05 | 70ba190 | [012-fix-circular-dep-build-error](./quick/012-fix-circular-dep-build-error/) |
 
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: v2.5 milestone archived — ready for next milestone
+Stopped at: Completed quick-012 — fix circular dependency build error
 Resume file: None
 
 **Platform status:**
@@ -72,4 +73,4 @@ Resume file: None
   - `npm run validate:all` - Complete validation (models + fallback)
 
 ---
-*Last updated: 2026-02-05 after v2.5 milestone archived*
+*Last updated: 2026-02-05 after quick-012 completed*
