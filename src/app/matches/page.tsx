@@ -3,32 +3,37 @@ import type { Metadata } from 'next';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MatchCard } from '@/components/match-card';
-import { getUpcomingMatches, getFinishedMatches, getRecentMatches, getLiveMatches, getLiveMatchCount } from '@/lib/db/queries';
+import { getUpcomingMatches, getFinishedMatches, getRecentMatches, getLiveMatches, getLiveMatchCount, getOverallStats } from '@/lib/db/queries';
 import { Calendar, Clock, CheckCircle, List, Radio, Filter } from 'lucide-react';
 import { LiveTabRefresher } from './live-refresher';
 import { CompetitionFilter } from '@/components/competition-filter';
 
 // PPR enabled - removed force-dynamic, Next.js handles static/dynamic split via Suspense
 
-export const metadata: Metadata = {
-  title: 'Upcoming Football Matches | AI Predictions | kroam.xyz',
-  description: 'Browse upcoming and recent football matches with AI predictions from 35 models. Track live scores and pre-match analysis across 17 competitions.',
-  alternates: {
-    canonical: 'https://kroam.xyz/matches',
-  },
-  openGraph: {
-    title: 'Upcoming Football Matches with AI Predictions',
-    description: 'View upcoming matches with predictions from 35 AI models',
-    url: 'https://kroam.xyz/matches',
-    type: 'website',
-    siteName: 'kroam.xyz',
-  },
-  twitter: {
-    card: 'summary',
-    title: 'Football Matches & AI Predictions',
-    description: 'Browse matches with AI predictions from 35 models',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const stats = await getOverallStats();
+  const modelCount = stats.activeModels;
+
+  return {
+    title: 'Upcoming Football Matches | AI Predictions | kroam.xyz',
+    description: `Browse upcoming and recent football matches with AI predictions from ${modelCount} models. Track live scores and pre-match analysis across 17 competitions.`,
+    alternates: {
+      canonical: 'https://kroam.xyz/matches',
+    },
+    openGraph: {
+      title: 'Upcoming Football Matches with AI Predictions',
+      description: `View upcoming matches with predictions from ${modelCount} AI models`,
+      url: 'https://kroam.xyz/matches',
+      type: 'website',
+      siteName: 'kroam.xyz',
+    },
+    twitter: {
+      card: 'summary',
+      title: 'Football Matches & AI Predictions',
+      description: `Browse matches with AI predictions from ${modelCount} models`,
+    },
+  };
+}
 
 async function LiveMatchesList() {
   const matches = await getLiveMatches();

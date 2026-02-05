@@ -8,7 +8,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { getPublishedBlogPosts } from '@/lib/db/queries';
+import { getPublishedBlogPosts, getOverallStats } from '@/lib/db/queries';
 import { format, parseISO } from 'date-fns';
 import { ArrowLeft, ArrowRight, Filter } from 'lucide-react';
 import type { Metadata } from 'next';
@@ -16,31 +16,36 @@ import type { BlogPost } from '@/lib/db/schema';
 import { COMPETITIONS } from '@/lib/football/competitions';
 import { BlogListSkeleton } from '@/components/blog/blog-list-skeleton';
 
-export const metadata: Metadata = {
-  title: 'AI Football Analysis Blog | kroam.xyz',
-  description: 'AI-generated match reports, league roundups, and model performance analysis. Deep insights into football predictions from 35 AI models.',
-  alternates: {
-    canonical: 'https://kroam.xyz/blog',
-  },
-  openGraph: {
-    title: 'AI Football Analysis Blog',
-    description: 'Match reports, league roundups, and AI model performance analysis',
-    url: 'https://kroam.xyz/blog',
-    type: 'website',
-    siteName: 'kroam.xyz',
-    images: [{
-      url: 'https://kroam.xyz/api/og/league?leagueName=AI+Analysis',
-      width: 1200,
-      height: 630,
-      alt: 'AI Football Analysis Blog',
-    }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'AI Football Analysis Blog',
-    description: 'AI-generated insights into football predictions',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const stats = await getOverallStats();
+  const modelCount = stats.activeModels;
+
+  return {
+    title: 'AI Football Analysis Blog | kroam.xyz',
+    description: `AI-generated match reports, league roundups, and model performance analysis. Deep insights into football predictions from ${modelCount} AI models.`,
+    alternates: {
+      canonical: 'https://kroam.xyz/blog',
+    },
+    openGraph: {
+      title: 'AI Football Analysis Blog',
+      description: 'Match reports, league roundups, and AI model performance analysis',
+      url: 'https://kroam.xyz/blog',
+      type: 'website',
+      siteName: 'kroam.xyz',
+      images: [{
+        url: 'https://kroam.xyz/api/og/league?leagueName=AI+Analysis',
+        width: 1200,
+        height: 630,
+        alt: 'AI Football Analysis Blog',
+      }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: 'AI Football Analysis Blog',
+      description: 'AI-generated insights into football predictions',
+    },
+  };
+}
 
 const POSTS_PER_PAGE = 12;
 

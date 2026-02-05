@@ -8,7 +8,7 @@ import { buildEnhancedCompetitionSchema } from '@/lib/seo/schema/competition';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { BASE_URL } from '@/lib/seo/constants';
 import { abbreviateCompetition } from '@/lib/seo/abbreviations';
-import { getCompetitionStats, getTopModelsByCompetition } from '@/lib/db/queries';
+import { getCompetitionStats, getTopModelsByCompetition, getOverallStats } from '@/lib/db/queries';
 import { generateFAQPageSchema } from '@/lib/seo/schemas';
 import { generateLeagueFAQs } from '@/lib/league/generate-league-faqs';
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
@@ -31,16 +31,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  // Fetch stats for dynamic metadata
-  const stats = await getCompetitionStats(competition.id);
+  // Fetch stats for dynamic metadata (including active model count)
+  const [competitionStats, overallStats] = await Promise.all([
+    getCompetitionStats(competition.id),
+    getOverallStats(),
+  ]);
+  const stats = competitionStats;
+  const modelCount = overallStats.activeModels;
 
   const shortName = abbreviateCompetition(competition.name);
-  const title = `${shortName} AI Predictions | 35 Models | kroam.xyz`;
+  const title = `${shortName} AI Predictions | ${modelCount} Models | kroam.xyz`;
 
   // Dynamic description based on stats
   const description = stats.finishedMatches > 0
-    ? `AI predictions for ${competition.name} from 35 models. ${stats.finishedMatches} matches analyzed with ${stats.avgGoalsPerMatch} avg goals. Track model accuracy and compare predictions.`
-    : `AI predictions for ${competition.name} from 35 models. Track accuracy, compare predictions, and see which AI performs best.`;
+    ? `AI predictions for ${competition.name} from ${modelCount} models. ${stats.finishedMatches} matches analyzed with ${stats.avgGoalsPerMatch} avg goals. Track model accuracy and compare predictions.`
+    : `AI predictions for ${competition.name} from ${modelCount} models. Track accuracy, compare predictions, and see which AI performs best.`;
 
   // Use canonical ID in URL, not the slug
   const url = `${BASE_URL}/leagues/${competition.id}`;
@@ -131,11 +136,13 @@ export default async function LeaguePage({ params }: PageProps) {
     permanentRedirect(`/leagues/${competition.id}`);
   }
 
-  // Fetch stats and top models for enhanced schema and FAQ generation in parallel
-  const [stats, topModels] = await Promise.all([
+  // Fetch stats, top models, and active model count for enhanced schema and FAQ generation in parallel
+  const [stats, topModels, overallStats] = await Promise.all([
     getCompetitionStats(competition.id),
     getTopModelsByCompetition(competition.id, 1),
+    getOverallStats(),
   ]);
+  const activeModels = overallStats.activeModels;
 
   // Generate FAQs for schema (same source as LeagueHubContent for consistency)
   const topModel = topModels[0];
@@ -149,6 +156,7 @@ export default async function LeaguePage({ params }: PageProps) {
       model: { name: topModel.model.displayName },
       accuracy: topModel.accuracy,
     } : undefined,
+    activeModels,
   });
 
   // Build schema.org structured data with enhanced competition schema
@@ -159,6 +167,7 @@ export default async function LeaguePage({ params }: PageProps) {
       finishedMatches: stats.finishedMatches,
       avgGoalsPerMatch: stats.avgGoalsPerMatch,
     },
+    activeModels,
   });
   const breadcrumbs = buildBreadcrumbSchema([
     { name: 'Home', url: BASE_URL },

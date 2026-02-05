@@ -9,6 +9,7 @@ import { Trophy, ChevronDown } from 'lucide-react';
 import type { Metadata } from 'next';
 import { LiveTabRefresher } from '@/app/matches/live-refresher';
 import { getLeaderboardWithTrends } from '@/lib/db/queries/stats';
+import { getOverallStats } from '@/lib/db/queries';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { generateFAQPageSchema } from '@/lib/seo/schemas';
 import { generateLeaderboardFAQs } from '@/lib/leaderboard/generate-leaderboard-faqs';
@@ -16,25 +17,30 @@ import { BASE_URL } from '@/lib/seo/constants';
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
 import { buildLeaderboardBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 
-export const metadata: Metadata = {
-  title: 'AI Model Leaderboard | Compare 35 Models | kroam.xyz',
-  description: 'Compare AI model accuracy across 17 football competitions. See which models predict best in Champions League, Premier League, and more.',
-  alternates: {
-    canonical: 'https://kroam.xyz/leaderboard',
-  },
-  openGraph: {
-    title: 'AI Model Leaderboard | Compare 35 Models',
+export async function generateMetadata(): Promise<Metadata> {
+  const stats = await getOverallStats();
+  const modelCount = stats.activeModels;
+
+  return {
+    title: `AI Model Leaderboard | Compare ${modelCount} Models | kroam.xyz`,
     description: 'Compare AI model accuracy across 17 football competitions. See which models predict best in Champions League, Premier League, and more.',
-    url: 'https://kroam.xyz/leaderboard',
-    type: 'website',
-    siteName: 'kroam.xyz',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'AI Model Leaderboard | Compare 35 Models',
-    description: 'Compare AI model accuracy across 17 football competitions',
-  },
-};
+    alternates: {
+      canonical: 'https://kroam.xyz/leaderboard',
+    },
+    openGraph: {
+      title: `AI Model Leaderboard | Compare ${modelCount} Models`,
+      description: 'Compare AI model accuracy across 17 football competitions. See which models predict best in Champions League, Premier League, and more.',
+      url: 'https://kroam.xyz/leaderboard',
+      type: 'website',
+      siteName: 'kroam.xyz',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `AI Model Leaderboard | Compare ${modelCount} Models`,
+      description: 'Compare AI model accuracy across 17 football competitions',
+    },
+  };
+}
 
 // ISR: Revalidate every 60 seconds
 

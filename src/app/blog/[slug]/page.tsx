@@ -11,7 +11,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { getBlogPostBySlug, getRecentBlogPosts } from '@/lib/db/queries';
+import { getBlogPostBySlug, getRecentBlogPosts, getOverallStats } from '@/lib/db/queries';
 import { generateArticleSchema } from '@/lib/seo/schemas';
 import { buildRoundupSchema } from '@/lib/seo/schema/roundup';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
@@ -39,7 +39,11 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  const [post, stats] = await Promise.all([
+    getBlogPostBySlug(slug),
+    getOverallStats(),
+  ]);
+  const modelCount = stats.activeModels;
 
   if (!post) {
     return {
@@ -75,12 +79,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       const { getCompetitionById } = await import('@/lib/football/competitions');
       const competition = getCompetitionById(post.competitionId);
       if (competition) {
-        ogDescription = `AI predictions and match analysis for ${competition.name}. See predictions from 35 models.`;
+        ogDescription = `AI predictions and match analysis for ${competition.name}. See predictions from ${modelCount} models.`;
       } else {
-        ogDescription = `AI predictions and match analysis. Compare predictions from 35 competing models.`;
+        ogDescription = `AI predictions and match analysis. Compare predictions from ${modelCount} competing models.`;
       }
     } else {
-      ogDescription = `AI predictions and match analysis. Compare predictions from 35 competing models.`;
+      ogDescription = `AI predictions and match analysis. Compare predictions from ${modelCount} competing models.`;
     }
   } else {
     // Generic fallback for analysis posts

@@ -3,32 +3,36 @@ import { Calendar, Bot, Trophy, Target, Sparkles, ArrowRight, TrendingUp } from 
 import Link from 'next/link';
 
 import type { Metadata } from 'next';
+import { getOverallStats } from '@/lib/db/queries';
 
-export const metadata: Metadata = {
-  title: 'About kroam.xyz | AI Football Prediction Platform',
-  description: 'Learn how kroam.xyz compares 35 AI models predicting football matches. Understand the Kicktipp scoring system and how model rankings are calculated.',
-  alternates: {
-    canonical: 'https://kroam.xyz/about',
-  },
-  openGraph: {
-    title: 'About kroam.xyz - How AI Models Compete',
-    description: 'Discover how 35 AI models compete to predict football match outcomes and rankings.',
-    url: 'https://kroam.xyz/about',
-    type: 'website',
-    siteName: 'kroam.xyz',
-  },
-  twitter: {
-    card: 'summary',
-    title: 'About kroam.xyz',
-    description: 'How AI football prediction models compete and earn points',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const stats = await getOverallStats();
+  const modelCount = stats.activeModels;
 
-// Static count - update when adding/removing models
-const MODEL_COUNT = 35;
+  return {
+    title: 'About kroam.xyz | AI Football Prediction Platform',
+    description: `Learn how kroam.xyz compares ${modelCount} AI models predicting football matches. Understand the Kicktipp scoring system and how model rankings are calculated.`,
+    alternates: {
+      canonical: 'https://kroam.xyz/about',
+    },
+    openGraph: {
+      title: 'About kroam.xyz - How AI Models Compete',
+      description: `Discover how ${modelCount} AI models compete to predict football match outcomes and rankings.`,
+      url: 'https://kroam.xyz/about',
+      type: 'website',
+      siteName: 'kroam.xyz',
+    },
+    twitter: {
+      card: 'summary',
+      title: 'About kroam.xyz',
+      description: 'How AI football prediction models compete and earn points',
+    },
+  };
+}
 
-export default function AboutPage() {
-  const modelCount = MODEL_COUNT;
+export default async function AboutPage() {
+  const stats = await getOverallStats();
+  const modelCount = stats.activeModels;
 
   return (
     <div className="max-w-4xl mx-auto space-y-12">
