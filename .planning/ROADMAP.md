@@ -272,8 +272,8 @@
 **Plans**: 2 plans
 
 Plans:
-- [ ] 40-01-PLAN.md — Create prompt variant and response handler infrastructure
-- [ ] 40-02-PLAN.md — Integrate into providers and configure failing models
+- [x] 40-01-PLAN.md — Create prompt variant and response handler infrastructure
+- [x] 40-02-PLAN.md — Integrate into providers and configure failing models
 
 #### Phase 41: Together AI Fallbacks
 **Goal**: Synthetic model failures automatically fall back to Together AI equivalents with cycle detection and cost tracking
@@ -367,10 +367,10 @@ Phases execute in numeric order: 40 → 41 → 42 → 43
 | 37. Provider Infrastructure | v2.4 | 3/3 | Complete | 2026-02-05 |
 | 38. Model Configuration | v2.4 | 2/2 | Complete | 2026-02-05 |
 | 39. Testing & Validation | v2.4 | 2/2 | Complete | 2026-02-05 |
-| 40. Model-Specific Prompt Selection | v2.5 | 0/2 | Planned | - |
+| 40. Model-Specific Prompt Selection | v2.5 | 2/2 | Complete | 2026-02-05 |
 | 41. Together AI Fallbacks | v2.5 | 0/2 | Not started | - |
 | 42. Dynamic Model Counts | v2.5 | 0/2 | Not started | - |
 | 43. Testing & Validation | v2.5 | 0/1 | Not started | - |
 
 ---
-*Last updated: 2026-02-05 after Phase 40 planning*
+*Last updated: 2026-02-05 after Phase 40 execution complete*
