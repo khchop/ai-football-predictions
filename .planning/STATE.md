@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** The prediction pipeline must reliably generate scores from LLMs and accurately calculate Kicktipp quota points when matches complete
-**Current focus:** Phase 43 - Testing & Validation
+**Current focus:** v2.5 Model Reliability - COMPLETE
 
 ## Current Position
 
 Phase: 43 of 43 (Testing & Validation)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-05 — Completed 43-02-PLAN.md (All Models Integration Tests)
+Plan: 3 of 3 in current phase
+Status: COMPLETE - v2.5 Model Reliability shipped
+Last activity: 2026-02-05 - Completed 43-03-PLAN.md (Fallback Rate Monitoring)
 
-Progress: [███████████████████████████████████████████░] 99%
+Progress: [████████████████████████████████████████████] 100%
 
 ## Milestone History
 
@@ -29,9 +29,9 @@ Progress: [███████████████████████
 | v2.2 Match Page Rewrite | 26-30 | 17 | 21 | 2026-02-04 |
 | v2.3 Content Pipeline & SEO | 31-36 | 13 | 24 | 2026-02-04 |
 | v2.4 Synthetic.new Integration | 37-39 | 7 | 17 | 2026-02-05 |
-| **v2.5 Model Reliability (in progress)** | **40-43** | **8 (TBD)** | **36** | **-** |
+| **v2.5 Model Reliability** | **40-43** | **8** | **36** | **2026-02-05** |
 
-**Total shipped:** 39 phases, 117 plans, 172 requirements
+**Total shipped:** 43 phases, 122 plans, 208 requirements
 
 ## Accumulated Context
 
@@ -64,6 +64,8 @@ Recent decisions affecting v2.5:
 - Zod v4 uses .issues not .errors on ZodError (43-01: breaking API change)
 - Vitest 4 test signature: test(name, options, fn) with options as second arg (43-02: API change)
 - Dual threshold exit code for validate:models (43-02: EITHER overall OR previously disabled <90% fails)
+- Snake_case column names in raw SQL queries (43-03: drizzle schema maps to snake_case)
+- Global fallback threshold <5%, model success threshold >90% (43-03: production validation)
 
 ### Pending Todos
 
@@ -71,13 +73,7 @@ None.
 
 ### Blockers/Concerns
 
-**Known Issues for v2.5:**
-- Phase 40: COMPLETE - Infrastructure ready, needs integration testing to validate prompt fixes
-- Phase 41: COMPLETE - All 4 plans shipped (infrastructure, orchestration, admin visibility, gap closure)
-- Phase 41: Cross-provider API compatibility (Together AI vs Synthetic parameter differences) needs validation
-- Phase 41: Fallback timeout behavior needs testing (does Together AI inherit model-specific timeout?)
-- Phase 42: COMPLETE - All 2 plans shipped (cache infrastructure, hardcoded reference replacement)
-- Phase 43: Timeout validation needed - Qwen3 Thinking at 90s, others at 60s/45s
+None remaining - v2.5 milestone complete.
 
 ### Quick Tasks Completed
 
@@ -89,20 +85,18 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 43-02-PLAN.md (All Models Integration Tests)
-Resume file: None (continue with 43-03)
+Stopped at: v2.5 Model Reliability milestone COMPLETE
+Resume file: None
 
 **Platform status:**
 - 17 leagues operational
 - 42 active models (29 Together + 13 Synthetic)
 - 0 disabled models (all 6 previously disabled models re-enabled with configurations)
-- 172 requirements validated (v1.0-v2.4)
-- 36 new requirements for v2.5
-- Phase 43 in progress: Testing & Validation (2/3 plans complete)
-- Phase 42: COMPLETE - Dynamic model count infrastructure and UI integration verified
-- 3 fallback mappings validated: deepseek-r1-0528-syn, kimi-k2-thinking-syn, kimi-k2.5-syn
-- Integration tests ready: npm run test:integration for 42-model validation
-- Validation script ready: npm run validate:models with PREVIOUSLY_DISABLED_MODELS tracking
+- 208 requirements validated (v1.0-v2.5)
+- Complete validation suite available:
+  - `npm run validate:models` - Test all 42 models return valid JSON
+  - `npm run check:fallback` - Verify production fallback rate <5%
+  - `npm run validate:all` - Complete validation (models + fallback)
 
 ---
-*Last updated: 2026-02-05 after 43-02-PLAN.md completed*
+*Last updated: 2026-02-05 after 43-03-PLAN.md completed - v2.5 milestone shipped*
