@@ -1,4 +1,6 @@
 import { OpenAICompatibleProvider } from './base';
+import { PromptConfig, PromptVariant } from '../prompt-variants';
+import { ResponseHandler } from '../response-handlers';
 
 // Cost per 1M tokens (in USD)
 export interface ModelPricing {
@@ -12,9 +14,10 @@ export type ModelTier = 'free' | 'ultra-budget' | 'budget' | 'premium';
 // Generic Together AI provider that can be configured for any model
 export class TogetherProvider extends OpenAICompatibleProvider {
   protected endpoint = 'https://api.together.xyz/v1/chat/completions';
-  
+
   public readonly tier: ModelTier;
   public readonly pricing: ModelPricing;
+  public readonly promptConfig: PromptConfig;
 
   constructor(
     public readonly id: string,
@@ -23,11 +26,13 @@ export class TogetherProvider extends OpenAICompatibleProvider {
     public readonly displayName: string,
     tier: ModelTier,
     pricing: ModelPricing,
-    public readonly isPremium: boolean = false
+    public readonly isPremium: boolean = false,
+    promptConfig: PromptConfig = {}
   ) {
     super();
     this.tier = tier;
     this.pricing = pricing;
+    this.promptConfig = promptConfig;
   }
 
   protected getHeaders(): Record<string, string> {
@@ -92,7 +97,12 @@ export const DeepSeekR1Provider = new TogetherProvider(
   'DeepSeek R1 (Reasoning)',
   'premium',
   { promptPer1M: 3.00, completionPer1M: 7.00 },
-  true
+  true,
+  {
+    promptVariant: PromptVariant.THINKING_STRIPPED,
+    responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
+    timeoutMs: 60000,
+  }
 );
 
 // ============================================================================
