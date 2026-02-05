@@ -10,7 +10,6 @@ import {
   BatchParsedResult,
 } from '../prompt';
 import { loggers } from '@/lib/logger/modules';
-import { getFallbackProvider } from '../index';
 
 const logger = loggers.llm;
 import { fetchWithRetry, APIError, RateLimitError } from '@/lib/utils/api-client';
@@ -378,6 +377,8 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
       return { response, usedFallback: false };
     } catch (originalError) {
       // Get fallback provider for this model
+      // Dynamic import to break circular dependency: index.ts -> synthetic.ts -> base.ts -> index.ts
+      const { getFallbackProvider } = await import('../index');
       const fallbackProvider = getFallbackProvider(this.id);
 
       if (!fallbackProvider) {
