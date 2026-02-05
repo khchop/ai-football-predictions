@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** The prediction pipeline must reliably generate scores from LLMs and accurately calculate Kicktipp quota points when matches complete
-**Current focus:** Phase 40 - Model-Specific Prompt Selection
+**Current focus:** Phase 42 - Dynamic Model Counts
 
 ## Current Position
 
-Phase: 41 of 43 (Together AI Fallbacks)
-Plan: 4 of 4 in current phase
-Status: Phase complete (gap closure)
-Last activity: 2026-02-05 — Completed 41-04-PLAN.md (gap closure)
+Phase: 42 of 43 (Dynamic Model Counts)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-05 - Completed 42-01-PLAN.md (cache infrastructure)
 
-Progress: [█████████████████████████████████████████░░░] 96%
+Progress: [█████████████████████████████████████████░░░] 97%
 
 ## Milestone History
 
@@ -29,9 +29,9 @@ Progress: [███████████████████████
 | v2.2 Match Page Rewrite | 26-30 | 17 | 21 | 2026-02-04 |
 | v2.3 Content Pipeline & SEO | 31-36 | 13 | 24 | 2026-02-04 |
 | v2.4 Synthetic.new Integration | 37-39 | 7 | 17 | 2026-02-05 |
-| **v2.5 Model Reliability (in progress)** | **40-43** | **7 (TBD)** | **36** | **—** |
+| **v2.5 Model Reliability (in progress)** | **40-43** | **8 (TBD)** | **36** | **-** |
 
-**Total shipped:** 39 phases, 114 plans, 172 requirements
+**Total shipped:** 39 phases, 115 plans, 172 requirements
 
 ## Accumulated Context
 
@@ -56,6 +56,8 @@ Recent decisions affecting v2.5:
 - Per-model fallback rate calculated from predictions table (41-03: aggregates usedFallback boolean per modelId)
 - Kimi K2.5-syn maps to kimi-k2-instruct (41-04: same fallback target as K2-thinking)
 - GLM/MiniMax/Qwen3 Coder have no fallbacks (41-04: documented provider limitation, not implementation gap)
+- 60s cache TTL for model count (42-01: aligned with CACHE_TTL.STATS for consistency)
+- Batch invalidation after recoverDisabledModels() (42-01: single invalidation after loop, not per-model)
 
 ### Pending Todos
 
@@ -68,7 +70,7 @@ None.
 - Phase 41: COMPLETE - All 4 plans shipped (infrastructure, orchestration, admin visibility, gap closure)
 - Phase 41: Cross-provider API compatibility (Together AI vs Synthetic parameter differences) needs validation
 - Phase 41: Fallback timeout behavior needs testing (does Together AI inherit model-specific timeout?)
-- Phase 42: Cache invalidation on model enable/disable must be atomic to prevent count inconsistencies
+- Phase 42: Plan 01 complete - cache infrastructure ready, plan 02 will replace hardcoded references
 - Phase 43: Timeout validation needed - Qwen3 Thinking at 90s, others at 60s/45s
 
 ### Quick Tasks Completed
@@ -81,8 +83,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 41-04-PLAN.md (gap closure, phase 41 fully complete)
-Resume file: None (ready for phase 42)
+Stopped at: Completed 42-01-PLAN.md (cache infrastructure)
+Resume file: None (ready for plan 02)
 
 **Platform status:**
 - 17 leagues operational
@@ -90,9 +92,9 @@ Resume file: None (ready for phase 42)
 - 0 disabled models (all 6 previously disabled models re-enabled with configurations)
 - 172 requirements validated (v1.0-v2.4)
 - 36 new requirements for v2.5
-- 42 phases complete, 2 phases remaining in v2.5
-- Phase 41: COMPLETE - All 4 plans shipped (infrastructure, orchestration, admin visibility, gap closure)
+- 42 phases complete, 1 phase remaining in v2.5
+- Phase 42: Plan 01 complete - getActiveModelCount() and cache invalidation ready
 - 3 fallback mappings validated: deepseek-r1-0528-syn, kimi-k2-thinking-syn, kimi-k2.5-syn
 
 ---
-*Last updated: 2026-02-05 after Phase 41 verification passed*
+*Last updated: 2026-02-05 after 42-01-PLAN.md execution complete*
