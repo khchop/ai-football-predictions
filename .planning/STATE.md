@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-04)
 
 **Core value:** The prediction pipeline must reliably generate scores from LLMs and accurately calculate Kicktipp quota points when matches complete
-**Current focus:** v2.4 Synthetic.new Integration
+**Current focus:** v2.4 Synthetic.new Integration (Complete)
 
 ## Current Position
 
 Phase: 39 of 39 (Testing & Validation)
-Plan: 3 of 4 (Together AI Fallbacks)
-Status: In progress — Fallback mapping added for cross-provider resilience
-Last activity: 2026-02-04 — Completed 39-03-PLAN.md (MODEL_FALLBACKS + getFallbackProvider)
+Plan: 4 of 4 (Production Validation)
+Status: Complete - All phases and plans finished
+Last activity: 2026-02-04 — Completed 39-04-PLAN.md (Production validation confirmed)
 
-Progress: [██████████░] 99%
+Progress: [###########] 100%
 
 ## Milestone History
 
@@ -28,9 +28,9 @@ Progress: [██████████░] 99%
 | v2.1 Match Page Simplification | 24-25 | 3 | 9 | 2026-02-03 |
 | v2.2 Match Page Rewrite | 26-30 | 17 | 21 | 2026-02-04 |
 | v2.3 Content Pipeline & SEO | 31-36 | 13 | 24 | 2026-02-04 |
-| v2.4 Synthetic.new Integration | 37-39 | — | 17 | In Progress |
+| v2.4 Synthetic.new Integration | 37-39 | 4 | 17 | 2026-02-04 |
 
-**Total shipped:** 36 phases, 107 plans, 155 requirements
+**Total shipped:** 39 phases, 111 plans, 172 requirements
 
 ## Accumulated Context
 
@@ -50,6 +50,7 @@ Key decisions from v2.3 are archived in milestones/v2.3-ROADMAP.md.
 - **39-01:** 6 models fail validation (GLM-4.7 has API bug, 2 timeout, 2 parse failures, 1 invalid output)
 - **39-02:** 6 failing models disabled in code, definitions preserved for future re-testing
 - **39-03:** Fallback mapping added (deepseek-r1-0528-syn -> deepseek-r1, kimi-k2-thinking-syn -> kimi-k2-instruct)
+- **39-04:** All 7 active Synthetic models confirmed production-ready (transient failures only)
 
 ### Pending Todos
 
@@ -76,16 +77,16 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-04T21:47:00Z
-Stopped at: Completed 39-03-PLAN.md (Together AI Fallbacks)
+Last session: 2026-02-04T21:51:40Z
+Stopped at: Completed 39-04-PLAN.md (Production Validation)
 Resume file: None
-Resume with: Continue with 39-04 (Production Validation)
+Resume with: Project complete - all phases finished
 
-**v2.4 Summary:**
-- 3 phases (37-39), 17 requirements
+**v2.4 Complete:**
+- 3 phases (37-39), 4 plans, 17 requirements
 - Adds Synthetic.new as second LLM provider
 - 7 active models (2 reasoning + 5 standard), 6 disabled pending upstream fixes
-- Total active models: 29 → 36 (6 Synthetic models disabled)
+- Total active models: 29 Together + 7 Synthetic = 36
 
 **Phase 37 Complete:**
 - 37-01: Base provider class with OpenAI-compatible API
@@ -96,7 +97,8 @@ Resume with: Continue with 39-04 (Production Validation)
 - Already implemented by sync-models.ts auto-sync architecture
 - Models register automatically on server startup when SYNTHETIC_API_KEY set
 
-**Phase 39 In Progress:**
+**Phase 39 Complete:**
 - 39-01: Model validation script created and executed (7/13 Synthetic models validated)
 - 39-02: 6 failing models disabled in SYNTHETIC_PROVIDERS (7 remain active)
 - 39-03: Fallback mapping (MODEL_FALLBACKS) and getFallbackProvider() for cross-provider resilience
+- 39-04: Production validation confirmed (7 models registered in database, ready for predictions)
