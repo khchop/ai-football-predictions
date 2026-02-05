@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** The prediction pipeline must reliably generate scores from LLMs and accurately calculate Kicktipp quota points when matches complete
-**Current focus:** Planning next milestone
+**Current focus:** v2.6 SEO/GEO Site Health
 
 ## Current Position
 
-Phase: 43 of 43 (all phases complete)
-Plan: N/A — milestone archived
-Status: Ready for next milestone
-Last activity: 2026-02-05 — v2.5 milestone archived
+Phase: Not started (researching)
+Plan: —
+Status: Researching domain
+Last activity: 2026-02-05 — Milestone v2.6 started
 
-Progress: [████████████████████████████████████████████] 100% (v2.5 complete)
+Progress: [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0% (researching)
 
 ## Milestone History
 
@@ -45,7 +45,7 @@ None.
 
 ### Blockers/Concerns
 
-None — ready for next milestone.
+None — researching for v2.6.
 
 ### Quick Tasks Completed
 
@@ -60,7 +60,7 @@ None — ready for next milestone.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed quick-013 — break circular dependency in base.ts imports
+Stopped at: Starting v2.6 SEO/GEO Site Health milestone
 Resume file: None
 
 **Platform status:**
@@ -68,10 +68,6 @@ Resume file: None
 - 42 active models (29 Together + 13 Synthetic)
 - 0 disabled models (all 6 previously disabled models re-enabled)
 - 208 requirements validated (v1.0-v2.5)
-- Complete validation suite:
-  - `npm run validate:models` - Test all 42 models return valid JSON
-  - `npm run check:fallback` - Verify production fallback rate <5%
-  - `npm run validate:all` - Complete validation (models + fallback)
 
 ---
-*Last updated: 2026-02-05 after quick-013 completed*
+*Last updated: 2026-02-05 after v2.6 milestone started*
