@@ -394,6 +394,9 @@ export const cacheKeys = {
     // Roundup content
     roundup: (matchId: string) => `roundup:${matchId}`,
     roundupBySlug: (slug: string) => `roundup:slug:${slug}`,
+
+    // Model count (for dynamic UI references)
+    activeModelCount: () => 'db:models:count:active',
   } as const;
 
 /**
@@ -451,6 +454,29 @@ export async function invalidateStatsCache(options?: { matchId?: string }): Prom
       error: error instanceof Error ? error.message : String(error),
       ...options,
     }, 'Error invalidating stats caches');
+  }
+}
+
+/**
+ * Invalidate all caches that depend on active model count
+ * Called when model status changes (enable/disable/auto-disable)
+ */
+export async function invalidateModelCountCaches(): Promise<void> {
+  const redis = getRedis();
+  if (!redis) return;
+
+  try {
+    await Promise.all([
+      cacheDelete(cacheKeys.activeModelCount()),
+      cacheDelete(cacheKeys.overallStats()),
+      // Leaderboard caches include model count in FAQs
+      cacheDeletePattern('db:leaderboard:*'),
+    ]);
+    loggers.cache.info('Invalidated model count caches');
+  } catch (error) {
+    loggers.cache.error({
+      error: error instanceof Error ? error.message : String(error)
+    }, 'Failed to invalidate model count caches');
   }
 }
 
