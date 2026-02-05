@@ -1,5 +1,7 @@
 import { OpenAICompatibleProvider } from './base';
 import { ModelPricing, ModelTier } from './together';
+import { PromptConfig, PromptVariant } from '../prompt-variants';
+import { ResponseHandler } from '../response-handlers';
 
 /**
  * Synthetic.new LLM Provider
@@ -13,6 +15,7 @@ export class SyntheticProvider extends OpenAICompatibleProvider {
 
   public readonly tier: ModelTier;
   public readonly pricing: ModelPricing;
+  public readonly promptConfig: PromptConfig;
 
   constructor(
     public readonly id: string,
@@ -21,11 +24,13 @@ export class SyntheticProvider extends OpenAICompatibleProvider {
     public readonly displayName: string,
     tier: ModelTier,
     pricing: ModelPricing,
-    public readonly isPremium: boolean = false
+    public readonly isPremium: boolean = false,
+    promptConfig: PromptConfig = {}
   ) {
     super();
     this.tier = tier;
     this.pricing = pricing;
+    this.promptConfig = promptConfig;
   }
 
   protected getHeaders(): Record<string, string> {
@@ -88,7 +93,12 @@ export const DeepSeekR1_0528_SynProvider = new SyntheticProvider(
   'DeepSeek R1 0528 (Synthetic)',
   'premium',
   { promptPer1M: 3.00, completionPer1M: 7.00 },
-  true
+  true,
+  {
+    promptVariant: PromptVariant.THINKING_STRIPPED,
+    responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
+    timeoutMs: 60000,
+  }
 );
 
 // 2. Kimi K2 Thinking
@@ -99,7 +109,12 @@ export const KimiK2Thinking_SynProvider = new SyntheticProvider(
   'Kimi K2 Thinking (Synthetic)',
   'premium',
   { promptPer1M: 2.00, completionPer1M: 6.00 },
-  true
+  true,
+  {
+    promptVariant: PromptVariant.THINKING_STRIPPED,
+    responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
+    timeoutMs: 60000,
+  }
 );
 
 // 3. Qwen3 235B Thinking
@@ -110,7 +125,12 @@ export const Qwen3_235BThinking_SynProvider = new SyntheticProvider(
   'Qwen3 235B Thinking (Synthetic)',
   'premium',
   { promptPer1M: 2.50, completionPer1M: 6.00 },
-  true
+  true,
+  {
+    promptVariant: PromptVariant.THINKING_STRIPPED,
+    responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
+    timeoutMs: 90000,
+  }
 );
 
 // ============================================================================
@@ -148,7 +168,12 @@ export const DeepSeekV32_SynProvider = new SyntheticProvider(
   'DeepSeek V3.2 (Synthetic)',
   'budget',
   { promptPer1M: 0.65, completionPer1M: 1.30 },
-  false
+  false,
+  {
+    promptVariant: PromptVariant.JSON_STRICT,
+    responseHandler: ResponseHandler.EXTRACT_JSON,
+    timeoutMs: 45000,
+  }
 );
 
 // ============================================================================
@@ -191,7 +216,12 @@ export const KimiK25_SynProvider = new SyntheticProvider(
   'Kimi K2.5 (Synthetic)',
   'budget',
   { promptPer1M: 1.00, completionPer1M: 3.00 },
-  false
+  false,
+  {
+    promptVariant: PromptVariant.BASE,
+    responseHandler: ResponseHandler.DEFAULT,
+    timeoutMs: 60000,
+  }
 );
 
 // ============================================================================
@@ -207,7 +237,12 @@ export const GLM46_SynProvider = new SyntheticProvider(
   'GLM 4.6 (Synthetic)',
   'budget',
   { promptPer1M: 0.40, completionPer1M: 0.80 },
-  false
+  false,
+  {
+    promptVariant: PromptVariant.ENGLISH_ENFORCED,
+    responseHandler: ResponseHandler.DEFAULT,
+    timeoutMs: 60000,
+  }
 );
 
 // 11. GLM 4.7
@@ -218,7 +253,12 @@ export const GLM47_SynProvider = new SyntheticProvider(
   'GLM 4.7 (Synthetic)',
   'budget',
   { promptPer1M: 0.45, completionPer1M: 0.90 },
-  false
+  false,
+  {
+    promptVariant: PromptVariant.ENGLISH_ENFORCED,
+    responseHandler: ResponseHandler.EXTRACT_JSON,
+    timeoutMs: 60000,
+  }
 );
 
 // ============================================================================
@@ -250,49 +290,55 @@ export const GPTOSS120B_SynProvider = new SyntheticProvider(
   'GPT-OSS 120B (Synthetic)',
   'budget',
   { promptPer1M: 1.20, completionPer1M: 2.40 },
-  false
+  false,
+  {
+    promptVariant: PromptVariant.JSON_STRICT,
+    responseHandler: ResponseHandler.EXTRACT_JSON,
+    timeoutMs: 45000,
+  }
 );
 
 // ============================================================================
-// DISABLED MODELS - Kept for future re-testing
-// These models failed validation (2026-02-04) and are excluded from production
-// To re-test: move from here back to SYNTHETIC_PROVIDERS array
-// ============================================================================
-//
-// Qwen3_235BThinking_SynProvider - Parse failure: returns natural language instead of JSON
-// DeepSeekV32_SynProvider - Parse failure: returns natural language instead of JSON
-// KimiK25_SynProvider - Timeout: 30s timeout, needs investigation
-// GLM46_SynProvider - Timeout: 30s timeout, needs investigation
-// GLM47_SynProvider - API bug: SGLang structured output not supported (Synthetic.new confirmed)
-// GPTOSS120B_SynProvider - Invalid response: returns {"type":"object"} instead of predictions
-
-// ============================================================================
-// Export active Synthetic providers (7 validated models)
+// Export all Synthetic providers (13 models with model-specific configurations)
 // ============================================================================
 
 export const SYNTHETIC_PROVIDERS = [
-  // Reasoning models (2) - Premium (1 disabled: qwen3-235b-thinking)
+  // Reasoning models (3) - Premium
   DeepSeekR1_0528_SynProvider,        // 1  - $3.00/$7.00 (premium, reasoning)
   KimiK2Thinking_SynProvider,         // 2  - $2.00/$6.00 (premium, reasoning)
+  Qwen3_235BThinking_SynProvider,     // 3  - $2.50/$6.00 (premium, reasoning)
 
-  // DeepSeek family (2) - Budget (1 disabled: deepseek-v3.2)
-  DeepSeekV3_0324_SynProvider,        // 3  - $0.60/$1.25
-  DeepSeekV31_Terminus_SynProvider,   // 4  - $0.70/$1.40
+  // DeepSeek family (3) - Budget
+  DeepSeekV3_0324_SynProvider,        // 4  - $0.60/$1.25
+  DeepSeekV31_Terminus_SynProvider,   // 5  - $0.70/$1.40
+  DeepSeekV32_SynProvider,            // 6  - $0.65/$1.30
 
   // MiniMax (2) - Budget
-  MiniMaxM2_SynProvider,              // 5  - $0.50/$1.00
-  MiniMaxM21_SynProvider,             // 6  - $0.55/$1.10
+  MiniMaxM2_SynProvider,              // 7  - $0.50/$1.00
+  MiniMaxM21_SynProvider,             // 8  - $0.55/$1.10
+
+  // Moonshot (1) - Budget
+  KimiK25_SynProvider,                // 9  - $1.00/$3.00
+
+  // GLM (2) - Budget
+  GLM46_SynProvider,                  // 10 - $0.40/$0.80
+  GLM47_SynProvider,                  // 11 - $0.45/$0.90
 
   // Qwen Coder (1) - Premium
-  Qwen3Coder480B_SynProvider,         // 7  - $3.00/$6.00 (premium)
+  Qwen3Coder480B_SynProvider,         // 12 - $3.00/$6.00 (premium)
+
+  // OpenAI OSS (1) - Budget
+  GPTOSS120B_SynProvider,             // 13 - $1.20/$2.40
 ];
 
 // ============================================================================
 // Summary (February 2026):
-// - 13 Synthetic-exclusive models defined (not all available on Together AI)
-// - 7 models ACTIVE: 2 reasoning + 4 budget + 1 coder premium
-// - 6 models DISABLED: 1 reasoning (parse), 1 budget (parse), 2 timeout, 1 API bug, 1 invalid response
+// - 13 Synthetic-exclusive models (not available on Together AI)
+// - 13 models ACTIVE with model-specific prompt variants and response handlers
+// - 0 models DISABLED (all re-enabled with appropriate configurations)
+// - Prompt variants: THINKING_STRIPPED (reasoning), ENGLISH_ENFORCED (GLM), JSON_STRICT (DeepSeek V3.2, GPT-OSS)
+// - Response handlers: STRIP_THINKING_TAGS, EXTRACT_JSON, DEFAULT
+// - Timeout configurations: 45s-90s based on model characteristics
 // - All use hf:org/model format for Synthetic.new API
 // - Pricing: Placeholder estimates (actual pricing TBD)
-// - Disabled models kept in code for future re-testing
 // ============================================================================
