@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 40 of 43 (Model-Specific Prompt Selection)
-Plan: 0 of 2 in current phase
-Status: Ready to plan
-Last activity: 2026-02-05 — Roadmap created for v2.5 milestone
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-05 — Completed 40-01-PLAN.md
 
-Progress: [████████████████████████████████████████░░░░] 91%
+Progress: [████████████████████████████████████████░░░░] 92%
 
 ## Milestone History
 
@@ -42,6 +42,9 @@ Recent decisions affecting v2.5:
 - Model-specific prompts over LangChain/LiteLLM (avoids 10MB+ bundle, 50-200ms latency)
 - Fallback chains with cycle detection and max depth 3 (prevents worker exhaustion)
 - Dynamic model counts via getProviderStats() single source of truth (eliminates hardcoded references)
+- Enum-based configuration for compile-time validation (40-01: PromptVariant, ResponseHandler)
+- Combo variants over multi-variant arrays (40-01: simpler model configuration)
+- Response handlers as pure functions (40-01: string -> string pipeline)
 
 ### Pending Todos
 
@@ -65,8 +68,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Roadmap and STATE.md created for v2.5 milestone
-Resume file: None (ready to start Phase 40 planning with /gsd:plan-phase 40)
+Stopped at: Completed 40-01-PLAN.md (prompt variants and response handlers)
+Resume file: None (ready to execute 40-02-PLAN.md)
 
 **Platform status:**
 - 17 leagues operational
@@ -77,4 +80,4 @@ Resume file: None (ready to start Phase 40 planning with /gsd:plan-phase 40)
 - 39 phases complete, 4 phases in v2.5
 
 ---
-*Last updated: 2026-02-05 after v2.5 roadmap creation*
+*Last updated: 2026-02-05 after completing 40-01*
