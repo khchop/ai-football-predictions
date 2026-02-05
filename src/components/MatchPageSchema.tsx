@@ -23,6 +23,7 @@ interface MatchPageSchemaProps {
   url: string;
   faqs: FAQItem[];
   contentGeneratedAt?: string; // ISO timestamp when content was last generated
+  activeModels?: number; // Dynamic model count for descriptions
 }
 
 /**
@@ -43,10 +44,11 @@ function getEventStatus(status: string | null): string {
   }
 }
 
-export function MatchPageSchema({ match, competition, url, faqs, contentGeneratedAt }: MatchPageSchemaProps) {
+export function MatchPageSchema({ match, competition, url, faqs, contentGeneratedAt, activeModels }: MatchPageSchemaProps) {
   const eventStatus = getEventStatus(match.status);
   const matchName = `${match.homeTeam} vs ${match.awayTeam}`;
-  const pageDescription = `AI predictions for ${matchName} (${competition.name}). Compare forecasts from 35+ AI models.`;
+  const modelCount = activeModels ?? 35; // Fallback for backwards compatibility
+  const pageDescription = `AI predictions for ${matchName} (${competition.name}). Compare forecasts from ${modelCount}+ AI models.`;
 
   // Dates for Article schema - content freshness signals (GEO optimization)
   const datePublished = match.kickoffTime; // Initial content created around kickoff

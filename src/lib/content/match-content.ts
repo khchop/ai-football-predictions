@@ -12,6 +12,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { getDb, matchContent, matches, matchAnalysis, bets, models, predictions } from '@/lib/db';
+import { getOverallStats } from '@/lib/db/queries';
 import { loggers } from '@/lib/logger/modules';
 import { generateTextWithTogetherAI, generateWithTogetherAI } from './together-client';
 import { CONTENT_CONFIG, estimateContentCost } from './config';
@@ -708,6 +709,10 @@ export async function generateFAQContent(matchId: string): Promise<void> {
     const formattedDate = format(kickoffDate, 'MMMM d, yyyy');
     const formattedTime = format(kickoffDate, 'h:mm a');
 
+    // Get active model count for dynamic content
+    const overallStats = await getOverallStats();
+    const activeModelCount = overallStats.activeModels;
+
     // Get predictions for context
     const modelPredictions = await db
       .select({
@@ -817,7 +822,7 @@ Generate 5 FAQs for this UPCOMING match:
 2. What do AI models predict for ${match.homeTeam} vs ${match.awayTeam}? (MUST include: "${consensusCount} of ${modelPredictions.length} models predict ${consensusOutcome}")
 3. What is the most predicted scoreline? (State the top predicted score(s) with model counts)
 4. Which AI models are predicting a ${match.homeTeam} win? (Name specific models from sample list)
-5. How accurate are AI football predictions? (Brief methodology, mention 35+ models)
+5. How accurate are AI football predictions? (Brief methodology, mention ${activeModelCount}+ models)
 
 CRITICAL: Use the EXACT numbers and model names provided above. Do NOT use generic placeholders.`;
     }

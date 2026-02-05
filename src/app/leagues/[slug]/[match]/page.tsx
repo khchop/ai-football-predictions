@@ -1,5 +1,5 @@
 import { notFound, permanentRedirect } from 'next/navigation';
-import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails } from '@/lib/db/queries';
+import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails, getOverallStats } from '@/lib/db/queries';
 import { getCompetitionByIdOrAlias } from '@/lib/football/competitions';
 import type { Metadata } from 'next';
 import { MatchPageSchema } from '@/components/MatchPageSchema';
@@ -60,8 +60,11 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
     }
   }
 
+  // Fetch active model count for dynamic metadata
+  const overallStats = await getOverallStats();
+
   // Use centralized metadata builder
-  return buildMatchMetadata(seoData);
+  return buildMatchMetadata(seoData, overallStats.activeModels);
 }
 
 export default async function MatchPage({ params }: MatchPageProps) {
@@ -98,7 +101,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
     analysisData,
     predictions,
     aiFaqs,
-    contentTimestamp
+    contentTimestamp,
+    overallStats
   ] = await Promise.all([
     getMatchWithAnalysis(matchData.id).catch(err => {
       console.error('Failed to fetch analysis:', err);
@@ -115,6 +119,10 @@ export default async function MatchPage({ params }: MatchPageProps) {
     getMatchContentTimestamp(matchData.id).catch(err => {
       console.error('Failed to fetch content timestamp:', err);
       return null;
+    }),
+    getOverallStats().catch(err => {
+      console.error('Failed to fetch overall stats:', err);
+      return { activeModels: 35, totalMatches: 0, finishedMatches: 0, totalPredictions: 0 };
     })
   ]);
 
@@ -153,6 +161,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
         url={`https://kroam.xyz/leagues/${competitionSlug}/${matchData.slug}`}
         faqs={faqs}
         contentGeneratedAt={contentTimestamp || undefined}
+        activeModels={overallStats.activeModels}
       />
       <Breadcrumbs items={breadcrumbs} />
 

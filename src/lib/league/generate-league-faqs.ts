@@ -23,6 +23,7 @@ export interface LeagueFAQData {
     model: { name: string };
     accuracy: number;
   };
+  activeModels?: number;
 }
 
 /**
@@ -72,11 +73,12 @@ function truncateToSentence(text: string, maxLength: number): string {
  * });
  */
 export function generateLeagueFAQs(data: LeagueFAQData): FAQItem[] {
-  const { competition, stats, topModel } = data;
+  const { competition, stats, topModel, activeModels } = data;
+  const modelCount = activeModels ?? 35; // Fallback for backwards compatibility
   const name = competition.name;
 
   // Q1: TL;DR question FIRST (user decision from Phase 19)
-  const tldrAnswer = `Our platform uses 35 AI models to predict exact scores for ${name} matches. The models analyze team form, head-to-head records, standings, and lineups to generate predictions approximately 30 minutes before kickoff.`;
+  const tldrAnswer = `Our platform uses ${modelCount} AI models to predict exact scores for ${name} matches. The models analyze team form, head-to-head records, standings, and lineups to generate predictions approximately 30 minutes before kickoff.`;
 
   // Q2: Accuracy question with dynamic stats
   let accuracyAnswer = `Across ${stats.finishedMatches} ${name} matches, our AI models achieve varying accuracy levels.`;
@@ -85,7 +87,7 @@ export function generateLeagueFAQs(data: LeagueFAQData): FAQItem[] {
   }
 
   // Q3: Match count question
-  const matchCountAnswer = `We have tracked and predicted ${stats.finishedMatches} ${name} matches with AI analysis and exact score predictions from 35 different models.`;
+  const matchCountAnswer = `We have tracked and predicted ${stats.finishedMatches} ${name} matches with AI analysis and exact score predictions from ${modelCount} different models.`;
 
   // Q4: Timing question
   const timingAnswer = `Predictions for ${name} matches are generated approximately 30 minutes before kickoff, once official team lineups are announced. This ensures predictions incorporate the most relevant team information.`;
