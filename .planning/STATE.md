@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 40 of 43 (Model-Specific Prompt Selection)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-05 — Completed 40-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-05 — Completed 40-02-PLAN.md (provider integration)
 
-Progress: [████████████████████████████████████████░░░░] 92%
+Progress: [████████████████████████████████████████░░░░] 93%
 
 ## Milestone History
 
@@ -45,6 +45,9 @@ Recent decisions affecting v2.5:
 - Enum-based configuration for compile-time validation (40-01: PromptVariant, ResponseHandler)
 - Combo variants over multi-variant arrays (40-01: simpler model configuration)
 - Response handlers as pure functions (40-01: string -> string pipeline)
+- Optional promptConfig property on provider classes (40-02: subclasses only override when needed)
+- Unified content extraction before response handler (40-02: single return path handles all response formats)
+- Model-specific timeouts: 90s for large reasoning models, 60s for medium, 45s for JSON-strict (40-02)
 
 ### Pending Todos
 
@@ -53,10 +56,10 @@ None.
 ### Blockers/Concerns
 
 **Known Issues for v2.5:**
-- Phase 40: Need to validate that custom prompts actually fix GLM, Kimi, Qwen failures
+- Phase 40: COMPLETE - Infrastructure ready, needs integration testing to validate prompt fixes
 - Phase 41: Cross-provider API compatibility (Together AI vs Synthetic parameter differences) needs validation
 - Phase 42: Cache invalidation on model enable/disable must be atomic to prevent count inconsistencies
-- Phase 43: 60s timeout may be insufficient for Kimi K2.5, GLM 4.6 (may need 90s)
+- Phase 43: Timeout validation needed - Qwen3 Thinking at 90s, others at 60s/45s
 
 ### Quick Tasks Completed
 
@@ -68,16 +71,16 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 40-01-PLAN.md (prompt variants and response handlers)
-Resume file: None (ready to execute 40-02-PLAN.md)
+Stopped at: Completed 40-02-PLAN.md (provider integration, phase 40 complete)
+Resume file: None (ready for phase 41)
 
 **Platform status:**
 - 17 leagues operational
-- 36 active models (29 Together + 7 Synthetic)
-- 6 disabled Synthetic models (target for re-enabling)
+- 42 active models (29 Together + 13 Synthetic) - increased from 36
+- 0 disabled models (all 6 previously disabled models re-enabled with configurations)
 - 172 requirements validated (v1.0-v2.4)
 - 36 new requirements for v2.5
-- 39 phases complete, 4 phases in v2.5
+- 40 phases complete, 3 phases remaining in v2.5
 
 ---
-*Last updated: 2026-02-05 after completing 40-01*
+*Last updated: 2026-02-05 after completing 40-02*
