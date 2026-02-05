@@ -291,7 +291,7 @@ Plans:
 - [x] 41-01-PLAN.md — Add usedFallback column and startup validation
 - [x] 41-02-PLAN.md — Implement callAPIWithFallback wrapper
 - [x] 41-03-PLAN.md — Add fallback metrics to admin dashboard
-- [ ] 41-04-PLAN.md — Gap closure: add K2.5 mapping, correct criteria
+- [x] 41-04-PLAN.md — Gap closure: add K2.5 mapping, correct criteria
 
 #### Phase 42: Dynamic Model Counts
 **Goal**: Model counts displayed dynamically throughout the application with single source of truth
@@ -370,7 +370,7 @@ Phases execute in numeric order: 40 → 41 → 42 → 43
 | 38. Model Configuration | v2.4 | 2/2 | Complete | 2026-02-05 |
 | 39. Testing & Validation | v2.4 | 2/2 | Complete | 2026-02-05 |
 | 40. Model-Specific Prompt Selection | v2.5 | 2/2 | Complete | 2026-02-05 |
-| 41. Together AI Fallbacks | v2.5 | 3/4 | In progress | - |
+| 41. Together AI Fallbacks | v2.5 | 4/4 | Complete | 2026-02-05 |
 | 42. Dynamic Model Counts | v2.5 | 0/2 | Not started | - |
 | 43. Testing & Validation | v2.5 | 0/1 | Not started | - |
 
