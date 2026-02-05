@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 
 ## Current Position
 
-Phase: 42 of 43 (Dynamic Model Counts)
-Plan: 2 of 2 in current phase
-Status: Phase complete (verified)
-Last activity: 2026-02-05 — Completed Phase 42 execution and verification
+Phase: 43 of 43 (Testing & Validation)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-05 — Completed 43-01-PLAN.md (Test Framework Setup)
 
 Progress: [██████████████████████████████████████████░░] 98%
 
@@ -59,6 +59,9 @@ Recent decisions affecting v2.5:
 - 60s cache TTL for model count (42-01: aligned with CACHE_TTL.STATS for consistency)
 - Batch invalidation after recoverDisabledModels() (42-01: single invalidation after loop, not per-model)
 - Optional activeModels parameter with fallback to 35 (42-02: backwards compatibility for incremental updates)
+- Node environment for Vitest over jsdom (43-01: API testing, not browser)
+- 60s default test timeout with maxConcurrency 5 (43-01: LLM rate limit handling)
+- Zod v4 uses .issues not .errors on ZodError (43-01: breaking API change)
 
 ### Pending Todos
 
@@ -84,8 +87,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed Phase 42 (dynamic model counts, verified)
-Resume file: None (ready for phase 43)
+Stopped at: Completed 43-01-PLAN.md (Test Framework Setup)
+Resume file: None (continue with 43-02)
 
 **Platform status:**
 - 17 leagues operational
@@ -93,9 +96,10 @@ Resume file: None (ready for phase 43)
 - 0 disabled models (all 6 previously disabled models re-enabled with configurations)
 - 172 requirements validated (v1.0-v2.4)
 - 36 new requirements for v2.5
-- 43 phases complete, 1 phase remaining in v2.5 (Phase 43: Testing & Validation)
+- Phase 43 in progress: Testing & Validation (1/3 plans complete)
 - Phase 42: COMPLETE - Dynamic model count infrastructure and UI integration verified
 - 3 fallback mappings validated: deepseek-r1-0528-syn, kimi-k2-thinking-syn, kimi-k2.5-syn
+- Vitest framework installed with Zod validation schemas ready for model integration tests
 
 ---
-*Last updated: 2026-02-05 after Phase 42 verification passed*
+*Last updated: 2026-02-05 after 43-01-PLAN.md completed*
