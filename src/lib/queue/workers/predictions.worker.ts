@@ -23,6 +23,7 @@ import type { NewPrediction } from '@/lib/db/schema';
 import { getActiveProviders } from '@/lib/llm';
 import { buildBatchPrompt } from '@/lib/football/prompt-builder';
 import { parseBatchPredictionResponse, BATCH_SYSTEM_PROMPT } from '@/lib/llm/prompt';
+import { FallbackAPIResult } from '@/lib/llm/providers/base';
 import { getStandingsForLeagues, getStandingFromMap } from '@/lib/football/standings';
 import { getResult, calculateQuotas } from '@/lib/utils/scoring';
 import { generateBettingContent } from '@/lib/content/match-content';
@@ -158,8 +159,13 @@ export function createPredictionsWorker() {
                awayStanding,
              }]);
 
-              // Call LLM with score prediction system prompt
-               const rawResponse = await (provider as unknown as { callAPI: (system: string, user: string) => Promise<string> }).callAPI(BATCH_SYSTEM_PROMPT, prompt);
+              // Use fallback-aware API call
+              const apiResult = await (provider as unknown as {
+                callAPIWithFallback: (system: string, user: string) => Promise<FallbackAPIResult>
+              }).callAPIWithFallback(BATCH_SYSTEM_PROMPT, prompt);
+
+              const rawResponse = apiResult.response;
+              const usedFallback = apiResult.usedFallback;
 
               // Validate response before parsing (defensive null check)
               if (!rawResponse || typeof rawResponse !== 'string') {
@@ -203,11 +209,17 @@ export function createPredictionsWorker() {
                predictedAway: prediction.awayScore,
                predictedResult: result,
                status: 'pending',
+               usedFallback,  // Track fallback usage
              });
 
              // Track successful model but DON'T record health yet
              successfulModelIds.push(provider.id);
-              log.info({ matchId, modelId: provider.id, prediction: `${prediction.homeScore}-${prediction.awayScore}` }, `✓ Prediction generated`);
+              log.info({
+                matchId,
+                modelId: provider.id,
+                prediction: `${prediction.homeScore}-${prediction.awayScore}`,
+                usedFallback,
+              }, `${usedFallback ? '↩' : '✓'} Prediction generated${usedFallback ? ' (via fallback)' : ''}`);
               successCount++;
               } catch (modelError: unknown) {
                 const errorMessage = modelError instanceof Error ? modelError.message : String(modelError);
