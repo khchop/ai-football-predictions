@@ -280,17 +280,18 @@ Plans:
 **Depends on**: Phase 40
 **Requirements**: FALL-01, FALL-02, FALL-03, FALL-04, FALL-05, FALL-06, CYCL-01, CYCL-02, CYCL-03, COST-01, COST-02, COST-03
 **Success Criteria** (what must be TRUE):
-  1. Kimi K2.5-syn failures automatically retry with Together AI Kimi model
-  2. GLM 4.6-syn and GLM 4.7-syn failures fall back to Together AI GLM models
-  3. Fallback loops prevented by cycle detection at startup and max depth limit of 3
-  4. Admin dashboard displays daily fallback costs with warnings when fallback >2x more expensive
-  5. Prediction records track originalModelId and fallbackModelId for transparency
-**Plans**: 3 plans
+  1. Synthetic model failures (Kimi K2, DeepSeek R1) automatically retry with Together AI equivalents
+  2. Models without Together AI equivalents (GLM, MiniMax, Qwen3 Coder) fail without fallback
+  3. Fallback loops prevented by startup validation (cycle detection, max depth 1)
+  4. Admin dashboard displays fallback costs with warnings when >2x more expensive
+  5. Prediction records track usedFallback boolean for internal transparency
+**Plans**: 4 plans
 
 Plans:
-- [ ] 41-01-PLAN.md — Add usedFallback column to schema and startup validation for MODEL_FALLBACKS
-- [ ] 41-02-PLAN.md — Implement callAPIWithFallback wrapper and integrate into predictions worker
-- [ ] 41-03-PLAN.md — Add fallback metrics to admin dashboard
+- [x] 41-01-PLAN.md — Add usedFallback column and startup validation
+- [x] 41-02-PLAN.md — Implement callAPIWithFallback wrapper
+- [x] 41-03-PLAN.md — Add fallback metrics to admin dashboard
+- [ ] 41-04-PLAN.md — Gap closure: add K2.5 mapping, correct criteria
 
 #### Phase 42: Dynamic Model Counts
 **Goal**: Model counts displayed dynamically throughout the application with single source of truth
@@ -369,7 +370,7 @@ Phases execute in numeric order: 40 → 41 → 42 → 43
 | 38. Model Configuration | v2.4 | 2/2 | Complete | 2026-02-05 |
 | 39. Testing & Validation | v2.4 | 2/2 | Complete | 2026-02-05 |
 | 40. Model-Specific Prompt Selection | v2.5 | 2/2 | Complete | 2026-02-05 |
-| 41. Together AI Fallbacks | v2.5 | 0/3 | Not started | - |
+| 41. Together AI Fallbacks | v2.5 | 3/4 | In progress | - |
 | 42. Dynamic Model Counts | v2.5 | 0/2 | Not started | - |
 | 43. Testing & Validation | v2.5 | 0/1 | Not started | - |
 
