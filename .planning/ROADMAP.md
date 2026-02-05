@@ -11,7 +11,7 @@
 - **v2.2 Match Page Rewrite** - Phases 26-30 (shipped 2026-02-04)
 - **v2.3 Content Pipeline & SEO** - Phases 31-36 (shipped 2026-02-04)
 - **v2.4 Synthetic.new Integration** - Phases 37-39 (shipped 2026-02-05)
-- **v2.5 Model Reliability & Dynamic Counts** - Phases 40-43 (in progress)
+- **v2.5 Model Reliability & Dynamic Counts** - Phases 40-43 (shipped 2026-02-05)
 
 ## Phases
 
@@ -255,7 +255,8 @@
 
 </details>
 
-### v2.5 Model Reliability & Dynamic Counts (In Progress)
+<details>
+<summary>v2.5 Model Reliability & Dynamic Counts (Phases 40-43) - SHIPPED 2026-02-05</summary>
 
 **Milestone Goal:** Make all models work reliably with model-specific prompts and Together.ai fallbacks, and display model counts dynamically everywhere.
 
@@ -321,9 +322,11 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 43-01-PLAN.md - Set up Vitest framework and Zod validation schemas
-- [ ] 43-02-PLAN.md - Create integration tests for all 42 models
-- [ ] 43-03-PLAN.md - Add production fallback rate monitoring script
+- [x] 43-01-PLAN.md - Set up Vitest framework and Zod validation schemas
+- [x] 43-02-PLAN.md - Create integration tests for all 42 models
+- [x] 43-03-PLAN.md - Add production fallback rate monitoring script
+
+</details>
 
 ## Progress
 
@@ -374,7 +377,7 @@ Phases execute in numeric order: 40 -> 41 -> 42 -> 43
 | 40. Model-Specific Prompt Selection | v2.5 | 2/2 | Complete | 2026-02-05 |
 | 41. Together AI Fallbacks | v2.5 | 4/4 | Complete | 2026-02-05 |
 | 42. Dynamic Model Counts | v2.5 | 2/2 | Complete | 2026-02-05 |
-| 43. Testing & Validation | v2.5 | 0/3 | Not started | - |
+| 43. Testing & Validation | v2.5 | 3/3 | Complete | 2026-02-05 |
 
 ---
-*Last updated: 2026-02-05 after Phase 43 planning complete*
+*Last updated: 2026-02-05 after Phase 43 complete*
