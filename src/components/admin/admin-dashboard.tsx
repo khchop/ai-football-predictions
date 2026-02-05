@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ModelHealthTable } from './model-health-table';
 import { CostSummary } from './cost-summary';
+import { FallbackMetrics } from './fallback-metrics';
 import { Activity, AlertTriangle, DollarSign, Lock, Loader2 } from 'lucide-react';
 
 interface AdminData {
@@ -258,6 +259,9 @@ export function AdminDashboard() {
 
       {/* Cost Summary */}
       <CostSummary budgetStatus={data.budgetStatus} />
+
+      {/* Fallback Metrics */}
+      <FallbackMetrics />
 
       {/* Model Health Table */}
       <ModelHealthTable 
