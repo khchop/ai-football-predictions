@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 42 of 43 (Dynamic Model Counts)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-05 - Completed 42-01-PLAN.md (cache infrastructure)
+Last activity: 2026-02-05 - Completed 42-02-PLAN.md (replace hardcoded references)
 
-Progress: [█████████████████████████████████████████░░░] 97%
+Progress: [██████████████████████████████████████████░░] 98%
 
 ## Milestone History
 
@@ -31,7 +31,7 @@ Progress: [███████████████████████
 | v2.4 Synthetic.new Integration | 37-39 | 7 | 17 | 2026-02-05 |
 | **v2.5 Model Reliability (in progress)** | **40-43** | **8 (TBD)** | **36** | **-** |
 
-**Total shipped:** 39 phases, 115 plans, 172 requirements
+**Total shipped:** 39 phases, 117 plans, 172 requirements
 
 ## Accumulated Context
 
@@ -58,6 +58,7 @@ Recent decisions affecting v2.5:
 - GLM/MiniMax/Qwen3 Coder have no fallbacks (41-04: documented provider limitation, not implementation gap)
 - 60s cache TTL for model count (42-01: aligned with CACHE_TTL.STATS for consistency)
 - Batch invalidation after recoverDisabledModels() (42-01: single invalidation after loop, not per-model)
+- Optional activeModels parameter with fallback to 35 (42-02: backwards compatibility for incremental updates)
 
 ### Pending Todos
 
@@ -70,7 +71,7 @@ None.
 - Phase 41: COMPLETE - All 4 plans shipped (infrastructure, orchestration, admin visibility, gap closure)
 - Phase 41: Cross-provider API compatibility (Together AI vs Synthetic parameter differences) needs validation
 - Phase 41: Fallback timeout behavior needs testing (does Together AI inherit model-specific timeout?)
-- Phase 42: Plan 01 complete - cache infrastructure ready, plan 02 will replace hardcoded references
+- Phase 42: Plans 01-02 complete - cache infrastructure and hardcoded reference replacement done
 - Phase 43: Timeout validation needed - Qwen3 Thinking at 90s, others at 60s/45s
 
 ### Quick Tasks Completed
@@ -83,8 +84,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 42-01-PLAN.md (cache infrastructure)
-Resume file: None (ready for plan 02)
+Stopped at: Completed 42-02-PLAN.md (replace hardcoded references)
+Resume file: None (ready for plan 03)
 
 **Platform status:**
 - 17 leagues operational
@@ -93,8 +94,8 @@ Resume file: None (ready for plan 02)
 - 172 requirements validated (v1.0-v2.4)
 - 36 new requirements for v2.5
 - 42 phases complete, 1 phase remaining in v2.5
-- Phase 42: Plan 01 complete - getActiveModelCount() and cache invalidation ready
+- Phase 42: Plans 01-02 complete - dynamic model count infrastructure and UI integration done
 - 3 fallback mappings validated: deepseek-r1-0528-syn, kimi-k2-thinking-syn, kimi-k2.5-syn
 
 ---
-*Last updated: 2026-02-05 after 42-01-PLAN.md execution complete*
+*Last updated: 2026-02-05 after 42-02-PLAN.md execution complete*
