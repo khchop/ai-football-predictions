@@ -10,6 +10,7 @@ import {
   BatchParsedResult,
 } from '../prompt';
 import { loggers } from '@/lib/logger/modules';
+import { getFallbackProvider } from '../index';
 
 const logger = loggers.llm;
 import { fetchWithRetry, APIError, RateLimitError } from '@/lib/utils/api-client';
@@ -25,6 +26,12 @@ export interface BatchPredictionResult {
   error?: string;
   processingTimeMs: number;
   failedMatchIds?: string[];
+}
+
+// Result for fallback-aware API calls
+export interface FallbackAPIResult {
+  response: string;
+  usedFallback: boolean;
 }
 
 // Base class for LLM providers with common functionality
@@ -356,6 +363,68 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
       }
       
       throw new APIError('Unknown error', undefined, this.endpoint, error);
+    }
+  }
+
+  /**
+   * Call API with automatic fallback to Together AI on failure
+   *
+   * User decisions (from CONTEXT.md):
+   * - Any error triggers fallback (timeout, parse error, empty response, API error, rate limit)
+   * - No retries on original model - first failure immediately triggers fallback
+   * - If fallback also fails, throw error (max depth 1, no fallback chains)
+   * - Attribution: return original model's response context, track fallback internally
+   */
+  async callAPIWithFallback(
+    systemPrompt: string,
+    userPrompt: string
+  ): Promise<FallbackAPIResult> {
+    try {
+      // Try original model first
+      const response = await this.callAPI(systemPrompt, userPrompt);
+      return { response, usedFallback: false };
+    } catch (originalError) {
+      // Get fallback provider for this model
+      const fallbackProvider = getFallbackProvider(this.id);
+
+      if (!fallbackProvider) {
+        // No fallback available, propagate original error
+        throw originalError;
+      }
+
+      // Log fallback attempt
+      logger.warn({
+        originalModel: this.id,
+        fallbackModel: fallbackProvider.id,
+        error: originalError instanceof Error ? originalError.message : String(originalError),
+      }, 'Model failed, attempting fallback to Together AI');
+
+      try {
+        // Try fallback provider (direct callAPI call, NOT recursive)
+        // Cast needed because getFallbackProvider returns LLMProvider interface
+        const fallbackResult = await (fallbackProvider as OpenAICompatibleProvider).callAPI(
+          systemPrompt,
+          userPrompt
+        );
+
+        logger.info({
+          originalModel: this.id,
+          fallbackModel: fallbackProvider.id,
+        }, 'Fallback succeeded');
+
+        return { response: fallbackResult, usedFallback: true };
+      } catch (fallbackError) {
+        // Fallback also failed - max depth 1, no more retries
+        logger.error({
+          originalModel: this.id,
+          fallbackModel: fallbackProvider.id,
+          originalError: originalError instanceof Error ? originalError.message : String(originalError),
+          fallbackError: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+        }, 'Both original and fallback models failed');
+
+        // Throw the fallback error (more recent/relevant)
+        throw fallbackError;
+      }
     }
   }
 }
