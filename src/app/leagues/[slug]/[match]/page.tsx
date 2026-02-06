@@ -42,8 +42,12 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
 
   const { match: matchData, competition } = result;
 
-  // Get analysis for predicted scores (with graceful degradation)
-  const analysisData = await getMatchWithAnalysis(matchData.id).catch(() => null);
+  // Parallelize independent queries for metadata generation
+  const [analysisData, overallStats] = await Promise.all([
+    getMatchWithAnalysis(matchData.id).catch(() => null),
+    getOverallStats(),
+  ]);
+
   const analysis = analysisData?.analysis;
 
   // Map to SEO data
@@ -62,9 +66,6 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
       // Ignore parse errors
     }
   }
-
-  // Fetch active model count for dynamic metadata
-  const overallStats = await getOverallStats();
 
   // Build canonical path using actual route structure (/leagues/{slug}/{match})
   // Use competition ID (short-form slug) after any alias resolution
