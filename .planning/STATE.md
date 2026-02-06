@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 ## Current Position
 
-Phase: 49 (Pipeline Scheduling Fixes)
-Plan: Ready to plan
-Status: Roadmap created, ready for phase planning
-Last activity: 2026-02-06 — v2.7 roadmap created with 4 phases
+Phase: 49 of 52 (Pipeline Scheduling Fixes)
+Plan: 1 of 5 complete
+Status: In progress
+Last activity: 2026-02-06 — Completed 49-01-PLAN.md (scheduler early exit fixes)
 
-Progress: [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 2% (1/52 plans)
 
 ## Milestone History
 
@@ -40,13 +40,19 @@ Progress: [░░░░░░░░░░░░░░░░░░░░░░░
 
 All decisions archived in milestone files. See `.planning/milestones/` for history.
 
-**Phase 48 (v2.6 - latest):**
+**Phase 48 (v2.6):**
 - 48-01: Pass 6 TTFB measurement integrated into audit script with page type categorization
 - 48-01: TTFB >2s flagged as warnings (not failures) - best-effort optimization, not blocker
 - 48-01: Match page generateMetadata parallelizes getMatchWithAnalysis and getOverallStats queries
 - 48-02: Production audit passes 6/6 with 0 failures (1 acceptable warning for blog link sources)
 - 48-02: TTFB baseline established: 50-73ms across all page types (well under 2s target)
 - 48-02: Use Host header for hostname in Edge Runtime (request.url.hostname can be 'localhost')
+
+**Phase 49 (v2.7 - latest):**
+- 49-01: Remove kickoff <= now early exit - prevents catch-up from working
+- 49-01: Use match status (finished/cancelled/postponed) as scheduling guard instead
+- 49-01: Preserve existing shouldRun logic (kickoff > now) for pre-match vs live job distinction
+- 49-01: Schedule jobs for ALL scheduled matches in fixtures worker, not just new ones
 
 **v2.7 Roadmap:**
 - Phase 49: Pipeline Scheduling Fixes (PIPE-01 to PIPE-05)
@@ -62,10 +68,10 @@ None.
 
 **v2.7 Issues (from investigation):**
 - 43 failed settlement jobs in production need investigation
-- Pipeline not scheduling analysis/predictions for existing matches after restart
-- Last 7 days of matches may be missing predictions entirely
-- Root cause: scheduleMatchJobs() skips matches where kickoff <= now (line 113 of scheduler.ts)
-- Root cause: Fixtures worker only schedules for isNewMatch (line 90)
+- ~~Pipeline not scheduling analysis/predictions for existing matches after restart~~ FIXED (49-01)
+- Last 7 days of matches may be missing predictions entirely (need backfill)
+- ~~Root cause: scheduleMatchJobs() skips matches where kickoff <= now (line 113 of scheduler.ts)~~ FIXED (49-01)
+- ~~Root cause: Fixtures worker only schedules for isNewMatch (line 90)~~ FIXED (49-01)
 - Backfill windows too narrow (12h for analysis, 2h for predictions)
 
 ### Quick Tasks Completed
@@ -82,8 +88,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-06
-Stopped at: v2.7 roadmap created with 4 phases (49-52) covering 20 requirements
+Last session: 2026-02-06T20:48:29Z
+Stopped at: Completed 49-01-PLAN.md (scheduler early exit fixes)
 Resume file: None
 
 **Platform status:**
@@ -91,9 +97,9 @@ Resume file: None
 - 42 active models (29 Together + 13 Synthetic)
 - 0 disabled models (all 6 previously disabled models re-enabled)
 - 248 requirements validated (v1.0-v2.6)
-- 20 new requirements defined for v2.7
+- 20 new requirements defined for v2.7 (2 fixed in 49-01)
 
-**Next action:** `/gsd:plan-phase 49` to plan Pipeline Scheduling Fixes
+**Next action:** Execute 49-02 (catch-up scheduling improvements)
 
 ---
-*Last updated: 2026-02-06 after v2.7 roadmap created*
+*Last updated: 2026-02-06 after 49-01 completed*
