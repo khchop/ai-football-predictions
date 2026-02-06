@@ -13,6 +13,7 @@ export interface AnalyzeMatchPayload {
   externalId: string;
   homeTeam: string;
   awayTeam: string;
+  allowRetroactive?: boolean; // Skip status check for retroactive backfill
 }
 
 // Refresh odds (T-2h)
@@ -35,6 +36,7 @@ export interface PredictMatchPayload {
   attempt: 1 | 2 | 3;
   skipIfDone?: boolean;  // Skip if bets already exist
   force?: boolean;       // Generate even without lineups
+  allowRetroactive?: boolean; // Skip status check for retroactive backfill
 }
 
 // Prediction job data (extends payload with retry tracking)
