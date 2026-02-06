@@ -103,6 +103,11 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 47-02: Article/roundup schemas use @id cross-references to Organization (https://kroam.xyz#organization)
 - 47-02: Updated Organization schema to reference 42 AI models (not 30)
 - 47-02: 'as any' type assertion for eventStatus (schema-dts limitation on EventStatusType)
+- 47-03: WebPageSchema component uses @id reference to WEBSITE_ID (not inline WebSite object)
+- 47-03: FaqSchema requires minimum 2 FAQs (Google recommendation for rich results eligibility)
+- 47-03: SportsEventSchema marked deprecated (superseded by MatchPageSchema @graph pattern)
+- 47-03: Model/leaderboard/blog/league pages consolidated to 1 JSON-LD script per page (2→1)
+- 47-03: Strip @context from sub-schemas before adding to @graph (prevents nested @context)
 - 47-04: Pass 5 JSON-LD validation only runs when AUDIT_BASE_URL set (consistent with Pass 1/4)
 - 47-04: FAQPage <2 questions is warning not failure (Google recommendation, not requirement)
 - 47-04: Reuse AUDIT_SAMPLE env var (default 50) for Pass 5 sampling consistency
