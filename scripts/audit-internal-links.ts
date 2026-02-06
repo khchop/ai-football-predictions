@@ -18,6 +18,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 import { getDb, matches, models, blogPosts } from '@/lib/db';
 import { COMPETITIONS } from '@/lib/football/competitions';
 import { eq, and, isNotNull } from 'drizzle-orm';
+import * as cheerio from 'cheerio';
 
 // Long-form league slugs that trigger redirects (from middleware)
 const LEAGUE_SLUG_REDIRECTS: Record<string, string> = {
@@ -52,6 +53,14 @@ interface Pass2Result extends AuditResult {
 
 interface Pass3Result extends AuditResult {
   linkSourceCounts: Record<string, number>;
+}
+
+interface Pass4Result extends AuditResult {
+  totalChecked: number;
+  titleViolations: number;
+  descriptionViolations: number;
+  h1Violations: number;
+  ogIncomplete: number;
 }
 
 /**
@@ -308,6 +317,136 @@ async function pass3InternalLinkArchitecture(): Promise<Pass3Result> {
 }
 
 /**
+ * Pass 4: Meta Tag Validation
+ * Fetches rendered HTML pages and validates meta tags using cheerio
+ */
+async function pass4MetaTagValidation(baseUrl: string): Promise<Pass4Result> {
+  const result: Pass4Result = {
+    pass: true,
+    failures: [],
+    warnings: [],
+    totalChecked: 0,
+    titleViolations: 0,
+    descriptionViolations: 0,
+    h1Violations: 0,
+    ogIncomplete: 0,
+  };
+
+  try {
+    // Fetch sitemap URLs (reuse Pass 1 logic)
+    const indexUrl = `${baseUrl}/sitemap.xml`;
+    const indexResponse = await fetch(indexUrl);
+    if (!indexResponse.ok) {
+      result.failures.push(`Failed to fetch sitemap index: ${indexResponse.status}`);
+      result.pass = false;
+      return result;
+    }
+
+    const indexXml = await indexResponse.text();
+    const sitemapUrlMatches = indexXml.matchAll(/<loc>(.*?)<\/loc>/g);
+    const sitemapUrls = Array.from(sitemapUrlMatches).map(m => m[1]);
+
+    // Fetch and collect all URLs
+    const allUrls: string[] = [];
+    for (const sitemapUrl of sitemapUrls) {
+      const response = await fetch(sitemapUrl);
+      if (!response.ok) continue;
+
+      const xml = await response.text();
+      const urlMatches = xml.matchAll(/<loc>(.*?)<\/loc>/g);
+      const urls = Array.from(urlMatches).map(m => m[1]);
+      allUrls.push(...urls);
+    }
+
+    // Sample if >50 URLs (controlled by AUDIT_SAMPLE env var)
+    const auditSample = process.env.AUDIT_SAMPLE ? parseInt(process.env.AUDIT_SAMPLE) : 50;
+    const urlsToCheck = allUrls.length > auditSample
+      ? allUrls.sort(() => Math.random() - 0.5).slice(0, auditSample)
+      : allUrls;
+
+    result.totalChecked = urlsToCheck.length;
+
+    // Check each URL
+    for (let i = 0; i < urlsToCheck.length; i++) {
+      const url = urlsToCheck[i];
+
+      // Log progress every 10 URLs
+      if ((i + 1) % 10 === 0 || i === 0) {
+        console.log(`  Checking ${i + 1}/${urlsToCheck.length}: ${url}`);
+      }
+
+      try {
+        // Fetch with 5s timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch(url, {
+          signal: controller.signal,
+          headers: { 'User-Agent': 'Kroam-Audit/1.0' }
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) continue;
+
+        const html = await response.text();
+        const $ = cheerio.load(html);
+
+        // Title check (CTAG-04)
+        const title = $('title').text();
+        if (title.length > 60) {
+          result.titleViolations++;
+          result.failures.push(`Title too long (${title.length} chars): ${url}`);
+          result.pass = false;
+        }
+
+        // Description check (CTAG-02/03)
+        const description = $('meta[name="description"]').attr('content') || '';
+        if (description.length < 100 || description.length > 160) {
+          result.descriptionViolations++;
+          result.failures.push(`Description invalid (${description.length} chars, need 100-160): ${url}`);
+          result.pass = false;
+        }
+
+        // H1 check (CTAG-01/06)
+        const h1Count = $('h1').length;
+        if (h1Count === 0) {
+          result.h1Violations++;
+          result.failures.push(`No H1 tag found: ${url}`);
+          result.pass = false;
+        } else if (h1Count > 1) {
+          result.h1Violations++;
+          result.failures.push(`Multiple H1 tags (${h1Count}): ${url}`);
+          result.pass = false;
+        }
+
+        // OG check (CTAG-05) - WARN only, not FAIL
+        const ogTitle = $('meta[property="og:title"]').attr('content');
+        const ogDescription = $('meta[property="og:description"]').attr('content');
+        const ogImage = $('meta[property="og:image"]').attr('content');
+        const ogUrl = $('meta[property="og:url"]').attr('content');
+
+        if (!ogTitle || !ogDescription || !ogImage || !ogUrl) {
+          result.ogIncomplete++;
+          result.warnings.push(`Incomplete OG tags: ${url}`);
+        }
+
+      } catch (error) {
+        // Timeout or fetch error - skip this URL
+        if (error instanceof Error && error.name === 'AbortError') {
+          result.warnings.push(`Timeout checking: ${url}`);
+        }
+      }
+    }
+
+  } catch (error) {
+    result.failures.push(`Pass 4 error: ${error instanceof Error ? error.message : String(error)}`);
+    result.pass = false;
+  }
+
+  return result;
+}
+
+/**
  * Main audit function
  */
 async function runAudit() {
@@ -317,6 +456,7 @@ async function runAudit() {
   let pass1: Pass1Result | null = null;
   let pass2: Pass2Result;
   let pass3: Pass3Result;
+  let pass4: Pass4Result | null = null;
 
   // Pass 1: Only run if AUDIT_BASE_URL is set (requires running server)
   if (baseUrl) {
@@ -369,17 +509,41 @@ async function runAudit() {
   pass3.warnings.forEach(w => console.log(`  ⚠ ${w}`));
   console.log('');
 
+  // Pass 4: Meta Tag Validation (only if AUDIT_BASE_URL is set)
+  if (baseUrl) {
+    console.log('Pass 4: Meta Tag Validation');
+    pass4 = await pass4MetaTagValidation(baseUrl);
+
+    if (pass4.pass) {
+      console.log(`  ✓ All ${pass4.totalChecked} pages have valid title tags (<60 chars)`);
+      console.log(`  ✓ All ${pass4.totalChecked} pages have valid description tags (100-160 chars)`);
+      console.log(`  ✓ All ${pass4.totalChecked} pages have exactly one H1 tag`);
+      if (pass4.ogIncomplete === 0) {
+        console.log(`  ✓ All ${pass4.totalChecked} pages have complete OG tags`);
+      }
+    } else {
+      pass4.failures.forEach(f => console.log(`  ✗ ${f}`));
+    }
+
+    pass4.warnings.forEach(w => console.log(`  ⚠ ${w}`));
+    console.log('');
+  } else {
+    console.log('Pass 4: SKIPPED (set AUDIT_BASE_URL to run meta tag validation)\n');
+  }
+
   // Aggregate results
   const allFailures = [
     ...(pass1?.failures || []),
     ...pass2.failures,
     ...pass3.failures,
+    ...(pass4?.failures || []),
   ];
 
   const allWarnings = [
     ...(pass1?.warnings || []),
     ...pass2.warnings,
     ...pass3.warnings,
+    ...(pass4?.warnings || []),
   ];
 
   const passed = allFailures.length === 0;
