@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 ## Current Position
 
 Phase: 51 of 52 (Retroactive Backfill Script) — IN PROGRESS
-Plan: 1 of 6 complete
-Status: Plan 51-01 complete (worker support for retroactive processing)
-Last activity: 2026-02-06 — Completed 51-01-PLAN.md (allowRetroactive flag added to workers)
+Plan: 2 of 2 complete
+Status: Plan 51-02 complete (retroactive backfill script with gap detection)
+Last activity: 2026-02-06 — Completed 51-02-PLAN.md (one-shot backfill script)
 
-Progress: [███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 52% (2.16/4 phases)
+Progress: [████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 53% (2.18/4 phases)
 
 ## Milestone History
 
@@ -65,11 +65,16 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 51-01: Use optional allowRetroactive flag instead of modifying match status or bypassing checks globally
 - 51-01: Log retroactive processing explicitly for observability
 - 51-01: Preserve normal pipeline behavior when flag is undefined/false
+- 51-02: Use favoriteTeamName IS NOT NULL as hasAnalysis indicator (Phase 50 pattern)
+- 51-02: Process matches sequentially (for-loop) to respect API-Football rate limits
+- 51-02: Separate job ID prefixes per phase: analyze-retro-*, predict-retro-*, settle-retro-*
+- 51-02: Phase-specific timeouts: 120s analysis, 300s predictions, 60s settlement
+- 51-02: Continue on per-match errors to maximize recovery coverage
 
 **v2.7 Roadmap:**
 - Phase 49: Pipeline Scheduling Fixes (PIPE-01 to PIPE-05) — COMPLETE
 - Phase 50: Settlement Investigation & Recovery (SETTLE-01 to SETTLE-04) — COMPLETE (code)
-- Phase 51: Retroactive Backfill Script (RETRO-01 to RETRO-06)
+- Phase 51: Retroactive Backfill Script (RETRO-01 to RETRO-06) — COMPLETE
 - Phase 52: Monitoring & Observability (MON-01 to MON-05)
 
 ### Pending Todos
@@ -81,18 +86,19 @@ None.
 **v2.7 Issues (from investigation):**
 - 43 failed settlement jobs ready for investigation — SCRIPT READY (`npx tsx scripts/investigate-settlement-failures.ts`)
 - ~~Pipeline not scheduling analysis/predictions for existing matches after restart~~ FIXED (49-01)
-- Last 7 days of matches may be missing predictions entirely (need backfill in Phase 51)
+- ~~Last 7 days of matches may be missing predictions entirely~~ FIXED (51-02) - backfill script ready
 - ~~Root cause: scheduleMatchJobs() skips matches where kickoff <= now (line 113 of scheduler.ts)~~ FIXED (49-01)
 - ~~Root cause: Fixtures worker only schedules for isNewMatch (line 90)~~ FIXED (49-01)
 - ~~Backfill windows too narrow (12h for analysis, 2h for predictions)~~ FIXED (49-02)
 - ~~Scoring worker silently skips zero-prediction matches~~ FIXED (50-01)
 
-**Phase 50 Human Verification Items:**
+**Phase 50 & 51 Human Verification Items:**
 1. Run `npx tsx scripts/investigate-settlement-failures.ts` against production Redis (SETTLE-01)
 2. Run `npx tsx scripts/backfill-settlement.ts` against production (settle all recent matches)
 3. POST `/api/admin/settlement/retry` with admin auth to retry failed jobs
 4. Monitor scoring worker logs for conditional retry behavior
 5. Wait for next hourly backfill worker run to verify zero-prediction detection
+6. Run `npx tsx scripts/backfill-retroactive-predictions.ts --days 7` against production (RETRO backfill)
 
 ### Quick Tasks Completed
 
@@ -108,18 +114,18 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-06T22:20:00Z
-Stopped at: Completed 51-01-PLAN.md
+Last session: 2026-02-06T22:25:35Z
+Stopped at: Completed 51-02-PLAN.md (retroactive backfill script)
 Resume file: None
 
 **Platform status:**
 - 17 leagues operational
 - 42 active models (29 Together + 13 Synthetic)
 - 0 disabled models (all 6 previously disabled models re-enabled)
-- 256 requirements validated (v1.0-v2.6 + PIPE-01 through PIPE-05 + SETTLE-02 through SETTLE-04)
-- 12 remaining requirements for v2.7 (SETTLE-01, RETRO, MON)
+- 262 requirements validated (v1.0-v2.6 + PIPE + SETTLE + RETRO-01 through RETRO-06)
+- 6 remaining requirements for v2.7 (SETTLE-01, MON-01 through MON-05)
 
-**Next action:** Plan and execute Phase 51 (Retroactive Backfill Script)
+**Next action:** Plan and execute Phase 52 (Monitoring & Observability)
 
 ---
-*Last updated: 2026-02-06 after Phase 50 completed and verified*
+*Last updated: 2026-02-06 after Phase 51 completed*
