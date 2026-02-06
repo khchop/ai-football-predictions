@@ -85,10 +85,15 @@ export function createFixturesWorker() {
                });
                
                savedFixtures++;
-               
-               // Schedule jobs for NEW scheduled matches only
-               if (isNewMatch && mapFixtureStatus(fixture.fixture.status.short) === 'scheduled') {
+
+               // Only ping IndexNow for genuinely NEW matches
+               if (isNewMatch) {
                  newMatchUrls.push(`https://kroam.xyz/leagues/${competition.id}/${slug}`);
+               }
+
+               // Schedule jobs for ALL scheduled matches (idempotent - skips if jobs exist)
+               // This ensures existing matches that lost BullMQ jobs after restart get re-scheduled
+               if (mapFixtureStatus(fixture.fixture.status.short) === 'scheduled') {
                  const scheduled = await scheduleMatchJobs({
                    match: {
                      id: actualMatchId,
@@ -124,7 +129,10 @@ export function createFixturesWorker() {
                     createdAt: null,
                   },
                 });
-                
+
+                if (scheduled > 0) {
+                  log.info({ matchId: actualMatchId, homeTeam: fixture.teams.home.name, awayTeam: fixture.teams.away.name, isNewMatch }, 'Scheduled jobs via fixtures worker');
+                }
                 jobsScheduled += scheduled;
               }
              } catch (error: any) {
