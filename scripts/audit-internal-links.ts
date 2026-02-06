@@ -5,6 +5,8 @@
  * - Pass 1: Sitemap URL validation (no UUIDs, no long-form slugs, HTTP health)
  * - Pass 2: Sitemap completeness (all expected pages present)
  * - Pass 3: Internal link architecture (structural analysis of link sources)
+ * - Pass 4: Meta tag validation (title, description, H1, OG tags)
+ * - Pass 5: JSON-LD validation (duplicate schemas, required properties)
  *
  * Exit code 0 = pass (warnings OK), exit code 1 = fail
  */
@@ -61,6 +63,17 @@ interface Pass4Result extends AuditResult {
   descriptionViolations: number;
   h1Violations: number;
   ogIncomplete: number;
+}
+
+interface Pass5Result extends AuditResult {
+  totalChecked: number;
+  duplicateOrganization: number;
+  duplicateWebSite: number;
+  invalidSportsEvent: number;
+  invalidArticle: number;
+  invalidBreadcrumb: number;
+  invalidFaq: number;
+  totalSchemaErrors: number;
 }
 
 /**
@@ -317,6 +330,139 @@ async function pass3InternalLinkArchitecture(): Promise<Pass3Result> {
 }
 
 /**
+ * Helper: Extract all schema types from JSON-LD scripts, flattening @graph arrays
+ */
+function extractAllSchemaTypes(jsonLdScripts: unknown[]): Record<string, unknown>[] {
+  const allSchemas: Record<string, unknown>[] = [];
+
+  jsonLdScripts.forEach(script => {
+    if (!script || typeof script !== 'object') return;
+
+    const s = script as Record<string, unknown>;
+
+    // Handle @graph arrays
+    if (s['@graph'] && Array.isArray(s['@graph'])) {
+      s['@graph'].forEach((item: unknown) => {
+        if (item && typeof item === 'object') {
+          allSchemas.push(item as Record<string, unknown>);
+        }
+      });
+    } else if (s['@type']) {
+      allSchemas.push(s);
+    }
+  });
+
+  return allSchemas;
+}
+
+/**
+ * Helper: Validate SportsEvent required properties
+ */
+function validateSportsEvent(event: Record<string, unknown>): string[] {
+  const errors: string[] = [];
+
+  if (!event.name) errors.push('Missing required property: name');
+  if (!event.startDate) errors.push('Missing required property: startDate');
+
+  // location must exist and be a Place with address
+  if (!event.location) {
+    errors.push('Missing required property: location');
+  } else if (typeof event.location === 'object') {
+    const loc = event.location as Record<string, unknown>;
+    if (loc['@type'] !== 'Place') {
+      errors.push('location must be @type Place');
+    }
+    // Address can be string or object, just needs to exist
+    if (!loc.address && !loc.name) {
+      errors.push('location.Place requires address or name property');
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Helper: Validate Article required properties
+ */
+function validateArticle(article: Record<string, unknown>): string[] {
+  const errors: string[] = [];
+
+  if (!article.headline) errors.push('Missing required property: headline');
+  if (!article.author) errors.push('Missing required property: author');
+
+  // publisher must exist and have logo as ImageObject
+  if (!article.publisher) {
+    errors.push('Missing required property: publisher');
+  } else if (typeof article.publisher === 'object') {
+    const pub = article.publisher as Record<string, unknown>;
+
+    // Publisher can be an @id reference or a full object
+    if (pub['@id']) {
+      // Reference to Organization elsewhere - acceptable
+    } else {
+      // Full publisher object - check for logo
+      if (!pub.logo) {
+        errors.push('publisher missing logo property');
+      } else if (typeof pub.logo === 'object') {
+        const logo = pub.logo as Record<string, unknown>;
+        if (logo['@type'] !== 'ImageObject') {
+          errors.push('publisher.logo must be @type ImageObject');
+        }
+        if (!logo.url) {
+          errors.push('publisher.logo missing url property');
+        }
+      }
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Helper: Validate BreadcrumbList items have 'item' property
+ */
+function validateBreadcrumbList(breadcrumb: Record<string, unknown>): string[] {
+  const errors: string[] = [];
+
+  if (!breadcrumb.itemListElement || !Array.isArray(breadcrumb.itemListElement)) {
+    errors.push('Missing or invalid itemListElement array');
+    return errors;
+  }
+
+  breadcrumb.itemListElement.forEach((listItem: unknown, index: number) => {
+    if (!listItem || typeof listItem !== 'object') {
+      errors.push(`itemListElement[${index}] is not an object`);
+      return;
+    }
+
+    const item = listItem as Record<string, unknown>;
+    if (!item.item) {
+      errors.push(`itemListElement[${index}] missing required 'item' property`);
+    }
+  });
+
+  return errors;
+}
+
+/**
+ * Helper: Validate FAQPage has minimum 2 questions (warning, not failure)
+ */
+function validateFAQPage(faq: Record<string, unknown>): { warnings: string[] } {
+  const warnings: string[] = [];
+
+  if (!faq.mainEntity || !Array.isArray(faq.mainEntity)) {
+    warnings.push('FAQPage missing mainEntity array');
+    return { warnings };
+  }
+
+  if (faq.mainEntity.length < 2) {
+    warnings.push(`FAQPage has only ${faq.mainEntity.length} question(s) — Google recommends 2+`);
+  }
+
+  return { warnings };
+}
+
+/**
  * Pass 4: Meta Tag Validation
  * Fetches rendered HTML pages and validates meta tags using cheerio
  */
@@ -447,6 +593,196 @@ async function pass4MetaTagValidation(baseUrl: string): Promise<Pass4Result> {
 }
 
 /**
+ * Pass 5: JSON-LD Validation
+ * Extracts and validates JSON-LD schemas from rendered HTML pages
+ */
+async function pass5JsonLdValidation(baseUrl: string): Promise<Pass5Result> {
+  const result: Pass5Result = {
+    pass: true,
+    failures: [],
+    warnings: [],
+    totalChecked: 0,
+    duplicateOrganization: 0,
+    duplicateWebSite: 0,
+    invalidSportsEvent: 0,
+    invalidArticle: 0,
+    invalidBreadcrumb: 0,
+    invalidFaq: 0,
+    totalSchemaErrors: 0,
+  };
+
+  try {
+    // Fetch sitemap URLs (reuse Pass 1 logic)
+    const indexUrl = `${baseUrl}/sitemap.xml`;
+    const indexResponse = await fetch(indexUrl);
+    if (!indexResponse.ok) {
+      result.failures.push(`Failed to fetch sitemap index: ${indexResponse.status}`);
+      result.pass = false;
+      return result;
+    }
+
+    const indexXml = await indexResponse.text();
+    const sitemapUrlMatches = indexXml.matchAll(/<loc>(.*?)<\/loc>/g);
+    const sitemapUrls = Array.from(sitemapUrlMatches).map(m => m[1]);
+
+    // Fetch and collect all URLs
+    const allUrls: string[] = [];
+    for (const sitemapUrl of sitemapUrls) {
+      const response = await fetch(sitemapUrl);
+      if (!response.ok) continue;
+
+      const xml = await response.text();
+      const urlMatches = xml.matchAll(/<loc>(.*?)<\/loc>/g);
+      const urls = Array.from(urlMatches).map(m => m[1]);
+      allUrls.push(...urls);
+    }
+
+    // Sample if >50 URLs (controlled by AUDIT_SAMPLE env var)
+    const auditSample = process.env.AUDIT_SAMPLE ? parseInt(process.env.AUDIT_SAMPLE) : 50;
+    const urlsToCheck = allUrls.length > auditSample
+      ? allUrls.sort(() => Math.random() - 0.5).slice(0, auditSample)
+      : allUrls;
+
+    result.totalChecked = urlsToCheck.length;
+
+    // Check each URL
+    for (let i = 0; i < urlsToCheck.length; i++) {
+      const url = urlsToCheck[i];
+
+      // Log progress every 10 URLs
+      if ((i + 1) % 10 === 0 || i === 0) {
+        console.log(`  Checking ${i + 1}/${urlsToCheck.length}: ${url}`);
+      }
+
+      try {
+        // Fetch with 5s timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch(url, {
+          signal: controller.signal,
+          headers: { 'User-Agent': 'Kroam-Audit/1.0' }
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) continue;
+
+        const html = await response.text();
+        const $ = cheerio.load(html);
+
+        // Extract all JSON-LD scripts
+        const jsonLdScripts: unknown[] = [];
+        $('script[type="application/ld+json"]').each((_, el) => {
+          try {
+            const content = $(el).html();
+            if (content) {
+              jsonLdScripts.push(JSON.parse(content));
+            }
+          } catch (error) {
+            result.warnings.push(`Invalid JSON-LD at ${url}: ${error instanceof Error ? error.message : String(error)}`);
+          }
+        });
+
+        // Extract all schemas (flatten @graph arrays)
+        const allSchemas = extractAllSchemaTypes(jsonLdScripts);
+
+        // Count schema types for duplication check
+        const typeCounts = new Map<string, number>();
+        allSchemas.forEach(schema => {
+          const type = schema['@type'];
+          if (typeof type === 'string') {
+            typeCounts.set(type, (typeCounts.get(type) || 0) + 1);
+          }
+        });
+
+        // SCHEMA-01: Check for duplicate Organization/WebSite
+        const orgCount = typeCounts.get('Organization') || 0;
+        if (orgCount > 1) {
+          result.duplicateOrganization++;
+          result.failures.push(`Duplicate Organization (${orgCount} found): ${url}`);
+          result.pass = false;
+        }
+
+        const websiteCount = typeCounts.get('WebSite') || 0;
+        if (websiteCount > 1) {
+          result.duplicateWebSite++;
+          result.failures.push(`Duplicate WebSite (${websiteCount} found): ${url}`);
+          result.pass = false;
+        }
+
+        // SCHEMA-02: Validate SportsEvent required properties
+        allSchemas.forEach(schema => {
+          if (schema['@type'] === 'SportsEvent') {
+            const errors = validateSportsEvent(schema);
+            if (errors.length > 0) {
+              result.invalidSportsEvent++;
+              result.failures.push(`Invalid SportsEvent: ${url}\n    ${errors.join('\n    ')}`);
+              result.pass = false;
+            }
+          }
+        });
+
+        // SCHEMA-03: Validate Article required properties
+        allSchemas.forEach(schema => {
+          const type = schema['@type'];
+          if (type === 'Article' || type === 'NewsArticle') {
+            const errors = validateArticle(schema);
+            if (errors.length > 0) {
+              result.invalidArticle++;
+              result.failures.push(`Invalid Article: ${url}\n    ${errors.join('\n    ')}`);
+              result.pass = false;
+            }
+          }
+        });
+
+        // SCHEMA-04: Validate BreadcrumbList item property
+        allSchemas.forEach(schema => {
+          if (schema['@type'] === 'BreadcrumbList') {
+            const errors = validateBreadcrumbList(schema);
+            if (errors.length > 0) {
+              result.invalidBreadcrumb++;
+              result.failures.push(`Invalid BreadcrumbList: ${url}\n    ${errors.join('\n    ')}`);
+              result.pass = false;
+            }
+          }
+        });
+
+        // SCHEMA-03 (FAQPage): Validate minimum questions (WARNING only)
+        allSchemas.forEach(schema => {
+          if (schema['@type'] === 'FAQPage') {
+            const { warnings } = validateFAQPage(schema);
+            if (warnings.length > 0) {
+              result.invalidFaq++;
+              warnings.forEach(w => result.warnings.push(`${url}: ${w}`));
+            }
+          }
+        });
+
+      } catch (error) {
+        // Timeout or fetch error - skip this URL
+        if (error instanceof Error && error.name === 'AbortError') {
+          result.warnings.push(`Timeout checking: ${url}`);
+        }
+      }
+    }
+
+    // Calculate total schema errors
+    result.totalSchemaErrors =
+      result.duplicateOrganization +
+      result.duplicateWebSite +
+      result.invalidSportsEvent +
+      result.invalidArticle +
+      result.invalidBreadcrumb;
+
+  } catch (error) {
+    result.failures.push(`Pass 5 error: ${error instanceof Error ? error.message : String(error)}`);
+    result.pass = false;
+  }
+
+  return result;
+}
+
+/**
  * Main audit function
  */
 async function runAudit() {
@@ -457,6 +793,7 @@ async function runAudit() {
   let pass2: Pass2Result;
   let pass3: Pass3Result;
   let pass4: Pass4Result | null = null;
+  let pass5: Pass5Result | null = null;
 
   // Pass 1: Only run if AUDIT_BASE_URL is set (requires running server)
   if (baseUrl) {
@@ -531,12 +868,54 @@ async function runAudit() {
     console.log('Pass 4: SKIPPED (set AUDIT_BASE_URL to run meta tag validation)\n');
   }
 
+  // Pass 5: JSON-LD Validation (only if AUDIT_BASE_URL is set)
+  if (baseUrl) {
+    console.log('Pass 5: JSON-LD Validation');
+    pass5 = await pass5JsonLdValidation(baseUrl);
+
+    if (pass5.pass) {
+      console.log(`  ✓ No duplicate Organization schemas (checked ${pass5.totalChecked} pages)`);
+      console.log(`  ✓ No duplicate WebSite schemas (checked ${pass5.totalChecked} pages)`);
+      console.log(`  ✓ All SportsEvent schemas have required properties`);
+      console.log(`  ✓ All Article schemas have required properties`);
+      console.log(`  ✓ All BreadcrumbList schemas valid`);
+      console.log(`  ✓ Total schema errors: ${pass5.totalSchemaErrors} (target: <50)`);
+    } else {
+      console.log(`  ✗ Total schema errors: ${pass5.totalSchemaErrors}`);
+      if (pass5.duplicateOrganization > 0) {
+        console.log(`  ✗ Duplicate Organization found on ${pass5.duplicateOrganization} page(s)`);
+      }
+      if (pass5.duplicateWebSite > 0) {
+        console.log(`  ✗ Duplicate WebSite found on ${pass5.duplicateWebSite} page(s)`);
+      }
+      if (pass5.invalidSportsEvent > 0) {
+        console.log(`  ✗ Invalid SportsEvent schemas: ${pass5.invalidSportsEvent}`);
+      }
+      if (pass5.invalidArticle > 0) {
+        console.log(`  ✗ Invalid Article schemas: ${pass5.invalidArticle}`);
+      }
+      if (pass5.invalidBreadcrumb > 0) {
+        console.log(`  ✗ Invalid BreadcrumbList schemas: ${pass5.invalidBreadcrumb}`);
+      }
+      pass5.failures.forEach(f => console.log(`  ✗ ${f}`));
+    }
+
+    if (pass5.invalidFaq > 0) {
+      console.log(`  ⚠ FAQPage schemas with <2 questions: ${pass5.invalidFaq} (recommendation only)`);
+    }
+    pass5.warnings.forEach(w => console.log(`  ⚠ ${w}`));
+    console.log('');
+  } else {
+    console.log('Pass 5: SKIPPED (set AUDIT_BASE_URL to run JSON-LD validation)\n');
+  }
+
   // Aggregate results
   const allFailures = [
     ...(pass1?.failures || []),
     ...pass2.failures,
     ...pass3.failures,
     ...(pass4?.failures || []),
+    ...(pass5?.failures || []),
   ];
 
   const allWarnings = [
@@ -544,6 +923,7 @@ async function runAudit() {
     ...pass2.warnings,
     ...pass3.warnings,
     ...(pass4?.warnings || []),
+    ...(pass5?.warnings || []),
   ];
 
   const passed = allFailures.length === 0;
