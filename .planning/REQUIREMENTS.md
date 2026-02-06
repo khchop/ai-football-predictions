@@ -51,11 +51,11 @@ Requirements for v2.6 milestone. Each maps to roadmap phases.
 
 ### Structured Data
 
-- [ ] **SCHEMA-01**: No duplicate Organization or WebSite schemas on any page (single source of truth)
-- [ ] **SCHEMA-02**: SportsEvent schema passes Google Rich Results Test validation
-- [ ] **SCHEMA-03**: Article/FAQPage schemas pass Google Rich Results Test validation
-- [ ] **SCHEMA-04**: BreadcrumbList schema is valid on all page types
-- [ ] **SCHEMA-05**: Schema.org validation errors reduced from 4365 to <50
+- [x] **SCHEMA-01**: No duplicate Organization or WebSite schemas on any page (single source of truth)
+- [x] **SCHEMA-02**: SportsEvent schema passes Google Rich Results Test validation
+- [x] **SCHEMA-03**: Article/FAQPage schemas pass Google Rich Results Test validation
+- [x] **SCHEMA-04**: BreadcrumbList schema is valid on all page types
+- [x] **SCHEMA-05**: Schema.org validation errors reduced from 4365 to <50
 
 ### Hreflang Cleanup
 
@@ -125,11 +125,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CTAG-04 | Phase 46 | Complete |
 | CTAG-05 | Phase 46 | Complete |
 | CTAG-06 | Phase 46 | Complete |
-| SCHEMA-01 | Phase 47 | Pending |
-| SCHEMA-02 | Phase 47 | Pending |
-| SCHEMA-03 | Phase 47 | Pending |
-| SCHEMA-04 | Phase 47 | Pending |
-| SCHEMA-05 | Phase 47 | Pending |
+| SCHEMA-01 | Phase 47 | Complete |
+| SCHEMA-02 | Phase 47 | Complete |
+| SCHEMA-03 | Phase 47 | Complete |
+| SCHEMA-04 | Phase 47 | Complete |
+| SCHEMA-05 | Phase 47 | Complete |
 | I18N-01 | Phase 44 | Complete |
 | I18N-02 | Phase 44 | Complete |
 | PERF-01 | Phase 48 | Pending |
