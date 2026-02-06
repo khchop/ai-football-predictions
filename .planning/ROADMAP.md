@@ -381,9 +381,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 46-01-PLAN.md — Centralize metadata formulas and update all page titles, descriptions, and H1 tags
-- [ ] 46-02-PLAN.md — Retheme OG images to dark gradient and add missing OG routes
-- [ ] 46-03-PLAN.md — CollectionPage structured data and build-time meta tag audit
+- [x] 46-01-PLAN.md — Centralize metadata formulas and update all page titles, descriptions, and H1 tags
+- [x] 46-02-PLAN.md — Retheme OG images to dark gradient and add missing OG routes
+- [x] 46-03-PLAN.md — CollectionPage structured data and build-time meta tag audit
 
 #### Phase 47: Structured Data Validation
 **Goal**: Deduplicate schemas, fix SportsEvent/Article/FAQ validation errors
@@ -461,9 +461,9 @@ Phases execute in numeric order: 44 -> 45 -> 46 -> 47 -> 48
 | 43. Testing & Validation | v2.5 | 3/3 | Complete | 2026-02-05 |
 | 44. Foundation — Redirects, Canonicals & Index Pages | v2.6 | 3/3 | Complete | 2026-02-06 |
 | 45. Sitemap & Internal Linking | v2.6 | 4/4 | Complete | 2026-02-06 |
-| 46. Content Tags & Meta Optimization | v2.6 | 0/3 | Not started | - |
+| 46. Content Tags & Meta Optimization | v2.6 | 3/3 | Complete | 2026-02-06 |
 | 47. Structured Data Validation | v2.6 | 0/TBD | Not started | - |
 | 48. Performance & Verification | v2.6 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-06 after Phase 46 planned*
+*Last updated: 2026-02-06 after Phase 46 complete*

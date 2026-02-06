@@ -22,8 +22,8 @@ Requirements for v2.6 milestone. Each maps to roadmap phases.
 - [ ] **INDEX-02**: /models returns 200 with a listing of all models with performance stats and internal links
 - [ ] **INDEX-03**: /leagues page has proper generateMetadata (title, description, canonical, OG tags)
 - [ ] **INDEX-04**: /models page has proper generateMetadata (title, description, canonical, OG tags)
-- [ ] **INDEX-05**: /leagues page includes CollectionPage or ItemList structured data
-- [ ] **INDEX-06**: /models page includes CollectionPage or ItemList structured data
+- [x] **INDEX-05**: /leagues page includes CollectionPage or ItemList structured data
+- [x] **INDEX-06**: /models page includes CollectionPage or ItemList structured data
 
 ### Sitemap Hygiene
 
@@ -42,12 +42,12 @@ Requirements for v2.6 milestone. Each maps to roadmap phases.
 
 ### Content Tags
 
-- [ ] **CTAG-01**: All match pages at /leagues/{slug}/{match} have an H1 tag ("{HomeTeam} vs {AwayTeam}")
-- [ ] **CTAG-02**: Zero meta descriptions shorter than 100 characters on indexable pages
-- [ ] **CTAG-03**: Zero meta descriptions longer than 160 characters on indexable pages
-- [ ] **CTAG-04**: Zero title tags longer than 60 characters on indexable pages
-- [ ] **CTAG-05**: All indexable pages have complete Open Graph tags (og:title, og:description, og:image, og:url)
-- [ ] **CTAG-06**: League index and model index pages have H1 tags
+- [x] **CTAG-01**: All match pages at /leagues/{slug}/{match} have an H1 tag ("{HomeTeam} vs {AwayTeam}")
+- [x] **CTAG-02**: Zero meta descriptions shorter than 100 characters on indexable pages
+- [x] **CTAG-03**: Zero meta descriptions longer than 160 characters on indexable pages
+- [x] **CTAG-04**: Zero title tags longer than 60 characters on indexable pages
+- [x] **CTAG-05**: All indexable pages have complete Open Graph tags (og:title, og:description, og:image, og:url)
+- [x] **CTAG-06**: League index and model index pages have H1 tags
 
 ### Structured Data
 
@@ -108,8 +108,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INDEX-02 | Phase 44 | Complete |
 | INDEX-03 | Phase 44 | Complete |
 | INDEX-04 | Phase 44 | Complete |
-| INDEX-05 | Phase 46 | Pending |
-| INDEX-06 | Phase 46 | Pending |
+| INDEX-05 | Phase 46 | Complete |
+| INDEX-06 | Phase 46 | Complete |
 | SMAP-01 | Phase 45 | Complete |
 | SMAP-02 | Phase 45 | Complete |
 | SMAP-03 | Phase 45 | Complete |
@@ -119,12 +119,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LINK-03 | Phase 45 | Complete |
 | LINK-04 | Phase 45 | Complete |
 | LINK-05 | Phase 45 | Complete |
-| CTAG-01 | Phase 46 | Pending |
-| CTAG-02 | Phase 46 | Pending |
-| CTAG-03 | Phase 46 | Pending |
-| CTAG-04 | Phase 46 | Pending |
-| CTAG-05 | Phase 46 | Pending |
-| CTAG-06 | Phase 46 | Pending |
+| CTAG-01 | Phase 46 | Complete |
+| CTAG-02 | Phase 46 | Complete |
+| CTAG-03 | Phase 46 | Complete |
+| CTAG-04 | Phase 46 | Complete |
+| CTAG-05 | Phase 46 | Complete |
+| CTAG-06 | Phase 46 | Complete |
 | SCHEMA-01 | Phase 47 | Pending |
 | SCHEMA-02 | Phase 47 | Pending |
 | SCHEMA-03 | Phase 47 | Pending |
@@ -142,4 +142,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-05*
-*Last updated: 2026-02-06 after Phase 44 completion*
+*Last updated: 2026-02-06 after Phase 46 completion*
