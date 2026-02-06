@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 47 — Structured Data Validation
-Plan: 1/3 in progress
-Status: Plan 47-01 complete
-Last activity: 2026-02-06 — Completed 47-01-PLAN.md (root schema single source of truth)
+Plan: 2/3 complete
+Status: Plan 47-02 complete
+Last activity: 2026-02-06 — Completed 47-02-PLAN.md (SportsEvent/Article schema validation fixes)
 
-Progress: [███████████████████████████░░░░░░░░░░░░░░░░░░░] 60% (phase 47 plan 1 of 44-48 complete)
+Progress: [███████████████████████████░░░░░░░░░░░░░░░░░░░] 60% (phase 47 plan 2 of 44-48 complete)
 
 ## Milestone History
 
@@ -97,6 +97,12 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 47-01: Match pages reference root Organization/WebSite via @id (no duplication, 7 entities → 5 entities)
 - 47-01: Organization logo as ImageObject (not string) for Google Article publisher.logo validation
 - 47-01: Legacy graph.ts uses ORGANIZATION_ID reference instead of inline duplicate with old "bettingsoccer.com" branding
+- 47-02: SportsEvent uses correct EventStatus mapping (EventCompleted for finished, EventInProgress for live, not always EventScheduled)
+- 47-02: SportsEvent location includes address property for Google Rich Results compliance
+- 47-02: Removed superEvent with @ts-expect-error code smell from sports-event.ts
+- 47-02: Article/roundup schemas use @id cross-references to Organization (https://kroam.xyz#organization)
+- 47-02: Updated Organization schema to reference 42 AI models (not 30)
+- 47-02: 'as any' type assertion for eventStatus (schema-dts limitation on EventStatusType)
 
 ### Pending Todos
 
@@ -119,14 +125,14 @@ None — Phase 47-01 complete. Root schema single source of truth established. R
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 47-01-PLAN.md — root schema single source of truth established
+Stopped at: Completed 47-02-PLAN.md — SportsEvent/Article schema validation fixes
 Resume file: None
 
 **Platform status:**
 - 17 leagues operational
 - 42 active models (29 Together + 13 Synthetic)
 - 0 disabled models (all 6 previously disabled models re-enabled)
-- 237 requirements validated (v1.0-v2.5 + 11 from Phase 44 + 10 from Phase 45 + 8 from Phase 46)
+- 239 requirements validated (v1.0-v2.5 + 11 from Phase 44 + 10 from Phase 45 + 8 from Phase 46 + 2 from Phase 47 Plans 01-02)
 
 ---
-*Last updated: 2026-02-06 after Phase 46 verified*
+*Last updated: 2026-02-06 after Phase 47 Plan 02 complete*
