@@ -360,7 +360,13 @@ Plans:
   3. All league and model pages appear in sitemap
   4. Zero orphan model pages (all have 3+ internal links)
   5. Internal links use short-form league slugs (no links triggering 308 redirects)
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 45-01-PLAN.md — Sitemap fixes + centralized getInternalUrl helper
+- [ ] 45-02-PLAN.md — Model page cross-linking widgets (recent predictions + leagues covered)
+- [ ] 45-03-PLAN.md — Match page predicting models widget
+- [ ] 45-04-PLAN.md — Build-time internal link and sitemap audit script
 
 #### Phase 46: Content Tags & Meta Optimization
 **Goal**: Fix H1 tags, meta descriptions, title lengths, and Open Graph tags across all pages
