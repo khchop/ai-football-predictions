@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { BASE_URL, SITE_NAME, MAX_TITLE_LENGTH, MAX_META_DESCRIPTION_LENGTH, MAX_OG_DESCRIPTION_LENGTH } from './constants';
+import { BASE_URL, SITE_NAME, MAX_TITLE_LENGTH, MIN_DESCRIPTION_LENGTH, MAX_META_DESCRIPTION_LENGTH, MAX_OG_DESCRIPTION_LENGTH } from './constants';
 import type { MatchSeoData, MatchStatus } from './types';
 import { isMatchFinished, isMatchLive, isMatchUpcoming } from './types';
 import { abbreviateTeam, abbreviateCompetition } from './abbreviations';
@@ -26,20 +26,119 @@ export function truncateWithEllipsis(text: string, maxLength: number): string {
   return text.substring(0, lastSpace) + '...';
 }
 
+/**
+ * Enforce description length constraints (100-160 chars)
+ * Pads short descriptions, truncates long ones
+ */
+function enforceDescriptionLength(text: string): string {
+  if (text.length > MAX_META_DESCRIPTION_LENGTH) {
+    return truncateWithEllipsis(text, MAX_META_DESCRIPTION_LENGTH);
+  }
+  if (text.length < MIN_DESCRIPTION_LENGTH) {
+    const padding = ' Compare forecasts, track accuracy, and explore AI model performance on Kroam.';
+    const padded = text + padding;
+    return padded.length > MAX_META_DESCRIPTION_LENGTH
+      ? padded.substring(0, MAX_META_DESCRIPTION_LENGTH)
+      : padded;
+  }
+  return text;
+}
+
+// ===== NEW: Centralized Title Builders =====
+
+/**
+ * Build match page title: "{Home} vs {Away} Prediction | Kroam"
+ * Drops " | Kroam" suffix if title exceeds 60 chars
+ */
+export function buildMatchTitle(homeTeam: string, awayTeam: string): string {
+  const base = `${homeTeam} vs ${awayTeam} Prediction`;
+  const withBrand = `${base} | Kroam`;
+  return withBrand.length <= MAX_TITLE_LENGTH ? withBrand : base;
+}
+
+/**
+ * Build league page title: "{League} AI Predictions | Kroam"
+ * Drops " | Kroam" suffix if title exceeds 60 chars
+ */
+export function buildLeagueTitle(leagueName: string): string {
+  const base = `${leagueName} AI Predictions`;
+  const withBrand = `${base} | Kroam`;
+  return withBrand.length <= MAX_TITLE_LENGTH ? withBrand : base;
+}
+
+/**
+ * Build model page title: "{Model} Football Predictions | Kroam"
+ * Drops " | Kroam" suffix if title exceeds 60 chars
+ */
+export function buildModelTitle(modelName: string): string {
+  const base = `${modelName} Football Predictions`;
+  const withBrand = `${base} | Kroam`;
+  return withBrand.length <= MAX_TITLE_LENGTH ? withBrand : base;
+}
+
+/**
+ * Build generic page title: "{Text} | Kroam"
+ * Drops " | Kroam" suffix if title exceeds 60 chars
+ */
+export function buildGenericTitle(text: string): string {
+  const withBrand = `${text} | Kroam`;
+  return withBrand.length <= MAX_TITLE_LENGTH ? withBrand : text;
+}
+
+// ===== NEW: Centralized Description Builders =====
+
+/**
+ * Build match description with 100-160 char enforcement
+ */
+export function buildMatchDescription(
+  homeTeam: string,
+  awayTeam: string,
+  league: string,
+  modelCount: number
+): string {
+  const base = `Get AI predictions for ${homeTeam} vs ${awayTeam} from ${modelCount} models. See scores, analysis, and betting insights for ${league}.`;
+  return enforceDescriptionLength(base);
+}
+
+/**
+ * Build league description with 100-160 char enforcement
+ */
+export function buildLeagueDescription(leagueName: string, modelCount: number): string {
+  const base = `AI predictions for ${leagueName} from ${modelCount} models. Track accuracy, compare predictions, and see which AI performs best.`;
+  return enforceDescriptionLength(base);
+}
+
+/**
+ * Build model description with 100-160 char enforcement
+ */
+export function buildModelDescription(modelName: string, accuracy: number, modelCount: number): string {
+  const base = `${modelName} football predictions with ${accuracy}% accuracy. Compare performance against ${modelCount} AI models across 17 leagues.`;
+  return enforceDescriptionLength(base);
+}
+
+/**
+ * Build generic description with 100-160 char enforcement
+ */
+export function buildGenericDescription(text: string): string {
+  return enforceDescriptionLength(text);
+}
+
 export function createTitle(match: MatchSeoData): string {
   const home = abbreviateTeam(match.homeTeam);
   const away = abbreviateTeam(match.awayTeam);
 
   if (isMatchFinished(match.status) && match.homeScore !== null && match.awayScore !== null) {
-    // Format: "Man Utd 2-1 Liverpool | kroam.xyz" (~30-40 chars)
-    return `${home} ${match.homeScore}-${match.awayScore} ${away} | kroam.xyz`;
+    // Format: "Man Utd 2-1 Liverpool | Kroam" (drop suffix if >60 chars)
+    const base = `${home} ${match.homeScore}-${match.awayScore} ${away}`;
+    const withBrand = `${base} | Kroam`;
+    return withBrand.length <= MAX_TITLE_LENGTH ? withBrand : base;
   }
-  // Format: "Man Utd vs Liverpool Prediction" (~30-40 chars)
-  return `${home} vs ${away} Prediction`;
+  // Format: "Man Utd vs Liverpool Prediction" (use buildMatchTitle for consistency)
+  return buildMatchTitle(home, away);
 }
 
 export function createDescription(match: MatchSeoData, activeModels?: number): string {
-  const modelCount = activeModels ?? 35; // Fallback for backwards compatibility
+  const modelCount = activeModels ?? 42; // Updated model count
 
   if (isMatchUpcoming(match.status)) {
     // Include predicted score when available
@@ -47,15 +146,15 @@ export function createDescription(match: MatchSeoData, activeModels?: number): s
       const baseMsg = `AI predicts ${match.predictedHomeScore}-${match.predictedAwayScore} for ${match.homeTeam} vs ${match.awayTeam}.`;
       const modelsMsg = ` ${modelCount} models compete - see who's most accurate.`;
       const full = baseMsg + modelsMsg;
-      return truncateWithEllipsis(full, MAX_META_DESCRIPTION_LENGTH);
+      return enforceDescriptionLength(full);
     }
     const full = `Get AI predictions for ${match.homeTeam} vs ${match.awayTeam}. See which models forecast the winner before kickoff on ${formatDate(match.startDate)}.`;
-    return truncateWithEllipsis(full, MAX_META_DESCRIPTION_LENGTH);
+    return enforceDescriptionLength(full);
   }
 
   if (isMatchLive(match.status)) {
     const full = `Follow ${match.homeTeam} vs ${match.awayTeam} live. Track AI predictions in real-time and see how models perform as the action unfolds.`;
-    return truncateWithEllipsis(full, MAX_META_DESCRIPTION_LENGTH);
+    return enforceDescriptionLength(full);
   }
 
   // Finished match
@@ -65,7 +164,7 @@ export function createDescription(match: MatchSeoData, activeModels?: number): s
   const modelsMsg = ` AI predictions from ${modelCount} models with accuracy tracking.`;
   const full = scoreInfo + modelsMsg;
 
-  return truncateWithEllipsis(full, MAX_META_DESCRIPTION_LENGTH);
+  return enforceDescriptionLength(full);
 }
 
 export function buildMatchMetadata(match: MatchSeoData, activeModels?: number, canonicalPath?: string): Metadata {
@@ -163,7 +262,7 @@ export function generateArticleMetadata(
   image?: string
 ): Metadata {
   const truncatedTitle = truncateWithEllipsis(headline, MAX_TITLE_LENGTH);
-  const truncatedDescription = truncateWithEllipsis(description, MAX_META_DESCRIPTION_LENGTH);
+  const truncatedDescription = enforceDescriptionLength(description);
   const truncatedOgDescription = truncateWithEllipsis(description, MAX_OG_DESCRIPTION_LENGTH);
 
   return {
@@ -198,23 +297,22 @@ export function generateLeaderboardMetadata(
   competition?: string,
   activeModels?: number
 ): Metadata {
-  const modelCount = activeModels ?? 35; // Fallback for backwards compatibility
+  const modelCount = activeModels ?? 42; // Updated model count
   const title = competition
-    ? `${competition} Leaderboard | AI Model Rankings | kroam.xyz`
-    : `AI Model Leaderboard | Compare ${modelCount} Models | kroam.xyz`;
+    ? buildGenericTitle(`${competition} Leaderboard`)
+    : buildGenericTitle('AI Model Leaderboard');
 
   const description = competition
     ? `Compare ${competition} predictions across all AI models. See which model performs best with real-time accuracy tracking.`
     : `Compare AI model accuracy across 17 football competitions. See which models predict best in Champions League, Premier League, and more.`;
 
-  const truncatedTitle = truncateWithEllipsis(title, MAX_TITLE_LENGTH);
-  const truncatedDescription = truncateWithEllipsis(description, MAX_META_DESCRIPTION_LENGTH);
+  const truncatedDescription = enforceDescriptionLength(description);
 
   return {
-    title: truncatedTitle,
+    title,
     description: truncatedDescription,
     openGraph: {
-      title: truncatedTitle,
+      title,
       description: truncatedDescription,
       type: 'website',
       url: competition ? `/leaderboard/${competition.toLowerCase().replace(/\s+/g, '-')}` : '/leaderboard',
@@ -222,7 +320,7 @@ export function generateLeaderboardMetadata(
     },
     twitter: {
       card: 'summary',
-      title: truncatedTitle,
+      title,
       description: truncatedDescription,
     },
     alternates: {
@@ -234,36 +332,35 @@ export function generateLeaderboardMetadata(
 }
 
 export function generateHomeMetadata(): Metadata {
-  const title = `${SITE_NAME} | AI-Powered Football Match Predictions`;
+  const title = buildGenericTitle('AI Football Predictions');
   const description = `Get accurate football predictions from multiple AI models. Track model performance, analyze predictions, and see which models beat the odds.`;
 
-  const truncatedTitle = truncateWithEllipsis(title, MAX_TITLE_LENGTH);
-  const truncatedDescription = truncateWithEllipsis(description, MAX_META_DESCRIPTION_LENGTH);
+  const truncatedDescription = enforceDescriptionLength(description);
   const truncatedOgDescription = truncateWithEllipsis(description, MAX_OG_DESCRIPTION_LENGTH);
 
   return {
-    title: truncatedTitle,
+    title,
     description: truncatedDescription,
     openGraph: {
-      title: truncatedTitle,
+      title,
       description: truncatedOgDescription,
       type: 'website',
       url: BASE_URL,
       siteName: SITE_NAME,
       images: [
         {
-          url: `${BASE_URL}/og-home.png`,
+          url: `${BASE_URL}/api/og/generic?title=${encodeURIComponent('AI Football Predictions')}`,
           width: 1200,
           height: 630,
-          alt: 'BettingSoccer - AI Football Predictions',
+          alt: 'Kroam - AI Football Predictions',
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: truncatedTitle,
+      title,
       description: truncatedOgDescription,
-      images: [`${BASE_URL}/og-home.png`],
+      images: [`${BASE_URL}/api/og/generic?title=${encodeURIComponent('AI Football Predictions')}`],
     },
     alternates: {
       canonical: BASE_URL,
@@ -277,15 +374,13 @@ export interface Competition {
 }
 
 export function generateCompetitionMetadata(competition: Competition, activeModels?: number): Metadata {
-  const modelCount = activeModels ?? 35; // Fallback for backwards compatibility
-  const title = `${competition.name} Predictions | AI Models Compete | kroam.xyz`;
-  const description = `AI predictions for ${competition.name} from ${modelCount} models. Track accuracy, compare predictions, and see which AI performs best.`;
+  const modelCount = activeModels ?? 42; // Updated model count
+  const title = buildLeagueTitle(competition.name);
+  const description = buildLeagueDescription(competition.name, modelCount);
   const url = `${BASE_URL}/leagues/${competition.id}`;
 
   const ogImageUrl = new URL(`${BASE_URL}/api/og/league`);
   ogImageUrl.searchParams.set('leagueName', competition.name);
-  ogImageUrl.searchParams.set('matchCount', '0');
-  ogImageUrl.searchParams.set('upcomingCount', '0');
 
   return {
     title,

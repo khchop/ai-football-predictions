@@ -4,7 +4,7 @@ export const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
   ?? process.env.NEXT_PUBLIC_APP_URL
   ?? '';
 
-export const SITE_NAME = 'BettingSoccer';
+export const SITE_NAME = 'Kroam';
 
 export const DEFAULT_OG_TEMPLATE = 'upcoming' as const;
 
@@ -40,5 +40,6 @@ export const ROBOTS_DEFAULTS = {
 
 // SEO length constraints for optimal display in search results
 export const MAX_TITLE_LENGTH = 60;
-export const MAX_META_DESCRIPTION_LENGTH = 155;
+export const MIN_DESCRIPTION_LENGTH = 100;
+export const MAX_META_DESCRIPTION_LENGTH = 160;
 export const MAX_OG_DESCRIPTION_LENGTH = 200;
