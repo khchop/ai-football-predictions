@@ -28,11 +28,12 @@ export function buildRoundupSchema(post: BlogPost, matches?: Match[]): object {
     datePublished: post.publishedAt || new Date().toISOString(),
     author: {
       '@type': 'Organization',
-      name: post.generatedBy || 'kroam.xyz',
+      name: post.generatedBy || 'Kroam',
     },
     publisher: {
       '@type': 'Organization',
-      name: 'kroam.xyz',
+      '@id': 'https://kroam.xyz#organization',
+      name: 'Kroam',
       logo: {
         '@type': 'ImageObject',
         url: `${BASE_URL}/logo.png`,

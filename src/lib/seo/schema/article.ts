@@ -4,10 +4,11 @@ import type { MatchSeoData } from '../types';
 
 export function buildArticleSchema(match: MatchSeoData): NewsArticle {
   const matchUrl = `${BASE_URL}/matches/${match.id}`;
-  
+
   // Create article metadata from match data
   const article: NewsArticle = {
     '@type': 'NewsArticle',
+    '@id': `${matchUrl}#article`,
     headline: createArticleHeadline(match),
     description: createArticleDescription(match),
     image: [createOgImageUrl(match)],
@@ -15,11 +16,13 @@ export function buildArticleSchema(match: MatchSeoData): NewsArticle {
     dateModified: new Date().toISOString(),
     author: {
       '@type': 'Organization',
+      '@id': 'https://kroam.xyz#organization',
       name: SITE_NAME,
       url: BASE_URL,
     },
     publisher: {
       '@type': 'Organization',
+      '@id': 'https://kroam.xyz#organization',
       name: SITE_NAME,
       logo: {
         '@type': 'ImageObject',
@@ -35,7 +38,7 @@ export function buildArticleSchema(match: MatchSeoData): NewsArticle {
     inLanguage: 'en-US',
     isAccessibleForFree: true,
   };
-  
+
   return article;
 }
 
