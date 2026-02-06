@@ -20,18 +20,6 @@ export const metadata: Metadata = {
   description: "Compare 29 open-source AI models predicting Champions League, Premier League & 15 more competitions. See which AI model performs best using the Kicktipp scoring system. Updated in real-time.",
   keywords: ["AI", "football", "predictions", "machine learning", "Champions League", "Premier League", "AI betting", "football AI", "prediction accuracy", "open source AI", "Llama", "Qwen", "DeepSeek", "Mistral"],
   metadataBase: new URL('https://kroam.xyz'),
-  alternates: {
-    canonical: 'https://kroam.xyz',
-    languages: {
-      'en-US': 'https://kroam.xyz',
-      'en': 'https://kroam.xyz',
-      // Future i18n support
-      'de': 'https://de.kroam.xyz',
-      'es': 'https://es.kroam.xyz',
-      'fr': 'https://fr.kroam.xyz',
-      'it': 'https://it.kroam.xyz',
-    },
-  },
   openGraph: {
     title: "AI Football Predictions - 29 Open-Source Models Compete",
     description: "Compare 29 open-source AI models predicting football across 17 competitions. See which AI model performs best.",
