@@ -14,7 +14,7 @@ Requirements for v2.6 milestone. Each maps to roadmap phases.
 - [ ] **REDIR-03**: No redirect chains exist (single-hop from any entry point to canonical URL)
 - [ ] **REDIR-04**: Root layout does not set canonical URL (no cascading canonical to child pages)
 - [ ] **REDIR-05**: All match pages at /leagues/{slug}/{match} have self-referential canonical URLs
-- [ ] **REDIR-06**: Internal links use short-form league slugs (epl, ucl, etc.) to avoid triggering 308 redirects
+- [x] **REDIR-06**: Internal links use short-form league slugs (epl, ucl, etc.) to avoid triggering 308 redirects
 
 ### Index Pages
 
@@ -27,18 +27,18 @@ Requirements for v2.6 milestone. Each maps to roadmap phases.
 
 ### Sitemap Hygiene
 
-- [ ] **SMAP-01**: Sitemap index file exists at /sitemap.xml referencing all sub-sitemaps
-- [ ] **SMAP-02**: No /matches/UUID URLs appear in any sitemap (only canonical /leagues/{slug}/{match} URLs)
-- [ ] **SMAP-03**: All league pages appear in sitemap (including non-club competitions if applicable)
-- [ ] **SMAP-04**: /models and /leagues index pages appear in sitemap
+- [x] **SMAP-01**: Sitemap index file exists at /sitemap.xml referencing all sub-sitemaps
+- [x] **SMAP-02**: No /matches/UUID URLs appear in any sitemap (only canonical /leagues/{slug}/{match} URLs)
+- [x] **SMAP-03**: All league pages appear in sitemap (including non-club competitions if applicable)
+- [x] **SMAP-04**: /models and /leagues index pages appear in sitemap
 
 ### Internal Linking
 
-- [ ] **LINK-01**: All model pages have at least 3 internal links pointing to them (from /models index and cross-links)
-- [ ] **LINK-02**: Zero orphan match pages (all matches reachable via internal links)
-- [ ] **LINK-03**: League pages include links to related models (cross-linking widget)
-- [ ] **LINK-04**: Model pages include links to recent matches they predicted (cross-linking widget)
-- [ ] **LINK-05**: Pages with only 1 dofollow internal link are reduced by >50%
+- [x] **LINK-01**: All model pages have at least 3 internal links pointing to them (from /models index and cross-links)
+- [x] **LINK-02**: Zero orphan match pages (all matches reachable via internal links)
+- [x] **LINK-03**: League pages include links to related models (cross-linking widget)
+- [x] **LINK-04**: Model pages include links to recent matches they predicted (cross-linking widget)
+- [x] **LINK-05**: Pages with only 1 dofollow internal link are reduced by >50%
 
 ### Content Tags
 
@@ -103,22 +103,22 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REDIR-03 | Phase 44 | Complete |
 | REDIR-04 | Phase 44 | Complete |
 | REDIR-05 | Phase 44 | Complete |
-| REDIR-06 | Phase 45 | Pending |
+| REDIR-06 | Phase 45 | Complete |
 | INDEX-01 | Phase 44 | Complete |
 | INDEX-02 | Phase 44 | Complete |
 | INDEX-03 | Phase 44 | Complete |
 | INDEX-04 | Phase 44 | Complete |
 | INDEX-05 | Phase 46 | Pending |
 | INDEX-06 | Phase 46 | Pending |
-| SMAP-01 | Phase 45 | Pending |
-| SMAP-02 | Phase 45 | Pending |
-| SMAP-03 | Phase 45 | Pending |
-| SMAP-04 | Phase 45 | Pending |
-| LINK-01 | Phase 45 | Pending |
-| LINK-02 | Phase 45 | Pending |
-| LINK-03 | Phase 45 | Pending |
-| LINK-04 | Phase 45 | Pending |
-| LINK-05 | Phase 45 | Pending |
+| SMAP-01 | Phase 45 | Complete |
+| SMAP-02 | Phase 45 | Complete |
+| SMAP-03 | Phase 45 | Complete |
+| SMAP-04 | Phase 45 | Complete |
+| LINK-01 | Phase 45 | Complete |
+| LINK-02 | Phase 45 | Complete |
+| LINK-03 | Phase 45 | Complete |
+| LINK-04 | Phase 45 | Complete |
+| LINK-05 | Phase 45 | Complete |
 | CTAG-01 | Phase 46 | Pending |
 | CTAG-02 | Phase 46 | Pending |
 | CTAG-03 | Phase 46 | Pending |

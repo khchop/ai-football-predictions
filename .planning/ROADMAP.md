@@ -363,10 +363,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 45-01-PLAN.md — Sitemap fixes + centralized getInternalUrl helper
-- [ ] 45-02-PLAN.md — Model page cross-linking widgets (recent predictions + leagues covered)
-- [ ] 45-03-PLAN.md — Match page predicting models widget
-- [ ] 45-04-PLAN.md — Build-time internal link and sitemap audit script
+- [x] 45-01-PLAN.md — Sitemap fixes + centralized getInternalUrl helper
+- [x] 45-02-PLAN.md — Model page cross-linking widgets (recent predictions + leagues covered)
+- [x] 45-03-PLAN.md — Match page predicting models widget
+- [x] 45-04-PLAN.md — Build-time internal link and sitemap audit script
 
 #### Phase 46: Content Tags & Meta Optimization
 **Goal**: Fix H1 tags, meta descriptions, title lengths, and Open Graph tags across all pages
@@ -455,10 +455,10 @@ Phases execute in numeric order: 44 -> 45 -> 46 -> 47 -> 48
 | 42. Dynamic Model Counts | v2.5 | 2/2 | Complete | 2026-02-05 |
 | 43. Testing & Validation | v2.5 | 3/3 | Complete | 2026-02-05 |
 | 44. Foundation — Redirects, Canonicals & Index Pages | v2.6 | 3/3 | Complete | 2026-02-06 |
-| 45. Sitemap & Internal Linking | v2.6 | 0/TBD | Not started | - |
+| 45. Sitemap & Internal Linking | v2.6 | 4/4 | Complete | 2026-02-06 |
 | 46. Content Tags & Meta Optimization | v2.6 | 0/TBD | Not started | - |
 | 47. Structured Data Validation | v2.6 | 0/TBD | Not started | - |
 | 48. Performance & Verification | v2.6 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-06 after Phase 44 completion*
+*Last updated: 2026-02-06 after Phase 45 completion*
