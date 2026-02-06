@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 47 — Structured Data Validation
-Plan: 2/3 complete
-Status: Plan 47-02 complete
-Last activity: 2026-02-06 — Completed 47-02-PLAN.md (SportsEvent/Article schema validation fixes)
+Plan: 4/4 complete
+Status: Plan 47-04 complete
+Last activity: 2026-02-06 — Completed 47-04-PLAN.md (Build-time JSON-LD validation)
 
-Progress: [███████████████████████████░░░░░░░░░░░░░░░░░░░] 60% (phase 47 plan 2 of 44-48 complete)
+Progress: [████████████████████████████░░░░░░░░░░░░░░░░░░] 62% (phase 47 plan 4 of 44-48 complete)
 
 ## Milestone History
 
@@ -103,6 +103,10 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 47-02: Article/roundup schemas use @id cross-references to Organization (https://kroam.xyz#organization)
 - 47-02: Updated Organization schema to reference 42 AI models (not 30)
 - 47-02: 'as any' type assertion for eventStatus (schema-dts limitation on EventStatusType)
+- 47-04: Pass 5 JSON-LD validation only runs when AUDIT_BASE_URL set (consistent with Pass 1/4)
+- 47-04: FAQPage <2 questions is warning not failure (Google recommendation, not requirement)
+- 47-04: Reuse AUDIT_SAMPLE env var (default 50) for Pass 5 sampling consistency
+- 47-04: Validate publisher.logo as ImageObject or @id reference (Google Rich Results requirement)
 
 ### Pending Todos
 
@@ -110,7 +114,7 @@ None.
 
 ### Blockers/Concerns
 
-None — Phase 47-01 complete. Root schema single source of truth established. Ready for 47-02 (SportsEvent/Article validation with build-time audit extension).
+None — Phase 47 complete (4/4 plans). Build-time JSON-LD validation operational. Ready to measure current schema error count against <50 target.
 
 ### Quick Tasks Completed
 
@@ -125,14 +129,14 @@ None — Phase 47-01 complete. Root schema single source of truth established. R
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 47-02-PLAN.md — SportsEvent/Article schema validation fixes
+Stopped at: Completed 47-04-PLAN.md — Build-time JSON-LD validation
 Resume file: None
 
 **Platform status:**
 - 17 leagues operational
 - 42 active models (29 Together + 13 Synthetic)
 - 0 disabled models (all 6 previously disabled models re-enabled)
-- 239 requirements validated (v1.0-v2.5 + 11 from Phase 44 + 10 from Phase 45 + 8 from Phase 46 + 2 from Phase 47 Plans 01-02)
+- 244 requirements validated (v1.0-v2.5 + 11 from Phase 44 + 10 from Phase 45 + 8 from Phase 46 + 5 from Phase 47)
 
 ---
-*Last updated: 2026-02-06 after Phase 47 Plan 02 complete*
+*Last updated: 2026-02-06 after Phase 47 Plan 04 complete*
