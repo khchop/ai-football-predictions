@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 ## Current Position
 
 Phase: 49 of 52 (Pipeline Scheduling Fixes)
-Plan: 1 of 5 complete
+Plan: 2 of 5 complete
 Status: In progress
-Last activity: 2026-02-06 — Completed 49-01-PLAN.md (scheduler early exit fixes)
+Last activity: 2026-02-06 — Completed 49-02-PLAN.md (backfill time windows & chain validation)
 
-Progress: [█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 2% (1/52 plans)
+Progress: [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 4% (2/52 plans)
 
 ## Milestone History
 
@@ -53,6 +53,10 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 49-01: Use match status (finished/cancelled/postponed) as scheduling guard instead
 - 49-01: Preserve existing shouldRun logic (kickoff > now) for pre-match vs live job distinction
 - 49-01: Schedule jobs for ALL scheduled matches in fixtures worker, not just new ones
+- 49-02: Widen backfill analysis window to 48h minimum (was 12h) for full catch-up coverage
+- 49-02: Widen lineups/predictions windows to 12h (was 2h) to catch recently missed matches
+- 49-02: Chain validation enforced via DB query joins (analysis → lineups → predictions)
+- 49-02: Added chain validation logging to show dependency flow
 
 **v2.7 Roadmap:**
 - Phase 49: Pipeline Scheduling Fixes (PIPE-01 to PIPE-05)
@@ -72,7 +76,7 @@ None.
 - Last 7 days of matches may be missing predictions entirely (need backfill)
 - ~~Root cause: scheduleMatchJobs() skips matches where kickoff <= now (line 113 of scheduler.ts)~~ FIXED (49-01)
 - ~~Root cause: Fixtures worker only schedules for isNewMatch (line 90)~~ FIXED (49-01)
-- Backfill windows too narrow (12h for analysis, 2h for predictions)
+- ~~Backfill windows too narrow (12h for analysis, 2h for predictions)~~ FIXED (49-02)
 
 ### Quick Tasks Completed
 
@@ -88,8 +92,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-06T20:48:29Z
-Stopped at: Completed 49-01-PLAN.md (scheduler early exit fixes)
+Last session: 2026-02-06T20:55:58Z
+Stopped at: Completed 49-02-PLAN.md (backfill time windows & chain validation)
 Resume file: None
 
 **Platform status:**
@@ -97,9 +101,9 @@ Resume file: None
 - 42 active models (29 Together + 13 Synthetic)
 - 0 disabled models (all 6 previously disabled models re-enabled)
 - 248 requirements validated (v1.0-v2.6)
-- 20 new requirements defined for v2.7 (2 fixed in 49-01)
+- 20 new requirements defined for v2.7 (5 PIPE requirements now complete)
 
-**Next action:** Execute 49-02 (catch-up scheduling improvements)
+**Next action:** Execute 49-03 (catch-up improvements)
 
 ---
-*Last updated: 2026-02-06 after 49-01 completed*
+*Last updated: 2026-02-06 after 49-02 completed*
