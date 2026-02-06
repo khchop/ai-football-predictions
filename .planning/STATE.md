@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 
 ## Current Position
 
-Phase: 44 — Foundation (Redirects, Canonicals & Index Pages)
-Plan: 3/3 complete
-Status: Phase verified and complete
-Last activity: 2026-02-06 — Phase 44 verified (5/5 must-haves passed)
+Phase: 45 — Sitemap & Internal Linking
+Plan: 1 of 3 complete (45-02 complete)
+Status: In progress
+Last activity: 2026-02-06 — Completed 45-02-PLAN.md (Model Cross-Linking Widgets)
 
-Progress: [█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 20% (phase 44 of 44-48 complete)
+Progress: [█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 21% (phase 44 complete, 45 in progress)
 
 ## Milestone History
 
@@ -51,13 +51,20 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 44-03: Models page uses dynamic metadata (generateMetadata) to include accurate model count
 - 44-03: Competition grouping by category (European, Domestic, International)
 
+**Phase 45 (v2.6):**
+- 45-02: Cross-linking widgets placed after "Performance by League", before "Related Models"
+- 45-02: RecentPredictionsWidget shows 10 most recent predictions ordered by kickoff DESC
+- 45-02: LeaguesCoveredWidget orders leagues by prediction count DESC
+- 45-02: Widgets return null for graceful degradation when no data exists
+- 45-02: All cross-linking uses HoverPrefetchLink for SEO-optimized prefetching
+
 ### Pending Todos
 
 None.
 
 ### Blockers/Concerns
 
-None — Phase 44 complete, ready for Phase 45.
+None — Phase 45 Plan 02 complete, ready for Plan 03 (match cross-linking).
 
 ### Quick Tasks Completed
 
@@ -72,7 +79,7 @@ None — Phase 44 complete, ready for Phase 45.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Phase 44 verified and complete, ready for Phase 45
+Stopped at: Completed 45-02-PLAN.md (Model Cross-Linking Widgets)
 Resume file: None
 
 **Platform status:**
