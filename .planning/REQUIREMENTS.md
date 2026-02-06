@@ -69,32 +69,34 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PIPE-01 | TBD | Pending |
-| PIPE-02 | TBD | Pending |
-| PIPE-03 | TBD | Pending |
-| PIPE-04 | TBD | Pending |
-| PIPE-05 | TBD | Pending |
-| SETTLE-01 | TBD | Pending |
-| SETTLE-02 | TBD | Pending |
-| SETTLE-03 | TBD | Pending |
-| SETTLE-04 | TBD | Pending |
-| RETRO-01 | TBD | Pending |
-| RETRO-02 | TBD | Pending |
-| RETRO-03 | TBD | Pending |
-| RETRO-04 | TBD | Pending |
-| RETRO-05 | TBD | Pending |
-| RETRO-06 | TBD | Pending |
-| MON-01 | TBD | Pending |
-| MON-02 | TBD | Pending |
-| MON-03 | TBD | Pending |
-| MON-04 | TBD | Pending |
-| MON-05 | TBD | Pending |
+| PIPE-01 | Phase 49 | Pending |
+| PIPE-02 | Phase 49 | Pending |
+| PIPE-03 | Phase 49 | Pending |
+| PIPE-04 | Phase 49 | Pending |
+| PIPE-05 | Phase 49 | Pending |
+| SETTLE-01 | Phase 50 | Pending |
+| SETTLE-02 | Phase 50 | Pending |
+| SETTLE-03 | Phase 50 | Pending |
+| SETTLE-04 | Phase 50 | Pending |
+| RETRO-01 | Phase 51 | Pending |
+| RETRO-02 | Phase 51 | Pending |
+| RETRO-03 | Phase 51 | Pending |
+| RETRO-04 | Phase 51 | Pending |
+| RETRO-05 | Phase 51 | Pending |
+| RETRO-06 | Phase 51 | Pending |
+| MON-01 | Phase 52 | Pending |
+| MON-02 | Phase 52 | Pending |
+| MON-03 | Phase 52 | Pending |
+| MON-04 | Phase 52 | Pending |
+| MON-05 | Phase 52 | Pending |
 
 **Coverage:**
 - v2.7 requirements: 20 total
-- Mapped to phases: 0
-- Unmapped: 20
+- Mapped to phases: 20
+- Unmapped: 0
+
+**Coverage validation:** ✓ 100% (20/20 requirements mapped)
 
 ---
 *Requirements defined: 2026-02-06*
-*Last updated: 2026-02-06 after initial definition*
+*Last updated: 2026-02-06 after roadmap created with full traceability*
