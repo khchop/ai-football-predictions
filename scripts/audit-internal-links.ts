@@ -7,6 +7,7 @@
  * - Pass 3: Internal link architecture (structural analysis of link sources)
  * - Pass 4: Meta tag validation (title, description, H1, OG tags)
  * - Pass 5: JSON-LD validation (duplicate schemas, required properties)
+ * - Pass 6: TTFB measurement (production performance by page type)
  *
  * Exit code 0 = pass (warnings OK), exit code 1 = fail
  */
@@ -74,6 +75,12 @@ interface Pass5Result extends AuditResult {
   invalidBreadcrumb: number;
   invalidFaq: number;
   totalSchemaErrors: number;
+}
+
+interface Pass6Result extends AuditResult {
+  totalChecked: number;
+  slowPages: Array<{ url: string; ttfb: number; pageType: string }>;
+  avgTTFBByType: Record<string, number>;
 }
 
 /**
@@ -593,6 +600,143 @@ async function pass4MetaTagValidation(baseUrl: string): Promise<Pass4Result> {
 }
 
 /**
+ * Pass 6: TTFB Measurement
+ * Measures Time To First Byte for sampled production URLs by page type
+ */
+async function pass6TTFBMeasurement(baseUrl: string): Promise<Pass6Result> {
+  const result: Pass6Result = {
+    pass: true,
+    failures: [],
+    warnings: [],
+    totalChecked: 0,
+    slowPages: [],
+    avgTTFBByType: {},
+  };
+
+  try {
+    // Fetch sitemap URLs (reuse Pass 1 logic)
+    const indexUrl = `${baseUrl}/sitemap.xml`;
+    const indexResponse = await fetch(indexUrl);
+    if (!indexResponse.ok) {
+      result.failures.push(`Failed to fetch sitemap index: ${indexResponse.status}`);
+      result.pass = false;
+      return result;
+    }
+
+    const indexXml = await indexResponse.text();
+    const sitemapUrlMatches = indexXml.matchAll(/<loc>(.*?)<\/loc>/g);
+    const sitemapUrls = Array.from(sitemapUrlMatches).map(m => m[1]);
+
+    // Fetch and collect all URLs
+    const allUrls: string[] = [];
+    for (const sitemapUrl of sitemapUrls) {
+      const response = await fetch(sitemapUrl);
+      if (!response.ok) continue;
+
+      const xml = await response.text();
+      const urlMatches = xml.matchAll(/<loc>(.*?)<\/loc>/g);
+      const urls = Array.from(urlMatches).map(m => m[1]);
+      allUrls.push(...urls);
+    }
+
+    // Categorize URLs by page type
+    const urlsByType: Record<string, string[]> = {
+      'Index pages': [],
+      'League pages': [],
+      'Match pages': [],
+      'Model pages': [],
+      'Blog pages': [],
+    };
+
+    const indexPages = ['/', '/blog', '/models', '/matches', '/leagues', '/leaderboard', '/about', '/methodology'];
+
+    allUrls.forEach(url => {
+      const path = url.replace(baseUrl, '');
+
+      if (indexPages.includes(path)) {
+        urlsByType['Index pages'].push(url);
+      } else if (path.startsWith('/leagues/')) {
+        const segments = path.split('/').filter(s => s);
+        // League pages have 2 segments: /leagues/{slug}
+        // Match pages have 3 segments: /leagues/{slug}/{match}
+        if (segments.length === 2) {
+          urlsByType['League pages'].push(url);
+        } else if (segments.length === 3) {
+          urlsByType['Match pages'].push(url);
+        }
+      } else if (path.startsWith('/models/') && path !== '/models') {
+        urlsByType['Model pages'].push(url);
+      } else if (path.startsWith('/blog/') && path !== '/blog') {
+        urlsByType['Blog pages'].push(url);
+      }
+    });
+
+    // Sample up to AUDIT_SAMPLE per page type (default 5)
+    const sampleSize = process.env.AUDIT_SAMPLE ? parseInt(process.env.AUDIT_SAMPLE) : 5;
+    const ttfbMeasurements: Record<string, number[]> = {};
+
+    for (const [pageType, urls] of Object.entries(urlsByType)) {
+      if (urls.length === 0) continue;
+
+      const sampled = urls
+        .sort(() => Math.random() - 0.5)
+        .slice(0, Math.min(sampleSize, urls.length));
+
+      ttfbMeasurements[pageType] = [];
+
+      for (const url of sampled) {
+        try {
+          // Measure TTFB with performance.now()
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+          const startTime = performance.now();
+          const response = await fetch(url, {
+            method: 'GET',
+            signal: controller.signal,
+            headers: { 'User-Agent': 'Kroam-Audit/1.0' }
+          });
+          const ttfb = performance.now() - startTime;
+          clearTimeout(timeoutId);
+
+          result.totalChecked++;
+          ttfbMeasurements[pageType].push(ttfb);
+
+          // Track slow pages
+          if (ttfb > 2000) {
+            result.slowPages.push({ url, ttfb, pageType });
+            result.warnings.push(`Slow page (${Math.round(ttfb)}ms TTFB): ${url}`);
+          } else if (ttfb > 1000) {
+            result.warnings.push(`Warning TTFB (${Math.round(ttfb)}ms): ${url}`);
+          }
+
+        } catch (error) {
+          if (error instanceof Error && error.name === 'AbortError') {
+            result.warnings.push(`Timeout measuring TTFB: ${url}`);
+          } else {
+            result.warnings.push(`Failed to measure TTFB for ${url}: ${error instanceof Error ? error.message : String(error)}`);
+          }
+        }
+      }
+    }
+
+    // Calculate average TTFB per page type
+    for (const [pageType, measurements] of Object.entries(ttfbMeasurements)) {
+      if (measurements.length > 0) {
+        const avg = measurements.reduce((sum, val) => sum + val, 0) / measurements.length;
+        result.avgTTFBByType[pageType] = avg;
+      }
+    }
+
+  } catch (error) {
+    result.failures.push(`Pass 6 error: ${error instanceof Error ? error.message : String(error)}`);
+    result.pass = false;
+  }
+
+  return result;
+}
+
+/**
  * Pass 5: JSON-LD Validation
  * Extracts and validates JSON-LD schemas from rendered HTML pages
  */
@@ -794,6 +938,7 @@ async function runAudit() {
   let pass3: Pass3Result;
   let pass4: Pass4Result | null = null;
   let pass5: Pass5Result | null = null;
+  let pass6: Pass6Result | null = null;
 
   // Pass 1: Only run if AUDIT_BASE_URL is set (requires running server)
   if (baseUrl) {
@@ -909,6 +1054,41 @@ async function runAudit() {
     console.log('Pass 5: SKIPPED (set AUDIT_BASE_URL to run JSON-LD validation)\n');
   }
 
+  // Pass 6: TTFB Measurement (only if AUDIT_BASE_URL is set)
+  if (baseUrl) {
+    console.log('Pass 6: TTFB Measurement');
+    pass6 = await pass6TTFBMeasurement(baseUrl);
+
+    if (Object.keys(pass6.avgTTFBByType).length > 0) {
+      console.log(`  ✓ Checked ${pass6.totalChecked} pages across ${Object.keys(pass6.avgTTFBByType).length} page types`);
+
+      // Display average TTFB by page type
+      Object.entries(pass6.avgTTFBByType).forEach(([pageType, avgTTFB]) => {
+        const avgMs = Math.round(avgTTFB);
+        const emoji = avgTTFB > 2000 ? '✗' : avgTTFB > 1000 ? '⚠' : '✓';
+        console.log(`  ${emoji} ${pageType}: ${avgMs}ms avg TTFB`);
+      });
+
+      // List slow pages (>2s)
+      if (pass6.slowPages.length > 0) {
+        console.log(`  ⚠ ${pass6.slowPages.length} page(s) exceed 2s TTFB threshold (best-effort optimization)`);
+        pass6.slowPages.slice(0, 5).forEach(({ url, ttfb, pageType }) => {
+          console.log(`    - [${pageType}] ${Math.round(ttfb)}ms: ${url}`);
+        });
+        if (pass6.slowPages.length > 5) {
+          console.log(`    ... and ${pass6.slowPages.length - 5} more`);
+        }
+      }
+    } else {
+      console.log(`  ⚠ No URLs categorized for TTFB measurement`);
+    }
+
+    pass6.warnings.forEach(w => console.log(`  ⚠ ${w}`));
+    console.log('');
+  } else {
+    console.log('Pass 6: SKIPPED (set AUDIT_BASE_URL to run TTFB measurement)\n');
+  }
+
   // Aggregate results
   const allFailures = [
     ...(pass1?.failures || []),
@@ -916,6 +1096,7 @@ async function runAudit() {
     ...pass3.failures,
     ...(pass4?.failures || []),
     ...(pass5?.failures || []),
+    // Note: pass6 warnings are NOT failures - TTFB is best-effort
   ];
 
   const allWarnings = [
@@ -924,6 +1105,7 @@ async function runAudit() {
     ...pass3.warnings,
     ...(pass4?.warnings || []),
     ...(pass5?.warnings || []),
+    ...(pass6?.warnings || []),
   ];
 
   const passed = allFailures.length === 0;
