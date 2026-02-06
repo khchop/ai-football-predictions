@@ -346,9 +346,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 44-01-PLAN.md — Remove cascading canonical and hreflang from root layout, fix match page canonicals
-- [ ] 44-02-PLAN.md — Rewrite middleware for www/http redirects, 410 Gone, league slug single-hop
-- [ ] 44-03-PLAN.md — Create /leagues and /models index pages with ISR and metadata
+- [x] 44-01-PLAN.md — Remove cascading canonical and hreflang from root layout, fix match page canonicals
+- [x] 44-02-PLAN.md — Rewrite middleware for www/http redirects, 410 Gone, league slug single-hop
+- [x] 44-03-PLAN.md — Create /leagues and /models index pages with ISR and metadata
 
 #### Phase 45: Sitemap & Internal Linking
 **Goal**: Clean sitemaps, fix orphan pages, add cross-linking widgets between models/leagues/matches
@@ -448,11 +448,11 @@ Phases execute in numeric order: 44 -> 45 -> 46 -> 47 -> 48
 | 41. Together AI Fallbacks | v2.5 | 4/4 | Complete | 2026-02-05 |
 | 42. Dynamic Model Counts | v2.5 | 2/2 | Complete | 2026-02-05 |
 | 43. Testing & Validation | v2.5 | 3/3 | Complete | 2026-02-05 |
-| 44. Foundation — Redirects, Canonicals & Index Pages | v2.6 | 0/3 | Planned | - |
+| 44. Foundation — Redirects, Canonicals & Index Pages | v2.6 | 3/3 | Complete | 2026-02-06 |
 | 45. Sitemap & Internal Linking | v2.6 | 0/TBD | Not started | - |
 | 46. Content Tags & Meta Optimization | v2.6 | 0/TBD | Not started | - |
 | 47. Structured Data Validation | v2.6 | 0/TBD | Not started | - |
 | 48. Performance & Verification | v2.6 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-05 after v2.6 roadmap created*
+*Last updated: 2026-02-06 after Phase 44 completion*

@@ -98,16 +98,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REDIR-01 | Phase 44 | Pending |
-| REDIR-02 | Phase 44 | Pending |
-| REDIR-03 | Phase 44 | Pending |
-| REDIR-04 | Phase 44 | Pending |
-| REDIR-05 | Phase 44 | Pending |
+| REDIR-01 | Phase 44 | Complete |
+| REDIR-02 | Phase 44 | Complete |
+| REDIR-03 | Phase 44 | Complete |
+| REDIR-04 | Phase 44 | Complete |
+| REDIR-05 | Phase 44 | Complete |
 | REDIR-06 | Phase 45 | Pending |
-| INDEX-01 | Phase 44 | Pending |
-| INDEX-02 | Phase 44 | Pending |
-| INDEX-03 | Phase 44 | Pending |
-| INDEX-04 | Phase 44 | Pending |
+| INDEX-01 | Phase 44 | Complete |
+| INDEX-02 | Phase 44 | Complete |
+| INDEX-03 | Phase 44 | Complete |
+| INDEX-04 | Phase 44 | Complete |
 | INDEX-05 | Phase 46 | Pending |
 | INDEX-06 | Phase 46 | Pending |
 | SMAP-01 | Phase 45 | Pending |
@@ -130,8 +130,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCHEMA-03 | Phase 47 | Pending |
 | SCHEMA-04 | Phase 47 | Pending |
 | SCHEMA-05 | Phase 47 | Pending |
-| I18N-01 | Phase 44 | Pending |
-| I18N-02 | Phase 44 | Pending |
+| I18N-01 | Phase 44 | Complete |
+| I18N-02 | Phase 44 | Complete |
 | PERF-01 | Phase 48 | Pending |
 | PERF-02 | Phase 48 | Pending |
 
@@ -142,4 +142,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-05*
-*Last updated: 2026-02-05 after research synthesis*
+*Last updated: 2026-02-06 after Phase 44 completion*
