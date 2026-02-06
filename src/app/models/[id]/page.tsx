@@ -23,6 +23,8 @@ import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { BASE_URL } from '@/lib/seo/constants';
 import { AccuracyDisplay } from '@/components/accuracy-display';
 import { RelatedModelsWidget } from '@/components/model/related-models-widget';
+import { RecentPredictionsWidget } from '@/components/model/recent-predictions-widget';
+import { LeaguesCoveredWidget } from '@/components/model/leagues-covered-widget';
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
 import { buildModelBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 
@@ -405,6 +407,20 @@ export default async function ModelPage({ params }: ModelPageProps) {
              </Suspense>
            </CardContent>
          </Card>
+       </section>
+
+       {/* Cross-linking: Recent Predictions */}
+       <section>
+         <Suspense fallback={<Skeleton className="h-[200px] rounded-xl" />}>
+           <RecentPredictionsWidget modelId={id} />
+         </Suspense>
+       </section>
+
+       {/* Cross-linking: Leagues Covered */}
+       <section>
+         <Suspense fallback={<Skeleton className="h-[200px] rounded-xl" />}>
+           <LeaguesCoveredWidget modelId={id} />
+         </Suspense>
        </section>
 
        {/* Related Models - SEO Internal Linking */}
