@@ -29,8 +29,6 @@ export function buildSportsEventSchema(match: MatchSeoData, competitionId?: stri
     location: {
       '@type': 'Place',
       name: match.venue ?? 'Unknown Venue',
-      // Google Rich Results requires Place @type explicitly
-      address: match.venue ?? 'Unknown Venue',
     },
     homeTeam: {
       '@type': 'SportsTeam',

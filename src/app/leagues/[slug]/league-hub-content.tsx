@@ -101,9 +101,9 @@ async function LeagueMatchesList({ competitionId }: { competitionId: string }) {
         <div>
           <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-primary" />
-            Recent Results ({finishedMatches.length})
+            Results ({finishedMatches.length})
           </h3>
-          <MatchGrid matchList={finishedMatches.slice(0, 12)} />
+          <MatchGrid matchList={finishedMatches} />
         </div>
       )}
     </div>
