@@ -2,17 +2,20 @@
  * MatchPageSchema Component
  *
  * Renders a consolidated Schema.org JSON-LD @graph for match pages.
- * Combines Organization, WebSite, SportsEvent, WebPage, and BreadcrumbList
+ * References root Organization/WebSite via @id (no duplication).
+ * Combines SportsEvent, WebPage, Article, FAQPage, and BreadcrumbList
  * into a single script tag with proper @id cross-references.
  *
  * Benefits:
  * - Single JSON-LD script (eliminates multiple script validation warnings)
  * - Entity relationships via @id cross-references
  * - Better rich result eligibility for AI search engines
+ * - SCHEMA-01: No duplicate Organization/WebSite (referenced from root layout)
  */
 
 import type { Match } from '@/lib/db/schema';
 import type { FAQItem } from './match/MatchFAQSchema';
+import { ORGANIZATION_ID, WEBSITE_ID } from '@/lib/seo/schema/root';
 
 interface MatchPageSchemaProps {
   match: Match;
@@ -57,22 +60,6 @@ export function MatchPageSchema({ match, competition, url, faqs, contentGenerate
   const graph = {
     '@context': 'https://schema.org',
     '@graph': [
-      // Organization (root entity, referenced by Website)
-      {
-        '@type': 'Organization',
-        '@id': 'https://kroam.xyz#organization',
-        name: 'kroam.xyz',
-        url: 'https://kroam.xyz',
-        logo: 'https://kroam.xyz/logo.png',
-      },
-      // WebSite (referenced by WebPage)
-      {
-        '@type': 'WebSite',
-        '@id': 'https://kroam.xyz#website',
-        name: 'kroam.xyz',
-        url: 'https://kroam.xyz',
-        publisher: { '@id': 'https://kroam.xyz#organization' },
-      },
       // SportsEvent (the match itself)
       {
         '@type': 'SportsEvent',
@@ -110,7 +97,7 @@ export function MatchPageSchema({ match, competition, url, faqs, contentGenerate
         url,
         name: `${matchName} Prediction`,
         description: pageDescription,
-        isPartOf: { '@id': 'https://kroam.xyz#website' },
+        isPartOf: { '@id': WEBSITE_ID },
         about: { '@id': url },
       },
       // Article entity for content freshness signals (GEO optimization)
@@ -121,14 +108,8 @@ export function MatchPageSchema({ match, competition, url, faqs, contentGenerate
         description: pageDescription,
         datePublished: datePublished,
         dateModified: dateModified,
-        author: {
-          '@type': 'Organization',
-          '@id': 'https://kroam.xyz#organization',
-        },
-        publisher: {
-          '@type': 'Organization',
-          '@id': 'https://kroam.xyz#organization',
-        },
+        author: { '@id': ORGANIZATION_ID },
+        publisher: { '@id': ORGANIZATION_ID },
         mainEntityOfPage: { '@id': `${url}#webpage` },
         about: { '@id': url }, // References the SportsEvent
       },

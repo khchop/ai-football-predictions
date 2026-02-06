@@ -10,6 +10,7 @@ import { Analytics } from "@/components/analytics";
 import { ErrorBoundaryProvider } from "@/components/error-boundary-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Providers } from "./providers";
+import { buildRootOrganizationSchema, buildRootWebSiteSchema, buildSoftwareApplicationSchema } from "@/lib/seo/schema/root";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -59,47 +60,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const organizationSchema = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Kroam",
-    "url": "https://kroam.xyz",
-    "description": "AI football prediction platform comparing 42 AI models on match predictions across 17 competitions",
-    "logo": "https://kroam.xyz/logo.png",
-  };
-
-  const websiteSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Kroam - AI Football Predictions",
-    "url": "https://kroam.xyz",
-    "description": "Compare 42 AI models predicting football matches across Champions League, Premier League, and 15 more competitions",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": {
-        "@type": "EntryPoint",
-        "urlTemplate": "https://kroam.xyz/matches?q={search_term_string}"
-      },
-      "query-input": "required name=search_term_string"
-    },
-    "inLanguage": "en-US"
-  };
-
-  const softwareApplicationSchema = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "kroam.xyz - AI Football Prediction Platform",
-    "description": "Compare and track AI model predictions for football matches using the Kicktipp scoring system",
-    "applicationCategory": "SportsApplication",
-    "url": "https://kroam.xyz",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    },
-    "operatingSystem": "Web",
-    "isAccessibleForFree": true,
-    "inLanguage": "en-US"
+  // Single @graph with all root schemas (SCHEMA-01: no duplication)
+  const rootGraph = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      buildRootOrganizationSchema(),
+      buildRootWebSiteSchema(),
+      buildSoftwareApplicationSchema(),
+    ],
   };
 
   // Static skeleton fallbacks for PPR (prerendered instantly)
@@ -137,22 +105,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased min-h-screen bg-background flex flex-col`}>
-        {/* Organization Schema */}
+        {/* Root @graph: Organization, WebSite, SoftwareApplication */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(rootGraph) }}
         />
-         {/* WebSite Schema */}
-         <script
-           type="application/ld+json"
-           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-         />
-         {/* SoftwareApplication Schema */}
-         <script
-           type="application/ld+json"
-           dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
-         />
-          {/* Umami Analytics */}
+        {/* Umami Analytics */}
         <Analytics />
 
         <Providers>

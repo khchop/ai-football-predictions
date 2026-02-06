@@ -2,6 +2,7 @@ import type { MatchSeoData } from '../types';
 import { buildSportsEventSchema } from './sports-event';
 import { buildArticleSchema } from './article';
 import { buildBreadcrumbSchema, buildMatchBreadcrumbs } from './breadcrumb';
+import { ORGANIZATION_ID } from './root';
 
 export interface MatchGraphOptions {
   competitionId?: string;
@@ -15,18 +16,11 @@ export function buildMatchGraphSchema(match: MatchSeoData, options?: MatchGraphO
   const eventSchema = buildSportsEventSchema(match, options?.competitionId);
   const articleSchema = buildArticleSchema(match);
 
-  // Create organization reference
-  const organizationSchema = {
-    '@type': 'Organization',
-    '@id': 'https://bettingsoccer.com#organization',
-    name: 'BettingSoccer',
-    url: 'https://bettingsoccer.com',
-    logo: 'https://bettingsoccer.com/logo.png',
-    description: 'AI-powered football match predictions and analysis platform',
-  };
+  // Reference organization from root layout (no duplication)
+  const organizationRef = { '@id': ORGANIZATION_ID };
 
   // Build breadcrumb schema if we have the required data
-  const graphItems: unknown[] = [organizationSchema, eventSchema, articleSchema];
+  const graphItems: unknown[] = [organizationRef, eventSchema, articleSchema];
 
   if (options?.competitionName && options?.competitionSlug && options?.matchSlug) {
     const matchName = `${match.homeTeam} vs ${match.awayTeam}`;
