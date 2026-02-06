@@ -43,8 +43,11 @@ export function createAnalysisWorker() {
         const analysis = await fetchAndStoreAnalysis(matchId, fixtureId);
         
          if (!analysis) {
-           log.info(`No analysis data available for ${homeTeam} vs ${awayTeam}`);
-           return { success: false, reason: 'no_data_available' };
+           log.warn(
+             { matchId, externalId, attemptsMade: job.attemptsMade, maxAttempts: job.opts.attempts },
+             `No analysis data available for ${homeTeam} vs ${awayTeam} (attempt ${job.attemptsMade + 1}/${job.opts.attempts || 5})`
+           );
+           throw new Error(`No analysis data available for match ${matchId} (${homeTeam} vs ${awayTeam})`);
          }
         
          log.info(`✓ Analysis complete for ${homeTeam} vs ${awayTeam}`);

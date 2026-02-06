@@ -109,8 +109,11 @@ export function createPredictionsWorker() {
          // Get analysis (odds excluded from prompt, but analysis contains other stats)
          const analysis = await getMatchAnalysisByMatchId(matchId);
          if (!analysis) {
-           log.info(`No analysis for match ${matchId}`);
-           return { skipped: true, reason: 'no_analysis' };
+           log.warn(
+             { matchId, attemptsMade: job.attemptsMade, maxAttempts: job.opts.attempts },
+             `No analysis data found for match ${matchId} (attempt ${job.attemptsMade + 1}/${job.opts.attempts || 5}) - analysis may still be processing`
+           );
+           throw new Error(`No analysis data found for match ${matchId} - analysis may still be processing`);
          }
         
         // Get standings
