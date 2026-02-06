@@ -17,10 +17,10 @@ Requirements for v2.7 milestone. Each maps to roadmap phases.
 
 ### Settlement Recovery
 
-- [ ] **SETTLE-01**: All 43 failed settlement jobs are investigated and root cause identified
-- [ ] **SETTLE-02**: Settlement worker handles case where match is finished but has zero predictions (creates settlement retry instead of permanent failure)
-- [ ] **SETTLE-03**: Backfill settlement covers all finished matches with unscored predictions
-- [ ] **SETTLE-04**: Settlement retry cleans up stale failed jobs and re-queues with fresh data
+- [ ] **SETTLE-01**: All 43 failed settlement jobs are investigated and root cause identified (script ready, needs production run)
+- [x] **SETTLE-02**: Settlement worker handles case where match is finished but has zero predictions (creates settlement retry instead of permanent failure)
+- [x] **SETTLE-03**: Backfill settlement covers all finished matches with unscored predictions
+- [x] **SETTLE-04**: Settlement retry cleans up stale failed jobs and re-queues with fresh data
 
 ### Retroactive Backfill
 
@@ -74,10 +74,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PIPE-03 | Phase 49 | Complete |
 | PIPE-04 | Phase 49 | Complete |
 | PIPE-05 | Phase 49 | Complete |
-| SETTLE-01 | Phase 50 | Pending |
-| SETTLE-02 | Phase 50 | Pending |
-| SETTLE-03 | Phase 50 | Pending |
-| SETTLE-04 | Phase 50 | Pending |
+| SETTLE-01 | Phase 50 | Pending (script ready, needs production run) |
+| SETTLE-02 | Phase 50 | Complete |
+| SETTLE-03 | Phase 50 | Complete |
+| SETTLE-04 | Phase 50 | Complete |
 | RETRO-01 | Phase 51 | Pending |
 | RETRO-02 | Phase 51 | Pending |
 | RETRO-03 | Phase 51 | Pending |
@@ -99,4 +99,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-06*
-*Last updated: 2026-02-06 after Phase 49 completed (PIPE-01 through PIPE-05 verified)*
+*Last updated: 2026-02-06 after Phase 50 completed (SETTLE-02, SETTLE-03, SETTLE-04 verified; SETTLE-01 pending production run)*

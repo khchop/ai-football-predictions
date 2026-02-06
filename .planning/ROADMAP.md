@@ -456,8 +456,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 50-01-PLAN.md — Investigate failed settlement jobs and fix scoring worker zero-prediction handling
-- [ ] 50-02-PLAN.md — Admin settlement retry API, backfill worker extension, and settlement backfill script
+- [x] 50-01-PLAN.md — Investigate failed settlement jobs and fix scoring worker zero-prediction handling
+- [x] 50-02-PLAN.md — Admin settlement retry API, backfill worker extension, and settlement backfill script
 
 #### Phase 51: Retroactive Backfill Script
 **Goal**: All matches from last 7 days missing predictions have retroactive predictions generated and scored
@@ -549,9 +549,9 @@ Phases execute in numeric order: 49 -> 50 -> 51 -> 52
 | 47. Structured Data Validation | v2.6 | 4/4 | Complete | 2026-02-06 |
 | 48. Performance & Verification | v2.6 | 3/3 | Complete | 2026-02-06 |
 | 49. Pipeline Scheduling Fixes | v2.7 | 2/2 | Complete | 2026-02-06 |
-| 50. Settlement Investigation & Recovery | v2.7 | 0/2 | Not started | - |
+| 50. Settlement Investigation & Recovery | v2.7 | 2/2 | Complete | 2026-02-06 |
 | 51. Retroactive Backfill Script | v2.7 | 0/TBD | Not started | - |
 | 52. Monitoring & Observability | v2.7 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-06 after Phase 50 planned (2 plans in 2 waves)*
+*Last updated: 2026-02-06 after Phase 50 executed (2/2 plans complete, human verification pending)*
