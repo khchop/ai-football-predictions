@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 46 — Content Tags & Meta Optimization
-Plan: 2/2 complete
+Plan: 3/3 complete
 Status: Phase complete — all plans executed
-Last activity: 2026-02-06 — Completed 46-01-PLAN.md (Metadata & H1 Standardization)
+Last activity: 2026-02-06 — Completed 46-03-PLAN.md (CollectionPage Structured Data & Meta Tag Validation)
 
 Progress: [██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 41% (phase 46 of 44-48 complete)
 
@@ -84,6 +84,12 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 46-02: Created generic fallback OG route (/api/og/generic) with query param customization
 - 46-02: Match pages under /leagues/[slug]/[match] have dynamic opengraph-image.tsx
 - 46-02: Replaced purple badge (rgba(168, 85, 247, 0.4)) with blue badge (rgba(96, 165, 250, 0.2))
+- 46-03: Use SportsOrganization for leagues (more semantic than Thing)
+- 46-03: Use SoftwareApplication for AI models (signals computational tools)
+- 46-03: OG tag completeness warnings (not failures) in Pass 4
+- 46-03: Sample 50 URLs when >50 total for faster audit runs (AUDIT_SAMPLE env var)
+- 46-03: CollectionPage -> ItemList -> ListItem three-tier hierarchy for index pages
+- 46-03: Build-time HTML validation using cheerio to catch meta tag regressions
 
 ### Pending Todos
 
@@ -91,7 +97,7 @@ None.
 
 ### Blockers/Concerns
 
-None — Phase 46 complete. Ready for Phase 47 or next milestone.
+None — Phase 46 complete (all 3 plans done). All 8 requirements covered (CTAG-01 through CTAG-06, INDEX-05, INDEX-06). Ready for Phase 47 or next milestone.
 
 ### Quick Tasks Completed
 
@@ -106,7 +112,7 @@ None — Phase 46 complete. Ready for Phase 47 or next milestone.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 46-01-PLAN.md (Metadata & H1 Standardization) — Phase 46 complete
+Stopped at: Completed 46-03-PLAN.md (CollectionPage Structured Data & Meta Tag Validation) — Phase 46 complete
 Resume file: None
 
 **Platform status:**
@@ -116,4 +122,4 @@ Resume file: None
 - 237 requirements validated (v1.0-v2.5 + 11 from Phase 44 + 10 from Phase 45 + 8 from Phase 46)
 
 ---
-*Last updated: 2026-02-06 after 46-01 complete*
+*Last updated: 2026-02-06 after 46-03 complete*
