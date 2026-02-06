@@ -68,11 +68,11 @@ export function createDescription(match: MatchSeoData, activeModels?: number): s
   return truncateWithEllipsis(full, MAX_META_DESCRIPTION_LENGTH);
 }
 
-export function buildMatchMetadata(match: MatchSeoData, activeModels?: number): Metadata {
+export function buildMatchMetadata(match: MatchSeoData, activeModels?: number, canonicalPath?: string): Metadata {
   const title = truncateWithEllipsis(createTitle(match), MAX_TITLE_LENGTH);
   const description = createDescription(match, activeModels); // Already truncated in createDescription
 
-  const url = `/matches/${match.id}`;
+  const url = canonicalPath || `/matches/${match.id}`;
   const ogImageUrl = `${BASE_URL}${url}/opengraph-image`;
 
   // Build OG description with predicted score and optional accuracy

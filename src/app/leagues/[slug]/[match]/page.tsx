@@ -63,8 +63,12 @@ export async function generateMetadata({ params }: MatchPageProps): Promise<Meta
   // Fetch active model count for dynamic metadata
   const overallStats = await getOverallStats();
 
-  // Use centralized metadata builder
-  return buildMatchMetadata(seoData, overallStats.activeModels);
+  // Build canonical path using actual route structure (/leagues/{slug}/{match})
+  // Use competition ID (short-form slug) after any alias resolution
+  const canonicalPath = `/leagues/${competitionSlug}/${match}`;
+
+  // Use centralized metadata builder with self-referential canonical
+  return buildMatchMetadata(seoData, overallStats.activeModels, canonicalPath);
 }
 
 export default async function MatchPage({ params }: MatchPageProps) {
