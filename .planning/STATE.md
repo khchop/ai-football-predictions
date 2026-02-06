@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 45 — Sitemap & Internal Linking
-Plan: 3 of 3 complete
+Plan: 4 of 4 complete
 Status: Phase complete
-Last activity: 2026-02-06 — Completed 45-03-PLAN.md (Match-to-Model Cross-Links)
+Last activity: 2026-02-06 — Completed 45-04-PLAN.md (Sitemap Audit & Build Integration)
 
 Progress: [█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 22% (phase 45 complete)
 
@@ -64,6 +64,11 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 45-03: Widget queries predictions independently (not reusing page query) for modularity
 - 45-03: Color-code points (green/yellow) for finished matches to highlight top performers
 - 45-03: Use 3-column responsive grid layout for better space utilization
+- 45-04: Build-time audit validates sitemap URLs (no UUIDs, no long-form slugs) before deployment
+- 45-04: Pass 1 (sitemap URL validation) only runs if AUDIT_BASE_URL set (optional for CI)
+- 45-04: Pass 2 validates database completeness (models, matches, blog posts, 17 leagues)
+- 45-04: Pass 3 structural link analysis ensures 3+ link sources per page type
+- 45-04: Build fails on FAIL (UUID URLs, bad slugs, missing data), succeeds on warnings
 
 ### Pending Todos
 
@@ -71,7 +76,7 @@ None.
 
 ### Blockers/Concerns
 
-None — Phase 45 complete, all 3 internal linking patterns established.
+None — Phase 45 complete, all 4 plans shipped (sitemap fixes, cross-linking widgets, build-time audit).
 
 ### Quick Tasks Completed
 
@@ -86,7 +91,7 @@ None — Phase 45 complete, all 3 internal linking patterns established.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 45-03-PLAN.md (Match-to-Model Cross-Links)
+Stopped at: Completed 45-04-PLAN.md (Sitemap Audit & Build Integration)
 Resume file: None
 
 **Platform status:**
