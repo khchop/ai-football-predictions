@@ -395,7 +395,13 @@ Plans:
   3. Article and FAQPage schemas pass validation
   4. BreadcrumbList schema valid on all page types
   5. Schema.org validation errors reduced from 4365 to <50
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 47-01-PLAN.md — Create root schema single source of truth, fix root layout + MatchPageSchema
+- [ ] 47-02-PLAN.md — Fix SportsEvent, Article, FAQ schema validation errors
+- [ ] 47-03-PLAN.md — Consolidate page-level schema rendering to use @id references
+- [ ] 47-04-PLAN.md — Build-time JSON-LD validation (Pass 5) in audit script
 
 #### Phase 48: Performance & Verification
 **Goal**: Optimize TTFB for slow pages, verify all fixes with Ahrefs re-audit
@@ -462,7 +468,7 @@ Phases execute in numeric order: 44 -> 45 -> 46 -> 47 -> 48
 | 44. Foundation — Redirects, Canonicals & Index Pages | v2.6 | 3/3 | Complete | 2026-02-06 |
 | 45. Sitemap & Internal Linking | v2.6 | 4/4 | Complete | 2026-02-06 |
 | 46. Content Tags & Meta Optimization | v2.6 | 3/3 | Complete | 2026-02-06 |
-| 47. Structured Data Validation | v2.6 | 0/TBD | Not started | - |
+| 47. Structured Data Validation | v2.6 | 0/4 | Not started | - |
 | 48. Performance & Verification | v2.6 | 0/TBD | Not started | - |
 
 ---
