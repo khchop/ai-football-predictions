@@ -108,13 +108,13 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
   const { match, competition } = data;
   const kickoff = new Date(match.kickoffTime).getTime();
   const now = Date.now();
-  
-  // Don't schedule if match already started
-  if (kickoff <= now) {
-    log.info({ matchId: match.id }, 'Match already started, skipping job scheduling');
+
+  // Skip finished/cancelled matches (they don't need new jobs)
+  if (match.status === 'finished' || match.status === 'cancelled' || match.status === 'postponed') {
+    log.info({ matchId: match.id, status: match.status, homeTeam: match.homeTeam, awayTeam: match.awayTeam }, 'Match not schedulable (status), skipping job scheduling');
     return 0;
   }
-  
+
   if (!match.externalId) {
     log.info({ matchId: match.id }, 'Match has no externalId, skipping');
     return 0;
