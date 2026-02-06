@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 
 ## Current Position
 
-Phase: 48 — Performance Verification
-Plan: 2/3 complete
-Status: In progress
-Last activity: 2026-02-06 — Completed quick task 015: Fix missing predictions (no analysis retry)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements for v2.7
+Last activity: 2026-02-06 — Milestone v2.7 started
 
-Progress: [█████████████████████████████████░░░░░░░░░░░░░] 84% (phase 48 of 44-48 in progress)
+Progress: [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0%
 
 ## Milestone History
 
@@ -131,7 +131,9 @@ None.
 
 ### Blockers/Concerns
 
-None — Phase 48 Plan 02 complete. Site is Ahrefs-ready with all internal validation passing.
+- 43 failed settlement jobs in production need investigation
+- Pipeline not scheduling analysis/predictions for existing matches after restart
+- Last 7 days of matches may be missing predictions entirely
 
 ### Quick Tasks Completed
 
@@ -148,7 +150,7 @@ None — Phase 48 Plan 02 complete. Site is Ahrefs-ready with all internal valid
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed quick task 015: Fix missing predictions (no analysis retry)
+Stopped at: Starting v2.7 milestone — Pipeline Reliability & Retroactive Backfill
 Resume file: None
 
 **Platform status:**

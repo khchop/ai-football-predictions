@@ -346,26 +346,22 @@ All 208 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, 
 - Model fine-tuning or custom training
 - Vision models (Qwen3-VL) - not useful for text-only predictions
 
-## Current Milestone: v2.6 SEO/GEO Site Health
+## Current Milestone: v2.7 Pipeline Reliability & Retroactive Backfill
 
-**Goal:** Fix all SEO/GEO issues identified by Ahrefs audit to achieve clean site health — 404 errors, broken internal links, missing index pages, canonical issues, redirect chains, meta tag problems, structured data errors, orphan pages, and slow pages.
+**Goal:** Fix the prediction/analysis pipeline that fails to schedule jobs for existing matches after server restarts, fix 43 failed settlement jobs, and retroactively generate predictions for all matches from the last 7 days that are missing them.
 
 **Target features:**
-- Create missing `/models` and `/leagues` index pages (404 → 200)
-- Fix canonical URLs on match pages (stop pointing to `/`)
-- Replace meta refresh redirects with proper HTTP 301/308 redirects on `/matches/UUID`
-- Fix internal links to use short-form league slugs (avoid 308 redirect chains)
-- Add missing H1 tags, fix meta descriptions, fix title lengths
-- Fix structured data validation errors (Schema.org + Google rich results)
-- Add missing pages to sitemap, remove non-canonical pages from sitemap
-- Fix hreflang annotations (add x-default)
-- Complete Open Graph tags on all pages
-- Improve internal linking to reduce orphan pages
-- Fix 302 redirects to 301 for `www.kroam.xyz` and `http://kroam.xyz`
+- Fix catch-up scheduling to handle past-due matches (analysis + predictions + lineups), not just future matches
+- Fix backfill worker to detect and fill gaps across wider time windows
+- Fix cascading failure chain: Redis job loss → no re-scheduling → no predictions → no settlement
+- Investigate and fix 43 failed settlement jobs (finished matches with no scoring)
+- Build retroactive prediction script for last 7 days of missed matches (using pre-match context + known scores for finished)
+- Score retroactive predictions against actual results
+- Add pipeline health monitoring to detect gaps before matches go unserved
 
 ## Completed Milestones
 
-v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5 — see `.planning/MILESTONES.md` for full history.
+v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6 — see `.planning/MILESTONES.md` for full history.
 
 ---
-*Last updated: 2026-02-05 after v2.6 milestone started*
+*Last updated: 2026-02-06 after v2.7 milestone started*
