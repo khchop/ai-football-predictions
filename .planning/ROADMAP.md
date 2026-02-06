@@ -343,7 +343,12 @@ Plans:
   3. Match pages at /leagues/{slug}/{match} have self-referential canonical URLs
   4. www.kroam.xyz and http://kroam.xyz redirect with 301 (not 302)
   5. No redirect chains exist (single-hop from any entry point)
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 44-01-PLAN.md — Remove cascading canonical and hreflang from root layout, fix match page canonicals
+- [ ] 44-02-PLAN.md — Rewrite middleware for www/http redirects, 410 Gone, league slug single-hop
+- [ ] 44-03-PLAN.md — Create /leagues and /models index pages with ISR and metadata
 
 #### Phase 45: Sitemap & Internal Linking
 **Goal**: Clean sitemaps, fix orphan pages, add cross-linking widgets between models/leagues/matches
@@ -443,7 +448,7 @@ Phases execute in numeric order: 44 -> 45 -> 46 -> 47 -> 48
 | 41. Together AI Fallbacks | v2.5 | 4/4 | Complete | 2026-02-05 |
 | 42. Dynamic Model Counts | v2.5 | 2/2 | Complete | 2026-02-05 |
 | 43. Testing & Validation | v2.5 | 3/3 | Complete | 2026-02-05 |
-| 44. Foundation — Redirects, Canonicals & Index Pages | v2.6 | 0/TBD | Not started | - |
+| 44. Foundation — Redirects, Canonicals & Index Pages | v2.6 | 0/3 | Planned | - |
 | 45. Sitemap & Internal Linking | v2.6 | 0/TBD | Not started | - |
 | 46. Content Tags & Meta Optimization | v2.6 | 0/TBD | Not started | - |
 | 47. Structured Data Validation | v2.6 | 0/TBD | Not started | - |
