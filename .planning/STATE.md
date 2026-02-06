@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 Phase: 48 — Performance Verification
 Plan: 2/3 complete
 Status: In progress
-Last activity: 2026-02-06 — Completed quick task 014: Fix Ahrefs SEO issues
+Last activity: 2026-02-06 — Completed quick task 015: Fix missing predictions (no analysis retry)
 
 Progress: [█████████████████████████████████░░░░░░░░░░░░░] 84% (phase 48 of 44-48 in progress)
 
@@ -143,11 +143,12 @@ None — Phase 48 Plan 02 complete. Site is Ahrefs-ready with all internal valid
 | 012 | Fix circular dependency build error in LLM module | 2026-02-05 | 70ba190 | [012-fix-circular-dep-build-error](./quick/012-fix-circular-dep-build-error/) |
 | 013 | Break circular dependency in base.ts imports | 2026-02-05 | 5322a19 | [013-break-circular-dep-base-imports-index](./quick/013-break-circular-dep-base-imports-index/) |
 | 014 | Fix Ahrefs SEO issues (redirects, orphans, schema) | 2026-02-06 | ca6f4f2 | [014-fix-ahrefs-seo-issues](./quick/014-fix-ahrefs-seo-issues/) |
+| 015 | Fix missing predictions (no analysis retry) | 2026-02-06 | e4b6021 | [015-fix-missing-predictions-no-analysis-retry](./quick/015-fix-missing-predictions-no-analysis-retry/) |
 
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed quick task 014: Fix Ahrefs SEO issues (redirects, orphans, schema)
+Stopped at: Completed quick task 015: Fix missing predictions (no analysis retry)
 Resume file: None
 
 **Platform status:**
