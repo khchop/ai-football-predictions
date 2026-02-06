@@ -72,7 +72,7 @@ export function createPredictionsWorker() {
   const worker = new Worker<PredictMatchPayload>(
     QUEUE_NAMES.PREDICTIONS,
     async (job: Job<PredictMatchPayload>) => {
-      const { matchId, skipIfDone = false } = job.data;
+      const { matchId, skipIfDone = false, allowRetroactive } = job.data;
       const log = loggers.predictionsWorker.child({
         jobId: job.id,
         jobName: job.name,
@@ -101,9 +101,13 @@ export function createPredictionsWorker() {
         
         const { match, competition } = matchData;
         
-         if (match.status !== 'scheduled') {
+         if (match.status !== 'scheduled' && !allowRetroactive) {
            log.info(`Match ${matchId} is ${match.status}, skipping`);
            return { skipped: true, reason: 'match_not_scheduled', status: match.status };
+         }
+
+         if (allowRetroactive) {
+           log.info(`Match ${matchId} is ${match.status}, generating predictions retroactively`);
          }
         
          // Get analysis (odds excluded from prompt, but analysis contains other stats)

@@ -17,7 +17,7 @@ export function createAnalysisWorker() {
   return new Worker<AnalyzeMatchPayload>(
     QUEUE_NAMES.ANALYSIS,
     async (job: Job<AnalyzeMatchPayload>) => {
-      const { matchId, externalId, homeTeam, awayTeam } = job.data;
+      const { matchId, externalId, homeTeam, awayTeam, allowRetroactive } = job.data;
       const log = loggers.analysisWorker.child({ jobId: job.id, jobName: job.name });
       
       log.info(`Analyzing ${homeTeam} vs ${awayTeam} (match: ${matchId})`);
@@ -33,9 +33,13 @@ export function createAnalysisWorker() {
         
         const { match } = matchData;
         
-         if (match.status !== 'scheduled') {
+         if (match.status !== 'scheduled' && !allowRetroactive) {
            log.info(`Match ${matchId} is ${match.status}, skipping`);
            return { skipped: true, reason: 'match_not_scheduled', status: match.status };
+         }
+
+         if (allowRetroactive) {
+           log.info(`Match ${matchId} is ${match.status}, processing retroactively`);
          }
         
         // Fetch and store analysis
