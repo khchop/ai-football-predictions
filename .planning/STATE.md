@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 ## Current Position
 
-Phase: 50 of 52 (Settlement Investigation & Recovery) — COMPLETE
-Plan: All plans complete (2/2)
-Status: Phase 50 verified (3/5 code-verified, 2 require production execution), ready for Phase 51
-Last activity: 2026-02-06 — Phase 50 completed and verified (SETTLE-02, SETTLE-03, SETTLE-04)
+Phase: 51 of 52 (Retroactive Backfill Script) — IN PROGRESS
+Plan: 1 of 6 complete
+Status: Plan 51-01 complete (worker support for retroactive processing)
+Last activity: 2026-02-06 — Completed 51-01-PLAN.md (allowRetroactive flag added to workers)
 
-Progress: [██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 50% (2/4 phases)
+Progress: [███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 52% (2.16/4 phases)
 
 ## Milestone History
 
@@ -50,7 +50,7 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 49-02: Chain validation enforced via DB query joins (analysis → lineups → predictions)
 - 49-02: Added chain validation logging to show dependency flow
 
-**Phase 50 (v2.7 - latest):**
+**Phase 50 (v2.7):**
 - 50-01: Use favoriteTeamName field to detect if analysis exists (reliable API-Football indicator)
 - 50-01: Throw error for retry when analysis exists but predictions don't (upstream pipeline issue)
 - 50-01: Skip gracefully when no analysis exists (expected for old/imported matches)
@@ -60,6 +60,11 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 50-02: Backfill worker detects zero-prediction matches hourly (step 6, priority 2)
 - 50-02: Backfill script uses separate jobId patterns (settle-backfill-* vs settle-backfill-zero-*)
 - 50-02: All operations use idempotent jobIds (safe to run multiple times)
+
+**Phase 51 (v2.7 - latest):**
+- 51-01: Use optional allowRetroactive flag instead of modifying match status or bypassing checks globally
+- 51-01: Log retroactive processing explicitly for observability
+- 51-01: Preserve normal pipeline behavior when flag is undefined/false
 
 **v2.7 Roadmap:**
 - Phase 49: Pipeline Scheduling Fixes (PIPE-01 to PIPE-05) — COMPLETE
@@ -103,8 +108,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-06T23:30:00Z
-Stopped at: Phase 50 complete and verified
+Last session: 2026-02-06T22:20:00Z
+Stopped at: Completed 51-01-PLAN.md
 Resume file: None
 
 **Platform status:**
