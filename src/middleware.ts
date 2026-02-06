@@ -20,6 +20,7 @@ const LEAGUE_SLUG_REDIRECTS: Record<string, string> = {
   'la-liga': 'laliga',
   'serie-a': 'seriea',
   'ligue-1': 'ligue1',
+  'turkish-super-lig': 'superlig',
 };
 
 /**

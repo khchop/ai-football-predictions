@@ -63,7 +63,7 @@ export async function POST(request: Request) {
         const postId = await generateLeagueRoundup({
           ...roundupData,
           competition: competition.name,
-          competitionSlug: competition.slug || competition.name.toLowerCase().replace(/\s+/g, '-'),
+          competitionSlug: competition.id,
           competitionId: competition.id,
         });
 

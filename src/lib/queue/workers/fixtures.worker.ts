@@ -88,7 +88,7 @@ export function createFixturesWorker() {
                
                // Schedule jobs for NEW scheduled matches only
                if (isNewMatch && mapFixtureStatus(fixture.fixture.status.short) === 'scheduled') {
-                 newMatchUrls.push(`https://kroam.xyz/leagues/${competitionSlug}/${slug}`);
+                 newMatchUrls.push(`https://kroam.xyz/leagues/${competition.id}/${slug}`);
                  const scheduled = await scheduleMatchJobs({
                    match: {
                      id: actualMatchId,

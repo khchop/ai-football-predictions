@@ -672,7 +672,7 @@ export async function getLeagueRoundupData(competitionId: string) {
 
   return {
     competition: roundupMatches[0].competition.name,
-    competitionSlug: roundupMatches[0].competition.slug || roundupMatches[0].competition.id,
+    competitionSlug: roundupMatches[0].competition.id,
     competitionId,
     week,
     allowedTeams,

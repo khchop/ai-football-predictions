@@ -27,7 +27,7 @@ export async function RecentPredictionsWidget({ competitionId }: RecentPredictio
           {matchesData.map(({ match, competition }) => {
             const kickoff = parseISO(match.kickoffTime);
             const matchUrl = match.slug
-              ? `/leagues/${competition.slug || competition.id}/${match.slug}`
+              ? `/leagues/${competition.id}/${match.slug}`
               : `/matches/${match.id}`;
 
             return (
