@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 
 ## Current Position
 
-Phase: 45 — Sitemap & Internal Linking
-Plan: 4/4 complete
-Status: Phase verified and complete
-Last activity: 2026-02-06 — Phase 45 verified (21/21 must-haves passed)
+Phase: 46 — Content Tags & Meta Optimization
+Plan: 1/2 complete (Wave 1: Plans 01-02 parallel execution)
+Status: In progress — Plan 02 complete
+Last activity: 2026-02-06 — Completed 46-02-PLAN.md (OG Image Dark Theme)
 
-Progress: [██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 40% (phase 45 of 44-48 complete)
+Progress: [██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 40% (phase 46 of 44-48 in progress)
 
 ## Milestone History
 
@@ -70,13 +70,20 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 45-04: Pass 3 structural link analysis ensures 3+ link sources per page type
 - 45-04: Build fails on FAIL (UUID URLs, bad slugs, missing data), succeeds on warnings
 
+**Phase 46 (v2.6):**
+- 46-02: All OG images use dark navy/charcoal gradient (#1a1a2e → #0f3460) with light text
+- 46-02: Updated branding from "kroam.xyz" to "Kroam.xyz" across all OG images
+- 46-02: Created generic fallback OG route (/api/og/generic) with query param customization
+- 46-02: Match pages under /leagues/[slug]/[match] have dynamic opengraph-image.tsx
+- 46-02: Replaced purple badge (rgba(168, 85, 247, 0.4)) with blue badge (rgba(96, 165, 250, 0.2))
+
 ### Pending Todos
 
 None.
 
 ### Blockers/Concerns
 
-None — Phase 45 verified, ready for Phase 46.
+None — Plan 02 complete, awaiting Plan 01 completion.
 
 ### Quick Tasks Completed
 
@@ -91,7 +98,7 @@ None — Phase 45 verified, ready for Phase 46.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Phase 45 verified and complete, ready for Phase 46
+Stopped at: Completed 46-02-PLAN.md (OG Image Dark Theme & Match Pages)
 Resume file: None
 
 **Platform status:**
@@ -101,4 +108,4 @@ Resume file: None
 - 229 requirements validated (v1.0-v2.5 + 11 from Phase 44 + 10 from Phase 45)
 
 ---
-*Last updated: 2026-02-06 after Phase 45 verified*
+*Last updated: 2026-02-06 after 46-02 complete*
