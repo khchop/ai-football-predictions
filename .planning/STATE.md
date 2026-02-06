@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 ## Current Position
 
 Phase: 50 of 52 (Settlement Investigation & Recovery) — IN PROGRESS
-Plan: 1 of 4 complete
-Status: Plan 50-01 complete - investigation script and scoring worker fix ready
-Last activity: 2026-02-06 — Completed 50-01-PLAN.md (2 tasks, 2 commits)
+Plan: 2 of 4 complete
+Status: Plan 50-02 complete - admin retry API and settlement backfill ready
+Last activity: 2026-02-06 — Completed 50-02-PLAN.md (2 tasks, 2 commits)
 
-Progress: [██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 30% (1.25/4 phases)
+Progress: [██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 31% (1.5/4 phases)
 
 ## Milestone History
 
@@ -63,6 +63,11 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 50-01: Throw error for retry when analysis exists but predictions don't (upstream pipeline issue)
 - 50-01: Skip gracefully when no analysis exists (expected for old/imported matches)
 - 50-01: Fixed schema error in getFinishedMatchesWithZeroPredictions (removed non-existent referee field)
+- 50-02: Admin retry API fetches fresh match data from DB (failed jobs may have stale data)
+- 50-02: Retry from both queue.getFailed() and DLQ (dual-source pattern)
+- 50-02: Backfill worker detects zero-prediction matches hourly (step 6, priority 2)
+- 50-02: Backfill script uses separate jobId patterns (settle-backfill-* vs settle-backfill-zero-*)
+- 50-02: All operations use idempotent jobIds (safe to run multiple times)
 
 **v2.7 Roadmap:**
 - Phase 49: Pipeline Scheduling Fixes (PIPE-01 to PIPE-05)
@@ -99,18 +104,18 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-06T21:44:48Z
-Stopped at: Completed 50-01-PLAN.md (investigation script + scoring worker fix)
+Last session: 2026-02-06T21:51:23Z
+Stopped at: Completed 50-02-PLAN.md (admin retry API + settlement backfill)
 Resume file: None
 
 **Platform status:**
 - 17 leagues operational
 - 42 active models (29 Together + 13 Synthetic)
 - 0 disabled models (all 6 previously disabled models re-enabled)
-- 255 requirements validated (v1.0-v2.6 + PIPE-01 through PIPE-05 + SETTLE-01, SETTLE-02)
-- 13 remaining requirements for v2.7 (SETTLE-03/04, RETRO, MON)
+- 257 requirements validated (v1.0-v2.6 + PIPE-01 through PIPE-05 + SETTLE-01 through SETTLE-04)
+- 11 remaining requirements for v2.7 (RETRO, MON)
 
-**Next action:** Execute Phase 50 plans 02-04 (DLQ retry, backfill, monitoring)
+**Next action:** Execute Phase 50 plans 03-04 (comprehensive backfill, monitoring)
 
 ---
-*Last updated: 2026-02-06 after Phase 50-01 completed*
+*Last updated: 2026-02-06 after Phase 50-02 completed*
