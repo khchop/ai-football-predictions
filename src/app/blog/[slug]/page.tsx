@@ -25,7 +25,6 @@ import { RelatedArticles } from '@/components/blog/related-articles';
 import { extractHeadings } from '@/lib/blog/extract-headings';
 import { extractFAQs } from '@/lib/blog/extract-faqs';
 import { findRelatedArticles } from '@/lib/blog/related-articles';
-import { WebPageSchema } from '@/components/WebPageSchema';
 import { getDb } from '@/lib/db';
 import { matches } from '@/lib/db/schema';
 import { inArray } from 'drizzle-orm';
@@ -215,9 +214,10 @@ export default async function BlogPostPage({ params }: PageProps) {
       }
     }
 
+    // buildRoundupSchema already returns @graph format
     schema = buildRoundupSchema(post, matchData.length > 0 ? matchData : undefined);
   } else {
-    // For other content types: Keep existing Article schema
+    // For other content types: Consolidated Article and BreadcrumbList in single @graph
     schema = {
       '@context': 'https://schema.org',
       '@graph': [
@@ -242,22 +242,10 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
-      {/* Article Schema for search engines */}
+      {/* Consolidated structured data for search engines */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-      />
-
-      <WebPageSchema
-        name={post.title}
-        description={post.excerpt || post.title}
-        url={`${BASE_URL}/blog/${post.slug}`}
-        datePublished={post.publishedAt || undefined}
-        breadcrumb={[
-          { name: 'Home', url: BASE_URL },
-          { name: 'Blog', url: `${BASE_URL}/blog` },
-          { name: post.title, url: `${BASE_URL}/blog/${post.slug}` },
-        ]}
       />
 
       {/* Breadcrumbs */}

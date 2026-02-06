@@ -168,7 +168,10 @@ export default async function LeaguePage({ params }: PageProps) {
     { name: 'Leagues', url: `${BASE_URL}/leagues` },
     { name: competition.name, url: `${BASE_URL}/leagues/${competition.id}` },
   ]);
-  const faqSchema = generateFAQPageSchema(faqs);
+
+  // Generate FAQPage schema and strip @context for use in @graph
+  const faqSchemaWithContext = generateFAQPageSchema(faqs);
+  const { '@context': _, ...faqSchema } = faqSchemaWithContext;
 
   // Combined @graph with SportsOrganization, BreadcrumbList, and FAQPage
   const schema = {

@@ -97,8 +97,9 @@ async function LeaderboardContent({ searchParams }: { searchParams: { [key: stri
     timePeriod,
   });
 
-  // Generate FAQPage schema
-  const faqSchema = generateFAQPageSchema(faqs);
+  // Generate FAQPage schema and strip @context for use in @graph
+  const faqSchemaWithContext = generateFAQPageSchema(faqs);
+  const { '@context': _, ...faqSchema } = faqSchemaWithContext;
 
   if (leaderboard.length === 0) {
     return (
@@ -128,14 +129,6 @@ async function LeaderboardContent({ searchParams }: { searchParams: { [key: stri
 
   return (
     <>
-      {/* FAQPage Schema JSON-LD */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(faqSchema),
-        }}
-      />
-
       {/* Leaderboard Table */}
       <Card className="bg-card/50 border-border/50">
         <CardContent className="p-0">
@@ -171,15 +164,38 @@ async function LeaderboardContent({ searchParams }: { searchParams: { [key: stri
 export default async function LeaderboardPage({ searchParams }: PageProps) {
   const resolvedParams = await searchParams;
 
+  // Fetch leaderboard data for FAQ generation
+  const leaderboard = await getLeaderboardWithTrends(50, 'avgPoints', {});
+  const totalModels = leaderboard.length;
+  const totalPredictions = leaderboard.reduce((sum, e) => sum + e.totalPredictions, 0);
+  const topModel = leaderboard[0] ? {
+    name: leaderboard[0].displayName,
+    avgPoints: leaderboard[0].avgPoints,
+    accuracy: leaderboard[0].accuracy,
+  } : null;
+
+  // Generate dynamic FAQs
+  const faqs = generateLeaderboardFAQs({
+    totalModels,
+    totalPredictions,
+    topModel,
+    timePeriod: 'all',
+  });
+
+  // Generate FAQPage schema and strip @context for use in @graph
+  const faqSchemaWithContext = generateFAQPageSchema(faqs);
+  const { '@context': _, ...faqSchema } = faqSchemaWithContext;
+
   // Build BreadcrumbList schema
   const breadcrumbs = buildBreadcrumbSchema([
     { name: 'Home', url: BASE_URL },
     { name: 'Leaderboard', url: `${BASE_URL}/leaderboard` },
   ]);
 
+  // Consolidated @graph with BreadcrumbList and FAQPage
   const schema = {
     '@context': 'https://schema.org',
-    '@graph': [breadcrumbs],
+    '@graph': [breadcrumbs, faqSchema],
   };
 
   // Build visual breadcrumbs
@@ -187,7 +203,7 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
 
   return (
     <LiveTabRefresher refreshInterval={30000}>
-      {/* BreadcrumbList Schema */}
+      {/* Consolidated structured data for search engines */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}

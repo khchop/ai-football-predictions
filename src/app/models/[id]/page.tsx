@@ -19,9 +19,9 @@ import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 import { ModelPerformanceChart } from '@/components/model-performance-chart';
 import { ModelCompetitionBreakdown } from '@/components/model-competition-breakdown';
-import { WebPageSchema } from '@/components/WebPageSchema';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { BASE_URL } from '@/lib/seo/constants';
+import { WEBSITE_ID } from '@/lib/seo/schema/root';
 import { AccuracyDisplay } from '@/components/accuracy-display';
 import { RelatedModelsWidget } from '@/components/model/related-models-widget';
 import { RecentPredictionsWidget } from '@/components/model/recent-predictions-widget';
@@ -155,16 +155,25 @@ export default async function ModelPage({ params }: ModelPageProps) {
      ? Math.round((predictionStats.correctTendencies / scoredPredictions) * 100)
      : 0;
 
-    // Build BreadcrumbList schema
+    // Build consolidated @graph with WebPage and BreadcrumbList
     const breadcrumbs = buildBreadcrumbSchema([
       { name: 'Home', url: BASE_URL },
       { name: 'Models', url: `${BASE_URL}/leaderboard` },
       { name: model.displayName, url: `${BASE_URL}/models/${id}` },
     ]);
 
+    const webPageSchema = {
+      '@type': 'WebPage',
+      'name': `${model.displayName} - AI Football Prediction Model`,
+      'description': `${model.displayName} AI model performance and statistics. Ranked #${modelRank || '—'} with ${scoredPredictions} predictions scored.`,
+      'url': `${BASE_URL}/models/${id}`,
+      'isPartOf': { '@id': WEBSITE_ID },
+      'breadcrumb': breadcrumbs,
+    };
+
     const schema = {
       '@context': 'https://schema.org',
-      '@graph': [breadcrumbs],
+      '@graph': [webPageSchema],
     };
 
     // Build visual breadcrumbs
@@ -172,20 +181,10 @@ export default async function ModelPage({ params }: ModelPageProps) {
 
     return (
       <div className="space-y-8">
-        {/* Structured data for search engines */}
+        {/* Consolidated structured data for search engines */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-        />
-        <WebPageSchema
-          name={`${model.displayName} - AI Football Prediction Model`}
-          description={`${model.displayName} AI model performance and statistics. Ranked #${modelRank || '—'} with ${scoredPredictions} predictions scored.`}
-          url={`${BASE_URL}/models/${id}`}
-          breadcrumb={[
-            { name: 'Home', url: BASE_URL },
-            { name: 'Leaderboard', url: `${BASE_URL}/leaderboard` },
-            { name: model.displayName, url: `${BASE_URL}/models/${id}` },
-          ]}
         />
 
         {/* Breadcrumbs */}
