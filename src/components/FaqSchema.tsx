@@ -8,9 +8,12 @@ interface FaqSchemaProps {
  * FAQ Schema Component
  * Injects FAQPage JSON-LD schema for rich snippets in search results
  * Used on pages with frequently asked questions
+ *
+ * Google recommends minimum 2 questions for FAQ rich results eligibility
  */
 export function FaqSchema({ faqs }: FaqSchemaProps) {
-  if (!faqs || faqs.length === 0) {
+  // Google recommends minimum 2 questions for FAQ rich results
+  if (!faqs || faqs.length < 2) {
     return null;
   }
 

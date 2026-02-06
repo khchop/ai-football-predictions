@@ -1,17 +1,19 @@
 /**
  * WebPageSchema Component
- * 
+ *
  * Renders a JSON-LD WebPage schema for SEO on dynamic pages
  * Helps Google understand page hierarchy and purpose
- * 
+ *
  * Usage:
- * <WebPageSchema 
+ * <WebPageSchema
  *   name="Page Title"
  *   description="Page description"
  *   url="https://kroam.xyz/page"
  *   breadcrumb={[{ name: "Home", url: "..." }, ...]}
  * />
  */
+
+import { WEBSITE_ID } from '@/lib/seo/schema/root';
 
 interface Breadcrumb {
   name: string;
@@ -41,11 +43,7 @@ export function WebPageSchema({
     "name": name,
     "description": description,
     "url": url,
-    "isPartOf": {
-      "@type": "WebSite",
-      "name": "kroam.xyz",
-      "url": "https://kroam.xyz",
-    },
+    "isPartOf": { "@id": WEBSITE_ID },
   };
 
   if (datePublished) {

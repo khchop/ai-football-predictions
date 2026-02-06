@@ -1,3 +1,8 @@
+/**
+ * @deprecated This component is superseded by MatchPageSchema.tsx which uses @graph pattern.
+ * Kept for reference but not actively used in the codebase.
+ */
+
 import type { Match } from '@/lib/db/schema';
 
 interface SportsEventSchemaProps {
