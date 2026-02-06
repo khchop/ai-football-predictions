@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 44 — Foundation (Redirects, Canonicals & Index Pages)
-Plan: 02 of 3
-Status: In progress
-Last activity: 2026-02-06 — Completed 44-02-PLAN.md (redirect consolidation)
+Plan: 03 of 3
+Status: Phase complete
+Last activity: 2026-02-06 — Completed 44-03-PLAN.md (index pages)
 
-Progress: [██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 17% (2 plans complete)
+Progress: [█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 25% (3 plans complete)
 
 ## Milestone History
 
@@ -47,6 +47,9 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 44-02: Use x-forwarded-proto header for HTTP detection in Edge Runtime
 - 44-02: Return 410 Gone (not 404) for permanently removed /matches/UUID
 - 44-02: Cache redirect responses for 1 year (max-age=31536000)
+- 44-03: PPR over ISR - removed explicit revalidate exports for cacheComponents compatibility
+- 44-03: Models page uses dynamic metadata (generateMetadata) to include accurate model count
+- 44-03: Competition grouping by category (European, Domestic, International)
 
 ### Pending Todos
 
@@ -69,7 +72,7 @@ None — roadmap ready, starting Phase 44.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 44-02-PLAN.md
+Stopped at: Completed 44-03-PLAN.md (Phase 44 complete)
 Resume file: None
 
 **Platform status:**
@@ -79,4 +82,4 @@ Resume file: None
 - 208 requirements validated (v1.0-v2.5)
 
 ---
-*Last updated: 2026-02-06 after completing 44-02-PLAN.md*
+*Last updated: 2026-02-06 after completing 44-03-PLAN.md*
