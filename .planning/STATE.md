@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 ## Current Position
 
-Phase: 49 of 52 (Pipeline Scheduling Fixes) — COMPLETE
-Plan: All plans complete
-Status: Phase 49 verified, ready for Phase 50
-Last activity: 2026-02-06 — Phase 49 completed and verified (all 5 PIPE requirements)
+Phase: 50 of 52 (Settlement Investigation & Recovery) — IN PROGRESS
+Plan: 1 of 4 complete
+Status: Plan 50-01 complete - investigation script and scoring worker fix ready
+Last activity: 2026-02-06 — Completed 50-01-PLAN.md (2 tasks, 2 commits)
 
-Progress: [█████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 25% (1/4 phases)
+Progress: [██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 30% (1.25/4 phases)
 
 ## Milestone History
 
@@ -48,7 +48,7 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 48-02: TTFB baseline established: 50-73ms across all page types (well under 2s target)
 - 48-02: Use Host header for hostname in Edge Runtime (request.url.hostname can be 'localhost')
 
-**Phase 49 (v2.7 - latest):**
+**Phase 49 (v2.7):**
 - 49-01: Remove kickoff <= now early exit - prevents catch-up from working
 - 49-01: Use match status (finished/cancelled/postponed) as scheduling guard instead
 - 49-01: Preserve existing shouldRun logic (kickoff > now) for pre-match vs live job distinction
@@ -57,6 +57,12 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 49-02: Widen lineups/predictions windows to 12h (was 2h) to catch recently missed matches
 - 49-02: Chain validation enforced via DB query joins (analysis → lineups → predictions)
 - 49-02: Added chain validation logging to show dependency flow
+
+**Phase 50 (v2.7 - latest):**
+- 50-01: Use favoriteTeamName field to detect if analysis exists (reliable indicator from API-Football)
+- 50-01: Throw error for retry when analysis exists but predictions don't (upstream pipeline issue)
+- 50-01: Skip gracefully when no analysis exists (expected for old/imported matches)
+- 50-01: Fixed schema error in getFinishedMatchesWithZeroPredictions (removed non-existent referee field)
 
 **v2.7 Roadmap:**
 - Phase 49: Pipeline Scheduling Fixes (PIPE-01 to PIPE-05)
@@ -71,12 +77,13 @@ None.
 ### Blockers/Concerns
 
 **v2.7 Issues (from investigation):**
-- 43 failed settlement jobs in production need investigation
+- 43 failed settlement jobs ready for investigation (script at scripts/investigate-settlement-failures.ts)
 - ~~Pipeline not scheduling analysis/predictions for existing matches after restart~~ FIXED (49-01)
-- Last 7 days of matches may be missing predictions entirely (need backfill)
+- Last 7 days of matches may be missing predictions entirely (need backfill in 51-01)
 - ~~Root cause: scheduleMatchJobs() skips matches where kickoff <= now (line 113 of scheduler.ts)~~ FIXED (49-01)
 - ~~Root cause: Fixtures worker only schedules for isNewMatch (line 90)~~ FIXED (49-01)
 - ~~Backfill windows too narrow (12h for analysis, 2h for predictions)~~ FIXED (49-02)
+- ~~Scoring worker silently skips zero-prediction matches (can't distinguish retry vs skip)~~ FIXED (50-01)
 
 ### Quick Tasks Completed
 
@@ -92,18 +99,18 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-06T21:30:00Z
-Stopped at: Phase 49 complete and verified
+Last session: 2026-02-06T21:44:48Z
+Stopped at: Completed 50-01-PLAN.md (investigation script + scoring worker fix)
 Resume file: None
 
 **Platform status:**
 - 17 leagues operational
 - 42 active models (29 Together + 13 Synthetic)
 - 0 disabled models (all 6 previously disabled models re-enabled)
-- 253 requirements validated (v1.0-v2.6 + PIPE-01 through PIPE-05)
-- 15 remaining requirements for v2.7 (SETTLE, RETRO, MON)
+- 255 requirements validated (v1.0-v2.6 + PIPE-01 through PIPE-05 + SETTLE-01, SETTLE-02)
+- 13 remaining requirements for v2.7 (SETTLE-03/04, RETRO, MON)
 
-**Next action:** Plan and execute Phase 50 (Settlement Investigation & Recovery)
+**Next action:** Execute Phase 50 plans 02-04 (DLQ retry, backfill, monitoring)
 
 ---
-*Last updated: 2026-02-06 after Phase 49 completed and verified*
+*Last updated: 2026-02-06 after Phase 50-01 completed*
