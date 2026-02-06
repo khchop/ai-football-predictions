@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 46 — Content Tags & Meta Optimization
-Plan: 1/2 complete (Wave 1: Plans 01-02 parallel execution)
-Status: In progress — Plan 02 complete
-Last activity: 2026-02-06 — Completed 46-02-PLAN.md (OG Image Dark Theme)
+Plan: 2/2 complete
+Status: Phase complete — all plans executed
+Last activity: 2026-02-06 — Completed 46-01-PLAN.md (Metadata & H1 Standardization)
 
-Progress: [██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 40% (phase 46 of 44-48 in progress)
+Progress: [██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 41% (phase 46 of 44-48 complete)
 
 ## Milestone History
 
@@ -71,6 +71,14 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 45-04: Build fails on FAIL (UUID URLs, bad slugs, missing data), succeeds on warnings
 
 **Phase 46 (v2.6):**
+- 46-01: Centralized metadata builders (buildMatchTitle, buildLeagueTitle, buildModelTitle, buildGenericTitle + 4 description builders)
+- 46-01: Title suffix drops " | Kroam" when >60 chars instead of abbreviating entity names
+- 46-01: enforceDescriptionLength() pads short descriptions to 100-160 char range
+- 46-01: Updated MAX_META_DESCRIPTION_LENGTH from 155 to 160, added MIN_DESCRIPTION_LENGTH = 100
+- 46-01: Updated branding from 'BettingSoccer'/'kroam.xyz' to 'Kroam' across all site metadata
+- 46-01: Updated model count from 29/35 to 42 in all metadata strings
+- 46-01: All pages have og:image URLs wired to /api/og/* routes
+- 46-01: Standardized H1 tags ("{League} Predictions", "{Model} Football Predictions")
 - 46-02: All OG images use dark navy/charcoal gradient (#1a1a2e → #0f3460) with light text
 - 46-02: Updated branding from "kroam.xyz" to "Kroam.xyz" across all OG images
 - 46-02: Created generic fallback OG route (/api/og/generic) with query param customization
@@ -83,7 +91,7 @@ None.
 
 ### Blockers/Concerns
 
-None — Plan 02 complete, awaiting Plan 01 completion.
+None — Phase 46 complete. Ready for Phase 47 or next milestone.
 
 ### Quick Tasks Completed
 
@@ -98,14 +106,14 @@ None — Plan 02 complete, awaiting Plan 01 completion.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 46-02-PLAN.md (OG Image Dark Theme & Match Pages)
+Stopped at: Completed 46-01-PLAN.md (Metadata & H1 Standardization) — Phase 46 complete
 Resume file: None
 
 **Platform status:**
 - 17 leagues operational
 - 42 active models (29 Together + 13 Synthetic)
 - 0 disabled models (all 6 previously disabled models re-enabled)
-- 229 requirements validated (v1.0-v2.5 + 11 from Phase 44 + 10 from Phase 45)
+- 237 requirements validated (v1.0-v2.5 + 11 from Phase 44 + 10 from Phase 45 + 8 from Phase 46)
 
 ---
-*Last updated: 2026-02-06 after 46-02 complete*
+*Last updated: 2026-02-06 after 46-01 complete*
