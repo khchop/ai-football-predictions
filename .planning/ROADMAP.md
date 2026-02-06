@@ -412,7 +412,12 @@ Plans:
   2. /matches/UUID redirect responds within 500ms
   3. Re-audit with Ahrefs shows site health score >90
   4. Zero critical or high-severity SEO errors remaining
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 48-01-PLAN.md — Add Pass 6 TTFB measurement to audit script + parallelize match metadata queries
+- [ ] 48-02-PLAN.md — Production TTFB profiling, optimization, and pre-Ahrefs spot-checks
+- [ ] 48-03-PLAN.md — Ahrefs audit verification and issue cleanup
 
 ## Progress
 
@@ -469,7 +474,7 @@ Phases execute in numeric order: 44 -> 45 -> 46 -> 47 -> 48
 | 45. Sitemap & Internal Linking | v2.6 | 4/4 | Complete | 2026-02-06 |
 | 46. Content Tags & Meta Optimization | v2.6 | 3/3 | Complete | 2026-02-06 |
 | 47. Structured Data Validation | v2.6 | 4/4 | Complete | 2026-02-06 |
-| 48. Performance & Verification | v2.6 | 0/TBD | Not started | - |
+| 48. Performance & Verification | v2.6 | 0/3 | Not started | - |
 
 ---
-*Last updated: 2026-02-06 after Phase 47 complete*
+*Last updated: 2026-02-06 after Phase 48 planned*
