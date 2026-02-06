@@ -172,6 +172,10 @@ export default async function MatchPage({ params }: MatchPageProps) {
       />
       <Breadcrumbs items={breadcrumbs} />
 
+      <h1 className="text-2xl md:text-3xl font-bold text-center">
+        {matchData.homeTeam} vs {matchData.awayTeam} Prediction
+      </h1>
+
       <MatchDataProvider
         match={matchData}
         competition={competition}
