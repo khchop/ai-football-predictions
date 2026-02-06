@@ -25,24 +25,24 @@ export const OG_TEMPLATES: Record<MatchStatus, OGTemplateConfig> = {
   upcoming: {
     name: 'upcoming',
     background: {
-      gradient: 'linear-gradient(to bottom right, #1f4037, #99b993)',
+      gradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
       angle: 135,
     },
-    textColor: '#ffffff',
-    accentColor: '#4ade80',
+    textColor: '#e0e0e0',
+    accentColor: '#60a5fa',
     badge: {
       text: 'Predictions Open',
-      textColor: '#ffffff',
-      background: 'rgba(74, 222, 128, 0.2)',
+      textColor: '#e0e0e0',
+      background: 'rgba(96, 165, 250, 0.2)',
     },
   },
   live: {
     name: 'live',
     background: {
-      gradient: 'linear-gradient(to bottom right, #2d1f3d, #1a1a2e)',
+      gradient: 'linear-gradient(135deg, #1a1a2e 0%, #1e2a3a 50%, #0f3460 100%)',
       angle: 135,
     },
-    textColor: '#ffffff',
+    textColor: '#e0e0e0',
     accentColor: '#ef4444',
     statusIndicator: {
       text: '● LIVE',
@@ -53,11 +53,11 @@ export const OG_TEMPLATES: Record<MatchStatus, OGTemplateConfig> = {
   finished: {
     name: 'finished',
     background: {
-      gradient: 'linear-gradient(to bottom right, #1a1a2e, #16213e)',
+      gradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
       angle: 135,
     },
-    textColor: '#ffffff',
-    accentColor: '#fbbf24',
+    textColor: '#e0e0e0',
+    accentColor: '#60a5fa',
     statusIndicator: {
       text: 'FINAL',
       textColor: '#1a1a2e',

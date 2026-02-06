@@ -320,7 +320,7 @@ export default async function Image({ params }: Props) {
                 opacity: 0.7,
               }}
             >
-              BettingSoccer
+              Kroam.xyz
             </span>
           </div>
         </div>

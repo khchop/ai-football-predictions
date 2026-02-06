@@ -13,14 +13,14 @@ export async function GET(request: Request) {
       <div
         style={{
           fontSize: 48,
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
           width: '100%',
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'white',
+          color: '#e0e0e0',
           fontFamily: 'system-ui, sans-serif',
           padding: '40px',
         }}
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
           </div>
         </div>
 
-        {/* kroam.xyz branding */}
+        {/* Kroam.xyz branding */}
         <div
           style={{
             position: 'absolute',
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
             opacity: 0.7,
           }}
         >
-          kroam.xyz
+          Kroam.xyz
         </div>
 
         {/* AI Predictions badge - bottom right */}
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
             position: 'absolute',
             bottom: '30px',
             right: '30px',
-            background: 'rgba(168, 85, 247, 0.4)',
+            background: 'rgba(96, 165, 250, 0.2)',
             padding: '10px 20px',
             borderRadius: '8px',
             fontSize: '18px',
