@@ -1,18 +1,28 @@
 import { BASE_URL } from '@/lib/seo/constants';
-import { getDb, models } from '@/lib/db';
+import { getDb, models, predictions } from '@/lib/db';
+import { eq, sql } from 'drizzle-orm';
 
 
 export async function GET(): Promise<Response> {
   const db = getDb();
   const today = new Date().toISOString().split('T')[0];
 
-  const allModels = await db
-    .select({ id: models.id })
-    .from(models);
+  // Get most recent prediction timestamp per model for accurate lastmod
+  const modelsWithLastmod = await db
+    .select({
+      id: models.id,
+      lastPrediction: sql<string>`MAX(${predictions.createdAt})`.as('last_prediction'),
+    })
+    .from(models)
+    .leftJoin(predictions, eq(models.id, predictions.modelId))
+    .where(eq(models.active, true))
+    .groupBy(models.id);
 
-  const urls = allModels.map(model => ({
+  const urls = modelsWithLastmod.map(model => ({
     url: `${BASE_URL}/models/${model.id}`,
-    lastmod: today,
+    lastmod: model.lastPrediction
+      ? new Date(model.lastPrediction).toISOString().split('T')[0]
+      : today,
     changefreq: 'daily',
     priority: 0.7,
   }));

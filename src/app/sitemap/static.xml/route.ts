@@ -16,6 +16,8 @@ export async function GET(): Promise<Response> {
     { url: `${BASE_URL}/about`, lastmod: today, changefreq: 'monthly', priority: 0.8 },
     { url: `${BASE_URL}/leaderboard`, lastmod: today, changefreq: 'daily', priority: 0.9 },
     { url: `${BASE_URL}/matches`, lastmod: today, changefreq: 'hourly', priority: 0.9 },
+    { url: `${BASE_URL}/models`, lastmod: today, changefreq: 'daily', priority: 0.9 },
+    { url: `${BASE_URL}/leagues`, lastmod: today, changefreq: 'daily', priority: 0.9 },
     { url: `${BASE_URL}/blog`, lastmod: today, changefreq: 'daily', priority: 0.8 },
     { url: `${BASE_URL}/methodology`, lastmod: today, changefreq: 'monthly', priority: 0.7 },
   ];
