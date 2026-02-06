@@ -435,13 +435,13 @@ Plans:
   1. After server restart, fixtures worker schedules analysis/predictions/lineups for matches within 48h (not just new matches)
   2. Backfill worker identifies matches with no delayed/active BullMQ jobs and re-schedules them
   3. Backfill checks 48h window for missing analysis (not 12h), 12h window for missing predictions (not 2h)
-  4. Matches missing any step in analysis → lineups → predictions chain are completed (not just individual steps)
+  4. Matches missing any step in analysis -> lineups -> predictions chain are completed (not just individual steps)
   5. All matches within 48h of kickoff have correct delayed jobs visible in Bull Board queue metrics
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 49-01: [TBD during plan-phase]
-- [ ] 49-02: [TBD during plan-phase]
+- [ ] 49-01-PLAN.md — Fix scheduler early exit and fixtures worker existing-match scheduling
+- [ ] 49-02-PLAN.md — Widen backfill time windows and add chain validation
 
 #### Phase 50: Settlement Investigation & Recovery
 **Goal**: All 43 failed settlement jobs investigated, root cause fixed, and matches re-settled with correct scoring
@@ -495,7 +495,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 49 → 50 → 51 → 52
+Phases execute in numeric order: 49 -> 50 -> 51 -> 52
 (Phase 50 and 52 can run in parallel after Phase 49)
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -548,10 +548,10 @@ Phases execute in numeric order: 49 → 50 → 51 → 52
 | 46. Content Tags & Meta Optimization | v2.6 | 3/3 | Complete | 2026-02-06 |
 | 47. Structured Data Validation | v2.6 | 4/4 | Complete | 2026-02-06 |
 | 48. Performance & Verification | v2.6 | 3/3 | Complete | 2026-02-06 |
-| 49. Pipeline Scheduling Fixes | v2.7 | 0/TBD | Not started | - |
+| 49. Pipeline Scheduling Fixes | v2.7 | 0/2 | Not started | - |
 | 50. Settlement Investigation & Recovery | v2.7 | 0/TBD | Not started | - |
 | 51. Retroactive Backfill Script | v2.7 | 0/TBD | Not started | - |
 | 52. Monitoring & Observability | v2.7 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-06 after v2.7 roadmap created*
+*Last updated: 2026-02-06 after Phase 49 planning completed*
