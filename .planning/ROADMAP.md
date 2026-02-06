@@ -473,8 +473,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 51-01-PLAN.md — Add allowRetroactive flag to worker types and analysis/predictions workers
-- [ ] 51-02-PLAN.md — Create retroactive backfill script with gap detection and job orchestration
+- [x] 51-01-PLAN.md — Add allowRetroactive flag to worker types and analysis/predictions workers
+- [x] 51-02-PLAN.md — Create retroactive backfill script with gap detection and job orchestration
 
 #### Phase 52: Monitoring & Observability
 **Goal**: Pipeline health monitoring detects matches approaching kickoff without scheduled jobs before they become gaps
@@ -550,8 +550,8 @@ Phases execute in numeric order: 49 -> 50 -> 51 -> 52
 | 48. Performance & Verification | v2.6 | 3/3 | Complete | 2026-02-06 |
 | 49. Pipeline Scheduling Fixes | v2.7 | 2/2 | Complete | 2026-02-06 |
 | 50. Settlement Investigation & Recovery | v2.7 | 2/2 | Complete | 2026-02-06 |
-| 51. Retroactive Backfill Script | v2.7 | 0/2 | Not started | - |
+| 51. Retroactive Backfill Script | v2.7 | 2/2 | Complete | 2026-02-06 |
 | 52. Monitoring & Observability | v2.7 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-06 after Phase 51 planned (2 plans in 2 waves)*
+*Last updated: 2026-02-06 after Phase 51 complete (2 plans executed, 6/6 RETRO requirements verified)*

@@ -24,12 +24,12 @@ Requirements for v2.7 milestone. Each maps to roadmap phases.
 
 ### Retroactive Backfill
 
-- [ ] **RETRO-01**: Script identifies all matches from last 7 days missing predictions
-- [ ] **RETRO-02**: Script generates analysis data retroactively for matches missing it (using API-Football historical data)
-- [ ] **RETRO-03**: Script generates predictions using pre-match context sent to all 42 LLMs
-- [ ] **RETRO-04**: Finished match predictions are scored against actual results immediately after generation
-- [ ] **RETRO-05**: Live match predictions are generated with available pre-match data (scored when match finishes)
-- [ ] **RETRO-06**: Script is idempotent — running it twice doesn't create duplicate predictions
+- [x] **RETRO-01**: Script identifies all matches from last 7 days missing predictions
+- [x] **RETRO-02**: Script generates analysis data retroactively for matches missing it (using API-Football historical data)
+- [x] **RETRO-03**: Script generates predictions using pre-match context sent to all 42 LLMs
+- [x] **RETRO-04**: Finished match predictions are scored against actual results immediately after generation
+- [x] **RETRO-05**: Live match predictions are generated with available pre-match data (scored when match finishes)
+- [x] **RETRO-06**: Script is idempotent — running it twice doesn't create duplicate predictions
 
 ### Monitoring & Observability
 
@@ -78,12 +78,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SETTLE-02 | Phase 50 | Complete |
 | SETTLE-03 | Phase 50 | Complete |
 | SETTLE-04 | Phase 50 | Complete |
-| RETRO-01 | Phase 51 | Pending |
-| RETRO-02 | Phase 51 | Pending |
-| RETRO-03 | Phase 51 | Pending |
-| RETRO-04 | Phase 51 | Pending |
-| RETRO-05 | Phase 51 | Pending |
-| RETRO-06 | Phase 51 | Pending |
+| RETRO-01 | Phase 51 | Complete |
+| RETRO-02 | Phase 51 | Complete |
+| RETRO-03 | Phase 51 | Complete |
+| RETRO-04 | Phase 51 | Complete |
+| RETRO-05 | Phase 51 | Complete |
+| RETRO-06 | Phase 51 | Complete |
 | MON-01 | Phase 52 | Pending |
 | MON-02 | Phase 52 | Pending |
 | MON-03 | Phase 52 | Pending |
@@ -99,4 +99,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-06*
-*Last updated: 2026-02-06 after Phase 50 completed (SETTLE-02, SETTLE-03, SETTLE-04 verified; SETTLE-01 pending production run)*
+*Last updated: 2026-02-06 after Phase 51 completed (RETRO-01 through RETRO-06 verified)*
