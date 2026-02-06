@@ -170,7 +170,7 @@ export async function setupRepeatableJobs(): Promise<void> {
   await registerRepeatableJob(
     backfillQueue,
     JOB_TYPES.BACKFILL_MISSING,
-    { manual: false, hoursAhead: 12 },
+    { manual: false, hoursAhead: 48 },  // Was 12, now 48 for full coverage
     {
       repeat: {
         pattern: '5 * * * *', // Every hour at :05 (offset from fixtures at :00)
@@ -225,7 +225,7 @@ export async function setupRepeatableJobs(): Promise<void> {
      
      await backfillQueue.add(
        JOB_TYPES.BACKFILL_MISSING,
-       { manual: false, hoursAhead: 24 }, // Look further ahead on startup
+       { manual: false, hoursAhead: 48 },  // Was 24, now 48 for full coverage
        {
          delay: 5000, // 5 second delay to let workers start
          jobId: STARTUP_BACKFILL_JOB_ID, // Fixed ID prevents accumulation on restart

@@ -63,6 +63,11 @@ export function createBackfillWorker() {
       
       const MAX_ERRORS = 100;
       
+      // Track actual windows used for debugging
+      const analysisHoursAhead = Math.max(hoursAhead, 48); // ALWAYS check full 48h window for analysis
+      const lineupsHoursAhead = 12; // Wider window for lineups (not 2h)
+      const predictionsHoursAhead = 12; // Wider window for predictions (not 2h)
+
       const results = {
         analysisTriggered: 0,
         oddsTriggered: 0,
@@ -70,6 +75,7 @@ export function createBackfillWorker() {
         predictionsTriggered: 0,
         scoringsTriggered: 0,
         errors: [] as string[],
+        windows: { analysis: analysisHoursAhead, lineups: lineupsHoursAhead, predictions: predictionsHoursAhead },
       };
       
        // Helper to add errors with cap
@@ -82,8 +88,8 @@ export function createBackfillWorker() {
        };
       
       try {
-        // 1. Find matches missing analysis (check full range)
-        const missingAnalysis = await getMatchesMissingAnalysis(hoursAhead);
+        // 1. Find matches missing analysis (ALWAYS check full 48h window)
+        const missingAnalysis = await getMatchesMissingAnalysis(analysisHoursAhead);
         
         for (const match of missingAnalysis) {
           if (!match.externalId) continue;
@@ -137,7 +143,12 @@ export function createBackfillWorker() {
             }
           }
         }
-        
+
+        // Log chain status for debugging - lineups/predictions will be backfilled after analysis completes
+        if (results.analysisTriggered > 0) {
+          log.info({ analysisTriggered: results.analysisTriggered }, 'Analysis jobs triggered - lineups/predictions will be backfilled on next cycle after analysis completes');
+        }
+
         // 2. Find matches missing odds (has analysis but no odds, next 6h)
         const missingOdds = await getMatchesMissingOdds(6);
         
@@ -194,8 +205,8 @@ export function createBackfillWorker() {
           }
         }
         
-        // 3. Find matches missing lineups (next 2h, has analysis)
-        const missingLineups = await getMatchesMissingLineups(2);
+        // 3. Find matches missing lineups (12h window, not 2h)
+        const missingLineups = await getMatchesMissingLineups(lineupsHoursAhead);
         
         for (const match of missingLineups) {
           if (!match.externalId) continue;
@@ -249,8 +260,8 @@ export function createBackfillWorker() {
           }
         }
         
-        // 4. Find matches missing predictions (next 2h, has lineups, no predictions)
-        const missingPredictions = await getMatchesMissingPredictions(2);
+        // 4. Find matches missing predictions (12h window, not 2h)
+        const missingPredictions = await getMatchesMissingPredictions(predictionsHoursAhead);
         
         for (const match of missingPredictions) {
           try {
