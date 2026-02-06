@@ -39,7 +39,8 @@ export function middleware(request: NextRequest) {
 
   // 2. Detect all redirect conditions in ONE pass
   const url = new URL(request.url);
-  const hostname = url.hostname;
+  // Use Host header for reliable hostname in Edge Runtime (request.url may have localhost)
+  const hostname = request.headers.get('host') || url.hostname;
 
   // Check www subdomain
   const hasWww = hostname.startsWith('www.');
