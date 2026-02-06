@@ -536,6 +536,60 @@ export async function getFinishedMatches(limit: number = 100) {
     .limit(limit);
 }
 
+/**
+ * Get finished matches with zero predictions from the last N days
+ * Used to identify matches that may have been missed by the prediction pipeline
+ */
+export async function getFinishedMatchesWithZeroPredictions(daysBehind: number = 7): Promise<Match[]> {
+  const db = getDb();
+
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysBehind);
+  const cutoffIso = cutoffDate.toISOString();
+
+  // Find finished matches with scores but no predictions
+  const result = await db
+    .select({ match: matches })
+    .from(matches)
+    .leftJoin(predictions, eq(predictions.matchId, matches.id))
+    .where(
+      and(
+        eq(matches.status, 'finished'),
+        gte(matches.kickoffTime, cutoffIso),
+        isNotNull(matches.homeScore),
+        isNotNull(matches.awayScore)
+      )
+    )
+    .groupBy(
+      matches.id,
+      matches.competitionId,
+      matches.homeTeam,
+      matches.awayTeam,
+      matches.homeScore,
+      matches.awayScore,
+      matches.kickoffTime,
+      matches.status,
+      matches.venue,
+      matches.externalId,
+      matches.slug,
+      matches.createdAt,
+      matches.updatedAt,
+      matches.matchMinute,
+      matches.quotaHome,
+      matches.quotaDraw,
+      matches.quotaAway,
+      matches.homeTeamLogo,
+      matches.awayTeamLogo,
+      matches.round,
+      matches.matchday,
+      matches.isUpset
+    )
+    .having(sql`COUNT(${predictions.id}) = 0`)
+    .orderBy(desc(matches.kickoffTime));
+
+  return result.map(r => r.match);
+}
+
 export async function updateMatchResult(
   matchId: string,
   homeScore: number,

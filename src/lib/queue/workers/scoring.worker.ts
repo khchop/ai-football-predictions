@@ -20,7 +20,8 @@ import {
   getMatchById,
   getPredictionsForMatch,
   updateMatchQuotas,
-  scorePredictionsTransactional
+  scorePredictionsTransactional,
+  getMatchAnalysisByMatchId
 } from '@/lib/db/queries';
 import { calculateQuotas } from '@/lib/utils/scoring';
 import { invalidateMatchCaches } from '@/lib/cache/redis';
@@ -62,8 +63,26 @@ export function createScoringWorker() {
         const predictions = await getPredictionsForMatch(matchId);
 
         if (predictions.length === 0) {
-          log.info(`No predictions found for match ${matchId}`);
-          return { skipped: true, reason: 'no_predictions' };
+          // Check if match was analyzed - if so, predictions SHOULD exist (pipeline failure)
+          const analysisData = await getMatchAnalysisByMatchId(matchId);
+
+          if (analysisData && analysisData.favoriteTeamName) {
+            // Match was analyzed but has no predictions - upstream pipeline failure
+            // Throw to trigger BullMQ retry with exponential backoff
+            log.warn({ matchId }, 'Match has analysis but zero predictions - upstream pipeline issue');
+            throw new Error(
+              `Settlement deferred: match ${matchId} has analysis but zero predictions. ` +
+              `Prediction worker may not have run yet.`
+            );
+          } else {
+            // Match never analyzed - won't have predictions (expected for old/imported matches)
+            log.info({ matchId }, 'Match skipped settlement - no analysis or predictions (by design)');
+            return {
+              skipped: true,
+              reason: 'no_analysis_or_predictions',
+              expected: true,
+            };
+          }
         }
 
         log.info(`Found ${predictions.length} predictions`);
