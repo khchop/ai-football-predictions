@@ -33,12 +33,24 @@ export interface ArticleData {
  * Generate SportsEvent schema for match pages
  */
 export function generateSportsEventSchema(data: SportsEventData) {
+  // Map status to correct EventStatus
+  let eventStatus = 'https://schema.org/EventScheduled';
+  if (data.status === 'finished') {
+    eventStatus = 'https://schema.org/EventCompleted';
+  } else if (data.status === 'live') {
+    eventStatus = 'https://schema.org/EventInProgress';
+  } else if (data.status === 'postponed') {
+    eventStatus = 'https://schema.org/EventPostponed';
+  } else if (data.status === 'cancelled') {
+    eventStatus = 'https://schema.org/EventCancelled';
+  }
+
   const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "SportsEvent",
     "name": `${data.homeTeam} vs ${data.awayTeam}`,
     "startDate": data.kickoffTime,
-    "eventStatus": data.status === 'finished' ? 'https://schema.org/EventScheduled' : 'https://schema.org/EventScheduled',
+    "eventStatus": eventStatus,
     "sport": "Football",
     "homeTeam": {
       "@type": "SportsTeam",
@@ -64,12 +76,12 @@ export function generateSportsEventSchema(data: SportsEventData) {
     schema.location = {
       "@type": "Place",
       "name": data.venue,
+      "address": data.venue, // Google Rich Results requires address
     };
   }
 
-  if (data.homeScore !== null && data.homeScore !== undefined && 
+  if (data.homeScore !== null && data.homeScore !== undefined &&
       data.awayScore !== null && data.awayScore !== undefined) {
-    schema.eventStatus = "https://schema.org/EventCompleted";
     schema.homeTeamScore = data.homeScore;
     schema.awayTeamScore = data.awayScore;
   }
@@ -102,9 +114,10 @@ export function generateOrganizationSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": "https://kroam.xyz#organization",
     "name": "kroam.xyz",
     "url": "https://kroam.xyz",
-    "description": "AI football prediction platform comparing 30 AI models on match predictions",
+    "description": "AI football prediction platform comparing 42 AI models on match predictions",
     "logo": "https://kroam.xyz/logo.png",
   };
 }
@@ -116,6 +129,7 @@ export function generateArticleSchema(data: ArticleData) {
   const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Article",
+    "@id": data.url + '#article',
     "headline": data.title,
     "description": data.description,
     "datePublished": data.publishedAt,

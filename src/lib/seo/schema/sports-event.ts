@@ -4,10 +4,16 @@ import type { MatchSeoData, MatchStatus } from '../types';
 import { isMatchFinished, isMatchLive, isMatchUpcoming } from '../types';
 
 // Map match status to schema.org EventStatus
-// Note: schema.org only has EventScheduled for all events - no EventCompleted
-// Finished matches signal completion via scores (homeTeamScore/awayTeamScore properties)
-function mapEventStatus(status: MatchStatus): 'https://schema.org/EventScheduled' {
-  return 'https://schema.org/EventScheduled';
+function mapEventStatus(status: MatchStatus): string {
+  switch (status) {
+    case 'finished':
+      return 'https://schema.org/EventCompleted';
+    case 'live':
+      return 'https://schema.org/EventInProgress';
+    case 'upcoming':
+    default:
+      return 'https://schema.org/EventScheduled';
+  }
 }
 
 export function buildSportsEventSchema(match: MatchSeoData, competitionId?: string): SportsEvent {
@@ -19,7 +25,7 @@ export function buildSportsEventSchema(match: MatchSeoData, competitionId?: stri
     '@id': matchUrl,
     name: `${match.homeTeam} vs ${match.awayTeam}`,
     startDate: match.startDate,
-    eventStatus: mapEventStatus(match.status),
+    eventStatus: mapEventStatus(match.status) as any, // schema-dts EventStatusType doesn't include all valid schema.org values
     location: {
       '@type': 'Place',
       name: match.venue ?? 'Unknown Venue',
@@ -60,16 +66,6 @@ export function buildSportsEventSchema(match: MatchSeoData, competitionId?: stri
     event.homeTeamScore = match.homeScore;
     // @ts-expect-error - schema-dts types don't include these, but they're valid schema.org properties
     event.awayTeamScore = match.awayScore;
-  }
-
-  // Add competition reference if provided
-  // Note: superEvent expects an Event, but we can use type assertion for valid schema.org usage
-  if (competitionId) {
-    // @ts-expect-error - schema-dts expects Event, but SportsOrganization is valid per schema.org docs
-    event.superEvent = {
-      '@type': 'SportsOrganization',
-      '@id': `${BASE_URL}/leagues/${competitionId}`,
-    };
   }
 
   return event;
