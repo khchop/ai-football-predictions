@@ -29,8 +29,6 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 21600; // 6 hours — league list rarely changes
-
 export default function LeaguesPage() {
   const europeanClub = getCompetitionsByCategory('club-europe');
   const domesticLeagues = getCompetitionsByCategory('club-domestic');

@@ -35,8 +35,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const revalidate = 3600; // 1 hour — model stats update after matches
-
 export default async function ModelsPage() {
   const stats = await getOverallStats();
   const modelCount = stats.activeModels;
