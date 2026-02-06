@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 
 ## Current Position
 
-Phase: 46 — Content Tags & Meta Optimization
-Plan: 3/3 complete
-Status: Phase verified and complete
-Last activity: 2026-02-06 — Phase 46 verified, H1 gap fixed, all 8 requirements confirmed
+Phase: 47 — Structured Data Validation
+Plan: 1/3 in progress
+Status: Plan 47-01 complete
+Last activity: 2026-02-06 — Completed 47-01-PLAN.md (root schema single source of truth)
 
-Progress: [███████████████████████████░░░░░░░░░░░░░░░░░░░] 60% (phase 46 of 44-48 complete)
+Progress: [███████████████████████████░░░░░░░░░░░░░░░░░░░] 60% (phase 47 plan 1 of 44-48 complete)
 
 ## Milestone History
 
@@ -91,13 +91,20 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 46-03: CollectionPage -> ItemList -> ListItem three-tier hierarchy for index pages
 - 46-03: Build-time HTML validation using cheerio to catch meta tag regressions
 
+**Phase 47 (v2.6):**
+- 47-01: Root schema module (ORGANIZATION_ID, WEBSITE_ID constants) provides single source of truth
+- 47-01: Root layout consolidated from 3 separate JSON-LD scripts to 1 @graph (Organization + WebSite + SoftwareApplication)
+- 47-01: Match pages reference root Organization/WebSite via @id (no duplication, 7 entities → 5 entities)
+- 47-01: Organization logo as ImageObject (not string) for Google Article publisher.logo validation
+- 47-01: Legacy graph.ts uses ORGANIZATION_ID reference instead of inline duplicate with old "bettingsoccer.com" branding
+
 ### Pending Todos
 
 None.
 
 ### Blockers/Concerns
 
-None — Phase 46 verified and complete. All 8 requirements confirmed (CTAG-01 through CTAG-06, INDEX-05, INDEX-06). Ready for Phase 47 (Structured Data Validation).
+None — Phase 47-01 complete. Root schema single source of truth established. Ready for 47-02 (SportsEvent/Article validation with build-time audit extension).
 
 ### Quick Tasks Completed
 
@@ -112,7 +119,7 @@ None — Phase 46 verified and complete. All 8 requirements confirmed (CTAG-01 t
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Phase 46 verified and complete — all gaps resolved, ready for Phase 47
+Stopped at: Completed 47-01-PLAN.md — root schema single source of truth established
 Resume file: None
 
 **Platform status:**
