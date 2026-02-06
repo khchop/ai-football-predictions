@@ -52,6 +52,10 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 44-03: Competition grouping by category (European, Domestic, International)
 
 **Phase 45 (v2.6):**
+- 45-01: getInternalUrl validates league slugs via getCompetitionById to enforce canonical short-form
+- 45-01: Sitemap lastmod uses MAX(updatedAt) from database rather than static today date
+- 45-01: Include all 17 leagues in sitemap (removed club-only filter)
+- 45-01: Models sitemap filters to active: true only
 - 45-02: Cross-linking widgets placed after "Performance by League", before "Related Models"
 - 45-02: RecentPredictionsWidget shows 10 most recent predictions ordered by kickoff DESC
 - 45-02: LeaguesCoveredWidget orders leagues by prediction count DESC
@@ -79,7 +83,7 @@ None — Phase 45 Plan 02 complete, ready for Plan 03 (match cross-linking).
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 45-02-PLAN.md (Model Cross-Linking Widgets)
+Stopped at: Completed 45-01-PLAN.md (Sitemap Hygiene & URL Helper)
 Resume file: None
 
 **Platform status:**
@@ -89,4 +93,4 @@ Resume file: None
 - 219 requirements validated (v1.0-v2.5 + 11 from Phase 44)
 
 ---
-*Last updated: 2026-02-06 after Phase 44 verified*
+*Last updated: 2026-02-06 after 45-01 complete*
