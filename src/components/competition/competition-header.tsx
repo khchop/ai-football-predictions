@@ -40,12 +40,12 @@ export async function CompetitionHeader({ competitionId, matchCount, nextMatchTi
             </div>
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
-                {displayName}
-                <span 
+                {displayName} Predictions
+                <span
                   className="text-xs px-2 py-0.5 rounded-full font-medium"
-                  style={{ 
-                    backgroundColor: `${color}20`, 
-                    color: color 
+                  style={{
+                    backgroundColor: `${color}20`,
+                    color: color
                   }}
                 >
                   {season}-{season + 1}

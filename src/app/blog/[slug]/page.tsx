@@ -32,6 +32,8 @@ import { inArray } from 'drizzle-orm';
 import { BASE_URL } from '@/lib/seo/constants';
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
 import { buildBlogBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
+import { buildGenericDescription, truncateWithEllipsis } from '@/lib/seo/metadata';
+import { MAX_TITLE_LENGTH } from '@/lib/seo/constants';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -95,22 +97,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     ogImageUrl = genericUrl.toString();
   }
 
+  const title = truncateWithEllipsis(post.metaTitle || post.title, MAX_TITLE_LENGTH);
+  const description = buildGenericDescription(post.metaDescription || post.excerpt || post.title);
+
   return {
-    title: post.metaTitle || post.title,
-    description: post.metaDescription || post.excerpt,
+    title,
+    description,
     keywords: post.keywords,
     alternates: {
       canonical: url,
     },
     openGraph: {
-      title: post.title,
+      title,
       description: ogDescription,
       type: 'article',
       publishedTime: post.publishedAt || undefined,
       url: url,
+      siteName: 'Kroam',
       images: [
         {
-          url: ogImageUrl,
+          url: `${BASE_URL}/api/og/generic?title=${encodeURIComponent(post.title)}`,
           width: 1200,
           height: 630,
           alt: post.title,
@@ -119,9 +125,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     twitter: {
       card: 'summary_large_image',
-      title: post.title,
+      title,
       description: ogDescription,
-      images: [ogImageUrl],
+      images: [`${BASE_URL}/api/og/generic?title=${encodeURIComponent(post.title)}`],
     },
   };
 }

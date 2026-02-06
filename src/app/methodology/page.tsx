@@ -3,24 +3,35 @@ import { Calculator, CheckCircle2, XCircle, TrendingUp, Sparkles, Target } from 
 import Link from 'next/link';
 
 import type { Metadata } from 'next';
+import { buildGenericTitle, buildGenericDescription } from '@/lib/seo/metadata';
+import { BASE_URL } from '@/lib/seo/constants';
 
 export const metadata: Metadata = {
-  title: 'How We Calculate Accuracy | kroam.xyz',
-  description: 'Understand how we measure AI prediction accuracy. Our methodology uses tendency points to calculate the percentage of correct match outcome predictions.',
+  title: buildGenericTitle('Prediction Methodology'),
+  description: buildGenericDescription('Understand how we measure AI prediction accuracy. Our methodology uses tendency points to calculate the percentage of correct match outcome predictions.'),
   alternates: {
-    canonical: 'https://kroam.xyz/methodology',
+    canonical: `${BASE_URL}/methodology`,
   },
   openGraph: {
-    title: 'Accuracy Calculation Methodology - kroam.xyz',
+    title: 'Prediction Methodology | Kroam',
     description: 'Learn how we calculate AI prediction accuracy using the tendency points system.',
-    url: 'https://kroam.xyz/methodology',
+    url: `${BASE_URL}/methodology`,
     type: 'website',
-    siteName: 'kroam.xyz',
+    siteName: 'Kroam',
+    images: [
+      {
+        url: `${BASE_URL}/api/og/generic?title=${encodeURIComponent('Prediction Methodology')}`,
+        width: 1200,
+        height: 630,
+        alt: 'Prediction Methodology',
+      },
+    ],
   },
   twitter: {
-    card: 'summary',
-    title: 'How We Calculate Accuracy',
+    card: 'summary_large_image',
+    title: 'Prediction Methodology | Kroam',
     description: 'Methodology for measuring AI football prediction performance',
+    images: [`${BASE_URL}/api/og/generic?title=${encodeURIComponent('Prediction Methodology')}`],
   },
 };
 

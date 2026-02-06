@@ -15,25 +15,27 @@ import type { Metadata } from 'next';
 import type { BlogPost } from '@/lib/db/schema';
 import { COMPETITIONS } from '@/lib/football/competitions';
 import { BlogListSkeleton } from '@/components/blog/blog-list-skeleton';
+import { buildGenericTitle, buildGenericDescription } from '@/lib/seo/metadata';
+import { BASE_URL } from '@/lib/seo/constants';
 
 export async function generateMetadata(): Promise<Metadata> {
   const stats = await getOverallStats();
   const modelCount = stats.activeModels;
 
   return {
-    title: 'AI Football Analysis Blog | kroam.xyz',
-    description: `AI-generated match reports, league roundups, and model performance analysis. Deep insights into football predictions from ${modelCount} AI models.`,
+    title: buildGenericTitle('AI Football Analysis Blog'),
+    description: buildGenericDescription(`AI-generated match reports, league roundups, and model performance analysis. Deep insights into football predictions from ${modelCount} AI models.`),
     alternates: {
-      canonical: 'https://kroam.xyz/blog',
+      canonical: `${BASE_URL}/blog`,
     },
     openGraph: {
-      title: 'AI Football Analysis Blog',
+      title: 'AI Football Analysis Blog | Kroam',
       description: 'Match reports, league roundups, and AI model performance analysis',
-      url: 'https://kroam.xyz/blog',
+      url: `${BASE_URL}/blog`,
       type: 'website',
-      siteName: 'kroam.xyz',
+      siteName: 'Kroam',
       images: [{
-        url: 'https://kroam.xyz/api/og/league?leagueName=AI+Analysis',
+        url: `${BASE_URL}/api/og/generic?title=${encodeURIComponent('AI Football Analysis Blog')}`,
         width: 1200,
         height: 630,
         alt: 'AI Football Analysis Blog',
@@ -41,8 +43,9 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: 'AI Football Analysis Blog',
+      title: 'AI Football Analysis Blog | Kroam',
       description: 'AI-generated insights into football predictions',
+      images: [`${BASE_URL}/api/og/generic?title=${encodeURIComponent('AI Football Analysis Blog')}`],
     },
   };
 }

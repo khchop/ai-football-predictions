@@ -4,28 +4,39 @@ import Link from 'next/link';
 
 import type { Metadata } from 'next';
 import { getOverallStats } from '@/lib/db/queries';
+import { buildGenericTitle, buildGenericDescription } from '@/lib/seo/metadata';
+import { BASE_URL } from '@/lib/seo/constants';
 
 export async function generateMetadata(): Promise<Metadata> {
   const stats = await getOverallStats();
   const modelCount = stats.activeModels;
 
   return {
-    title: 'About kroam.xyz | AI Football Prediction Platform',
-    description: `Learn how kroam.xyz compares ${modelCount} AI models predicting football matches. Understand the Kicktipp scoring system and how model rankings are calculated.`,
+    title: buildGenericTitle('About Kroam'),
+    description: buildGenericDescription(`Learn how Kroam compares ${modelCount} AI models predicting football matches. Understand the Kicktipp scoring system and how model rankings are calculated.`),
     alternates: {
-      canonical: 'https://kroam.xyz/about',
+      canonical: `${BASE_URL}/about`,
     },
     openGraph: {
-      title: 'About kroam.xyz - How AI Models Compete',
+      title: 'About Kroam - How AI Models Compete',
       description: `Discover how ${modelCount} AI models compete to predict football match outcomes and rankings.`,
-      url: 'https://kroam.xyz/about',
+      url: `${BASE_URL}/about`,
       type: 'website',
-      siteName: 'kroam.xyz',
+      siteName: 'Kroam',
+      images: [
+        {
+          url: `${BASE_URL}/api/og/generic?title=${encodeURIComponent('About Kroam')}`,
+          width: 1200,
+          height: 630,
+          alt: 'About Kroam',
+        },
+      ],
     },
     twitter: {
-      card: 'summary',
-      title: 'About kroam.xyz',
+      card: 'summary_large_image',
+      title: 'About Kroam',
       description: 'How AI football prediction models compete and earn points',
+      images: [`${BASE_URL}/api/og/generic?title=${encodeURIComponent('About Kroam')}`],
     },
   };
 }

@@ -13,6 +13,7 @@ import { generateFAQPageSchema } from '@/lib/seo/schemas';
 import { generateLeagueFAQs } from '@/lib/league/generate-league-faqs';
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
 import { buildLeagueBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
+import { buildLeagueTitle, buildLeagueDescription } from '@/lib/seo/metadata';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -39,22 +40,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const stats = competitionStats;
   const modelCount = overallStats.activeModels;
 
-  const shortName = abbreviateCompetition(competition.name);
-  const title = `${shortName} AI Predictions | ${modelCount} Models | kroam.xyz`;
-
-  // Dynamic description based on stats
-  const description = stats.finishedMatches > 0
-    ? `AI predictions for ${competition.name} from ${modelCount} models. ${stats.finishedMatches} matches analyzed with ${stats.avgGoalsPerMatch} avg goals. Track model accuracy and compare predictions.`
-    : `AI predictions for ${competition.name} from ${modelCount} models. Track accuracy, compare predictions, and see which AI performs best.`;
+  const title = buildLeagueTitle(competition.name);
+  const description = buildLeagueDescription(competition.name, modelCount);
 
   // Use canonical ID in URL, not the slug
   const url = `${BASE_URL}/leagues/${competition.id}`;
 
-  // OG image for competition with real stats
+  // OG image for competition
   const ogImageUrl = new URL(`${BASE_URL}/api/og/league`);
   ogImageUrl.searchParams.set('leagueName', competition.name);
-  ogImageUrl.searchParams.set('matchCount', String(stats.finishedMatches || 0));
-  ogImageUrl.searchParams.set('upcomingCount', String(stats.scheduledMatches || 0));
 
   return {
     title,
@@ -75,7 +69,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description,
       url,
       type: 'website' as const,
-      siteName: 'kroam.xyz',
+      siteName: 'Kroam',
       images: [
         {
           url: ogImageUrl.toString(),

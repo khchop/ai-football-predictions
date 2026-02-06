@@ -11,6 +11,7 @@ import {
   getModelStatsByCompetitionWithRank,
   getModelRank,
   getModelResultTypeBreakdown,
+  getOverallStats,
 } from '@/lib/db/queries';
 import { getProviderById } from '@/lib/llm';
 import { ArrowLeft, Bot, Sparkles, DollarSign, TrendingUp, BarChart2, Award, Target } from 'lucide-react';
@@ -27,6 +28,7 @@ import { RecentPredictionsWidget } from '@/components/model/recent-predictions-w
 import { LeaguesCoveredWidget } from '@/components/model/leagues-covered-widget';
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
 import { buildModelBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
+import { buildModelTitle, buildModelDescription } from '@/lib/seo/metadata';
 
 // Memoize queries to avoid duplication between generateMetadata and page component
 const getModelStatsData = cache((modelId: string) => getModelPredictionStats(modelId));
@@ -49,37 +51,43 @@ export async function generateMetadata({ params }: ModelPageProps): Promise<Meta
     };
   }
 
-  const baseUrl = 'https://kroam.xyz';
-  const url = `${baseUrl}/models/${id}`;
+  const url = `${BASE_URL}/models/${id}`;
 
-  // Get prediction stats for OG image (uses memoized queries)
-  const predictionStats = await getModelStatsData(id);
-  const modelRank = await getModelRankData(id);
-  
+  // Get prediction stats and overall stats for OG image (uses memoized queries)
+  const [predictionStats, modelRank, overallStats] = await Promise.all([
+    getModelStatsData(id),
+    getModelRankData(id),
+    getOverallStats(),
+  ]);
+
   // Calculate tendency accuracy from stats (correctTendencies / scoredPredictions * 100)
-  // This matches the hero section's "Accuracy" display
   const accuracy = predictionStats?.scoredPredictions && predictionStats.scoredPredictions > 0
     ? Math.round((predictionStats.correctTendencies / predictionStats.scoredPredictions) * 100)
     : 0;
   const rank = modelRank || 999;
+  const modelCount = overallStats.activeModels;
+
+  const title = buildModelTitle(model.displayName);
+  const description = buildModelDescription(model.displayName, accuracy, modelCount);
 
   // Create OG image URL with encoded parameters
-  const ogImageUrl = new URL(`${baseUrl}/api/og/model`);
+  const ogImageUrl = new URL(`${BASE_URL}/api/og/model`);
   ogImageUrl.searchParams.set('modelName', model.displayName);
   ogImageUrl.searchParams.set('accuracy', accuracy.toString());
   ogImageUrl.searchParams.set('rank', rank.toString());
 
   return {
-    title: `${model.displayName} Predictions | AI Football Model | kroam.xyz`,
-    description: `${model.displayName} football predictions and accuracy stats. See performance across competitions with Prediction Accuracy: ${accuracy}%.`,
+    title,
+    description,
     alternates: {
       canonical: url,
     },
     openGraph: {
-      title: `${model.displayName} AI Model`,
-      description: `${accuracy}% tendency accuracy in football predictions - Rank #${rank}. Prediction Accuracy: ${accuracy}%`,
-      url: url,
+      title,
+      description,
+      url,
       type: 'website',
+      siteName: 'Kroam',
       images: [
         {
           url: ogImageUrl.toString(),
@@ -91,8 +99,8 @@ export async function generateMetadata({ params }: ModelPageProps): Promise<Meta
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${model.displayName} AI Model`,
-      description: `${accuracy}% tendency accuracy in football predictions`,
+      title,
+      description,
       images: [ogImageUrl.toString()],
     },
   };
@@ -191,7 +199,7 @@ export default async function ModelPage({ params }: ModelPageProps) {
            <div className="flex items-center gap-3">
              <Bot className="h-8 w-8 text-primary" />
              <div>
-               <h1 className="text-3xl font-bold">{model.displayName}</h1>
+               <h1 className="text-3xl font-bold">{model.displayName} Football Predictions</h1>
                <p className="text-sm text-muted-foreground capitalize">
                  {provider?.name || model.provider} AI Model
                </p>

@@ -5,28 +5,38 @@ import { getLeaderboardWithTrends } from '@/lib/db/queries/stats';
 import { getOverallStats } from '@/lib/db/queries';
 import { Bot, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { BASE_URL } from '@/lib/seo/constants';
+import { buildGenericTitle, buildGenericDescription } from '@/lib/seo/metadata';
 
 export async function generateMetadata(): Promise<Metadata> {
   const stats = await getOverallStats();
   const modelCount = stats.activeModels;
 
   return {
-    title: `AI Models | ${modelCount} Models Competing | kroam.xyz`,
-    description: `Compare ${modelCount} open-source AI models predicting football matches. See accuracy rankings, performance trends, and which models predict best.`,
+    title: buildGenericTitle('AI Model Football Predictions'),
+    description: buildGenericDescription(`Compare ${modelCount} AI models predicting football matches. See accuracy rankings, performance trends, and which models predict best.`),
     alternates: {
       canonical: `${BASE_URL}/models`,
     },
     openGraph: {
-      title: `AI Models - ${modelCount} Open-Source Models Competing`,
+      title: 'AI Model Football Predictions | Kroam',
       description: `${modelCount} AI models competing to predict football matches across 17 competitions.`,
       url: `${BASE_URL}/models`,
       type: 'website',
-      siteName: 'kroam.xyz',
+      siteName: 'Kroam',
+      images: [
+        {
+          url: `${BASE_URL}/api/og/generic?title=${encodeURIComponent('AI Model Football Predictions')}`,
+          width: 1200,
+          height: 630,
+          alt: 'AI Model Football Predictions',
+        },
+      ],
     },
     twitter: {
-      card: 'summary',
-      title: `AI Models | kroam.xyz`,
+      card: 'summary_large_image',
+      title: 'AI Model Football Predictions | Kroam',
       description: `${modelCount} models competing with live accuracy rankings.`,
+      images: [`${BASE_URL}/api/og/generic?title=${encodeURIComponent('AI Model Football Predictions')}`],
     },
     robots: {
       index: true,
@@ -51,7 +61,7 @@ export default async function ModelsPage() {
             <Bot className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">AI Models</h1>
+            <h1 className="text-3xl font-bold">AI Model Football Predictions</h1>
             <p className="text-muted-foreground">
               Open-source AI models compete to predict football matches across 17 competitions.
             </p>
@@ -77,7 +87,7 @@ export default async function ModelsPage() {
           <Bot className="h-6 w-6 text-white" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold">AI Models</h1>
+          <h1 className="text-3xl font-bold">AI Model Football Predictions</h1>
           <p className="text-muted-foreground">
             {modelCount} open-source AI models compete to predict football matches across 17 competitions. Rankings update after every match.
           </p>

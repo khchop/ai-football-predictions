@@ -16,22 +16,33 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AI Football Predictions - 29 Open-Source Models Compete | kroam.xyz",
-  description: "Compare 29 open-source AI models predicting Champions League, Premier League & 15 more competitions. See which AI model performs best using the Kicktipp scoring system. Updated in real-time.",
+  title: {
+    default: "AI Football Predictions | Kroam",
+    template: "%s",
+  },
+  description: "Compare 42 AI models predicting Champions League, Premier League & 15 more competitions. See which AI model performs best using the Kicktipp scoring system in real-time.",
   keywords: ["AI", "football", "predictions", "machine learning", "Champions League", "Premier League", "AI betting", "football AI", "prediction accuracy", "open source AI", "Llama", "Qwen", "DeepSeek", "Mistral"],
   metadataBase: new URL('https://kroam.xyz'),
   openGraph: {
-    title: "AI Football Predictions - 29 Open-Source Models Compete",
-    description: "Compare 29 open-source AI models predicting football across 17 competitions. See which AI model performs best.",
+    title: "AI Football Predictions - 42 AI Models Compete",
+    description: "Compare 42 AI models predicting football across 17 competitions. See which AI model performs best.",
     url: 'https://kroam.xyz',
-    siteName: 'kroam.xyz',
+    siteName: 'Kroam',
     type: 'website',
     locale: 'en_US',
+    images: [
+      {
+        url: '/api/og/generic?title=AI+Football+Predictions',
+        width: 1200,
+        height: 630,
+        alt: 'Kroam - AI Football Predictions',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: "AI Football Predictions - 29 Models Compete",
-    description: "See which open-source AI is best at predicting football matches",
+    title: "AI Football Predictions - 42 Models Compete",
+    description: "See which AI is best at predicting football matches across 17 leagues",
   },
   robots: {
     index: true,
@@ -51,18 +62,18 @@ export default function RootLayout({
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "kroam.xyz",
+    "name": "Kroam",
     "url": "https://kroam.xyz",
-    "description": "AI football prediction platform comparing 29 open-source AI models on match predictions across 17 competitions",
+    "description": "AI football prediction platform comparing 42 AI models on match predictions across 17 competitions",
     "logo": "https://kroam.xyz/logo.png",
   };
 
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "kroam.xyz - AI Football Predictions",
+    "name": "Kroam - AI Football Predictions",
     "url": "https://kroam.xyz",
-    "description": "Compare 29 open-source AI models predicting football matches across Champions League, Premier League, and 15 more competitions",
+    "description": "Compare 42 AI models predicting football matches across Champions League, Premier League, and 15 more competitions",
     "potentialAction": {
       "@type": "SearchAction",
       "target": {

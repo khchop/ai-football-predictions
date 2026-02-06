@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MatchCard } from '@/components/match-card';
@@ -6,8 +7,39 @@ import { getUpcomingMatches, getFinishedMatches, getOverallStats, getLiveMatches
 import { Trophy, Calendar, Bot, Target, ArrowRight, Sparkles, Award } from 'lucide-react';
 import Link from 'next/link';
 import { QuickLeagueLinks } from '@/components/quick-league-links';
+import { buildGenericTitle, buildGenericDescription } from '@/lib/seo/metadata';
+import { BASE_URL } from '@/lib/seo/constants';
 
 // PPR enabled - removed force-dynamic, Next.js handles static/dynamic split via Suspense
+
+export const metadata: Metadata = {
+  title: buildGenericTitle('AI Football Predictions'),
+  description: buildGenericDescription('Watch 42 AI models compete to predict football scores across Champions League, Premier League, and 15 more leagues.'),
+  openGraph: {
+    title: 'AI Football Predictions | Kroam',
+    description: 'Watch 42 AI models compete to predict football scores across Champions League, Premier League, and 15 more leagues.',
+    url: BASE_URL,
+    type: 'website',
+    siteName: 'Kroam',
+    images: [
+      {
+        url: `${BASE_URL}/api/og/generic?title=${encodeURIComponent('AI Football Predictions')}`,
+        width: 1200,
+        height: 630,
+        alt: 'Kroam - AI Football Predictions',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AI Football Predictions | Kroam',
+    description: 'Watch 42 AI models compete to predict football scores',
+    images: [`${BASE_URL}/api/og/generic?title=${encodeURIComponent('AI Football Predictions')}`],
+  },
+  alternates: {
+    canonical: BASE_URL,
+  },
+};
 
 async function StatsBar() {
   const stats = await getOverallStats();

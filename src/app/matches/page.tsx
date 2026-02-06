@@ -7,6 +7,8 @@ import { getUpcomingMatches, getFinishedMatches, getRecentMatches, getLiveMatche
 import { Calendar, Clock, CheckCircle, List, Radio, Filter } from 'lucide-react';
 import { LiveTabRefresher } from './live-refresher';
 import { CompetitionFilter } from '@/components/competition-filter';
+import { buildGenericTitle, buildGenericDescription } from '@/lib/seo/metadata';
+import { BASE_URL } from '@/lib/seo/constants';
 
 // PPR enabled - removed force-dynamic, Next.js handles static/dynamic split via Suspense
 
@@ -15,22 +17,31 @@ export async function generateMetadata(): Promise<Metadata> {
   const modelCount = stats.activeModels;
 
   return {
-    title: 'Upcoming Football Matches | AI Predictions | kroam.xyz',
-    description: `Browse upcoming and recent football matches with AI predictions from ${modelCount} models. Track live scores and pre-match analysis across 17 competitions.`,
+    title: buildGenericTitle('Football Match Predictions'),
+    description: buildGenericDescription(`Browse upcoming and recent football matches with AI predictions from ${modelCount} models. Track live scores and pre-match analysis across 17 competitions.`),
     alternates: {
-      canonical: 'https://kroam.xyz/matches',
+      canonical: `${BASE_URL}/matches`,
     },
     openGraph: {
-      title: 'Upcoming Football Matches with AI Predictions',
+      title: 'Football Match Predictions | Kroam',
       description: `View upcoming matches with predictions from ${modelCount} AI models`,
-      url: 'https://kroam.xyz/matches',
+      url: `${BASE_URL}/matches`,
       type: 'website',
-      siteName: 'kroam.xyz',
+      siteName: 'Kroam',
+      images: [
+        {
+          url: `${BASE_URL}/api/og/generic?title=${encodeURIComponent('Football Match Predictions')}`,
+          width: 1200,
+          height: 630,
+          alt: 'Football Match Predictions',
+        },
+      ],
     },
     twitter: {
-      card: 'summary',
-      title: 'Football Matches & AI Predictions',
+      card: 'summary_large_image',
+      title: 'Football Match Predictions | Kroam',
       description: `Browse matches with AI predictions from ${modelCount} models`,
+      images: [`${BASE_URL}/api/og/generic?title=${encodeURIComponent('Football Match Predictions')}`],
     },
   };
 }

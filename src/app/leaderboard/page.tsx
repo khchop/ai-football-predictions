@@ -16,28 +16,38 @@ import { generateLeaderboardFAQs } from '@/lib/leaderboard/generate-leaderboard-
 import { BASE_URL } from '@/lib/seo/constants';
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
 import { buildLeaderboardBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
+import { buildGenericTitle, buildGenericDescription } from '@/lib/seo/metadata';
 
 export async function generateMetadata(): Promise<Metadata> {
   const stats = await getOverallStats();
   const modelCount = stats.activeModels;
 
   return {
-    title: `AI Model Leaderboard | Compare ${modelCount} Models | kroam.xyz`,
-    description: 'Compare AI model accuracy across 17 football competitions. See which models predict best in Champions League, Premier League, and more.',
+    title: buildGenericTitle('AI Model Leaderboard'),
+    description: buildGenericDescription(`Compare ${modelCount} AI model accuracy across 17 football competitions. See which models predict best in Champions League, Premier League, and more.`),
     alternates: {
-      canonical: 'https://kroam.xyz/leaderboard',
+      canonical: `${BASE_URL}/leaderboard`,
     },
     openGraph: {
-      title: `AI Model Leaderboard | Compare ${modelCount} Models`,
-      description: 'Compare AI model accuracy across 17 football competitions. See which models predict best in Champions League, Premier League, and more.',
-      url: 'https://kroam.xyz/leaderboard',
+      title: 'AI Model Leaderboard | Kroam',
+      description: `Compare ${modelCount} AI model accuracy across 17 football competitions. See which models predict best.`,
+      url: `${BASE_URL}/leaderboard`,
       type: 'website',
-      siteName: 'kroam.xyz',
+      siteName: 'Kroam',
+      images: [
+        {
+          url: `${BASE_URL}/api/og/generic?title=${encodeURIComponent('AI Model Leaderboard')}`,
+          width: 1200,
+          height: 630,
+          alt: 'AI Model Leaderboard',
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `AI Model Leaderboard | Compare ${modelCount} Models`,
-      description: 'Compare AI model accuracy across 17 football competitions',
+      title: 'AI Model Leaderboard | Kroam',
+      description: `Compare ${modelCount} AI model accuracy across 17 football competitions`,
+      images: [`${BASE_URL}/api/og/generic?title=${encodeURIComponent('AI Model Leaderboard')}`],
     },
   };
 }
