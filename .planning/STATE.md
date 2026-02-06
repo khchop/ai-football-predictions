@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 44 — Foundation (Redirects, Canonicals & Index Pages)
-Plan: —
-Status: Roadmap complete, ready to plan Phase 44
-Last activity: 2026-02-05 — v2.6 roadmap created (5 phases, 36 requirements)
+Plan: 01 of 3
+Status: In progress
+Last activity: 2026-02-06 — Completed 44-01-PLAN.md (canonical and hreflang cleanup)
 
-Progress: [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 5% (roadmap done)
+Progress: [███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 8% (1 plan complete)
 
 ## Milestone History
 
@@ -39,6 +39,11 @@ Progress: [██░░░░░░░░░░░░░░░░░░░░░
 
 All decisions archived in milestone files. See `.planning/milestones/` for history.
 
+**Phase 44 (v2.6):**
+- 44-01: Removed all hreflang tags - no i18n subdomain support
+- 44-01: Match pages use /leagues/{slug}/{match} as canonical (not /matches/{id})
+- 44-01: Root layout provides only metadataBase, no cascading canonical
+
 ### Pending Todos
 
 None.
@@ -59,8 +64,8 @@ None — roadmap ready, starting Phase 44.
 
 ## Session Continuity
 
-Last session: 2026-02-05
-Stopped at: v2.6 roadmap created, ready to plan Phase 44
+Last session: 2026-02-06
+Stopped at: Completed 44-01-PLAN.md
 Resume file: None
 
 **Platform status:**
@@ -70,4 +75,4 @@ Resume file: None
 - 208 requirements validated (v1.0-v2.5)
 
 ---
-*Last updated: 2026-02-05 after v2.6 roadmap created*
+*Last updated: 2026-02-06 after completing 44-01-PLAN.md*
