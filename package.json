@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "tsx scripts/audit-internal-links.ts && next build",
     "start": "next start",
     "lint": "eslint",
+    "audit:links": "tsx scripts/audit-internal-links.ts",
+    "audit:links:full": "AUDIT_BASE_URL=http://localhost:3000 tsx scripts/audit-internal-links.ts",
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
     "db:generate": "drizzle-kit generate",
