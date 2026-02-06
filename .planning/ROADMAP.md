@@ -440,8 +440,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 49-01-PLAN.md — Fix scheduler early exit and fixtures worker existing-match scheduling
-- [ ] 49-02-PLAN.md — Widen backfill time windows and add chain validation
+- [x] 49-01-PLAN.md — Fix scheduler early exit and fixtures worker existing-match scheduling
+- [x] 49-02-PLAN.md — Widen backfill time windows and add chain validation
 
 #### Phase 50: Settlement Investigation & Recovery
 **Goal**: All 43 failed settlement jobs investigated, root cause fixed, and matches re-settled with correct scoring
@@ -548,10 +548,10 @@ Phases execute in numeric order: 49 -> 50 -> 51 -> 52
 | 46. Content Tags & Meta Optimization | v2.6 | 3/3 | Complete | 2026-02-06 |
 | 47. Structured Data Validation | v2.6 | 4/4 | Complete | 2026-02-06 |
 | 48. Performance & Verification | v2.6 | 3/3 | Complete | 2026-02-06 |
-| 49. Pipeline Scheduling Fixes | v2.7 | 0/2 | Not started | - |
+| 49. Pipeline Scheduling Fixes | v2.7 | 2/2 | Complete | 2026-02-06 |
 | 50. Settlement Investigation & Recovery | v2.7 | 0/TBD | Not started | - |
 | 51. Retroactive Backfill Script | v2.7 | 0/TBD | Not started | - |
 | 52. Monitoring & Observability | v2.7 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-06 after Phase 49 planning completed*
+*Last updated: 2026-02-06 after Phase 49 completed (all 5 PIPE requirements verified)*

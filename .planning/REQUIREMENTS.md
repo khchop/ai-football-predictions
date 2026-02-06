@@ -9,11 +9,11 @@ Requirements for v2.7 milestone. Each maps to roadmap phases.
 
 ### Pipeline Scheduling
 
-- [ ] **PIPE-01**: Catch-up scheduling handles past-due matches — schedules analysis/predictions/lineups immediately for matches where kickoff has passed but jobs never ran
-- [ ] **PIPE-02**: Fixtures worker detects existing matches with no delayed/active BullMQ jobs and re-schedules them
-- [ ] **PIPE-03**: Backfill worker checks wider time windows — 48h for missing analysis (not 12h), 12h for missing predictions (not 2h)
-- [ ] **PIPE-04**: Backfill worker runs analysis → lineups → predictions chain for matches missing any step (not just individual steps)
-- [ ] **PIPE-05**: After server restart, all matches within 48h have correct delayed jobs in Redis (verified by queue metrics)
+- [x] **PIPE-01**: Catch-up scheduling handles past-due matches — schedules analysis/predictions/lineups immediately for matches where kickoff has passed but jobs never ran
+- [x] **PIPE-02**: Fixtures worker detects existing matches with no delayed/active BullMQ jobs and re-schedules them
+- [x] **PIPE-03**: Backfill worker checks wider time windows — 48h for missing analysis (not 12h), 12h for missing predictions (not 2h)
+- [x] **PIPE-04**: Backfill worker runs analysis → lineups → predictions chain for matches missing any step (not just individual steps)
+- [x] **PIPE-05**: After server restart, all matches within 48h have correct delayed jobs in Redis (verified by queue metrics)
 
 ### Settlement Recovery
 
@@ -69,11 +69,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PIPE-01 | Phase 49 | Pending |
-| PIPE-02 | Phase 49 | Pending |
-| PIPE-03 | Phase 49 | Pending |
-| PIPE-04 | Phase 49 | Pending |
-| PIPE-05 | Phase 49 | Pending |
+| PIPE-01 | Phase 49 | Complete |
+| PIPE-02 | Phase 49 | Complete |
+| PIPE-03 | Phase 49 | Complete |
+| PIPE-04 | Phase 49 | Complete |
+| PIPE-05 | Phase 49 | Complete |
 | SETTLE-01 | Phase 50 | Pending |
 | SETTLE-02 | Phase 50 | Pending |
 | SETTLE-03 | Phase 50 | Pending |
@@ -99,4 +99,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-06*
-*Last updated: 2026-02-06 after roadmap created with full traceability*
+*Last updated: 2026-02-06 after Phase 49 completed (PIPE-01 through PIPE-05 verified)*
