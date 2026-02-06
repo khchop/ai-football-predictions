@@ -51,10 +51,41 @@ export default async function ModelsPage() {
 
   const leaderboard = await getLeaderboardWithTrends(50, 'avgPoints', { timePeriod: 'all' });
 
+  // Build CollectionPage structured data
+  const collectionPageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'AI Model Football Predictions',
+    description: `${modelCount} open-source AI models compete to predict football matches across 17 competitions.`,
+    url: 'https://kroam.xyz/models',
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: leaderboard.length,
+      itemListElement: leaderboard.map((model, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        item: {
+          '@type': 'SoftwareApplication',
+          name: model.displayName,
+          url: `https://kroam.xyz/models/${model.modelId}`,
+          description: `${model.displayName} AI football prediction model`,
+          applicationCategory: 'SportsApplication',
+          operatingSystem: 'Web',
+        },
+      })),
+    },
+  };
+
   // Empty state
   if (leaderboard.length === 0) {
     return (
       <div className="space-y-8">
+        {/* Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageSchema) }}
+        />
+
         {/* Header */}
         <div className="flex items-center gap-4">
           <div className="h-12 w-12 rounded-xl gradient-primary flex items-center justify-center">
@@ -81,6 +112,12 @@ export default async function ModelsPage() {
 
   return (
     <div className="space-y-8">
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageSchema) }}
+      />
+
       {/* Header */}
       <div className="flex items-center gap-4">
         <div className="h-12 w-12 rounded-xl gradient-primary flex items-center justify-center">

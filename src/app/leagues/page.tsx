@@ -44,8 +44,44 @@ export default function LeaguesPage() {
   const domesticLeagues = getCompetitionsByCategory('club-domestic');
   const international = getCompetitionsByCategory('international');
 
+  // Build CollectionPage structured data
+  const allCompetitions = [
+    ...europeanClub,
+    ...domesticLeagues,
+    ...international,
+  ];
+
+  const collectionPageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Football League AI Predictions',
+    description: 'AI predictions across 17 major football competitions including Champions League, Premier League, La Liga, and more.',
+    url: 'https://kroam.xyz/leagues',
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: allCompetitions.length,
+      itemListElement: allCompetitions.map((comp, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        item: {
+          '@type': 'SportsOrganization',
+          name: comp.name,
+          url: `https://kroam.xyz/leagues/${comp.id}`,
+          description: `AI predictions for ${comp.name}`,
+          sport: 'Football',
+        },
+      })),
+    },
+  };
+
   return (
     <div className="space-y-8">
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageSchema) }}
+      />
+
       {/* Header */}
       <div className="flex items-center gap-4">
         <div className="h-12 w-12 rounded-xl gradient-primary flex items-center justify-center">
