@@ -11,12 +11,13 @@ import { Worker, Job } from 'bullmq';
 import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, analysisQueue, oddsQueue, lineupsQueue, predictionsQueue, settlementQueue } from '../index';
 import type { BackfillMissingPayload } from '../types';
-import { 
+import {
   getMatchesMissingAnalysis,
   getMatchesMissingOdds,
   getMatchesMissingLineups,
   getMatchesMissingPredictions,
   getMatchesNeedingScoring,
+  getFinishedMatchesWithZeroPredictions,
 } from '@/lib/db/queries';
 import { checkAndFixStuckMatches, checkAndFixStuckLiveMatches } from '../catch-up';
 import { loggers } from '@/lib/logger/modules';
@@ -369,9 +370,43 @@ export function createBackfillWorker() {
             }
           }
         }
-        
+
+        // 6. Find finished matches with zero predictions (may need upstream pipeline re-run)
+        const zeroPredictionMatches = await getFinishedMatchesWithZeroPredictions(7);
+
+        for (const match of zeroPredictionMatches) {
+          try {
+            // Queue settlement job - the scoring worker will handle the conditional
+            // retry logic (check analysis, throw if has analysis but no predictions)
+            const jobId = `settle-zero-pred-${match.id}`;
+            const existingJob = await settlementQueue.getJob(jobId);
+
+            if (!existingJob) {
+              await settlementQueue.add(
+                JOB_TYPES.SETTLE_MATCH,
+                {
+                  matchId: match.id,
+                  homeScore: match.homeScore ?? 0,
+                  awayScore: match.awayScore ?? 0,
+                  status: match.status,
+                },
+                {
+                  delay: 1000,
+                  priority: 2, // Lower priority than normal settlement
+                  jobId,
+                }
+              );
+              results.scoringsTriggered++;
+            }
+          } catch (error: any) {
+            if (!error.message?.includes('already exists')) {
+              addError(`Zero-pred settlement ${match.id}: ${error.message}`);
+            }
+          }
+        }
+
         // Log summary
-        const total = results.analysisTriggered + results.oddsTriggered + 
+        const total = results.analysisTriggered + results.oddsTriggered +
                       results.lineupsTriggered + results.predictionsTriggered + results.scoringsTriggered;
         
          if (total > 0 || results.errors.length > 0) {
