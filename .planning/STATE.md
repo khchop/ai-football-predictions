@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 54 of 58 (Diagnostic Infrastructure)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-07 — Completed quick-028 (fix HierarchyRequestError in match narrative rendering)
+Last activity: 2026-02-07 — Completed quick-029 (fix match preview hallucination, focus on odds & predictions)
 
 Progress: [█████████████████████████████████████████████████████░] 91% (53/58 phases)
 
