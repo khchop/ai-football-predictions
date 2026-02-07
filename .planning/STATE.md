@@ -75,11 +75,12 @@ None.
 | 022 | Fix match_previews missing unique constraint | 2026-02-07 | c786d61 | [022-fix-match-previews-unique-constraint](./quick/022-fix-match-previews-unique-constraint/) |
 | 023 | Fix failed previews and analysis jobs (DLQ requeue) | 2026-02-07 | e1b9695 | [023-fix-failed-previews-and-analysis-jobs](./quick/023-fix-failed-previews-and-analysis-jobs/) |
 | 024 | Fix API-Football budget limit (100→1000) & error logging | 2026-02-07 | 76e3495 | [024-fix-api-budget-and-error-logging](./quick/024-fix-api-budget-and-error-logging/) |
+| 025 | Fix connection() called outside request scope in workers | 2026-02-07 | 753f73d | [025-fix-connection-outside-request-scope](./quick/025-fix-connection-outside-request-scope/) |
 
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed quick-024 (fix API-Football budget and error logging)
+Stopped at: Completed quick-025 (fix connection() outside request scope)
 Resume file: None
 
 **Platform status:**
@@ -89,7 +90,7 @@ Resume file: None
 - 252 requirements validated (v1.0-v2.7)
 - Pipeline monitoring operational (health endpoint, admin dashboards, alerts)
 
-**Next action:** Deploy quick-024 and verify pipeline recovers. Then `/gsd:new-milestone` if needed.
+**Next action:** Deploy quick-025 and verify analysis jobs succeed.
 
 ---
-*Last updated: 2026-02-07 after quick-024 completed*
+*Last updated: 2026-02-07 after quick-025 completed*
