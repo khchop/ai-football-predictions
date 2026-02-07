@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 ## Current Position
 
-Phase: 52 of 52 (Monitoring & Observability) — IN PROGRESS
-Plan: 2 of 3 complete (52-01, 52-02 complete)
-Status: Enhanced monitoring integration complete, admin dashboard next
-Last activity: 2026-02-07 — Completed 52-02-PLAN.md
+Phase: 52 of 52 (Monitoring & Observability) — COMPLETE
+Plan: 3 of 3 complete (all plans complete)
+Status: Phase complete - pipeline monitoring & observability operational
+Last activity: 2026-02-07 — Completed 52-03-PLAN.md
 
-Progress: [██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 75% (3/4 phases, 2/3 plans in phase 52)
+Progress: [████████████████████████████████████████████████] 100% (4/4 phases in v2.7 complete)
 
 ## Milestone History
 
@@ -82,12 +82,17 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 52-02: No auth on health endpoint (load balancers need unauthenticated access, aggregate data only)
 - 52-02: Backfill worker step 7 isolated in try/catch (health check failure never blocks backfill work)
 - 52-02: Queue metrics use debug level for coverage errors (non-critical periodic metrics)
+- 52-03: Both endpoints use RATE_LIMIT_PRESETS.admin (10 req/min) to prevent abuse
+- 52-03: Settlement failures endpoint truncates error messages to 300 chars to prevent sensitive data leakage
+- 52-03: Pipeline health uses 6-hour window for early warning (enough time to investigate + fix)
+- 52-03: POST /settlement-failures retries single match with fresh DB data (not stale job data)
+- 52-03: Separate rate limit keys per HTTP method (GET vs POST) for fair quota allocation
 
 **v2.7 Roadmap:**
 - Phase 49: Pipeline Scheduling Fixes (PIPE-01 to PIPE-05) — COMPLETE
 - Phase 50: Settlement Investigation & Recovery (SETTLE-01 to SETTLE-04) — COMPLETE (code)
 - Phase 51: Retroactive Backfill Script (RETRO-01 to RETRO-06) — COMPLETE
-- Phase 52: Monitoring & Observability (MON-01 to MON-05)
+- Phase 52: Monitoring & Observability (MON-01 to MON-05) — COMPLETE
 
 ### Pending Todos
 
@@ -126,18 +131,18 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-07T02:05:35Z
-Stopped at: Completed 52-02-PLAN.md (enhanced monitoring integration)
+Last session: 2026-02-07T02:07:26Z
+Stopped at: Completed 52-03-PLAN.md (admin dashboard endpoints)
 Resume file: None
 
 **Platform status:**
 - 17 leagues operational
 - 42 active models (29 Together + 13 Synthetic)
 - 0 disabled models (all 6 previously disabled models re-enabled)
-- 266 requirements validated (v1.0-v2.6 + PIPE + SETTLE + RETRO + MON-01 through MON-04)
-- 2 remaining requirements for v2.7 (SETTLE-01, MON-05)
+- 268 requirements validated (v1.0-v2.6 + PIPE + SETTLE + RETRO + MON complete)
+- 0 remaining requirements for v2.7
 
-**Next action:** Execute 52-03 (Admin Dashboard)
+**Next action:** v2.7 COMPLETE - Ready to ship monitoring & observability features
 
 ---
 *Last updated: 2026-02-07 after Phase 52 Plan 01 completed*
