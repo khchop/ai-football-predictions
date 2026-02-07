@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 52 of 52 — v2.7 COMPLETE
 Plan: All plans complete
 Status: Milestone shipped — ready for next milestone planning
-Last activity: 2026-02-07 — Completed quick-020
+Last activity: 2026-02-07 — Completed quick-021
 
 Progress: [████████████████████████████████████████████████] 100% (12 milestones shipped)
 
@@ -47,16 +47,14 @@ None.
 
 ### Blockers/Concerns
 
-**Operational items from v2.7 (deferred as tech debt):**
-1. Run `npx tsx scripts/investigate-settlement-failures.ts` against production Redis (SETTLE-01)
-2. Run `npx tsx scripts/backfill-settlement.ts` against production
-3. ~~Run `npx tsx scripts/backfill-retroactive-predictions.ts --days 7` against production~~ -- automated in quick-017
+**All manual post-deploy tasks automated in quick-021.** No manual steps needed after deploy.
 
-**Post quick-018:**
-1. ~~Run database migration: `psql $DATABASE_URL -f drizzle/0013_drop_lineup_columns.sql` to drop 9 lineup columns~~ -- automated in quick-021
-
-**Post quick-020:**
-1. ~~After deploying, run `npx tsx scripts/backfill-retroactive-predictions.ts --days 90` to backfill all historical gaps (partial + missing predictions)~~ -- automated in quick-021
+~~Operational items from v2.7~~ — all resolved:
+- ~~Settlement investigation~~ — diagnostic only, run if needed: `npx tsx scripts/investigate-settlement-failures.ts`
+- ~~Settlement backfill~~ — handled by hourly backfill worker
+- ~~Retroactive backfill~~ — automated in quick-017, extended in quick-020
+- ~~Drop lineup columns~~ — automated in quick-021 (post-deploy task runner)
+- ~~90-day deep backfill~~ — automated in quick-021 (post-deploy task runner)
 
 ### Quick Tasks Completed
 
@@ -91,4 +89,4 @@ Resume file: None
 **Next action:** `/gsd:new-milestone` to plan v2.8 (or `/clear` first for fresh context)
 
 ---
-*Last updated: 2026-02-07 after quick-020 completed*
+*Last updated: 2026-02-07 after quick-021 completed*
