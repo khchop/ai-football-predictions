@@ -65,30 +65,30 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DIAG-01 | TBD | Pending |
-| DIAG-02 | TBD | Pending |
-| DIAG-03 | TBD | Pending |
-| DIAG-04 | TBD | Pending |
-| DIAG-05 | TBD | Pending |
-| REGR-01 | TBD | Pending |
-| REGR-02 | TBD | Pending |
-| REGR-03 | TBD | Pending |
-| FIX-01 | TBD | Pending |
-| FIX-02 | TBD | Pending |
-| FIX-03 | TBD | Pending |
-| FIX-04 | TBD | Pending |
-| FIX-05 | TBD | Pending |
-| FIX-06 | TBD | Pending |
-| OBS-01 | TBD | Pending |
-| OBS-02 | TBD | Pending |
-| OBS-03 | TBD | Pending |
-| OBS-04 | TBD | Pending |
+| DIAG-01 | Phase 54 | Pending |
+| DIAG-02 | Phase 54 | Pending |
+| DIAG-03 | Phase 54 | Pending |
+| DIAG-04 | Phase 54 | Pending |
+| DIAG-05 | Phase 58 | Pending |
+| REGR-01 | Phase 53 | Pending |
+| REGR-02 | Phase 53 | Pending |
+| REGR-03 | Phase 53 | Pending |
+| FIX-01 | Phase 55 | Pending |
+| FIX-02 | Phase 55 | Pending |
+| FIX-03 | Phase 56 | Pending |
+| FIX-04 | Phase 56 | Pending |
+| FIX-05 | Phase 57 | Pending |
+| FIX-06 | Phase 57 | Pending |
+| OBS-01 | Phase 58 | Pending |
+| OBS-02 | Phase 58 | Pending |
+| OBS-03 | Phase 58 | Pending |
+| OBS-04 | Phase 58 | Pending |
 
 **Coverage:**
 - v2.8 requirements: 18 total
-- Mapped to phases: 0
-- Unmapped: 18 (pending roadmap creation)
+- Mapped to phases: 18
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-02-07*
-*Last updated: 2026-02-07 after initial definition*
+*Last updated: 2026-02-07 after v2.8 roadmap created*

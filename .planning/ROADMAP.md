@@ -13,7 +13,8 @@
 - **v2.4 Synthetic.new Integration** - Phases 37-39 (shipped 2026-02-05)
 - **v2.5 Model Reliability & Dynamic Counts** - Phases 40-43 (shipped 2026-02-05)
 - **v2.6 SEO/GEO Site Health** - Phases 44-48 (shipped 2026-02-06)
-- ✅ **v2.7 Pipeline Reliability & Retroactive Backfill** - Phases 49-52 (shipped 2026-02-07)
+- **v2.7 Pipeline Reliability & Retroactive Backfill** - Phases 49-52 (shipped 2026-02-07)
+- 🚧 **v2.8 Model Coverage** - Phases 53-58 (in progress)
 
 ## Phases
 
@@ -433,6 +434,108 @@ Plans:
 
 </details>
 
+### 🚧 v2.8 Model Coverage (In Progress)
+
+**Milestone Goal:** Achieve 100% prediction coverage — all 42 LLMs successfully generating predictions with per-model diagnosis and fixes.
+
+#### Phase 53: Regression Protection
+**Goal**: Protect currently-working models before making any config changes
+**Depends on**: Phase 52
+**Requirements**: REGR-01, REGR-02, REGR-03
+**Success Criteria** (what must be TRUE):
+  1. Regression test suite validates all working models produce valid JSON output
+  2. Zod schema validation catches schema mismatches before database save
+  3. Test suite runs automatically before any model config change is merged
+  4. Config changes that break working models are caught in CI before production
+**Plans**: TBD
+
+Plans:
+- [ ] 53-01: Create regression test suite with golden fixtures for working models
+- [ ] 53-02: Add Zod schema validation to all LLM response parsing paths
+
+#### Phase 54: Diagnostic Infrastructure
+**Goal**: Build visibility into which models fail and why through systematic testing
+**Depends on**: Phase 53
+**Requirements**: DIAG-01, DIAG-02, DIAG-03, DIAG-04
+**Success Criteria** (what must be TRUE):
+  1. Diagnostic runner tests all 42 models individually with consistent test fixtures
+  2. Failures automatically categorized as timeout, parse, language, thinking-tag, API-error, or empty-response
+  3. Per-model success rate calculated from diagnostic run with pass/fail/error counts
+  4. Raw LLM responses captured and saved to file for debugging failed models
+  5. Diagnostic report generated showing failure breakdown by category with fix recommendations
+**Plans**: TBD
+
+Plans:
+- [ ] 54-01: Create golden test fixtures representing diverse match scenarios
+- [ ] 54-02: Build diagnostic runner that tests each model and categorizes failures
+- [ ] 54-03: Generate diagnostic report with per-model results and fix recommendations
+
+#### Phase 55: Category Fixes - Timeouts & Tags
+**Goal**: Fix timeout and thinking tag failures identified by diagnostics
+**Depends on**: Phase 54
+**Requirements**: FIX-01, FIX-02
+**Success Criteria** (what must be TRUE):
+  1. Reasoning models (DeepSeek R1, Qwen3-Thinking) complete predictions without timeout errors
+  2. Timeout configuration tuned per model based on P95 latency from diagnostic data
+  3. Thinking tag leakage eliminated from all reasoning model responses
+  4. Models returning `<think>` or `<reasoning>` tags receive tag stripping handler
+  5. Regression test confirms working models unaffected by timeout/handler changes
+**Plans**: TBD
+
+Plans:
+- [ ] 55-01: Tune per-model timeouts based on diagnostic P95 latency data
+- [ ] 55-02: Apply thinking tag stripping to identified reasoning models
+
+#### Phase 56: Category Fixes - Language & JSON
+**Goal**: Fix language mixing and JSON extraction failures identified by diagnostics
+**Depends on**: Phase 55
+**Requirements**: FIX-03, FIX-04
+**Success Criteria** (what must be TRUE):
+  1. Models defaulting to non-English (GLM family) receive English enforcement prompts
+  2. Chinese character responses eliminated from production predictions
+  3. Models wrapping JSON in markdown or explanations receive extraction handler
+  4. JSON extraction succeeds for models outputting ```json blocks or prefixes
+  5. Regression test confirms no impact on models already returning clean JSON
+**Plans**: TBD
+
+Plans:
+- [ ] 56-01: Apply English enforcement variant to language-mixing models
+- [ ] 56-02: Enhance JSON extraction for models wrapping output in text
+
+#### Phase 57: Category Fixes - Fallbacks & Validation
+**Goal**: Expand fallback chains for unfixable models and validate 100% coverage
+**Depends on**: Phase 56
+**Requirements**: FIX-05, FIX-06
+**Success Criteria** (what must be TRUE):
+  1. All Synthetic models with Together AI equivalents have fallback mappings configured
+  2. Unfixable small models (3B-7B) documented with "skip" status and rationale
+  3. Final diagnostic run shows 40+ of 42 models producing valid predictions (95%+)
+  4. Remaining failures documented with severity assessment and mitigation plan
+  5. Production validation confirms no regressions in previously-working models
+**Plans**: TBD
+
+Plans:
+- [ ] 57-01: Expand fallback chains based on diagnostic failure patterns
+- [ ] 57-02: Run final diagnostic validation and document remaining gaps
+- [ ] 57-03: Production smoke test confirms 95%+ model success rate
+
+#### Phase 58: Observability & Monitoring
+**Goal**: Enable long-term monitoring of per-model health for regression detection
+**Depends on**: Phase 57
+**Requirements**: OBS-01, OBS-02, OBS-03, OBS-04, DIAG-05
+**Success Criteria** (what must be TRUE):
+  1. Database metrics table records per-model success/failure with error category timestamps
+  2. Admin dashboard displays per-model health cards (success rate, last failure, failure type)
+  3. Historical success rate trends visible per model over 7/30/90 day windows
+  4. Alert triggered when previously-working model drops below 90% success rate
+  5. Before/after comparison report shows improvement from pre-milestone baseline
+**Plans**: TBD
+
+Plans:
+- [ ] 58-01: Create llm_model_stats database table and tracking infrastructure
+- [ ] 58-02: Build admin dashboard with per-model health visualization
+- [ ] 58-03: Add regression alert system and generate before/after report
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -440,7 +543,7 @@ Plans:
 | 1. Database Resilience | v1.0 | 4/4 | Complete | 2026-02-01 |
 | 2. Pipeline Reliability | v1.0 | 4/4 | Complete | 2026-02-01 |
 | 3. Scoring Accuracy | v1.0 | 3/3 | Complete | 2026-02-01 |
-| 4. Frontend Stability | v1.0 | 3/3 | Complete | 2026-02-01 |
+| 4. Frontend Stability | v1.0 | 4/3 | Complete | 2026-02-01 |
 | 5. Stats Correction | v1.1 | 3/3 | Complete | 2026-02-02 |
 | 6. Historical Migration | v1.1 | 3/3 | Complete | 2026-02-02 |
 | 7. SEO Structured Data | v1.1 | 2/2 | Complete | 2026-02-02 |
@@ -489,6 +592,12 @@ Plans:
 | 50. Settlement Investigation & Recovery | v2.7 | 2/2 | Complete | 2026-02-06 |
 | 51. Retroactive Backfill Script | v2.7 | 2/2 | Complete | 2026-02-06 |
 | 52. Monitoring & Observability | v2.7 | 3/3 | Complete | 2026-02-07 |
+| 53. Regression Protection | v2.8 | 0/2 | Not started | - |
+| 54. Diagnostic Infrastructure | v2.8 | 0/3 | Not started | - |
+| 55. Category Fixes - Timeouts & Tags | v2.8 | 0/2 | Not started | - |
+| 56. Category Fixes - Language & JSON | v2.8 | 0/2 | Not started | - |
+| 57. Category Fixes - Fallbacks & Validation | v2.8 | 0/3 | Not started | - |
+| 58. Observability & Monitoring | v2.8 | 0/3 | Not started | - |
 
 ---
-*Last updated: 2026-02-07 after v2.7 milestone completed*
+*Last updated: 2026-02-07 after v2.8 roadmap created*
