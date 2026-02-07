@@ -13,7 +13,7 @@
 - **v2.4 Synthetic.new Integration** - Phases 37-39 (shipped 2026-02-05)
 - **v2.5 Model Reliability & Dynamic Counts** - Phases 40-43 (shipped 2026-02-05)
 - **v2.6 SEO/GEO Site Health** - Phases 44-48 (shipped 2026-02-06)
-- **v2.7 Pipeline Reliability & Retroactive Backfill** - Phases 49-52 (shipped 2026-02-07)
+- ✅ **v2.7 Pipeline Reliability & Retroactive Backfill** - Phases 49-52 (shipped 2026-02-07)
 
 ## Phases
 
@@ -423,81 +423,17 @@ Plans:
 
 </details>
 
-### v2.7 Pipeline Reliability & Retroactive Backfill (Phases 49-52)
+<details>
+<summary>v2.7 Pipeline Reliability & Retroactive Backfill (Phases 49-52) - SHIPPED 2026-02-07</summary>
 
-**Milestone Goal:** Fix the prediction/analysis pipeline that fails to schedule jobs for existing matches after server restarts, investigate and resolve 43 failed settlement jobs, retroactively generate predictions for all matches from the last 7 days that are missing them, and add pipeline health monitoring to prevent future gaps.
+- [x] Phase 49: Pipeline Scheduling Fixes (2/2 plans) — completed 2026-02-06
+- [x] Phase 50: Settlement Investigation & Recovery (2/2 plans) — completed 2026-02-06
+- [x] Phase 51: Retroactive Backfill Script (2/2 plans) — completed 2026-02-06
+- [x] Phase 52: Monitoring & Observability (3/3 plans) — completed 2026-02-07
 
-#### Phase 49: Pipeline Scheduling Fixes
-**Goal**: Catch-up scheduling handles past-due matches and backfill detects wider gaps to ensure all matches receive analysis/predictions
-**Depends on**: Phase 48
-**Requirements**: PIPE-01, PIPE-02, PIPE-03, PIPE-04, PIPE-05
-**Success Criteria** (what must be TRUE):
-  1. After server restart, fixtures worker schedules analysis/predictions/lineups for matches within 48h (not just new matches)
-  2. Backfill worker identifies matches with no delayed/active BullMQ jobs and re-schedules them
-  3. Backfill checks 48h window for missing analysis (not 12h), 12h window for missing predictions (not 2h)
-  4. Matches missing any step in analysis -> lineups -> predictions chain are completed (not just individual steps)
-  5. All matches within 48h of kickoff have correct delayed jobs visible in Bull Board queue metrics
-**Plans**: 2 plans
-
-Plans:
-- [x] 49-01-PLAN.md — Fix scheduler early exit and fixtures worker existing-match scheduling
-- [x] 49-02-PLAN.md — Widen backfill time windows and add chain validation
-
-#### Phase 50: Settlement Investigation & Recovery
-**Goal**: All 43 failed settlement jobs investigated, root cause fixed, and matches re-settled with correct scoring
-**Depends on**: Phase 49
-**Requirements**: SETTLE-01, SETTLE-02, SETTLE-03, SETTLE-04
-**Success Criteria** (what must be TRUE):
-  1. Root cause of all 43 failed settlement jobs identified and logged
-  2. Settlement worker handles finished matches with zero predictions gracefully (retry not permanent failure)
-  3. Backfill settlement job runs against all finished matches with predictions but no settlement record
-  4. Failed settlement jobs cleared from dead-letter queue after successful retry
-  5. All finished matches from last 7 days have settlement records with points calculated
-**Plans**: 2 plans
-
-Plans:
-- [x] 50-01-PLAN.md — Investigate failed settlement jobs and fix scoring worker zero-prediction handling
-- [x] 50-02-PLAN.md — Admin settlement retry API, backfill worker extension, and settlement backfill script
-
-#### Phase 51: Retroactive Backfill Script
-**Goal**: All matches from last 7 days missing predictions have retroactive predictions generated and scored
-**Depends on**: Phase 49 (pipeline must be healthy first)
-**Requirements**: RETRO-01, RETRO-02, RETRO-03, RETRO-04, RETRO-05, RETRO-06
-**Success Criteria** (what must be TRUE):
-  1. Script identifies all matches from last 7 days where predictions.length < 42 (active model count)
-  2. Historical API-Football data fetched for matches missing analysis (H2H, standings, form)
-  3. All 42 LLMs generate predictions using pre-match context (even for finished matches)
-  4. Finished match predictions scored immediately against actual results with Kicktipp quota points
-  5. Live/upcoming match predictions stored for scoring when match finishes
-  6. Running script twice against same matches produces no duplicate predictions (idempotent)
-**Plans**: 2 plans
-
-Plans:
-- [x] 51-01-PLAN.md — Add allowRetroactive flag to worker types and analysis/predictions workers
-- [x] 51-02-PLAN.md — Create retroactive backfill script with gap detection and job orchestration
-
-#### Phase 52: Monitoring & Observability
-**Goal**: Pipeline health monitoring detects matches approaching kickoff without scheduled jobs before they become gaps
-**Depends on**: Phase 49
-**Requirements**: MON-01, MON-02, MON-03, MON-04, MON-05
-**Success Criteria** (what must be TRUE):
-  1. /api/health endpoint shows match coverage percentage (upcoming matches with scheduled analysis/predictions)
-  2. Admin dashboard displays matches within 6h of kickoff with no scheduled jobs (early warning)
-  3. Server logs alert when match is within 2h of kickoff with no analysis job
-  4. Bull Board queue metrics include "matches without predictions" count
-  5. Settlement failure dashboard shows failed jobs with error reasons and retry controls
-**Plans**: 3 plans
-
-Plans:
-- [x] 52-01-PLAN.md — Core pipeline coverage calculation module (types + getMatchCoverage)
-- [x] 52-02-PLAN.md — Health endpoint enhancement, backfill alerts, queue metrics extension (MON-01, MON-03, MON-04)
-- [x] 52-03-PLAN.md — Admin pipeline-health and settlement-failures endpoints (MON-02, MON-05)
+</details>
 
 ## Progress
-
-**Execution Order:**
-Phases execute in numeric order: 49 -> 50 -> 51 -> 52
-(Phase 50 and 52 can run in parallel after Phase 49)
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -555,4 +491,4 @@ Phases execute in numeric order: 49 -> 50 -> 51 -> 52
 | 52. Monitoring & Observability | v2.7 | 3/3 | Complete | 2026-02-07 |
 
 ---
-*Last updated: 2026-02-07 after Phase 52 completed (3/3 plans, verified)*
+*Last updated: 2026-02-07 after v2.7 milestone completed*

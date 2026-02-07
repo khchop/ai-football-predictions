@@ -1,5 +1,62 @@
 # Project Milestones: AI Football Predictions Platform
 
+## v2.7 Pipeline Reliability & Retroactive Backfill (Shipped: 2026-02-07)
+
+**Delivered:** Fixed prediction pipeline scheduling after server restarts, added retroactive backfill for missed predictions, settlement retry infrastructure, and pipeline health monitoring with gap detection dashboards.
+
+**Phases completed:** 49-52 (9 plans total)
+
+**Key accomplishments:**
+
+- Fixed pipeline scheduling — past-due matches no longer dropped after server restarts (status-based guards)
+- Widened backfill windows to 48h/12h/12h for comprehensive catch-up coverage
+- Settlement retry infrastructure with admin API, conditional retry logic, and zero-prediction detection
+- Retroactive backfill script generates missing predictions for any time window with idempotent job orchestration
+- Pipeline health monitoring: /api/health coverage %, admin dashboards, severity-classified alerts, queue metrics
+
+**Stats:**
+
+- 48 files changed, +8,580 / -114 lines
+- 4 phases, 9 plans, 20 requirements
+- 39 commits
+- 2 days from start to ship (2026-02-06 → 2026-02-07)
+
+**Git range:** `33558e8 (docs(49))` → `359e810 (docs(52))`
+
+**Tech debt:** SETTLE-01 investigation script ready but not executed against production Redis
+
+**What's next:** New milestone planning with `/gsd:new-milestone`
+
+---
+
+## v2.6 SEO/GEO Site Health (Shipped: 2026-02-06)
+
+**Delivered:** Fixed all 24 SEO/GEO issues from Ahrefs audit — eliminated 404s, fixed canonical URLs, cleaned sitemaps, resolved orphan pages, optimized meta tags, fixed structured data, removed broken hreflang.
+
+**Phases completed:** 44-48 (17 plans total)
+
+**Key accomplishments:**
+
+- Removed cascading canonical from root layout, fixed match page self-referential canonicals
+- Created /leagues and /models index pages with ISR and metadata
+- Sitemap cleanup with centralized getInternalUrl helper
+- Cross-linking widgets on model, match, and league pages
+- Centralized metadata formulas with length validation
+- Dark gradient OG images and CollectionPage structured data
+- Deduplicated JSON-LD schemas with @id references and build-time validation
+- TTFB measurement pass and parallelized match metadata queries
+
+**Stats:**
+
+- 17 phases, 24 requirements
+- Shipped 2026-02-06
+
+**Git range:** Phase 44-48
+
+**What's next:** v2.7 Pipeline Reliability & Retroactive Backfill
+
+---
+
 ## v2.5 Model Reliability & Dynamic Counts (Shipped: 2026-02-05)
 
 **Delivered:** Made all 42 models work reliably with model-specific prompts, Together.ai fallback chains, dynamic model counts everywhere, and comprehensive integration testing with production monitoring.

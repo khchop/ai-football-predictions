@@ -21,7 +21,45 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 
 ## Current State
 
-**Brownfield project with v2.5 shipped.** 42 active LLM models across Together AI (29) and Synthetic.new (13) providers. 208 requirements validated across 10 milestones (v1.0-v2.5)
+**Brownfield project with v2.7 shipped.** 42 active LLM models across Together AI (29) and Synthetic.new (13) providers. 252 requirements validated across 12 milestones (v1.0-v2.7)
+
+### Validated (v2.7)
+
+The following requirements were validated in v2.7:
+
+- ✓ **PIPE-01**: Catch-up scheduling handles past-due matches after server restart — v2.7
+- ✓ **PIPE-02**: Fixtures worker schedules existing matches missing BullMQ jobs — v2.7
+- ✓ **PIPE-03**: Backfill worker uses wider time windows (48h/12h/12h) — v2.7
+- ✓ **PIPE-04**: Backfill worker runs full analysis → lineups → predictions chain — v2.7
+- ✓ **PIPE-05**: All matches within 48h have correct delayed jobs after restart — v2.7
+- ✓ **SETTLE-01**: Failed settlement jobs investigated (script ready, accepted as tech debt) — v2.7
+- ✓ **SETTLE-02**: Settlement worker handles zero-prediction matches with conditional retry — v2.7
+- ✓ **SETTLE-03**: Backfill settlement covers finished matches with unscored predictions — v2.7
+- ✓ **SETTLE-04**: Settlement retry cleans up failed jobs and re-queues with fresh data — v2.7
+- ✓ **RETRO-01**: Script identifies matches from last 7 days missing predictions — v2.7
+- ✓ **RETRO-02**: Historical analysis data fetched retroactively for missing matches — v2.7
+- ✓ **RETRO-03**: All 42 LLMs generate predictions using pre-match context — v2.7
+- ✓ **RETRO-04**: Finished match predictions scored immediately against actual results — v2.7
+- ✓ **RETRO-05**: Live match predictions stored for scoring when match finishes — v2.7
+- ✓ **RETRO-06**: Retroactive backfill script is idempotent — v2.7
+- ✓ **MON-01**: Pipeline health endpoint shows match coverage percentage — v2.7
+- ✓ **MON-02**: Admin dashboard shows matches approaching kickoff without jobs — v2.7
+- ✓ **MON-03**: Alert logged when match within 2h of kickoff has no analysis job — v2.7
+- ✓ **MON-04**: Queue metrics include matchesWithoutPredictions count — v2.7
+- ✓ **MON-05**: Settlement failure dashboard with error reasons and retry controls — v2.7
+
+### Validated (v2.6)
+
+The following requirements were validated in v2.6:
+
+- ✓ **REDIR-01 through REDIR-06**: Redirect fixes, canonical URLs, www/http redirects — v2.6
+- ✓ **INDEX-01 through INDEX-06**: /leagues and /models index pages with metadata — v2.6
+- ✓ **I18N-01, I18N-02**: Removed broken hreflang — v2.6
+- ✓ **SMAP-01 through SMAP-04**: Sitemap cleanup and validation — v2.6
+- ✓ **LINK-01 through LINK-05**: Internal linking and cross-linking widgets — v2.6
+- ✓ **CTAG-01 through CTAG-06**: H1 tags, meta descriptions, title lengths, OG tags — v2.6
+- ✓ **SCHEMA-01 through SCHEMA-05**: Deduplicated schemas, validation fixes — v2.6
+- ✓ **PERF-01, PERF-02**: TTFB optimization and Ahrefs re-audit verification — v2.6
 
 ### Validated (v2.5)
 
@@ -299,9 +337,9 @@ The following capabilities are built and operational:
 
 ### Context
 
-Shipped v2.5 with ~206,185 LOC TypeScript.
-Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, Synthetic.new, Vitest, Zod, Radix UI, next-themes, isomorphic-dompurify, html-to-text, he.
-All 208 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, and v2.5 milestones.
+Shipped v2.7 with ~215,000 LOC TypeScript.
+Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, Synthetic.new, Vitest, Zod, Radix UI, next-themes, isomorphic-dompurify, html-to-text, he, pino.
+All 252 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, and v2.7 milestones.
 
 ## Constraints
 
@@ -346,22 +384,9 @@ All 208 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, 
 - Model fine-tuning or custom training
 - Vision models (Qwen3-VL) - not useful for text-only predictions
 
-## Current Milestone: v2.7 Pipeline Reliability & Retroactive Backfill
-
-**Goal:** Fix the prediction/analysis pipeline that fails to schedule jobs for existing matches after server restarts, fix 43 failed settlement jobs, and retroactively generate predictions for all matches from the last 7 days that are missing them.
-
-**Target features:**
-- Fix catch-up scheduling to handle past-due matches (analysis + predictions + lineups), not just future matches
-- Fix backfill worker to detect and fill gaps across wider time windows
-- Fix cascading failure chain: Redis job loss → no re-scheduling → no predictions → no settlement
-- Investigate and fix 43 failed settlement jobs (finished matches with no scoring)
-- Build retroactive prediction script for last 7 days of missed matches (using pre-match context + known scores for finished)
-- Score retroactive predictions against actual results
-- Add pipeline health monitoring to detect gaps before matches go unserved
-
 ## Completed Milestones
 
-v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6 — see `.planning/MILESTONES.md` for full history.
+v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, v2.7 — see `.planning/MILESTONES.md` for full history.
 
 ---
-*Last updated: 2026-02-06 after v2.7 milestone started*
+*Last updated: 2026-02-07 after v2.7 milestone completed*
