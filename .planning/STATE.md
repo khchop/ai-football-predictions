@@ -55,6 +55,9 @@ None.
 **Post quick-018:**
 1. Run database migration: `psql $DATABASE_URL -f drizzle/0013_drop_lineup_columns.sql` to drop 9 lineup columns
 
+**Post quick-020:**
+1. After deploying, run `npx tsx scripts/backfill-retroactive-predictions.ts --days 90` to backfill all historical gaps (partial + missing predictions)
+
 ### Quick Tasks Completed
 
 | # | Description | Date | Commit | Directory |
