@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 54 of 58 (Diagnostic Infrastructure)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-07 — Completed quick-029 (fix match preview hallucination, focus on odds & predictions)
+Last activity: 2026-02-07 — Completed quick-030 (backfill script to regenerate match previews)
 
 Progress: [█████████████████████████████████████████████████████░] 91% (53/58 phases)
 
@@ -48,7 +48,7 @@ Recent decisions affecting current work:
 
 - **Human action:** Run `npx tsx scripts/generate-golden-fixtures.ts` with API keys to capture real golden fixture baselines (placeholder data currently)
 - **Human action:** Configure GitHub branch protection — Settings > Branches > require "Model Regression Tests" status check
-- **Optional:** Regenerate match previews for existing matches to remove hallucinated content (new prompt only affects future generations)
+- **Optional:** Run `npx tsx scripts/backfill-match-previews.ts` to regenerate all existing match previews with anti-hallucination prompt (quick-030)
 
 ### Blockers/Concerns
 
@@ -65,11 +65,12 @@ Recent decisions affecting current work:
 | 027 | Improve match detail text to 500+ words (preview + roundup narrative) | 2026-02-07 | 53ed692 | [027-improve-match-detail-text-500-words](./quick/027-improve-match-detail-text-500-words/) |
 | 028 | Fix HierarchyRequestError in match narrative rendering | 2026-02-07 | ce33711 | [028-fix-hierarchyrequesterror-insertbefore-d](./quick/028-fix-hierarchyrequesterror-insertbefore-d/) |
 | 029 | Fix match preview text to focus on odds, predictions & outcomes instead of hallucinated facts | 2026-02-07 | c57f7f2 | [029-fix-match-preview-text-to-focus-on-odds-](./quick/029-fix-match-preview-text-to-focus-on-odds-/) |
+| 030 | Backfill script to regenerate all existing match previews with anti-hallucination prompt | 2026-02-07 | ec33e5f | [030-backfill-regenerate-match-previews-anti-](./quick/030-backfill-regenerate-match-previews-anti-/) |
 
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed quick-029 (fix match preview hallucination)
+Stopped at: Completed quick-030 (backfill script for match previews)
 Resume file: None
 
 **Next action:** Execute 54-02-PLAN.md (diagnostic runner)
