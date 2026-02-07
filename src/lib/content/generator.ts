@@ -31,6 +31,7 @@ import {
 } from './deduplication';
 import { sanitizeContent, validateNoHtml, textToParagraphs } from './sanitization';
 import { RetryableContentError } from '@/lib/errors/content-errors';
+import { getMatchPredictionsForPreview } from './queries';
 
 /**
  * Generate a match preview using AI
@@ -50,7 +51,40 @@ export async function generateMatchPreview(matchData: {
      homeTeam: matchData.homeTeam,
      awayTeam: matchData.awayTeam,
    }, 'Generating match preview');
-  
+
+  // Fetch score predictions to calculate consensus percentages
+  const scorePredictions = await getMatchPredictionsForPreview(matchData.matchId);
+  let predictionConsensus = undefined;
+  if (scorePredictions.length > 0) {
+    const homeWinCount = scorePredictions.filter(p => p.predictedResult === 'H').length;
+    const drawCount = scorePredictions.filter(p => p.predictedResult === 'D').length;
+    const awayWinCount = scorePredictions.filter(p => p.predictedResult === 'A').length;
+    const total = scorePredictions.length;
+
+    // Calculate top scorelines
+    const scoreFreq: Record<string, number> = {};
+    for (const p of scorePredictions) {
+      const key = `${p.predictedHome}-${p.predictedAway}`;
+      scoreFreq[key] = (scoreFreq[key] || 0) + 1;
+    }
+    const topScorelines = Object.entries(scoreFreq)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 3)
+      .map(([score, count]) => `${score} (${count} models)`)
+      .join(', ');
+
+    predictionConsensus = {
+      totalModels: total,
+      homeWinCount,
+      homeWinPct: Math.round((homeWinCount / total) * 100),
+      drawCount,
+      drawPct: Math.round((drawCount / total) * 100),
+      awayWinCount,
+      awayWinPct: Math.round((awayWinCount / total) * 100),
+      topScorelines,
+    };
+  }
+
   const systemPrompt = 'You are a professional football analyst writing a match preview for SEO and AI search engines (ChatGPT, Perplexity, Claude).';
   const userPrompt = buildMatchPreviewPrompt({
     homeTeam: matchData.homeTeam,
@@ -76,6 +110,7 @@ export async function generateMatchPreview(matchData: {
     oddsUnder25: matchData.analysis?.oddsUnder25 as string | undefined,
     oddsBttsYes: matchData.analysis?.oddsBttsYes as string | undefined,
     aiPredictions: matchData.aiPredictions,
+    predictionConsensus,
   });
 
   const result = await generateWithTogetherAI<MatchPreviewResponse>(systemPrompt, userPrompt);

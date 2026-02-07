@@ -52,7 +52,7 @@ export async function getMatchesNeedingPreviews() {
  */
 export async function getMatchBetsForPreview(matchId: string) {
   const db = getDb();
-  
+
   const result = await db
     .select({
       modelName: models.displayName,
@@ -71,6 +71,26 @@ export async function getMatchBetsForPreview(matchId: string) {
     model: bet.modelName,
     prediction: `${bet.betType}: ${bet.selection} @${bet.odds}`,
   }));
+}
+
+/**
+ * Get match score predictions for preview consensus calculation
+ * Returns score predictions with H/D/A results for calculating consensus percentages
+ */
+export async function getMatchPredictionsForPreview(matchId: string) {
+  const db = getDb();
+  const result = await db
+    .select({
+      modelName: models.displayName,
+      predictedHome: predictions.predictedHome,
+      predictedAway: predictions.predictedAway,
+      predictedResult: predictions.predictedResult,
+    })
+    .from(predictions)
+    .innerJoin(models, eq(predictions.modelId, models.id))
+    .where(eq(predictions.matchId, matchId))
+    .orderBy(models.displayName);
+  return result;
 }
 
 /**

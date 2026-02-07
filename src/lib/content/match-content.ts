@@ -298,11 +298,15 @@ export async function generateBettingContent(matchId: string): Promise<void> {
 
      // Build prediction summary
      let predictionsSummary = '';
+     // Count result tendencies (declare outside block for use in prompt)
+     let homeFavor = 0;
+     let drawFavor = 0;
+     let awayFavor = 0;
+
      if (modelPredictions.length > 0) {
-       // Count result tendencies
-       const homeFavor = modelPredictions.filter((p) => p.predictedResult === 'H').length;
-       const drawFavor = modelPredictions.filter((p) => p.predictedResult === 'D').length;
-       const awayFavor = modelPredictions.filter((p) => p.predictedResult === 'A').length;
+       homeFavor = modelPredictions.filter((p) => p.predictedResult === 'H').length;
+       drawFavor = modelPredictions.filter((p) => p.predictedResult === 'D').length;
+       awayFavor = modelPredictions.filter((p) => p.predictedResult === 'A').length;
 
        // Find most common scores
        const scoreFrequency = modelPredictions.reduce((acc, p) => {
@@ -342,10 +346,12 @@ Kickoff: ${match.kickoffTime}
 ${predictionsSummary}
 
 Include:
-- Consensus prediction (most popular score/outcome)
-- Distribution breakdown (how many models favor each side)
+- Consensus prediction: use the EXACT numbers from Prediction Distribution above (do NOT invent different numbers). Specifically: ${homeFavor} models predict ${match.homeTeam} win, ${drawFavor} predict draw, ${awayFavor} predict ${match.awayTeam} win.
+- Distribution breakdown: quote the exact model counts from above (e.g., "${homeFavor} models favor ${match.homeTeam} Win")
 - Notable outliers or split opinions
 - Confidence level of the consensus
+
+CRITICAL: You MUST use the exact model counts stated above (${homeFavor}/${drawFavor}/${awayFavor}). Do NOT make up different numbers.
 
 OUTPUT FORMAT:
 - Plain text only, no HTML tags

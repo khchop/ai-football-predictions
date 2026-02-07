@@ -11,13 +11,13 @@ interface MatchPreviewData {
   competition: string;
   kickoffTime: string;
   venue?: string;
-  
+
   // Analysis data
   homeWinPct?: number;
   drawPct?: number;
   awayWinPct?: number;
   advice?: string;
-  
+
   // Team form
   homeTeamForm?: string;
   awayTeamForm?: string;
@@ -25,7 +25,7 @@ interface MatchPreviewData {
   homeGoalsConceded?: number;
   awayGoalsScored?: number;
   awayGoalsConceded?: number;
-  
+
   // Odds
   oddsHome?: string;
   oddsDraw?: string;
@@ -33,17 +33,29 @@ interface MatchPreviewData {
   oddsOver25?: string;
   oddsUnder25?: string;
   oddsBttsYes?: string;
-  
-  // AI model predictions
+
+  // AI model predictions (betting)
   aiPredictions?: Array<{
     model: string;
     prediction: string;
   }>;
+
+  // AI prediction consensus (score predictions)
+  predictionConsensus?: {
+    totalModels: number;
+    homeWinCount: number;
+    homeWinPct: number;
+    drawCount: number;
+    drawPct: number;
+    awayWinCount: number;
+    awayWinPct: number;
+    topScorelines: string;
+  };
 }
 
 export function buildMatchPreviewPrompt(data: MatchPreviewData): string {
   const { homeTeam, awayTeam, competition, kickoffTime, venue } = data;
-  
+
   return `Match Details:
 - ${homeTeam} vs ${awayTeam}
 - Competition: ${competition}
@@ -68,8 +80,17 @@ ${data.awayWinPct ? `- ${awayTeam}: ${data.awayWinPct}%` : ''}
 ${data.advice ? `Expert Advice: ${data.advice}` : ''}
 
 ${data.aiPredictions && data.aiPredictions.length > 0 ? `
-AI Model Predictions:
+AI Model Betting Predictions:
 ${data.aiPredictions.map(p => `- ${p.model}: ${p.prediction}`).join('\n')}
+` : ''}
+
+${data.predictionConsensus ? `
+AI Score Prediction Consensus:
+- Total Models Analyzed: ${data.predictionConsensus.totalModels}
+- ${homeTeam} Win: ${data.predictionConsensus.homeWinCount} models (${data.predictionConsensus.homeWinPct}%)
+- Draw: ${data.predictionConsensus.drawCount} models (${data.predictionConsensus.drawPct}%)
+- ${awayTeam} Win: ${data.predictionConsensus.awayWinCount} models (${data.predictionConsensus.awayWinPct}%)
+- Most Predicted Scorelines: ${data.predictionConsensus.topScorelines}
 ` : ''}
 
 Write a comprehensive match preview with the following sections in JSON format:
@@ -77,7 +98,7 @@ Write a comprehensive match preview with the following sections in JSON format:
 {
   "introduction": "2-3 paragraph introduction setting the scene (200-250 words). First sentence MUST state which team bookmakers favor and at what odds (e.g., 'Bookmakers favor Arsenal at 1.65 to beat Chelsea in this Premier League clash'). Include match importance, stakes, and context.",
   "teamFormAnalysis": "Detailed analysis of both teams' recent form and current situation (250-300 words). Use ONLY the form string (e.g., 'WWDWL') and goals data provided. Do NOT mention league table positions, relegation/title races, or player names.",
-  "prediction": "AI-powered prediction based on model consensus (150-200 words). State the overall AI model consensus (e.g., '45% draw, 35% home win, 20% away win'). Highlight which outcome most models agree on. Reference how the AI consensus compares to the bookmaker odds. Mention confidence level based on model agreement.",
+  "prediction": "AI-powered prediction based on model consensus (150-200 words). ${data.predictionConsensus ? `EXACT CONSENSUS DATA (use these exact numbers): ${data.predictionConsensus.homeWinCount} of ${data.predictionConsensus.totalModels} models (${data.predictionConsensus.homeWinPct}%) predict ${homeTeam} win, ${data.predictionConsensus.drawCount} (${data.predictionConsensus.drawPct}%) predict a draw, ${data.predictionConsensus.awayWinCount} (${data.predictionConsensus.awayWinPct}%) predict ${awayTeam} win. Most predicted scorelines: ${data.predictionConsensus.topScorelines}.` : 'State the overall model consensus based on available data.'} Highlight which outcome most models agree on. Reference how the AI consensus compares to the bookmaker odds. Mention confidence level based on model agreement.",
   "bettingInsights": "Betting insights based on AI model predictions vs market odds (150-200 words). Identify where AI model consensus DIFFERS from bookmaker odds (value bets). Suggest 2-3 specific betting markets where models see value. Reference the AI prediction percentages alongside the implied odds percentages.",
   "metaDescription": "SEO-optimized meta description (150-160 characters exactly)",
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
