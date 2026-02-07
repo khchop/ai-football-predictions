@@ -1,8 +1,8 @@
 /**
- * Together AI Content Generation Client
- * 
- * Uses Llama 4 Maverick for high-quality blog content generation.
- * Replaces OpenRouter for unified LLM provider infrastructure.
+ * Synthetic API Content Generation Client (Kimi K2 Thinking)
+ *
+ * Uses Kimi K2 Thinking (moonshotai) for high-quality reasoning-based content generation.
+ * Replaces Together AI (Llama 4 Maverick) for enhanced content quality.
  */
 
 import { fetchWithRetry } from '@/lib/utils/api-client';
@@ -60,12 +60,25 @@ interface TextGenerationResult {
 }
 
 // Configuration
-const MODEL = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
-const API_URL = 'https://api.together.xyz/v1/chat/completions';
+const MODEL = 'hf:moonshotai/Kimi-K2-Thinking';
+const API_URL = 'https://api.synthetic.new/openai/v1/chat/completions';
 const PRICING = {
-  inputCostPerMillion: 0.27,  // USD per 1M tokens
-  outputCostPerMillion: 0.85, // USD per 1M tokens
+  inputCostPerMillion: 2.00,  // USD per 1M tokens
+  outputCostPerMillion: 6.00, // USD per 1M tokens
 };
+
+/**
+ * Strip thinking/reasoning tags from Kimi K2 Thinking model responses
+ * Kimi K2 wraps reasoning in <think>...</think>, <thinking>...</thinking>, <reasoning>...</reasoning>
+ * These must be removed BEFORE JSON parsing or text output
+ */
+function stripThinkingTags(text: string): string {
+  return text
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
+    .replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '')
+    .trim();
+}
 
 /**
  * Calculate content generation cost
@@ -109,7 +122,7 @@ function cleanJSONString(jsonString: string): string {
 }
 
 /**
- * Generate content using Llama 4 Maverick via Together AI
+ * Generate content using Kimi K2 Thinking via Synthetic API
  */
 export async function generateWithTogetherAI<T = unknown>(
   systemPrompt: string,
@@ -117,10 +130,10 @@ export async function generateWithTogetherAI<T = unknown>(
   temperature: number = 0.7,
   maxTokens: number = 3000
 ): Promise<GenerationResult<T>> {
-  const apiKey = process.env.TOGETHER_API_KEY;
-  
+  const apiKey = process.env.SYNTHETIC_API_KEY;
+
   if (!apiKey) {
-    throw new Error('TOGETHER_API_KEY environment variable is not set');
+    throw new Error('SYNTHETIC_API_KEY environment variable is not set');
   }
 
   const request: TogetherRequest = {
@@ -160,16 +173,17 @@ export async function generateWithTogetherAI<T = unknown>(
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Together AI API error (${response.status}): ${errorText}`);
+      throw new Error(`Synthetic API error (${response.status}): ${errorText}`);
     }
 
     const data = await response.json() as TogetherResponse;
 
     if (!data.choices || data.choices.length === 0) {
-      throw new Error('No response from Together AI API');
+      throw new Error('No response from Synthetic API');
     }
 
-    const content = data.choices[0].message.content;
+    const rawContent = data.choices[0].message.content;
+    const content = stripThinkingTags(rawContent);
     const usage = data.usage;
      const cost = calculateCost(usage.prompt_tokens, usage.completion_tokens);
      const duration = Date.now() - startTime;
@@ -179,7 +193,7 @@ export async function generateWithTogetherAI<T = unknown>(
        inputTokens: usage.prompt_tokens,
        outputTokens: usage.completion_tokens,
        cost,
-     }, 'Content generated');
+     }, 'Content generated (Kimi K2 Thinking)');
 
     // Parse JSON response
     let parsedContent: T;
@@ -246,7 +260,7 @@ export async function generateWithTogetherAI<T = unknown>(
 }
 
 /**
- * Generate plain text content using Together AI
+ * Generate plain text content using Kimi K2 Thinking via Synthetic API
  * Use this for prose content (match summaries, descriptions) that doesn't need JSON structure.
  * Avoids JSON parsing errors by returning raw text directly.
  */
@@ -256,10 +270,10 @@ export async function generateTextWithTogetherAI(
   temperature: number = 0.7,
   maxTokens: number = 1000
 ): Promise<TextGenerationResult> {
-  const apiKey = process.env.TOGETHER_API_KEY;
-  
+  const apiKey = process.env.SYNTHETIC_API_KEY;
+
   if (!apiKey) {
-    throw new Error('TOGETHER_API_KEY environment variable is not set');
+    throw new Error('SYNTHETIC_API_KEY environment variable is not set');
   }
 
   const request: TogetherRequest = {
@@ -293,16 +307,17 @@ export async function generateTextWithTogetherAI(
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Together AI API error (${response.status}): ${errorText}`);
+      throw new Error(`Synthetic API error (${response.status}): ${errorText}`);
     }
 
     const data = await response.json() as TogetherResponse;
 
     if (!data.choices || data.choices.length === 0) {
-      throw new Error('No response from Together AI API');
+      throw new Error('No response from Synthetic API');
     }
 
-    const content = data.choices[0].message.content;
+    const rawContent = data.choices[0].message.content;
+    const content = stripThinkingTags(rawContent);
     const usage = data.usage;
     const cost = calculateCost(usage.prompt_tokens, usage.completion_tokens);
     const duration = Date.now() - startTime;
@@ -312,10 +327,10 @@ export async function generateTextWithTogetherAI(
       inputTokens: usage.prompt_tokens,
       outputTokens: usage.completion_tokens,
       cost,
-    }, 'Text content generated (no JSON parsing)');
+    }, 'Text content generated (Kimi K2 Thinking, no JSON parsing)');
 
     return {
-      content, // Raw text, no JSON parsing
+      content, // Thinking tags stripped, no JSON parsing
       usage: {
         promptTokens: usage.prompt_tokens,
         completionTokens: usage.completion_tokens,

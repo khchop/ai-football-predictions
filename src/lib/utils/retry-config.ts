@@ -139,9 +139,9 @@ export const TOGETHER_PREDICTION_TIMEOUT_MS = 25000;       // Increased from 20s
 export const TOGETHER_PREDICTION_BATCH_TIMEOUT_MS = 35000; // Increased from 30s to 35s for batch
 
 // ============================================================================
-// TOGETHER AI - CONTENT (Llama 4 Maverick)
+// SYNTHETIC API - CONTENT (Kimi K2 Thinking)
 // Rate limit: Same as predictions
-// Typical latency: 5-15s for long-form content
+// Typical latency: 10-30s for long-form content (reasoning model)
 // Reliability: High (99.5%)
 // ============================================================================
 export const TOGETHER_CONTENT_RETRY: Partial<RetryConfig> = {
@@ -151,7 +151,7 @@ export const TOGETHER_CONTENT_RETRY: Partial<RetryConfig> = {
   retryableStatusCodes: [408, 429, 500, 502, 503, 504],
 };
 
-export const TOGETHER_CONTENT_TIMEOUT_MS = 60000; // 60s timeout for content generation
+export const TOGETHER_CONTENT_TIMEOUT_MS = 90000; // 90s timeout for reasoning model content generation
 
 // ============================================================================
 // SERVICE NAMES (for circuit breaker and logging)
@@ -159,7 +159,7 @@ export const TOGETHER_CONTENT_TIMEOUT_MS = 60000; // 60s timeout for content gen
 export const SERVICE_NAMES = {
   API_FOOTBALL: 'api-football',
   TOGETHER_PREDICTIONS: 'together-predictions',
-  TOGETHER_CONTENT: 'together-content',
+  TOGETHER_CONTENT: 'together-content', // Now points to Synthetic API (Kimi K2 Thinking)
 } as const;
 
 export type ServiceName = typeof SERVICE_NAMES[keyof typeof SERVICE_NAMES];

@@ -1,28 +1,28 @@
 /**
  * Content Generation Configuration
- * 
- * Uses Llama 4 Maverick via Together AI for unified LLM infrastructure.
- * Pricing: $0.27/M input, $0.85/M output
- * 
+ *
+ * Uses Kimi K2 Thinking via Synthetic API for high-quality reasoning-based content.
+ * Pricing: $2.00/M input, $6.00/M output
+ *
  * Estimated monthly volume:
  * - Match previews: ~280/month (65/week avg)
  * - League roundups: ~32/month (8 leagues/week, 4 weeks)
  * - Model reports: ~4/month (weekly instead of monthly)
  * Total: ~316 articles/month
- * 
- * Cost estimate: ~$0.71/month
+ *
+ * Cost estimate: ~$5/month (higher due to reasoning model premium, but better quality)
  */
 
 export const CONTENT_CONFIG = {
-  // Together AI configuration (unified with predictions)
-  provider: 'together',
-  model: 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8',
-  apiUrl: 'https://api.together.xyz/v1/chat/completions',
-  
+  // Synthetic API configuration (Kimi K2 Thinking)
+  provider: 'synthetic',
+  model: 'hf:moonshotai/Kimi-K2-Thinking',
+  apiUrl: 'https://api.synthetic.new/openai/v1/chat/completions',
+
   // Token limits and pricing (for cost tracking)
   pricing: {
-    inputCostPerMillion: 0.27,  // USD
-    outputCostPerMillion: 0.85, // USD
+    inputCostPerMillion: 2.00,  // USD
+    outputCostPerMillion: 6.00, // USD
   },
   
   // Generation parameters (tuned for content quality)
