@@ -618,23 +618,25 @@ ${modelPredictions
   if (narrativeAngles?.isMilestone) angles.push('milestone performance');
   const anglesText = angles.length > 0 ? angles.join(', ') : 'standard match analysis';
 
+  // Conditionally include events section only if events exist
+  const eventsSection = eventsTimeline
+    ? `## MATCH EVENTS (TIMELINE)\n${eventsTimeline}\n`
+    : ''; // Omit entirely when no events — do NOT include placeholder text
+
   return `MATCH: ${homeTeam} vs ${awayTeam}
 COMPETITION: ${competition}
 VENUE: ${venue || 'TBD'}
 KICKOFF: ${kickoffTime}
 FINAL SCORE: ${finalScore.home} - ${finalScore.away}
 
-## MATCH EVENTS (TIMELINE)
-${eventsTimeline || '  No major events recorded'}
-
-## EXTENDED STATS
-${formattedStats.join('\n') || '  Stats unavailable'}
-
 ## MODEL PREDICTIONS PERFORMANCE
 ${predictionsTable}
 
 ## TOP 3 PERFORMERS (BY POINTS)
 ${topPerformers.map((m, i) => `${i + 1}. ${m.modelName}: ${m.prediction} (${m.points} pts)`).join('\n')}
+
+${eventsSection}## EXTENDED STATS
+${formattedStats.join('\n') || '  Stats unavailable'}
 
 ## NARRATIVE ANGLES
 ${anglesText}
@@ -644,22 +646,31 @@ ${anglesText}
 Write a comprehensive post-match roundup (1000+ words) in the following structure:
 
 1. **Score Header** - Match title with final score and competition
-2. **Match Overview** - Opening paragraph setting the scene (context, importance)
-3. **Key Events Timeline** - Major moments in chronological order
+2. **Match Overview** - Opening paragraph (context, importance, AI prediction landscape)
+3. **Model Predictions Analysis** - LEAD SECTION: How AI models performed, highlight top/bottom performers, accuracy breakdown, which models got the tendency right vs exact score
 4. **Extended Statistics** - Possession, shots, xG analysis with bullet points
-5. **Model Predictions Analysis** - How AI models performed, highlight top/bottom performers
-6. **Narrative Analysis** - Deep dive into the match, tactical insights, key moments
+5. **Key Events Timeline** - Major moments in chronological order (ONLY if event data was provided above; if not, skip this section entirely)
+6. **Narrative Analysis** - Deep dive: tactical insights, what the stats reveal, why models succeeded or failed
 7. **Narrative Angles** - Highlight if this was a derby, comeback, upset, or milestone
+
+CRITICAL RULES:
+- NEVER mention the absence of events, missing event data, or say "no events recorded"
+- If no match events timeline is provided above, simply skip that section — do NOT comment on its absence
+- The PRIMARY narrative focus must be AI model prediction accuracy and performance
+- Lead with which models predicted correctly, which were close, and which missed badly
 
 ## WRITING GUIDELINES
 
-- Use a balanced tone: mix storytelling with key statistics
-- Reference specific model names (no generic "Model 1")
+- PRIMARY FOCUS: AI model prediction accuracy — which models nailed it, which missed, and why
+- Reference specific model names and their exact predictions (no generic "Model 1")
+- Use a balanced tone: mix data-driven analysis with storytelling
 - Use facts ONLY from the provided data (no hallucinations)
+- NEVER mention the absence or lack of match events — if events aren't provided, focus elsewhere
+- Highlight prediction patterns: did most models predict the right tendency? Any exact scores?
 - Highlight unique angles: comebacks, upsets, derbies, milestones
 - Rich formatting: bullet points for stats, occasional emoji for emphasis
 - Plain text format with natural line breaks (no HTML tags or entities)
-- Focus on the narrative: what made this match interesting?
+- Focus on what the AI models reveal about this match
 
 ## OUTPUT FORMAT
 
