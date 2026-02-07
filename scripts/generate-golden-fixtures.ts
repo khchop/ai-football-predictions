@@ -78,7 +78,7 @@ async function generateGoldenFixtures(): Promise<void> {
         console.log(`  ✓ Success: ${prediction.homeScore}-${prediction.awayScore}`);
       } else {
         // Model returned but failed to parse
-        const errorMsg = result.errors?.[TEST_MATCH_ID] || 'Unknown parsing error';
+        const errorMsg = result.error || 'Unknown parsing error';
         fixtures.push({
           modelId: provider.id,
           provider: providerType,
