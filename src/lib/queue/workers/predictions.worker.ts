@@ -83,12 +83,18 @@ export function createPredictionsWorker() {
       log.info({ matchId }, 'Starting prediction job');
 
       try {
-         // Check if predictions already exist
+         // Check if predictions are complete (>= 42 = all models done)
+         let existingModelIds: Set<string> | null = null;
          if (skipIfDone) {
            const existingPredictions = await getPredictionsForMatch(matchId);
+           if (existingPredictions.length >= 42) {
+             log.info({ matchId, count: existingPredictions.length }, `All predictions complete for match ${matchId}, skipping`);
+             return { skipped: true, reason: 'predictions_complete', predictionCount: existingPredictions.length };
+           }
            if (existingPredictions.length > 0) {
-             log.info(`Predictions already exist for match ${matchId}, skipping`);
-             return { skipped: true, reason: 'predictions_already_exist', predictionCount: existingPredictions.length };
+             // Partial predictions exist - track which models already predicted
+             existingModelIds = new Set(existingPredictions.map(p => p.modelId));
+             log.info({ matchId, existing: existingPredictions.length, modelsCompleted: existingModelIds.size }, `Partial predictions found, will complete remaining models`);
            }
          }
 
@@ -153,7 +159,21 @@ export function createPredictionsWorker() {
           // Get active providers (filtered to exclude auto-disabled models)
           const providers = await getActiveProviders();
           log.info(`Generating predictions from ${providers.length} models`);
-        
+
+         // Filter out models that already have predictions for this match (partial backfill)
+         const filteredProviders = existingModelIds
+           ? providers.filter(p => !existingModelIds!.has(p.id))
+           : providers;
+
+         if (existingModelIds && filteredProviders.length === 0) {
+           log.info({ matchId, existingModels: existingModelIds.size, totalModels: providers.length }, `All active models already have predictions, skipping`);
+           return { skipped: true, reason: 'all_active_models_predicted', predictionCount: existingModelIds.size };
+         }
+
+         if (existingModelIds) {
+           log.info({ matchId, remaining: filteredProviders.length, skippedModels: existingModelIds.size }, `Generating predictions for ${filteredProviders.length} remaining models`);
+         }
+
          let successCount = 0;
          let failCount = 0;
          
@@ -161,9 +181,9 @@ export function createPredictionsWorker() {
          const predictionsToInsert: NewPrediction[] = [];
          // Track which models succeeded so we can record health AFTER batch insert
          const successfulModelIds: string[] = [];
-         
+
          // Generate predictions for each model with isolation
-         for (const provider of providers) {
+         for (const provider of filteredProviders) {
            try {
              // Build prompt (WITHOUT ODDS - only stats, form, H2H, standings)
              const prompt = buildBatchPrompt([{
@@ -295,8 +315,10 @@ export function createPredictionsWorker() {
           
           log.info({
             totalModels: providers.length,
+            filtered: filteredProviders.length,
             successful: successCount,
             failed: failCount,
+            previouslyComplete: existingModelIds?.size ?? 0,
           }, 'Prediction job completed');
 
         return {
@@ -304,6 +326,8 @@ export function createPredictionsWorker() {
           successCount,
           failCount,
           totalModels: providers.length,
+          newPredictions: predictionsToInsert.length,
+          previouslyComplete: existingModelIds?.size ?? 0,
         };
        } catch (error: unknown) {
            const errorMsg = error instanceof Error ? error.message : String(error);
