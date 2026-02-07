@@ -18,7 +18,54 @@ interface PreviewData {
 interface NarrativeContent {
   preMatchContent: string | null;
   postMatchContent: string | null;
+  roundupNarrative: string | null;
   preview: PreviewData | null;
+}
+
+/**
+ * Renders structured preview sections (introduction, team form, H2H, key players, etc.)
+ * Shared between finished matches (preview + report) and upcoming/live matches (preview only).
+ */
+function renderPreviewSections(preview: PreviewData) {
+  return (
+    <>
+      <p>{preview.introduction}</p>
+
+      <h3>Team Form</h3>
+      <p>{preview.teamFormAnalysis}</p>
+
+      {preview.headToHead && (
+        <>
+          <h3>Head to Head</h3>
+          <p>{preview.headToHead}</p>
+        </>
+      )}
+
+      {preview.keyPlayers && (
+        <>
+          <h3>Key Players</h3>
+          <p>{preview.keyPlayers}</p>
+        </>
+      )}
+
+      {preview.tacticalAnalysis && (
+        <>
+          <h3>Tactical Analysis</h3>
+          <p>{preview.tacticalAnalysis}</p>
+        </>
+      )}
+
+      <h3>Prediction</h3>
+      <p>{preview.prediction}</p>
+
+      {preview.bettingInsights && (
+        <>
+          <h3>Betting Insights</h3>
+          <p>{preview.bettingInsights}</p>
+        </>
+      )}
+    </>
+  );
 }
 
 /**
@@ -27,7 +74,7 @@ interface NarrativeContent {
  * Displays pre-match or post-match narrative based on match state from context:
  * - Upcoming: Shows structured preview content (form analysis, H2H, key players, etc.)
  * - Live: Shows structured preview content (keep preview visible)
- * - Finished: Shows postMatchContent with "Match Report" heading
+ * - Finished: Shows Match Preview section + Match Report section with full roundup narrative
  *
  * Falls back to preMatchContent plain text if no preview data is available.
  * If no narrative content is available, displays a placeholder message.
@@ -72,10 +119,15 @@ export function MatchNarrative() {
     );
   }
 
-  // Finished matches: show post-match content
+  // Finished matches: show preview + match report (roundup narrative)
   if (isFinished) {
+    const preview = content?.preview;
+    const roundupNarrative = content?.roundupNarrative;
     const postContent = content?.postMatchContent;
-    if (!postContent) {
+    const hasReport = roundupNarrative || postContent;
+
+    // No content at all
+    if (!preview && !hasReport) {
       return (
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-6">
@@ -91,23 +143,48 @@ export function MatchNarrative() {
       );
     }
 
-    const isHtml = /<[a-z][\s\S]*>/i.test(postContent);
     return (
-      <Card className="bg-card/50 border-border/50">
-        <CardContent className="p-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
-            Match Report
-          </h2>
-          <div className="prose prose-sm dark:prose-invert max-w-none">
-            {isHtml ? (
-              <div dangerouslySetInnerHTML={{ __html: postContent }} />
-            ) : (
-              postContent
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        {/* Match Preview - show if preview data exists */}
+        {preview && (
+          <Card className="bg-card/50 border-border/50">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                Match Preview
+              </h2>
+              <div className="prose prose-sm dark:prose-invert max-w-none space-y-4">
+                {renderPreviewSections(preview)}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Match Report - roundup narrative preferred, fallback to postMatchContent */}
+        <Card className="bg-card/50 border-border/50">
+          <CardContent className="p-6">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Match Report
+            </h2>
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              {roundupNarrative ? (
+                <div dangerouslySetInnerHTML={{ __html: roundupNarrative }} />
+              ) : postContent ? (
+                /<[a-z][\s\S]*>/i.test(postContent) ? (
+                  <div dangerouslySetInnerHTML={{ __html: postContent }} />
+                ) : (
+                  postContent
+                )
+              ) : (
+                <p className="text-muted-foreground italic">
+                  Match report is being generated.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -122,41 +199,7 @@ export function MatchNarrative() {
             Match Preview
           </h2>
           <div className="prose prose-sm dark:prose-invert max-w-none space-y-4">
-            <p>{preview.introduction}</p>
-
-            <h3>Team Form</h3>
-            <p>{preview.teamFormAnalysis}</p>
-
-            {preview.headToHead && (
-              <>
-                <h3>Head to Head</h3>
-                <p>{preview.headToHead}</p>
-              </>
-            )}
-
-            {preview.keyPlayers && (
-              <>
-                <h3>Key Players</h3>
-                <p>{preview.keyPlayers}</p>
-              </>
-            )}
-
-            {preview.tacticalAnalysis && (
-              <>
-                <h3>Tactical Analysis</h3>
-                <p>{preview.tacticalAnalysis}</p>
-              </>
-            )}
-
-            <h3>Prediction</h3>
-            <p>{preview.prediction}</p>
-
-            {preview.bettingInsights && (
-              <>
-                <h3>Betting Insights</h3>
-                <p>{preview.bettingInsights}</p>
-              </>
-            )}
+            {renderPreviewSections(preview)}
           </div>
         </CardContent>
       </Card>
