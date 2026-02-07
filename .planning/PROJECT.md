@@ -341,6 +341,15 @@ Shipped v2.7 with ~215,000 LOC TypeScript.
 Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, Synthetic.new, Vitest, Zod, Radix UI, next-themes, isomorphic-dompurify, html-to-text, he, pino.
 All 252 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, and v2.7 milestones.
 
+## Current Milestone: v2.8 Model Coverage
+
+**Goal:** Achieve 100% prediction coverage — all 42 LLMs successfully generating predictions with per-model diagnosis and fixes.
+
+**Target features:**
+- Diagnostic tooling to identify which models fail and categorize failure modes
+- Per-model fixes: prompt tweaks, timeout tuning, response parsing, fallback adjustments
+- Validation that all 42 models produce valid predictions end-to-end
+
 ## Constraints
 
 **Technical:**
@@ -358,7 +367,7 @@ All 252 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, 
 
 **Business:**
 - View-only platform (no user predictions or betting)
-- Focus on bug fixes, not new features
+- Focus on model reliability and prediction coverage
 - Maintain 17 league coverage (don't reduce scope)
 
 ## Key Decisions
@@ -369,7 +378,7 @@ All 252 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, 
 | Exact score predictions (not 1X2) | More impressive benchmark, demonstrates reasoning capability | Current system predicts 2-1, 0-0, etc. |
 | Kicktipp quota scoring | Rewards rare correct predictions, penalizes herd behavior | 2-6 points based on prediction rarity |
 | 30-minute pre-kickoff prediction window | Lineups available, but close enough to match for relevant context | T-30m with T-5m retry fallback |
-| Bug fixes only scope | Existing platform has fundamental value, stability is priority | Current sprint focused on fixes |
+| Per-model investigation | Different models fail for different reasons, need individual fixes | v2.8 — diagnose then fix per model |
 | Keep 17 leagues | Already integrated, reducing scope would be regression | All leagues operational |
 
 ## Out of Scope
@@ -389,4 +398,4 @@ All 252 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, 
 v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, v2.7 — see `.planning/MILESTONES.md` for full history.
 
 ---
-*Last updated: 2026-02-07 after v2.7 milestone completed*
+*Last updated: 2026-02-07 after v2.8 milestone started*

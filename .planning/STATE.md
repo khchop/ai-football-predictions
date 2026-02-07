@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** The prediction pipeline must reliably generate scores from 42 LLMs before kickoff and accurately score them when matches complete
-**Current focus:** Planning next milestone
+**Current focus:** v2.8 Model Coverage — All 42 models producing predictions
 
 ## Current Position
 
-Phase: 52 of 52 — v2.7 COMPLETE
-Plan: All plans complete
-Status: Milestone shipped — ready for next milestone planning
-Last activity: 2026-02-07 — Completed quick-023
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements for v2.8
+Last activity: 2026-02-07 — Milestone v2.8 started
 
-Progress: [████████████████████████████████████████████████] 100% (12 milestones shipped)
+Progress: Defining requirements
 
 ## Milestone History
 
@@ -80,17 +80,17 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed quick-025 (fix connection() outside request scope)
+Stopped at: Starting v2.8 milestone
 Resume file: None
 
 **Platform status:**
 - 17 leagues operational
 - 42 active models (29 Together + 13 Synthetic)
-- 0 disabled models
+- Unknown number of models failing — diagnosis needed
 - 252 requirements validated (v1.0-v2.7)
-- Pipeline monitoring operational (health endpoint, admin dashboards, alerts)
+- Pipeline monitoring operational
 
-**Next action:** Deploy quick-025 and verify analysis jobs succeed.
+**Next action:** Define requirements, then create roadmap.
 
 ---
-*Last updated: 2026-02-07 after quick-025 completed*
+*Last updated: 2026-02-07 after v2.8 milestone started*
