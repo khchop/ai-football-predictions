@@ -1424,34 +1424,6 @@ export async function getMatchAnalysisByMatchId(matchId: string): Promise<MatchA
   return result[0] || null;
 }
 
-export async function updateMatchAnalysisLineups(
-  matchId: string,
-  lineupData: {
-    homeFormation: string | null;
-    awayFormation: string | null;
-    homeStartingXI: string;
-    awayStartingXI: string;
-    homeCoach: string | null;
-    awayCoach: string | null;
-    lineupsAvailable: boolean;
-    lineupsUpdatedAt: string;
-    rawLineupsData: string;
-  }
-) {
-  const db = getDb();
-  
-  // First check if analysis exists
-  const existing = await getMatchAnalysisByMatchId(matchId);
-  if (!existing) {
-    throw new Error(`No analysis found for match ${matchId}`);
-  }
-  
-  return db
-    .update(matchAnalysis)
-    .set(lineupData)
-    .where(eq(matchAnalysis.matchId, matchId));
-}
-
 // ============= LEGACY FUNCTIONS (DEPRECATED - Betting System Only) =============
 // These functions are stubs to allow build to succeed while UI is migrated to betting system
 
@@ -1656,30 +1628,6 @@ export async function getMatchesMissingOdds(hoursAhead: number = 6): Promise<Mat
         lte(matches.kickoffTime, future.toISOString()),
         isNotNull(matches.externalId),
         isNull(matchAnalysis.oddsHome) // Has analysis but no odds
-      )
-    )
-    .orderBy(matches.kickoffTime);
-  
-  return results.map(r => r.match);
-}
-
-// Get matches missing lineups (has analysis, < X hours to kickoff)
-export async function getMatchesMissingLineups(hoursAhead: number = 2): Promise<Match[]> {
-  const db = getDb();
-  const now = new Date();
-  const future = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
-  
-  const results = await db
-    .select({ match: matches })
-    .from(matches)
-    .innerJoin(matchAnalysis, eq(matches.id, matchAnalysis.matchId))
-    .where(
-      and(
-        eq(matches.status, 'scheduled'),
-        gte(matches.kickoffTime, now.toISOString()),
-        lte(matches.kickoffTime, future.toISOString()),
-        isNotNull(matches.externalId),
-        eq(matchAnalysis.lineupsAvailable, false) // Lineups not yet fetched
       )
     )
     .orderBy(matches.kickoffTime);
@@ -2274,8 +2222,8 @@ export async function getMatchesMissingPredictions(hoursAhead: number = 2): Prom
   
   const now = new Date();
   const targetTime = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
-  
-  // Find matches with analysis and lineups but no predictions
+
+  // Find matches with analysis but no predictions
   const results = await db
     .select({ match: matches })
     .from(matches)
@@ -2286,7 +2234,6 @@ export async function getMatchesMissingPredictions(hoursAhead: number = 2): Prom
         eq(matches.status, 'scheduled'),
         gte(matches.kickoffTime, now.toISOString()),
         lte(matches.kickoffTime, targetTime.toISOString()),
-        eq(matchAnalysis.lineupsAvailable, true), // Has lineups
         isNull(predictions.id) // No predictions yet
       )
     )

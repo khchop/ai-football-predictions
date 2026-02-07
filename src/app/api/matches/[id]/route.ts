@@ -118,12 +118,6 @@ export async function GET(
           homeInjuriesCount: analysis.homeInjuriesCount,
           awayInjuriesCount: analysis.awayInjuriesCount,
           keyInjuries: analysis.keyInjuries,
-          homeFormation: analysis.homeFormation,
-          awayFormation: analysis.awayFormation,
-          homeStartingXI: analysis.homeStartingXI,
-          awayStartingXI: analysis.awayStartingXI,
-          homeCoach: analysis.homeCoach,
-          awayCoach: analysis.awayCoach,
         } : null,
         predictions: predictions.map(pred => ({
           id: pred.predictionId,

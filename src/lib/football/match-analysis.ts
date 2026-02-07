@@ -505,18 +505,7 @@ export async function fetchAndStoreAnalysis(
     rawTeamStatsHome: null,
     rawTeamStatsAway: null,
     rawH2HData: null,
-    
-    // Keep existing lineup data if present
-    homeFormation: existing?.homeFormation || null,
-    awayFormation: existing?.awayFormation || null,
-    homeStartingXI: existing?.homeStartingXI || null,
-    awayStartingXI: existing?.awayStartingXI || null,
-    homeCoach: existing?.homeCoach || null,
-    awayCoach: existing?.awayCoach || null,
-    lineupsAvailable: existing?.lineupsAvailable || false,
-    lineupsUpdatedAt: existing?.lineupsUpdatedAt || null,
-    rawLineupsData: existing?.rawLineupsData || null,
-    
+
     // Archive raw data: Don't store raw API responses to reduce DB bloat
     // Only processed results are stored (predictions, injuries, odds)
     rawPredictionsData: null,

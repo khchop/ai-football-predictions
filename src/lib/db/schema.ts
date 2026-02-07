@@ -187,17 +187,7 @@ export const matchAnalysis = pgTable('match_analysis', {
   homeInjuriesCount: integer('home_injuries_count').default(0),
   awayInjuriesCount: integer('away_injuries_count').default(0),
   keyInjuries: text('key_injuries'), // JSON array of injury details
-  
-  // Lineups (from /fixtures/lineups endpoint, fetched closer to kickoff)
-  homeFormation: text('home_formation'), // e.g., "4-3-3"
-  awayFormation: text('away_formation'),
-  homeStartingXI: text('home_starting_xi'), // JSON array of player names
-  awayStartingXI: text('away_starting_xi'),
-  homeCoach: text('home_coach'),
-  awayCoach: text('away_coach'),
-  lineupsAvailable: boolean('lineups_available').default(false),
-  lineupsUpdatedAt: text('lineups_updated_at'),
-  
+
   // Head-to-head history (extracted from /predictions endpoint h2h data)
   h2hTotal: integer('h2h_total'),           // Total H2H matches in data
   h2hHomeWins: integer('h2h_home_wins'),    // Home team wins in H2H
@@ -216,7 +206,6 @@ export const matchAnalysis = pgTable('match_analysis', {
   rawPredictionsData: text('raw_predictions_data'),
   rawInjuriesData: text('raw_injuries_data'),
   rawOddsData: text('raw_odds_data'),
-  rawLineupsData: text('raw_lineups_data'),
   rawTeamStatsHome: text('raw_team_stats_home'),     // Raw team statistics API response
   rawTeamStatsAway: text('raw_team_stats_away'),     // Raw team statistics API response
   rawH2HData: text('raw_h2h_data'),                   // Raw H2H API response
