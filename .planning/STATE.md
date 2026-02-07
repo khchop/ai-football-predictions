@@ -53,10 +53,10 @@ None.
 3. ~~Run `npx tsx scripts/backfill-retroactive-predictions.ts --days 7` against production~~ -- automated in quick-017
 
 **Post quick-018:**
-1. Run database migration: `psql $DATABASE_URL -f drizzle/0013_drop_lineup_columns.sql` to drop 9 lineup columns
+1. ~~Run database migration: `psql $DATABASE_URL -f drizzle/0013_drop_lineup_columns.sql` to drop 9 lineup columns~~ -- automated in quick-021
 
 **Post quick-020:**
-1. After deploying, run `npx tsx scripts/backfill-retroactive-predictions.ts --days 90` to backfill all historical gaps (partial + missing predictions)
+1. ~~After deploying, run `npx tsx scripts/backfill-retroactive-predictions.ts --days 90` to backfill all historical gaps (partial + missing predictions)~~ -- automated in quick-021
 
 ### Quick Tasks Completed
 
@@ -73,11 +73,12 @@ None.
 | 018 | Remove lineup dependency from prediction pipeline | 2026-02-07 | cccd0e7 | [018-remove-lineup-dependency](./quick/018-remove-lineup-dependency/) |
 | 019 | Fix retroactive backfill infinite retry on no data | 2026-02-07 | 54894f2 | [019-fix-retroactive-backfill-no-data-infinite-retry](./quick/019-fix-retroactive-backfill-no-data-infinite-retry/) |
 | 020 | Fix retroactive analysis for old matches | 2026-02-07 | 6e3fb28 | [020-retroactive-analysis-old-matches](./quick/020-retroactive-analysis-old-matches/) |
+| 021 | Automate post-deploy tasks (migrations & backfill) | 2026-02-07 | 3c109ea | [021-auto-post-deploy-tasks](./quick/021-auto-post-deploy-tasks/) |
 
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed quick-020 (fix retroactive analysis for old matches)
+Stopped at: Completed quick-021 (automate post-deploy tasks)
 Resume file: None
 
 **Platform status:**
