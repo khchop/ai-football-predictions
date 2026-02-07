@@ -39,14 +39,6 @@ interface MatchPreviewData {
     model: string;
     prediction: string;
   }>;
-  
-  // H2H data
-  h2hHistory?: Array<{
-    date: string;
-    homeTeam: string;
-    awayTeam: string;
-    score: string;
-  }>;
 }
 
 export function buildMatchPreviewPrompt(data: MatchPreviewData): string {
@@ -80,19 +72,13 @@ AI Model Predictions:
 ${data.aiPredictions.map(p => `- ${p.model}: ${p.prediction}`).join('\n')}
 ` : ''}
 
-${data.h2hHistory && data.h2hHistory.length > 0 ? `
-Recent Head-to-Head:
-${data.h2hHistory.slice(0, 3).map(h => `- ${h.date}: ${h.homeTeam} vs ${h.awayTeam} (${h.score})`).join('\n')}
-` : ''}
-
 Write a comprehensive match preview with the following sections in JSON format:
 
 {
   "introduction": "2-3 paragraph introduction setting the scene (200-250 words). First sentence MUST state which team bookmakers favor and at what odds (e.g., 'Bookmakers favor Arsenal at 1.65 to beat Chelsea in this Premier League clash'). Include match importance, stakes, and context.",
   "teamFormAnalysis": "Detailed analysis of both teams' recent form and current situation (250-300 words). Use ONLY the form string (e.g., 'WWDWL') and goals data provided. Do NOT mention league table positions, relegation/title races, or player names.",
-  "headToHead": "H2H history analysis using ONLY the dates and scores provided. If no H2H data provided, write 'No recent head-to-head data available' (do not speculate). (150-200 words).",
-  "prediction": "AI-powered prediction with reasoning (150-200 words). Reference the odds and AI model consensus.",
-  "bettingInsights": "Betting tips and value bets based on the analysis (150-200 words). Suggest 2-3 betting markets with reasoning.",
+  "prediction": "AI-powered prediction based on model consensus (150-200 words). State the overall AI model consensus (e.g., '45% draw, 35% home win, 20% away win'). Highlight which outcome most models agree on. Reference how the AI consensus compares to the bookmaker odds. Mention confidence level based on model agreement.",
+  "bettingInsights": "Betting insights based on AI model predictions vs market odds (150-200 words). Identify where AI model consensus DIFFERS from bookmaker odds (value bets). Suggest 2-3 specific betting markets where models see value. Reference the AI prediction percentages alongside the implied odds percentages.",
   "metaDescription": "SEO-optimized meta description (150-160 characters exactly)",
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
 }
@@ -101,8 +87,9 @@ CRITICAL ANTI-HALLUCINATION RULES:
 - Use ONLY the data provided above. Do NOT infer, guess, or add facts not explicitly in the data.
 - Do NOT mention league table positions, relegation/title races, or championship standings.
 - Do NOT mention player names, injuries, managers, or formations.
-- Do NOT mention specific dates of past matches unless provided in H2H data.
-- If data is not provided for a section, acknowledge it (e.g., "No H2H data available") instead of inventing content.
+- Do NOT mention specific dates of past matches unless provided in the data.
+- If data is not provided for a section, acknowledge it instead of inventing content.
+- Focus heavily on AI model consensus and predictions when discussing likely outcomes.
 - Focus on betting odds, AI predictions, form strings, and goal statistics ONLY.
 
 Writing Guidelines:
@@ -445,7 +432,6 @@ Return ONLY the JSON object.`;
 export interface MatchPreviewResponse {
   introduction: string;
   teamFormAnalysis: string;
-  headToHead: string;
   prediction: string;
   bettingInsights: string;
   metaDescription: string;

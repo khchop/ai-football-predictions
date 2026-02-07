@@ -83,7 +83,6 @@ export async function generateMatchPreview(matchData: {
   // Sanitize all text fields before save
   const introduction = sanitizeContent(result.content.introduction);
   const teamFormAnalysis = sanitizeContent(result.content.teamFormAnalysis);
-  const headToHead = sanitizeContent(result.content.headToHead);
   const prediction = sanitizeContent(result.content.prediction);
   const bettingInsights = sanitizeContent(result.content.bettingInsights);
   const metaDescription = sanitizeContent(result.content.metaDescription);
@@ -91,7 +90,6 @@ export async function generateMatchPreview(matchData: {
   // Validate no HTML remains
   validateNoHtml(introduction);
   validateNoHtml(teamFormAnalysis);
-  validateNoHtml(headToHead);
   validateNoHtml(prediction);
   validateNoHtml(bettingInsights);
   validateNoHtml(metaDescription);
@@ -105,7 +103,6 @@ export async function generateMatchPreview(matchData: {
     matchId: matchData.matchId,
     introduction,
     teamFormAnalysis,
-    headToHead,
     prediction,
     bettingInsights,
     metaDescription,

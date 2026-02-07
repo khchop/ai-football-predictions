@@ -9,7 +9,6 @@ import { textToParagraphs } from '@/lib/content/sanitization';
 interface PreviewData {
   introduction: string;
   teamFormAnalysis: string;
-  headToHead: string | null;
   prediction: string;
   bettingInsights: string | null;
 }
@@ -22,7 +21,7 @@ interface NarrativeContent {
 }
 
 /**
- * Renders structured preview sections (introduction, team form, H2H, key players, etc.)
+ * Renders structured preview sections (introduction, team form, prediction, betting insights)
  * Shared between finished matches (preview + report) and upcoming/live matches (preview only).
  */
 function renderPreviewSections(preview: PreviewData) {
@@ -32,13 +31,6 @@ function renderPreviewSections(preview: PreviewData) {
 
       <h3>Team Form</h3>
       <p>{preview.teamFormAnalysis}</p>
-
-      {preview.headToHead && (
-        <>
-          <h3>Head to Head</h3>
-          <p>{preview.headToHead}</p>
-        </>
-      )}
 
       <h3>Prediction</h3>
       <p>{preview.prediction}</p>

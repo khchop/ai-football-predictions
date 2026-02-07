@@ -51,7 +51,6 @@ export const CONTENT_CONFIG = {
       sections: [
         'introduction',
         'teamFormAnalysis',
-        'headToHead',
         'keyPlayers',
         'tacticalAnalysis',
         'prediction',

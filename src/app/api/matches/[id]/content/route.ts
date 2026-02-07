@@ -30,7 +30,6 @@ export async function GET(
       preview: preview ? {
         introduction: preview.introduction,
         teamFormAnalysis: preview.teamFormAnalysis,
-        headToHead: preview.headToHead,
         keyPlayers: preview.keyPlayers,
         tacticalAnalysis: preview.tacticalAnalysis,
         prediction: preview.prediction,
