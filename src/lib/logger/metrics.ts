@@ -6,6 +6,7 @@
 
 import { getAllQueues } from '@/lib/queue';
 import { createLogger } from './index';
+import { getMatchCoverage } from '@/lib/monitoring/pipeline-coverage';
 
 const metricsLogger = createLogger('metrics');
 
@@ -72,6 +73,23 @@ export async function logQueueMetrics(): Promise<void> {
       totals,
       queueCount: metrics.length,
     }, 'Queue metrics snapshot');
+
+    // Pipeline coverage metrics (MON-04)
+    try {
+      const coverage = await getMatchCoverage(6);
+      metricsLogger.info({
+        matchCoverage: {
+          percentage: Math.round(coverage.percentage * 10) / 10,
+          totalMatches: coverage.totalMatches,
+          matchesWithoutPredictions: coverage.gaps.length,
+        },
+      }, 'Pipeline coverage metrics');
+    } catch (coverageError) {
+      metricsLogger.debug(
+        { error: coverageError instanceof Error ? coverageError.message : String(coverageError) },
+        'Failed to collect pipeline coverage metrics'
+      );
+    }
   } catch (error) {
     metricsLogger.error(
       { error: error instanceof Error ? error.message : String(error) },
