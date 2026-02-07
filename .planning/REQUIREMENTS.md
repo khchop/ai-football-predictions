@@ -33,11 +33,11 @@ Requirements for v2.7 milestone. Each maps to roadmap phases.
 
 ### Monitoring & Observability
 
-- [ ] **MON-01**: Pipeline health endpoint shows match coverage (% of upcoming matches with scheduled analysis/predictions jobs)
-- [ ] **MON-02**: Admin dashboard shows matches approaching kickoff with no scheduled jobs (gap detection)
-- [ ] **MON-03**: Alert logged when match is within 2h of kickoff with no analysis job
-- [ ] **MON-04**: Queue metrics include "matches without predictions" count alongside existing queue stats
-- [ ] **MON-05**: Settlement failure dashboard shows failed settlement jobs with error reasons
+- [x] **MON-01**: Pipeline health endpoint shows match coverage (% of upcoming matches with scheduled analysis/predictions jobs)
+- [x] **MON-02**: Admin dashboard shows matches approaching kickoff with no scheduled jobs (gap detection)
+- [x] **MON-03**: Alert logged when match is within 2h of kickoff with no analysis job
+- [x] **MON-04**: Queue metrics include "matches without predictions" count alongside existing queue stats
+- [x] **MON-05**: Settlement failure dashboard shows failed settlement jobs with error reasons
 
 ## v2.8+ Requirements (Deferred)
 

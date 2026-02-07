@@ -13,7 +13,7 @@
 - **v2.4 Synthetic.new Integration** - Phases 37-39 (shipped 2026-02-05)
 - **v2.5 Model Reliability & Dynamic Counts** - Phases 40-43 (shipped 2026-02-05)
 - **v2.6 SEO/GEO Site Health** - Phases 44-48 (shipped 2026-02-06)
-- **v2.7 Pipeline Reliability & Retroactive Backfill** - Phases 49-52 (in progress)
+- **v2.7 Pipeline Reliability & Retroactive Backfill** - Phases 49-52 (shipped 2026-02-07)
 
 ## Phases
 
@@ -489,9 +489,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 52-01-PLAN.md — Core pipeline coverage calculation module (types + getMatchCoverage)
-- [ ] 52-02-PLAN.md — Health endpoint enhancement, backfill alerts, queue metrics extension (MON-01, MON-03, MON-04)
-- [ ] 52-03-PLAN.md — Admin pipeline-health and settlement-failures endpoints (MON-02, MON-05)
+- [x] 52-01-PLAN.md — Core pipeline coverage calculation module (types + getMatchCoverage)
+- [x] 52-02-PLAN.md — Health endpoint enhancement, backfill alerts, queue metrics extension (MON-01, MON-03, MON-04)
+- [x] 52-03-PLAN.md — Admin pipeline-health and settlement-failures endpoints (MON-02, MON-05)
 
 ## Progress
 
@@ -552,7 +552,7 @@ Phases execute in numeric order: 49 -> 50 -> 51 -> 52
 | 49. Pipeline Scheduling Fixes | v2.7 | 2/2 | Complete | 2026-02-06 |
 | 50. Settlement Investigation & Recovery | v2.7 | 2/2 | Complete | 2026-02-06 |
 | 51. Retroactive Backfill Script | v2.7 | 2/2 | Complete | 2026-02-06 |
-| 52. Monitoring & Observability | v2.7 | 0/3 | Not started | - |
+| 52. Monitoring & Observability | v2.7 | 3/3 | Complete | 2026-02-07 |
 
 ---
-*Last updated: 2026-02-07 after Phase 52 planned (3 plans in 2 waves)*
+*Last updated: 2026-02-07 after Phase 52 completed (3/3 plans, verified)*
