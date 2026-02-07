@@ -34,6 +34,10 @@ Progress: [███████████████████████
 
 Recent decisions affecting current work:
 
+- quick-033: Pre-calculated consensus before prompting — Calculate H/D/A percentages from DB predictions before prompt building (prevents LLM fabrication)
+- quick-033: Kimi K2 Thinking for content — Upgrade to reasoning model via Synthetic API (~$5/month vs ~$0.71/month for quality)
+- quick-033: Thinking tag stripping pattern — Strip <think>...</think> BEFORE JSON parsing to prevent parse errors
+- quick-033: Explicit prompt interpolation — Inject exact numbers into prompt instructions instead of relying on LLM to honor separate data
 - quick-032: Omit empty event sections entirely — Prevents LLM from generating filler text about data absence
 - quick-032: Model predictions first in roundups — AI prediction accuracy is section 3, events become section 5 (conditional)
 - quick-032: CRITICAL RULES instruction block — Strong signal to LLM about non-negotiable behaviors (e.g., never mention data absence)
@@ -74,11 +78,12 @@ Recent decisions affecting current work:
 | 030 | Backfill script to regenerate all existing match previews with anti-hallucination prompt | 2026-02-07 | ec33e5f | [030-backfill-regenerate-match-previews-anti-](./quick/030-backfill-regenerate-match-previews-anti-/) |
 | 031 | Remove head-to-head section from match generation, refocus on AI consensus | 2026-02-07 | 77f105a | [031-remove-head-to-head-from-match-generatio](./quick/031-remove-head-to-head-from-match-generatio/) |
 | 032 | Fix match roundups: remove "no events" filler, refocus on AI prediction accuracy | 2026-02-07 | 929df88 | [032-fix-match-report-remove-no-events-focus-](./quick/032-fix-match-report-remove-no-events-focus-/) |
+| 033 | Fix consensus percentages and upgrade to Kimi K2 Thinking | 2026-02-07 | aafcf66 | [033-fix-consensus-percentages-upgrade-conten](./quick/033-fix-consensus-percentages-upgrade-conten/) |
 
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed quick-032 (refocus match roundups on AI prediction accuracy)
+Stopped at: Completed quick-033 (fix consensus percentages, upgrade to Kimi K2 Thinking)
 Resume file: None
 
 **Next action:** Execute 54-02-PLAN.md (diagnostic runner)
