@@ -1,22 +1,20 @@
 /**
  * Match Job Scheduler
- * 
+ *
  * Schedules all jobs for a match at precise times relative to kickoff.
- * Simplified schedule: 5 jobs per match (was 10)
+ * Simplified schedule: 4 jobs per match (was 10)
  * - T-6h: Analysis (stats, form, H2H)
  * - T-2h: Odds (for content only, not sent to models)
- * - T-60m: Lineups
  * - T-30m: Predictions (score prediction with Kicktipp Quota Scoring)
  * - T-0: Live monitoring
  */
 
-import { 
-  analysisQueue, 
-  predictionsQueue, 
-  lineupsQueue, 
-  oddsQueue, 
+import {
+  analysisQueue,
+  predictionsQueue,
+  oddsQueue,
   liveQueue,
-  JOB_TYPES 
+  JOB_TYPES
 } from './index';
 import { loggers } from '@/lib/logger/modules';
 import { addToDeadLetterQueue } from './dead-letter';
@@ -32,7 +30,7 @@ const log = loggers.scheduler;
 
 export const JOB_PRIORITIES = {
   CRITICAL: 1,      // Live score updates, match start monitoring
-  HIGH: 5,          // Pre-match odds refresh, lineups, predictions
+  HIGH: 5,          // Pre-match odds refresh, predictions
   NORMAL: 10,       // Regular analysis, standings updates
   LOW: 20,          // Content generation, backfill
   BACKGROUND: 50,   // Cleanup, maintenance, warming
@@ -48,7 +46,6 @@ export const JOB_TIMEOUTS: Record<string, number> = {
   [JOB_TYPES.FETCH_FIXTURES]: 5 * 60 * 1000,     // 5 min - bulk API calls, multiple requests
   [JOB_TYPES.ANALYZE_MATCH]: 3 * 60 * 1000,      // 3 min - multiple API calls (H2H, stats, injuries)
   [JOB_TYPES.PREDICT_MATCH]: 10 * 60 * 1000,     // 10 min - LLM calls can be slow, multiple models
-  [JOB_TYPES.FETCH_LINEUPS]: 2 * 60 * 1000,      // 2 min - single API call with parsing
   [JOB_TYPES.REFRESH_ODDS]: 2 * 60 * 1000,       // 2 min - single API call with processing
   [JOB_TYPES.SETTLE_MATCH]: 1 * 60 * 1000,       // 1 min - DB operations only
   [JOB_TYPES.MONITOR_LIVE]: 30 * 60 * 1000,      // 30 min - long-running live score polling
@@ -149,21 +146,7 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
        jobId: `odds-${match.id}`,
        priority: calculateDynamicPriority(JOB_PRIORITIES.NORMAL, kickoffDate, JOB_TYPES.REFRESH_ODDS),
      },
-     // T-60m: Fetch lineups
-     {
-       queue: lineupsQueue,
-       name: JOB_TYPES.FETCH_LINEUPS,
-       data: {
-         matchId: match.id,
-         externalId: match.externalId,
-         homeTeam: match.homeTeam,
-         awayTeam: match.awayTeam,
-       },
-       delay: kickoff - 60 * 60 * 1000 - now,
-       jobId: `lineups-${match.id}`,
-       priority: calculateDynamicPriority(JOB_PRIORITIES.HIGH, kickoffDate, JOB_TYPES.FETCH_LINEUPS),
-     },
-     // T-30m: Generate predictions (single attempt after lineups available)
+     // T-30m: Generate predictions
      {
        queue: predictionsQueue,
        name: JOB_TYPES.PREDICT_MATCH,
@@ -197,7 +180,6 @@ export async function scheduleMatchJobs(data: MatchWithCompetition): Promise<num
   const lateRunnableJobs = new Set([
     JOB_TYPES.ANALYZE_MATCH,
     JOB_TYPES.REFRESH_ODDS,
-    JOB_TYPES.FETCH_LINEUPS,
     JOB_TYPES.PREDICT_MATCH,
     JOB_TYPES.MONITOR_LIVE, // Start live monitoring for matches already in progress
   ]);
@@ -282,7 +264,6 @@ export async function cancelMatchJobs(matchId: string): Promise<number> {
   const jobsToCancel = [
     { queue: analysisQueue, jobId: `analyze-${matchId}` },
     { queue: oddsQueue, jobId: `odds-${matchId}` },
-    { queue: lineupsQueue, jobId: `lineups-${matchId}` },
     { queue: predictionsQueue, jobId: `predict-${matchId}` },
     { queue: liveQueue, jobId: `live-${matchId}` },
   ];

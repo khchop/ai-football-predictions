@@ -1,9 +1,9 @@
 /**
  * Predictions Worker
- * 
+ *
  * Generates score predictions for all active models for a match.
  * Uses Kicktipp Quota Scoring system.
- * Runs at T-30m (after lineups are available).
+ * Runs at T-30m before each match.
  */
 
 import { Worker, Job } from 'bullmq';

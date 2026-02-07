@@ -22,20 +22,11 @@ export interface RefreshOddsPayload {
   externalId: string;
 }
 
-// Fetch lineups (T-60m)
-export interface FetchLineupsPayload {
-  matchId: string;
-  externalId: string;
-  homeTeam: string;
-  awayTeam: string;
-}
-
-// Predict match (T-90m, T-30m, T-5m)
+// Predict match (T-30m)
 export interface PredictMatchPayload {
   matchId: string;
   attempt: 1 | 2 | 3;
   skipIfDone?: boolean;  // Skip if bets already exist
-  force?: boolean;       // Generate even without lineups
   allowRetroactive?: boolean; // Skip status check for retroactive backfill
 }
 
@@ -124,7 +115,6 @@ export type JobPayload =
   | BackfillMissingPayload
   | AnalyzeMatchPayload
   | RefreshOddsPayload
-  | FetchLineupsPayload
   | PredictMatchPayload
   | MonitorLivePayload
   | SettleMatchPayload

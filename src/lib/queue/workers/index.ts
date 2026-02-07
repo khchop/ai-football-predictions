@@ -8,7 +8,6 @@
 import { Worker } from 'bullmq';
 import { createFixturesWorker } from './fixtures.worker';
 import { createAnalysisWorker } from './analysis.worker';
-import { createLineupsWorker } from './lineups.worker';
 import { createOddsWorker } from './odds.worker';
 import { createPredictionsWorker } from './predictions.worker';
 import { createLiveScoreWorker } from './live-score.worker';
@@ -79,7 +78,6 @@ export function startAllWorkers(): Worker[] {
   const workerConfigs = [
     { name: 'fixtures', create: createFixturesWorker },
     { name: 'analysis', create: createAnalysisWorker },
-    { name: 'lineups', create: createLineupsWorker },
     { name: 'odds', create: createOddsWorker },
     { name: 'predictions', create: createPredictionsWorker },
     { name: 'live-score', create: createLiveScoreWorker },

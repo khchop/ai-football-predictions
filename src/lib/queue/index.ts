@@ -20,7 +20,6 @@ export const JOB_TYPES = {
   // Per-match scheduled
   ANALYZE_MATCH: 'analyze-match',
   REFRESH_ODDS: 'refresh-odds',
-  FETCH_LINEUPS: 'fetch-lineups',
   PREDICT_MATCH: 'predict-match',
   MONITOR_LIVE: 'monitor-live',
   SETTLE_MATCH: 'settle-match',
@@ -174,7 +173,6 @@ export async function closeQueueConnection(): Promise<void> {
 export const QUEUE_NAMES = {
   ANALYSIS: 'analysis-queue',
   PREDICTIONS: 'predictions-queue',
-  LINEUPS: 'lineups-queue',
   ODDS: 'odds-queue',
   LIVE: 'live-queue',
   SETTLEMENT: 'settlement-queue',
@@ -288,13 +286,6 @@ export function getPredictionsQueue(): Queue {
 }
 export const predictionsQueue = createLazyQueueProxy(getPredictionsQueue);
 
-let _lineupsQueue: Queue | null = null;
-export function getLineupsQueue(): Queue {
-  if (!_lineupsQueue) _lineupsQueue = createQueue(QUEUE_NAMES.LINEUPS);
-  return _lineupsQueue;
-}
-export const lineupsQueue = createLazyQueueProxy(getLineupsQueue);
-
 let _oddsQueue: Queue | null = null;
 export function getOddsQueue(): Queue {
   if (!_oddsQueue) _oddsQueue = createQueue(QUEUE_NAMES.ODDS);
@@ -380,8 +371,6 @@ export function getQueue(queueName: string): Queue {
       return analysisQueue;
     case QUEUE_NAMES.PREDICTIONS:
       return predictionsQueue;
-    case QUEUE_NAMES.LINEUPS:
-      return lineupsQueue;
     case QUEUE_NAMES.ODDS:
       return oddsQueue;
     case QUEUE_NAMES.LIVE:
@@ -412,7 +401,6 @@ export function getAllQueues(): Queue[] {
   return [
     getAnalysisQueue(),
     getPredictionsQueue(),
-    getLineupsQueue(),
     getOddsQueue(),
     getLiveQueue(),
     getSettlementQueue(),

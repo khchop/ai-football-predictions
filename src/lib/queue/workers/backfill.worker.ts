@@ -9,12 +9,11 @@
 
 import { Worker, Job } from 'bullmq';
 import * as Sentry from '@sentry/nextjs';
-import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, analysisQueue, oddsQueue, lineupsQueue, predictionsQueue, settlementQueue } from '../index';
+import { getQueueConnection, QUEUE_NAMES, JOB_TYPES, analysisQueue, oddsQueue, predictionsQueue, settlementQueue } from '../index';
 import type { BackfillMissingPayload } from '../types';
 import {
   getMatchesMissingAnalysis,
   getMatchesMissingOdds,
-  getMatchesMissingLineups,
   getMatchesMissingPredictions,
   getMatchesNeedingScoring,
   getFinishedMatchesWithZeroPredictions,
@@ -68,20 +67,18 @@ export function createBackfillWorker() {
       
       // Track actual windows used for debugging
       const analysisHoursAhead = Math.max(hoursAhead, 48); // ALWAYS check full 48h window for analysis
-      const lineupsHoursAhead = 12; // Wider window for lineups (not 2h)
       const predictionsHoursAhead = 12; // Wider window for predictions (not 2h)
 
       const results = {
         analysisTriggered: 0,
         oddsTriggered: 0,
-        lineupsTriggered: 0,
         predictionsTriggered: 0,
         scoringsTriggered: 0,
         retroAnalysisTriggered: 0,
         retroPredictionsTriggered: 0,
         retroSettlementsTriggered: 0,
         errors: [] as string[],
-        windows: { analysis: analysisHoursAhead, lineups: lineupsHoursAhead, predictions: predictionsHoursAhead },
+        windows: { analysis: analysisHoursAhead, predictions: predictionsHoursAhead },
       };
       
        // Helper to add errors with cap
@@ -150,9 +147,9 @@ export function createBackfillWorker() {
           }
         }
 
-        // Log chain status for debugging - lineups/predictions will be backfilled after analysis completes
+        // Log chain status for debugging - predictions will be backfilled after analysis completes
         if (results.analysisTriggered > 0) {
-          log.info({ analysisTriggered: results.analysisTriggered }, 'Analysis jobs triggered - lineups/predictions will be backfilled on next cycle after analysis completes');
+          log.info({ analysisTriggered: results.analysisTriggered }, 'Analysis jobs triggered - predictions will be backfilled on next cycle after analysis completes');
         }
 
         // 2. Find matches missing odds (has analysis but no odds, next 6h)
@@ -210,63 +207,8 @@ export function createBackfillWorker() {
             }
           }
         }
-        
-        // 3. Find matches missing lineups (12h window, not 2h)
-        const missingLineups = await getMatchesMissingLineups(lineupsHoursAhead);
-        
-        for (const match of missingLineups) {
-          if (!match.externalId) continue;
-          
-          try {
-            // Check for failed lineups jobs and remove them
-            const oldLineupsJobIds = [
-              `lineups-${match.id}`,
-              `backfill-lineups-${match.id}`,
-            ];
-            
-             for (const oldJobId of oldLineupsJobIds) {
-               try {
-                 const oldJob = await lineupsQueue.getJob(oldJobId);
-                 if (oldJob && await oldJob.isFailed()) {
-                   await oldJob.remove();
-                   log.info(`Removed failed lineups job ${oldJobId} for retry`);
-                 }
-              } catch (err) {
-                // Job doesn't exist, that's fine
-              }
-            }
-            
-             // Check if job already exists (deterministic ID)
-             const jobId = `lineups-${match.id}`;
-             const existingJob = await lineupsQueue.getJob(jobId);
-             
-             if (!existingJob) {
-               // Create new lineups job with deterministic ID
-               await lineupsQueue.add(
-                 JOB_TYPES.FETCH_LINEUPS,
-                 {
-                   matchId: match.id,
-                   externalId: match.externalId,
-                   homeTeam: match.homeTeam,
-                   awayTeam: match.awayTeam,
-                 },
-                 {
-                   delay: 1000,
-                   jobId,
-                 }
-               );
-               results.lineupsTriggered++;
-             } else {
-               log.debug(`Lineups job already exists for match ${match.id}`);
-             }
-          } catch (error: any) {
-            if (!error.message?.includes('already exists')) {
-              addError(`Lineups ${match.id}: ${error.message}`);
-            }
-          }
-        }
-        
-        // 4. Find matches missing predictions (12h window, not 2h)
+
+        // 3. Find matches missing predictions (12h window, not 2h)
         const missingPredictions = await getMatchesMissingPredictions(predictionsHoursAhead);
         
         for (const match of missingPredictions) {
@@ -574,11 +516,11 @@ export function createBackfillWorker() {
 
         // Log summary
         const total = results.analysisTriggered + results.oddsTriggered +
-                      results.lineupsTriggered + results.predictionsTriggered + results.scoringsTriggered +
+                      results.predictionsTriggered + results.scoringsTriggered +
                       results.retroAnalysisTriggered + results.retroPredictionsTriggered + results.retroSettlementsTriggered;
 
          if (total > 0 || results.errors.length > 0) {
-           log.info({ analysis: results.analysisTriggered, odds: results.oddsTriggered, lineups: results.lineupsTriggered, predictions: results.predictionsTriggered, scorings: results.scoringsTriggered, retroAnalysis: results.retroAnalysisTriggered, retroPredictions: results.retroPredictionsTriggered, retroSettlements: results.retroSettlementsTriggered }, `Triggered ${total} jobs`);
+           log.info({ analysis: results.analysisTriggered, odds: results.oddsTriggered, predictions: results.predictionsTriggered, scorings: results.scoringsTriggered, retroAnalysis: results.retroAnalysisTriggered, retroPredictions: results.retroPredictionsTriggered, retroSettlements: results.retroSettlementsTriggered }, `Triggered ${total} jobs`);
            
            if (results.errors.length > 0) {
              log.error({ errors: results.errors }, `${results.errors.length} errors`);
