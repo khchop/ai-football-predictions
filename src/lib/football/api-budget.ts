@@ -1,7 +1,7 @@
 /**
  * API-Football Budget Enforcement
  *
- * Free tier: 100 requests/day
+ * Pro tier: 1000 requests/day
  * Strategy: Redis atomic INCR counter with TTL-based automatic reset at midnight UTC
  * Fails open when Redis unavailable (availability > strict enforcement)
  */
@@ -12,7 +12,7 @@ import { loggers } from '@/lib/logger/modules';
 const log = loggers.apiFootball;
 
 // Budget configuration
-const DAILY_REQUEST_LIMIT = 100;
+const DAILY_REQUEST_LIMIT = 1000;
 const BUDGET_KEY = 'api-football:daily-budget';
 
 /**

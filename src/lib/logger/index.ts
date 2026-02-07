@@ -15,10 +15,16 @@ const logLevel = process.env.LOG_LEVEL || (isDev ? 'debug' : 'info');
 // Base logger configuration
 const baseLogger = pino({
   level: logLevel,
-  
+
   // ISO timestamps for consistent parsing in logs
   timestamp: pino.stdTimeFunctions.isoTime,
-  
+
+  // Serialize Error objects properly (fixes error: {} in logs)
+  serializers: {
+    error: pino.stdSerializers.err,
+    err: pino.stdSerializers.err,
+  },
+
   // Format level as string for better readability
   formatters: {
     level: (label) => ({ level: label }),

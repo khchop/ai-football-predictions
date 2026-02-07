@@ -164,6 +164,7 @@ export async function fetchPrediction(fixtureId: number): Promise<APIFootballPre
       })
     );
    } catch (error) {
+     if (error instanceof BudgetExceededError) throw error;
      log.error({ fixtureId, error }, 'Error fetching prediction');
      return null;
    }
@@ -183,6 +184,7 @@ export async function fetchInjuries(fixtureId: number): Promise<APIFootballInjur
       })
     );
    } catch (error) {
+     if (error instanceof BudgetExceededError) throw error;
      log.error({ fixtureId, error }, 'Error fetching injuries');
      return null;
    }
@@ -202,6 +204,7 @@ export async function fetchOdds(fixtureId: number): Promise<APIFootballOddsRespo
       })
     );
    } catch (error) {
+     if (error instanceof BudgetExceededError) throw error;
      log.error({ fixtureId, error }, 'Error fetching odds');
      return null;
    }
