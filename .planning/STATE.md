@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 ## Current Position
 
 Phase: 52 of 52 (Monitoring & Observability) — IN PROGRESS
-Plan: 1 of 3 complete (52-01 complete)
-Status: Pipeline coverage calculation module complete, health endpoint next
-Last activity: 2026-02-07 — Completed 52-01-PLAN.md
+Plan: 2 of 3 complete (52-01, 52-02 complete)
+Status: Enhanced monitoring integration complete, admin dashboard next
+Last activity: 2026-02-07 — Completed 52-02-PLAN.md
 
-Progress: [██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 75% (3/4 phases, 1/3 plans in phase 52)
+Progress: [██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 75% (3/4 phases, 2/3 plans in phase 52)
 
 ## Milestone History
 
@@ -76,6 +76,12 @@ All decisions archived in milestone files. See `.planning/milestones/` for histo
 - 52-01: Sort gaps by urgency (closest kickoff first) for actionable prioritization
 - 52-01: Error handling with logging and re-throw (lets callers decide response strategy)
 - 52-01: Query only 'scheduled' status matches (live/finished don't need pre-match jobs)
+- 52-02: Cache coverage for 60s in health endpoint (avoids DB/Redis spam on frequent polling)
+- 52-02: Health endpoint returns HTTP 503 when Redis unhealthy, 200 otherwise
+- 52-02: Health status levels: 'ok' (Redis healthy + coverage >= 90%), 'degraded' (coverage < 90%), 'unhealthy' (Redis down)
+- 52-02: No auth on health endpoint (load balancers need unauthenticated access, aggregate data only)
+- 52-02: Backfill worker step 7 isolated in try/catch (health check failure never blocks backfill work)
+- 52-02: Queue metrics use debug level for coverage errors (non-critical periodic metrics)
 
 **v2.7 Roadmap:**
 - Phase 49: Pipeline Scheduling Fixes (PIPE-01 to PIPE-05) — COMPLETE
@@ -120,18 +126,18 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-07T02:00:30Z
-Stopped at: Completed 52-01-PLAN.md (pipeline coverage calculation module)
+Last session: 2026-02-07T02:05:35Z
+Stopped at: Completed 52-02-PLAN.md (enhanced monitoring integration)
 Resume file: None
 
 **Platform status:**
 - 17 leagues operational
 - 42 active models (29 Together + 13 Synthetic)
 - 0 disabled models (all 6 previously disabled models re-enabled)
-- 263 requirements validated (v1.0-v2.6 + PIPE + SETTLE + RETRO-01 through RETRO-06 + MON-01)
-- 5 remaining requirements for v2.7 (SETTLE-01, MON-02 through MON-05)
+- 266 requirements validated (v1.0-v2.6 + PIPE + SETTLE + RETRO + MON-01 through MON-04)
+- 2 remaining requirements for v2.7 (SETTLE-01, MON-05)
 
-**Next action:** Execute 52-02 (Health Endpoint) and 52-03 (Admin Dashboard)
+**Next action:** Execute 52-03 (Admin Dashboard)
 
 ---
 *Last updated: 2026-02-07 after Phase 52 Plan 01 completed*
