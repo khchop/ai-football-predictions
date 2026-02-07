@@ -63,7 +63,7 @@ export async function runPostDeployTasks(): Promise<TaskResult> {
       try {
         await task.run();
 
-        // Record success
+        // Record success — task won't run again
         await db.execute(sql`
           INSERT INTO deploy_tasks (id, result)
           VALUES (${task.id}, 'success')
@@ -74,13 +74,8 @@ export async function runPostDeployTasks(): Promise<TaskResult> {
       } catch (error: any) {
         const errorMessage = error instanceof Error ? error.message : String(error);
 
-        // Record failure but don't throw - startup continues
-        await db.execute(sql`
-          INSERT INTO deploy_tasks (id, result)
-          VALUES (${task.id}, ${errorMessage})
-        `);
-
-        log.error({ taskId: task.id, taskName: task.name, error: errorMessage }, 'Task failed');
+        // Don't record failure — task will retry on next deploy
+        log.error({ taskId: task.id, taskName: task.name, error: errorMessage }, 'Task failed (will retry next startup)');
         result.failed++;
       }
     }
