@@ -18,6 +18,7 @@ import {
   getMatchesMissingPredictions,
   getMatchesNeedingScoring,
   getFinishedMatchesWithZeroPredictions,
+  getMatchesMissingRetroactivePredictions,
 } from '@/lib/db/queries';
 import { checkAndFixStuckMatches, checkAndFixStuckLiveMatches } from '../catch-up';
 import { loggers } from '@/lib/logger/modules';
@@ -76,6 +77,9 @@ export function createBackfillWorker() {
         lineupsTriggered: 0,
         predictionsTriggered: 0,
         scoringsTriggered: 0,
+        retroAnalysisTriggered: 0,
+        retroPredictionsTriggered: 0,
+        retroSettlementsTriggered: 0,
         errors: [] as string[],
         windows: { analysis: analysisHoursAhead, lineups: lineupsHoursAhead, predictions: predictionsHoursAhead },
       };
@@ -406,7 +410,126 @@ export function createBackfillWorker() {
           }
         }
 
-        // 7. Pipeline health check - alert on matches approaching kickoff without jobs (MON-03)
+        // 7. Retroactive backfill - find matches from last 7 days with < 42 predictions
+        // Catches matches that slipped through the forward-looking pipeline
+        // (server restarts, API failures, worker crashes)
+        try {
+          const retroGaps = await getMatchesMissingRetroactivePredictions(7);
+
+          if (retroGaps.length > 0) {
+            log.info({
+              retroGapCount: retroGaps.length,
+              gaps: retroGaps.slice(0, 10).map(g => ({
+                matchId: g.match.id,
+                match: `${g.match.homeTeam} vs ${g.match.awayTeam}`,
+                status: g.match.status,
+                predictions: g.predictionCount,
+                hasAnalysis: g.hasAnalysis,
+              })),
+            }, `Retroactive backfill: found ${retroGaps.length} match(es) with < 42 predictions in last 7 days`);
+
+            for (const gap of retroGaps) {
+              const match = gap.match;
+              if (!match.externalId) continue;
+
+              try {
+                // Queue analysis if missing
+                if (!gap.hasAnalysis) {
+                  const analyzeJobId = `retro-analyze-${match.id}`;
+                  const existingAnalyzeJob = await analysisQueue.getJob(analyzeJobId);
+
+                  // Remove failed retro jobs for retry
+                  if (existingAnalyzeJob && await existingAnalyzeJob.isFailed()) {
+                    await existingAnalyzeJob.remove();
+                  }
+
+                  if (!existingAnalyzeJob || await existingAnalyzeJob.isFailed()) {
+                    await analysisQueue.add(
+                      JOB_TYPES.ANALYZE_MATCH,
+                      {
+                        matchId: match.id,
+                        externalId: match.externalId,
+                        homeTeam: match.homeTeam,
+                        awayTeam: match.awayTeam,
+                        allowRetroactive: true,
+                      },
+                      {
+                        jobId: analyzeJobId,
+                        delay: 1000,
+                        priority: 3,
+                      }
+                    );
+                    results.retroAnalysisTriggered++;
+                  }
+                }
+
+                // Always queue predictions (will fill remaining slots up to 42)
+                const predictJobId = `retro-predict-${match.id}`;
+                const existingPredictJob = await predictionsQueue.getJob(predictJobId);
+
+                // Remove failed retro jobs for retry
+                if (existingPredictJob && await existingPredictJob.isFailed()) {
+                  await existingPredictJob.remove();
+                }
+
+                if (!existingPredictJob || await existingPredictJob.isFailed()) {
+                  await predictionsQueue.add(
+                    JOB_TYPES.PREDICT_MATCH,
+                    {
+                      matchId: match.id,
+                      attempt: 1,
+                      skipIfDone: true,
+                      allowRetroactive: true,
+                    },
+                    {
+                      jobId: predictJobId,
+                      delay: 2000, // Slight delay to let analysis complete first if queued
+                      priority: 3,
+                    }
+                  );
+                  results.retroPredictionsTriggered++;
+                }
+
+                // Queue settlement if finished with scores
+                if (match.status === 'finished' && match.homeScore !== null && match.awayScore !== null) {
+                  const settleJobId = `retro-settle-${match.id}`;
+                  const existingSettleJob = await settlementQueue.getJob(settleJobId);
+
+                  // Remove failed retro jobs for retry
+                  if (existingSettleJob && await existingSettleJob.isFailed()) {
+                    await existingSettleJob.remove();
+                  }
+
+                  if (!existingSettleJob || await existingSettleJob.isFailed()) {
+                    await settlementQueue.add(
+                      JOB_TYPES.SETTLE_MATCH,
+                      {
+                        matchId: match.id,
+                        homeScore: match.homeScore,
+                        awayScore: match.awayScore,
+                        status: match.status,
+                      },
+                      {
+                        jobId: settleJobId,
+                        delay: 3000, // Delay to let predictions complete first
+                        priority: 3,
+                      }
+                    );
+                    results.retroSettlementsTriggered++;
+                  }
+                }
+              } catch (error: any) {
+                if (!error.message?.includes('already exists')) {
+                  addError(`Retro ${match.id}: ${error.message}`);
+                }
+              }
+            }
+          }
+        } catch (retroError: any) {
+          log.warn({ err: retroError }, 'Retroactive backfill step failed (non-critical)');
+        }
+
+        // 8. Pipeline health check - alert on matches approaching kickoff without jobs (MON-03)
         try {
           const coverage = await getMatchCoverage(6); // Check next 6 hours
           const { critical, warning } = classifyGapsBySeverity(coverage.gaps);
@@ -451,10 +574,11 @@ export function createBackfillWorker() {
 
         // Log summary
         const total = results.analysisTriggered + results.oddsTriggered +
-                      results.lineupsTriggered + results.predictionsTriggered + results.scoringsTriggered;
-        
+                      results.lineupsTriggered + results.predictionsTriggered + results.scoringsTriggered +
+                      results.retroAnalysisTriggered + results.retroPredictionsTriggered + results.retroSettlementsTriggered;
+
          if (total > 0 || results.errors.length > 0) {
-           log.info({ analysis: results.analysisTriggered, odds: results.oddsTriggered, lineups: results.lineupsTriggered, predictions: results.predictionsTriggered, scorings: results.scoringsTriggered }, `Triggered ${total} jobs`);
+           log.info({ analysis: results.analysisTriggered, odds: results.oddsTriggered, lineups: results.lineupsTriggered, predictions: results.predictionsTriggered, scorings: results.scoringsTriggered, retroAnalysis: results.retroAnalysisTriggered, retroPredictions: results.retroPredictionsTriggered, retroSettlements: results.retroSettlementsTriggered }, `Triggered ${total} jobs`);
            
            if (results.errors.length > 0) {
              log.error({ errors: results.errors }, `${results.errors.length} errors`);
