@@ -154,12 +154,27 @@ export const TOGETHER_CONTENT_RETRY: Partial<RetryConfig> = {
 export const TOGETHER_CONTENT_TIMEOUT_MS = 90000; // 90s timeout for reasoning model content generation
 
 // ============================================================================
+// TOGETHER AI - CONTENT FALLBACK (Llama 4 Maverick)
+// Used when primary Kimi K2 Thinking fails after all retries
+// Typical latency: 5-15s (faster than reasoning model)
+// ============================================================================
+export const TOGETHER_CONTENT_FALLBACK_RETRY: Partial<RetryConfig> = {
+  maxRetries: 2,            // Fewer retries - this IS the fallback
+  baseDelayMs: 1500,
+  maxDelayMs: 15000,
+  retryableStatusCodes: [408, 429, 500, 502, 503, 504],
+};
+
+export const TOGETHER_CONTENT_FALLBACK_TIMEOUT_MS = 60000; // 60s - Llama 4 is faster
+
+// ============================================================================
 // SERVICE NAMES (for circuit breaker and logging)
 // ============================================================================
 export const SERVICE_NAMES = {
   API_FOOTBALL: 'api-football',
   TOGETHER_PREDICTIONS: 'together-predictions',
   TOGETHER_CONTENT: 'together-content', // Now points to Synthetic API (Kimi K2 Thinking)
+  TOGETHER_CONTENT_FALLBACK: 'together-content-fallback',
 } as const;
 
 export type ServiceName = typeof SERVICE_NAMES[keyof typeof SERVICE_NAMES];
