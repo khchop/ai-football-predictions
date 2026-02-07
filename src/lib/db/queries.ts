@@ -2300,6 +2300,74 @@ export async function getMatchesMissingPredictions(hoursAhead: number = 2): Prom
   return results.map(r => r.match);
 }
 
+/**
+ * Get matches from the last N days with fewer than 42 predictions.
+ * Used by the backfill worker to retroactively fill gaps from pipeline failures
+ * (server restarts, API failures, worker crashes).
+ *
+ * Unlike forward-looking queries, this checks scheduled/live/finished matches
+ * that already passed through (or should have passed through) the pipeline.
+ *
+ * Returns match data plus hasAnalysis flag so the worker can decide
+ * whether to queue analysis before predictions.
+ */
+export async function getMatchesMissingRetroactivePredictions(days: number = 7): Promise<Array<{ match: Match; hasAnalysis: boolean; predictionCount: number }>> {
+  const db = getDb();
+
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - days);
+  const cutoff = cutoffDate.toISOString();
+
+  const results = await db
+    .select({
+      match: matches,
+      predictionCount: sql<number>`CAST(COUNT(DISTINCT ${predictions.id}) AS INTEGER)`,
+      hasAnalysis: sql<boolean>`BOOL_OR(${matchAnalysis.favoriteTeamName} IS NOT NULL)`,
+    })
+    .from(matches)
+    .leftJoin(matchAnalysis, eq(matches.id, matchAnalysis.matchId))
+    .leftJoin(predictions, eq(matches.id, predictions.matchId))
+    .where(
+      and(
+        gte(matches.kickoffTime, cutoff),
+        isNotNull(matches.externalId),
+        sql`${matches.status} IN ('scheduled', 'live', 'finished')`
+      )
+    )
+    .groupBy(
+      matches.id,
+      matches.externalId,
+      matches.competitionId,
+      matches.homeTeam,
+      matches.awayTeam,
+      matches.homeTeamLogo,
+      matches.awayTeamLogo,
+      matches.kickoffTime,
+      matches.homeScore,
+      matches.awayScore,
+      matches.status,
+      matches.matchMinute,
+      matches.round,
+      matches.matchday,
+      matches.venue,
+      matches.isUpset,
+      matches.quotaHome,
+      matches.quotaDraw,
+      matches.quotaAway,
+      matches.slug,
+      matches.createdAt,
+      matches.updatedAt
+    )
+    .having(sql`COUNT(DISTINCT ${predictions.id}) < 42`)
+    .orderBy(desc(matches.kickoffTime));
+
+  return results.map(r => ({
+    match: r.match,
+    hasAnalysis: r.hasAnalysis ?? false,
+    predictionCount: r.predictionCount,
+  }));
+}
+
 // Get finished matches with pending predictions (need scoring)
 export async function getMatchesNeedingScoring(): Promise<Match[]> {
   const db = getDb();
