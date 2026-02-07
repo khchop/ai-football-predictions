@@ -1,0 +1,35 @@
+name: Regression Tests
+
+on:
+  pull_request:
+    paths:
+      - 'src/lib/llm/**'
+      - 'src/lib/queue/workers/predictions.worker.ts'
+      - 'src/lib/validation/**'
+      - 'src/__tests__/**'
+      - 'vitest.config.ts'
+
+jobs:
+  regression:
+    name: Model Regression Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run regression tests (offline)
+        run: npm run test:regression
+
+      - name: Run schema validation tests
+        run: npx vitest run src/__tests__/schemas/
