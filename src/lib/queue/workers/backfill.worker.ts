@@ -27,7 +27,7 @@ export function createBackfillWorker() {
   return new Worker<BackfillMissingPayload>(
     QUEUE_NAMES.BACKFILL,
     async (job: Job<BackfillMissingPayload>) => {
-      const { hoursAhead = 12, type } = job.data;
+      const { hoursAhead = 12, type, retroDays } = job.data;
       const log = loggers.backfillWorker.child({ jobId: job.id, jobName: job.name });
       
       // ============ STUCK MATCHES RECOVERY ============
@@ -352,15 +352,16 @@ export function createBackfillWorker() {
           }
         }
 
-        // 7. Retroactive backfill - find matches from last 30 days with < 42 predictions
+        // 7. Retroactive backfill - find matches from last N days with < 42 predictions
         // Catches matches that slipped through the forward-looking pipeline
         // (server restarts, API failures, worker crashes)
         try {
-          const retroGaps = await getMatchesMissingRetroactivePredictions(30);
+          const retroGaps = await getMatchesMissingRetroactivePredictions(retroDays ?? 30);
 
           if (retroGaps.length > 0) {
             log.info({
               retroGapCount: retroGaps.length,
+              retroDays: retroDays ?? 30,
               gaps: retroGaps.slice(0, 10).map(g => ({
                 matchId: g.match.id,
                 match: `${g.match.homeTeam} vs ${g.match.awayTeam}`,
@@ -368,7 +369,7 @@ export function createBackfillWorker() {
                 predictions: g.predictionCount,
                 hasAnalysis: g.hasAnalysis,
               })),
-            }, `Retroactive backfill: found ${retroGaps.length} match(es) with < 42 predictions in last 30 days`);
+            }, `Retroactive backfill: found ${retroGaps.length} match(es) with < 42 predictions in last ${retroDays ?? 30} days`);
 
             for (const gap of retroGaps) {
               const match = gap.match;

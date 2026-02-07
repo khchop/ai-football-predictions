@@ -86,6 +86,7 @@ export interface BackfillMissingPayload {
   manual?: boolean;     // True if triggered manually via API
   hoursAhead?: number;  // How far ahead to look (default 12)
   type?: 'stuck-matches'; // Special type for stuck match recovery
+  retroDays?: number;   // Retroactive backfill window in days (default 30)
 }
 
 // Generate AI content (match previews, league roundups, model reports)
