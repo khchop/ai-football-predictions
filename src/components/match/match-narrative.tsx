@@ -10,8 +10,6 @@ interface PreviewData {
   introduction: string;
   teamFormAnalysis: string;
   headToHead: string | null;
-  keyPlayers: string | null;
-  tacticalAnalysis: string | null;
   prediction: string;
   bettingInsights: string | null;
 }
@@ -39,20 +37,6 @@ function renderPreviewSections(preview: PreviewData) {
         <>
           <h3>Head to Head</h3>
           <p>{preview.headToHead}</p>
-        </>
-      )}
-
-      {preview.keyPlayers && (
-        <>
-          <h3>Key Players</h3>
-          <p>{preview.keyPlayers}</p>
-        </>
-      )}
-
-      {preview.tacticalAnalysis && (
-        <>
-          <h3>Tactical Analysis</h3>
-          <p>{preview.tacticalAnalysis}</p>
         </>
       )}
 
