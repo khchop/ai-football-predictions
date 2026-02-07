@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 52 of 52 — v2.7 COMPLETE
 Plan: All plans complete
 Status: Milestone shipped — ready for next milestone planning
-Last activity: 2026-02-07 — Completed quick-022
+Last activity: 2026-02-07 — Completed quick-023
 
 Progress: [████████████████████████████████████████████████] 100% (12 milestones shipped)
 
@@ -73,11 +73,12 @@ None.
 | 020 | Fix retroactive analysis for old matches | 2026-02-07 | 6e3fb28 | [020-retroactive-analysis-old-matches](./quick/020-retroactive-analysis-old-matches/) |
 | 021 | Automate post-deploy tasks (migrations & backfill) | 2026-02-07 | 3c109ea | [021-auto-post-deploy-tasks](./quick/021-auto-post-deploy-tasks/) |
 | 022 | Fix match_previews missing unique constraint | 2026-02-07 | c786d61 | [022-fix-match-previews-unique-constraint](./quick/022-fix-match-previews-unique-constraint/) |
+| 023 | Fix failed previews and analysis jobs (DLQ requeue) | 2026-02-07 | e1b9695 | [023-fix-failed-previews-and-analysis-jobs](./quick/023-fix-failed-previews-and-analysis-jobs/) |
 
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed quick-022 (fix match_previews unique constraint)
+Stopped at: Completed quick-023 (fix failed previews and analysis jobs)
 Resume file: None
 
 **Platform status:**
@@ -90,4 +91,4 @@ Resume file: None
 **Next action:** `/gsd:new-milestone` to plan v2.8 (or `/clear` first for fresh context)
 
 ---
-*Last updated: 2026-02-07 after quick-022 completed*
+*Last updated: 2026-02-07 after quick-023 completed*
