@@ -139,9 +139,9 @@ export const TOGETHER_PREDICTION_TIMEOUT_MS = 25000;       // Increased from 20s
 export const TOGETHER_PREDICTION_BATCH_TIMEOUT_MS = 35000; // Increased from 30s to 35s for batch
 
 // ============================================================================
-// SYNTHETIC API - CONTENT (Kimi K2 Thinking)
-// Rate limit: Same as predictions
-// Typical latency: 10-30s for long-form content (reasoning model)
+// TOGETHER AI - CONTENT (DeepSeek V3.1)
+// Rate limit: Together AI plan limits
+// Typical latency: 5-15s for long-form content (non-reasoning model)
 // Reliability: High (99.5%)
 // ============================================================================
 export const TOGETHER_CONTENT_RETRY: Partial<RetryConfig> = {
@@ -151,11 +151,11 @@ export const TOGETHER_CONTENT_RETRY: Partial<RetryConfig> = {
   retryableStatusCodes: [408, 429, 500, 502, 503, 504],
 };
 
-export const TOGETHER_CONTENT_TIMEOUT_MS = 90000; // 90s timeout for reasoning model content generation
+export const TOGETHER_CONTENT_TIMEOUT_MS = 60000; // 60s timeout for DeepSeek V3.1 content generation
 
 // ============================================================================
 // TOGETHER AI - CONTENT FALLBACK (Llama 4 Maverick)
-// Used when primary Kimi K2 Thinking fails after all retries
+// Used when primary DeepSeek V3.1 fails after all retries
 // Typical latency: 5-15s (faster than reasoning model)
 // ============================================================================
 export const TOGETHER_CONTENT_FALLBACK_RETRY: Partial<RetryConfig> = {
@@ -173,7 +173,7 @@ export const TOGETHER_CONTENT_FALLBACK_TIMEOUT_MS = 60000; // 60s - Llama 4 is f
 export const SERVICE_NAMES = {
   API_FOOTBALL: 'api-football',
   TOGETHER_PREDICTIONS: 'together-predictions',
-  TOGETHER_CONTENT: 'together-content', // Now points to Synthetic API (Kimi K2 Thinking)
+  TOGETHER_CONTENT: 'together-content', // DeepSeek V3.1 via Together API
   TOGETHER_CONTENT_FALLBACK: 'together-content-fallback',
 } as const;
 
