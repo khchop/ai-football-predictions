@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 54 of 58 (Diagnostic Infrastructure)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-07 — Completed quick-030 (backfill script to regenerate match previews)
+Last activity: 2026-02-07 — Completed quick-031 (remove H2H section, refocus on AI consensus)
 
 Progress: [█████████████████████████████████████████████████████░] 91% (53/58 phases)
 
@@ -34,6 +34,9 @@ Progress: [███████████████████████
 
 Recent decisions affecting current work:
 
+- quick-031: Remove H2H section entirely — H2H data rarely available, low value; focus on AI consensus instead
+- quick-031: AI consensus language in predictions — State percentages (e.g., "45% draw, 35% home, 20% away") and confidence level
+- quick-031: Betting Insights as value betting guide — Highlight where AI predictions DIFFER from market odds
 - 54-01: Priority-ordered failure categorization — timeout > api-error > empty > language > thinking-tag > parse prevents misclassification
 - 54-01: diag- prefix for diagnostic match IDs — Avoids collision with existing test-validation-001 fixture
 - 53-02: Separate test vs production schemas — Test schemas validate LLM output, production validates DB insert (different field names, different concerns)
@@ -66,11 +69,12 @@ Recent decisions affecting current work:
 | 028 | Fix HierarchyRequestError in match narrative rendering | 2026-02-07 | ce33711 | [028-fix-hierarchyrequesterror-insertbefore-d](./quick/028-fix-hierarchyrequesterror-insertbefore-d/) |
 | 029 | Fix match preview text to focus on odds, predictions & outcomes instead of hallucinated facts | 2026-02-07 | c57f7f2 | [029-fix-match-preview-text-to-focus-on-odds-](./quick/029-fix-match-preview-text-to-focus-on-odds-/) |
 | 030 | Backfill script to regenerate all existing match previews with anti-hallucination prompt | 2026-02-07 | ec33e5f | [030-backfill-regenerate-match-previews-anti-](./quick/030-backfill-regenerate-match-previews-anti-/) |
+| 031 | Remove head-to-head section from match generation, refocus on AI consensus | 2026-02-07 | 77f105a | [031-remove-head-to-head-from-match-generatio](./quick/031-remove-head-to-head-from-match-generatio/) |
 
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed quick-030 (backfill script for match previews)
+Stopped at: Completed quick-031 (remove H2H, refocus on AI consensus)
 Resume file: None
 
 **Next action:** Execute 54-02-PLAN.md (diagnostic runner)
