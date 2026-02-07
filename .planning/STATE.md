@@ -50,7 +50,7 @@ None.
 **Operational items from v2.7 (deferred as tech debt):**
 1. Run `npx tsx scripts/investigate-settlement-failures.ts` against production Redis (SETTLE-01)
 2. Run `npx tsx scripts/backfill-settlement.ts` against production
-3. Run `npx tsx scripts/backfill-retroactive-predictions.ts --days 7` against production
+3. ~~Run `npx tsx scripts/backfill-retroactive-predictions.ts --days 7` against production~~ -- automated in quick-017
 
 ### Quick Tasks Completed
 
@@ -63,11 +63,12 @@ None.
 | 013 | Break circular dependency in base.ts imports | 2026-02-05 | 5322a19 | [013-break-circular-dep-base-imports-index](./quick/013-break-circular-dep-base-imports-index/) |
 | 014 | Fix Ahrefs SEO issues (redirects, orphans, schema) | 2026-02-06 | ca6f4f2 | [014-fix-ahrefs-seo-issues](./quick/014-fix-ahrefs-seo-issues/) |
 | 015 | Fix missing predictions (no analysis retry) | 2026-02-06 | e4b6021 | [015-fix-missing-predictions-no-analysis-retry](./quick/015-fix-missing-predictions-no-analysis-retry/) |
+| 017 | Automate retroactive backfill in hourly worker | 2026-02-07 | 7bb27e9 | [017-automate-retroactive-backfill](./quick/017-automate-retroactive-backfill/) |
 
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: v2.7 milestone completed and archived
+Stopped at: Completed quick-017 (automate retroactive backfill)
 Resume file: None
 
 **Platform status:**
@@ -80,4 +81,4 @@ Resume file: None
 **Next action:** `/gsd:new-milestone` to plan v2.8 (or `/clear` first for fresh context)
 
 ---
-*Last updated: 2026-02-07 after v2.7 milestone archived*
+*Last updated: 2026-02-07 after quick-017 completed*
