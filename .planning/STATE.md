@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 54 of 58 (Diagnostic Infrastructure)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-07 — Completed quick-026 (fix match report overwrite, preview data, duplicate predictions)
+Last activity: 2026-02-07 — Completed quick-027 (improve match detail text to 500+ words with preview + roundup)
 
 Progress: [█████████████████████████████████████████████████████░] 91% (53/58 phases)
 
@@ -61,11 +61,12 @@ Recent decisions affecting current work:
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 026 | Fix match report overwrite, add preview data, remove duplicate predictions | 2026-02-07 | 3e4a953 | [026-fix-match-report-overwrite-duplicates](./quick/026-fix-match-report-overwrite-duplicates/) |
+| 027 | Improve match detail text to 500+ words (preview + roundup narrative) | 2026-02-07 | 53ed692 | [027-improve-match-detail-text-500-words](./quick/027-improve-match-detail-text-500-words/) |
 
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed quick-026 (fix match report overwrite, preview data, duplicate predictions)
+Stopped at: Completed quick-027 (improve match detail text to 500+ words)
 Resume file: None
 
 **Next action:** Execute 54-02-PLAN.md (diagnostic runner)
