@@ -4,6 +4,7 @@ import { useMatch } from './use-match';
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { FileText } from 'lucide-react';
+import { textToParagraphs } from '@/lib/content/sanitization';
 
 interface PreviewData {
   introduction: string;
@@ -169,7 +170,7 @@ export function MatchNarrative() {
             </h2>
             <div className="prose prose-sm dark:prose-invert max-w-none">
               {roundupNarrative ? (
-                <div dangerouslySetInnerHTML={{ __html: roundupNarrative }} />
+                <div dangerouslySetInnerHTML={{ __html: textToParagraphs(roundupNarrative) }} />
               ) : postContent ? (
                 /<[a-z][\s\S]*>/i.test(postContent) ? (
                   <div dangerouslySetInnerHTML={{ __html: postContent }} />
