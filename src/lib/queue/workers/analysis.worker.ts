@@ -5,7 +5,7 @@
  * Runs at T-6h before each match.
  */
 
-import { Worker, Job } from 'bullmq';
+import { Worker, Job, UnrecoverableError } from 'bullmq';
 import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { AnalyzeMatchPayload } from '../types';
@@ -47,11 +47,22 @@ export function createAnalysisWorker() {
         const analysis = await fetchAndStoreAnalysis(matchId, fixtureId);
         
          if (!analysis) {
-           log.warn(
-             { matchId, externalId, attemptsMade: job.attemptsMade, maxAttempts: job.opts.attempts },
-             `No analysis data available for ${homeTeam} vs ${awayTeam} (attempt ${job.attemptsMade + 1}/${job.opts.attempts || 5})`
-           );
-           throw new Error(`No analysis data available for match ${matchId} (${homeTeam} vs ${awayTeam})`);
+           if (allowRetroactive) {
+             // Retroactive jobs: No data means API-Football doesn't have it (e.g., cup matches)
+             // This is permanent - don't retry
+             log.info(
+               { matchId, externalId },
+               `No API data available for retroactive match ${matchId} (${homeTeam} vs ${awayTeam}) - permanent failure, data will not appear for past matches`
+             );
+             throw new UnrecoverableError(`No API data available for retroactive match ${matchId} (${homeTeam} vs ${awayTeam}) - permanent failure, data will not appear for past matches`);
+           } else {
+             // Normal pre-match flow: Retry in case data arrives later
+             log.warn(
+               { matchId, externalId, attemptsMade: job.attemptsMade, maxAttempts: job.opts.attempts },
+               `No analysis data available for ${homeTeam} vs ${awayTeam} (attempt ${job.attemptsMade + 1}/${job.opts.attempts || 5})`
+             );
+             throw new Error(`No analysis data available for match ${matchId} (${homeTeam} vs ${awayTeam})`);
+           }
          }
         
          log.info(`✓ Analysis complete for ${homeTeam} vs ${awayTeam}`);
@@ -64,15 +75,25 @@ export function createAnalysisWorker() {
           hasInjuries: (analysis.homeInjuriesCount || 0) > 0 || (analysis.awayInjuriesCount || 0) > 0,
         };
        } catch (error: any) {
-           log.error({ 
-             matchId, 
-             externalId, 
-             homeTeam, 
+           // Check if this is an expected permanent failure (retroactive no-data)
+           if (error instanceof UnrecoverableError) {
+             log.info({
+               matchId,
+               externalId,
+               error: error.message
+             }, `Permanent failure - not retrying`);
+             throw error; // Re-throw as-is so BullMQ sees UnrecoverableError
+           }
+
+           log.error({
+             matchId,
+             externalId,
+             homeTeam,
              awayTeam,
              attemptsMade: job.attemptsMade,
-             err: error 
+             err: error
            }, `Error analyzing match`);
-           
+
            Sentry.captureException(error, {
              level: 'error',
              tags: {
@@ -87,7 +108,7 @@ export function createAnalysisWorker() {
                attempt: job.attemptsMade,
              },
            });
-           
+
            throw error; // Let BullMQ handle retry
        }
     },
