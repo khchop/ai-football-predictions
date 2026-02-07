@@ -21,6 +21,7 @@ import {
 } from '@/lib/db/queries';
 import { checkAndFixStuckMatches, checkAndFixStuckLiveMatches } from '../catch-up';
 import { loggers } from '@/lib/logger/modules';
+import { getMatchCoverage, classifyGapsBySeverity } from '@/lib/monitoring/pipeline-coverage';
 
 export function createBackfillWorker() {
   return new Worker<BackfillMissingPayload>(
@@ -403,6 +404,49 @@ export function createBackfillWorker() {
               addError(`Zero-pred settlement ${match.id}: ${error.message}`);
             }
           }
+        }
+
+        // 7. Pipeline health check - alert on matches approaching kickoff without jobs (MON-03)
+        try {
+          const coverage = await getMatchCoverage(6); // Check next 6 hours
+          const { critical, warning } = classifyGapsBySeverity(coverage.gaps);
+
+          // Log coverage summary at INFO level
+          log.info({
+            coveragePercentage: Math.round(coverage.percentage * 10) / 10,
+            totalMatches: coverage.totalMatches,
+            coveredMatches: coverage.coveredMatches,
+            totalGaps: coverage.gaps.length,
+            criticalGaps: critical.length,
+            warningGaps: warning.length,
+          }, 'Pipeline coverage check');
+
+          // Alert on critical gaps (< 2h to kickoff) at ERROR level
+          if (critical.length > 0) {
+            log.error({
+              criticalGaps: critical.map(g => ({
+                matchId: g.matchId,
+                match: `${g.homeTeam} vs ${g.awayTeam}`,
+                kickoffTime: g.kickoffTime,
+                hoursUntilKickoff: g.hoursUntilKickoff,
+                missingJobs: g.missingJobs,
+              })),
+            }, `CRITICAL: ${critical.length} match(es) within 2h of kickoff without scheduled jobs`);
+          }
+
+          // Log warnings (2-4h) at WARN level
+          if (warning.length > 0) {
+            log.warn({
+              warningGaps: warning.map(g => ({
+                matchId: g.matchId,
+                match: `${g.homeTeam} vs ${g.awayTeam}`,
+                hoursUntilKickoff: g.hoursUntilKickoff,
+                missingJobs: g.missingJobs,
+              })),
+            }, `WARNING: ${warning.length} match(es) within 2-4h of kickoff without scheduled jobs`);
+          }
+        } catch (healthError: any) {
+          log.warn({ err: healthError }, 'Pipeline health check failed (non-critical)');
         }
 
         // Log summary
