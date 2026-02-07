@@ -1,21 +1,21 @@
-import { getDb, matches, predictions, matchContent } from '@/lib/db';
-import { eq, and, isNull, or } from 'drizzle-orm';
+import { getDb, matches, predictions } from '@/lib/db';
+import { eq, and } from 'drizzle-orm';
 import { generatePostMatchContent } from '@/lib/content/match-content';
 import { loggers } from '@/lib/logger/modules';
 
 const log = loggers.content;
 
 /**
- * One-time backfill script for ALL matches missing post-match content
- * No time limit - processes all finished matches with scored predictions
+ * Backfill script to regenerate ALL post-match roundup content
+ * Overwrites existing content using upsert — use after prompt changes
  */
 async function backfillAllPostMatchContent() {
   const db = getDb();
-  
-  console.log('\n=== Starting Post-Match Content Backfill (All Time) ===\n');
-  
-  // Find ALL finished matches with scored predictions but missing post-match content
-  const missingContent = await db
+
+  console.log('\n=== Starting Post-Match Content Backfill (Regenerate All) ===\n');
+
+  // Find ALL finished matches with scored predictions
+  const allFinished = await db
     .select({
       matchId: matches.id,
       homeTeam: matches.homeTeam,
@@ -26,26 +26,23 @@ async function backfillAllPostMatchContent() {
     })
     .from(matches)
     .innerJoin(predictions, eq(matches.id, predictions.matchId))
-    .leftJoin(matchContent, eq(matches.id, matchContent.matchId))
     .where(
       and(
         eq(matches.status, 'finished'),
-        eq(predictions.status, 'scored'),
-        or(
-          isNull(matchContent.id),
-          isNull(matchContent.postMatchContent)
-        )
+        eq(predictions.status, 'scored')
       )
     )
     .groupBy(matches.id)
     .orderBy(matches.kickoffTime);
-  
-  console.log(`Found ${missingContent.length} matches missing post-match content\n`);
-  
-  if (missingContent.length === 0) {
-    console.log('✓ All matches have post-match content!\n');
+
+  console.log(`Found ${allFinished.length} finished matches to regenerate\n`);
+
+  if (allFinished.length === 0) {
+    console.log('✓ No finished matches found!\n');
     process.exit(0);
   }
+
+  const missingContent = allFinished;
   
   let successCount = 0;
   let failCount = 0;
