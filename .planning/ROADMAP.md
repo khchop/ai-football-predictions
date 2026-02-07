@@ -447,11 +447,11 @@ Plans:
   2. Zod schema validation catches schema mismatches before database save
   3. Test suite runs automatically before any model config change is merged
   4. Config changes that break working models are caught in CI before production
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 53-01: Create regression test suite with golden fixtures for working models
-- [ ] 53-02: Add Zod schema validation to all LLM response parsing paths
+- [ ] 53-01-PLAN.md — Golden fixture generator, regression test suite, test:regression npm script
+- [ ] 53-02-PLAN.md — Production Zod schema validation in predictions worker + GitHub Actions CI workflow
 
 #### Phase 54: Diagnostic Infrastructure
 **Goal**: Build visibility into which models fail and why through systematic testing
