@@ -5,19 +5,31 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { FileText } from 'lucide-react';
 
+interface PreviewData {
+  introduction: string;
+  teamFormAnalysis: string;
+  headToHead: string | null;
+  keyPlayers: string | null;
+  tacticalAnalysis: string | null;
+  prediction: string;
+  bettingInsights: string | null;
+}
+
 interface NarrativeContent {
   preMatchContent: string | null;
   postMatchContent: string | null;
+  preview: PreviewData | null;
 }
 
 /**
  * MatchNarrative - State-aware narrative display component.
  *
  * Displays pre-match or post-match narrative based on match state from context:
- * - Upcoming: Shows preMatchContent with "Match Preview" heading
- * - Live: Shows preMatchContent with "Match Preview" heading (keep preview visible)
+ * - Upcoming: Shows structured preview content (form analysis, H2H, key players, etc.)
+ * - Live: Shows structured preview content (keep preview visible)
  * - Finished: Shows postMatchContent with "Match Report" heading
  *
+ * Falls back to preMatchContent plain text if no preview data is available.
  * If no narrative content is available, displays a placeholder message.
  */
 export function MatchNarrative() {
@@ -42,13 +54,7 @@ export function MatchNarrative() {
     fetchContent();
   }, [match.id]);
 
-  // Determine which content to show based on matchState
-  // Live and upcoming both show pre-match content
   const isFinished = matchState === 'finished';
-  const narrativeText = isFinished
-    ? content?.postMatchContent
-    : content?.preMatchContent;
-  const heading = isFinished ? 'Match Report' : 'Match Preview';
 
   // Loading state with skeleton
   if (loading) {
@@ -66,14 +72,106 @@ export function MatchNarrative() {
     );
   }
 
-  // Show placeholder if no narrative available
-  if (!narrativeText) {
+  // Finished matches: show post-match content
+  if (isFinished) {
+    const postContent = content?.postMatchContent;
+    if (!postContent) {
+      return (
+        <Card className="bg-card/50 border-border/50">
+          <CardContent className="p-6">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Match Report
+            </h2>
+            <p className="text-muted-foreground italic">
+              Match report is being generated.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    const isHtml = /<[a-z][\s\S]*>/i.test(postContent);
     return (
       <Card className="bg-card/50 border-border/50">
         <CardContent className="p-6">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            {heading}
+            Match Report
+          </h2>
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            {isHtml ? (
+              <div dangerouslySetInnerHTML={{ __html: postContent }} />
+            ) : (
+              postContent
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Upcoming/Live matches: prefer structured preview over plain preMatchContent
+  const preview = content?.preview;
+  if (preview) {
+    return (
+      <Card className="bg-card/50 border-border/50">
+        <CardContent className="p-6">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            Match Preview
+          </h2>
+          <div className="prose prose-sm dark:prose-invert max-w-none space-y-4">
+            <p>{preview.introduction}</p>
+
+            <h3>Team Form</h3>
+            <p>{preview.teamFormAnalysis}</p>
+
+            {preview.headToHead && (
+              <>
+                <h3>Head to Head</h3>
+                <p>{preview.headToHead}</p>
+              </>
+            )}
+
+            {preview.keyPlayers && (
+              <>
+                <h3>Key Players</h3>
+                <p>{preview.keyPlayers}</p>
+              </>
+            )}
+
+            {preview.tacticalAnalysis && (
+              <>
+                <h3>Tactical Analysis</h3>
+                <p>{preview.tacticalAnalysis}</p>
+              </>
+            )}
+
+            <h3>Prediction</h3>
+            <p>{preview.prediction}</p>
+
+            {preview.bettingInsights && (
+              <>
+                <h3>Betting Insights</h3>
+                <p>{preview.bettingInsights}</p>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Fallback: plain preMatchContent text
+  const preContent = content?.preMatchContent;
+  if (!preContent) {
+    return (
+      <Card className="bg-card/50 border-border/50">
+        <CardContent className="p-6">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            Match Preview
           </h2>
           <p className="text-muted-foreground italic">
             Analysis pending - check back closer to kickoff.
@@ -88,10 +186,10 @@ export function MatchNarrative() {
       <CardContent className="p-6">
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
-          {heading}
+          Match Preview
         </h2>
         <div className="prose prose-sm dark:prose-invert max-w-none">
-          {narrativeText}
+          {preContent}
         </div>
       </CardContent>
     </Card>

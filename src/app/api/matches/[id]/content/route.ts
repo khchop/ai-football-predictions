@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getMatchContentUnified } from '@/lib/db/queries';
+import { getMatchPreview } from '@/lib/content/queries';
 
 /**
  * GET /api/matches/[id]/content
  *
- * Returns narrative content (pre-match and post-match) for a match.
+ * Returns narrative content (pre-match and post-match) and preview data for a match.
  * Used by MatchNarrative component for client-side content fetching.
  *
  * Response:
- * - 200: { preMatchContent: string | null, postMatchContent: string | null }
+ * - 200: { preMatchContent: string | null, postMatchContent: string | null, preview: PreviewData | null }
  * - 500: { error: string }
  */
 export async function GET(
@@ -17,19 +18,23 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const content = await getMatchContentUnified(id);
-
-    // Return null values if no content exists (not 404 - absence of content is valid)
-    if (!content) {
-      return NextResponse.json(
-        { preMatchContent: null, postMatchContent: null },
-        { status: 200 }
-      );
-    }
+    const [content, preview] = await Promise.all([
+      getMatchContentUnified(id),
+      getMatchPreview(id),
+    ]);
 
     return NextResponse.json({
-      preMatchContent: content.preMatchContent || null,
-      postMatchContent: content.postMatchContent || null,
+      preMatchContent: content?.preMatchContent || null,
+      postMatchContent: content?.postMatchContent || null,
+      preview: preview ? {
+        introduction: preview.introduction,
+        teamFormAnalysis: preview.teamFormAnalysis,
+        headToHead: preview.headToHead,
+        keyPlayers: preview.keyPlayers,
+        tacticalAnalysis: preview.tacticalAnalysis,
+        prediction: preview.prediction,
+        bettingInsights: preview.bettingInsights,
+      } : null,
     });
   } catch (error) {
     console.error('Error fetching match content:', error);

@@ -1,5 +1,4 @@
 import { notFound, permanentRedirect } from 'next/navigation';
-import { Suspense } from 'react';
 import { getMatchBySlug, getMatchWithAnalysis, getPredictionsForMatchWithDetails, getOverallStats } from '@/lib/db/queries';
 import { getCompetitionByIdOrAlias } from '@/lib/football/competitions';
 import type { Metadata } from 'next';
@@ -12,8 +11,6 @@ import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
 import { buildMatchBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 import { MatchDataProvider } from '@/components/match/match-data-provider';
 import { MatchLayout } from '@/components/match/match-layout';
-import { PredictingModelsWidget } from '@/components/match/predicting-models-widget';
-import { Skeleton } from '@/components/ui/skeleton';
 
 
 interface MatchPageProps {
@@ -187,10 +184,6 @@ export default async function MatchPage({ params }: MatchPageProps) {
           faqs={aiFaqs}
         />
       </MatchDataProvider>
-
-      <Suspense fallback={<Skeleton className="h-[200px] rounded-xl" />}>
-        <PredictingModelsWidget matchId={matchData.id} />
-      </Suspense>
     </div>
   );
 }
