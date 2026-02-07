@@ -26,6 +26,7 @@ export async function GET(
     return NextResponse.json({
       preMatchContent: content?.preMatchContent || null,
       postMatchContent: content?.postMatchContent || null,
+      roundupNarrative: content?.roundupNarrative || null,
       preview: preview ? {
         introduction: preview.introduction,
         teamFormAnalysis: preview.teamFormAnalysis,

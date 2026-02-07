@@ -2662,6 +2662,7 @@ export interface UnifiedMatchContent {
   postMatchContent: string | null;
   postMatchGeneratedAt: string | null;
   hasFullRoundup: boolean;
+  roundupNarrative: string | null;
 }
 
 /**
@@ -2705,6 +2706,7 @@ export async function getMatchContentUnified(matchId: string): Promise<UnifiedMa
         END
       `,
       hasFullRoundup: sql<boolean>`${matchRoundups.id} IS NOT NULL`,
+      roundupNarrative: matchRoundups.narrative,
     })
     .from(matchContent)
     .leftJoin(matchRoundups, eq(matchContent.matchId, matchRoundups.matchId))
@@ -2722,6 +2724,7 @@ export async function getMatchContentUnified(matchId: string): Promise<UnifiedMa
       postMatchContent: result[0].postMatchContent,
       postMatchGeneratedAt: result[0].postMatchGeneratedAt,
       hasFullRoundup: result[0].hasFullRoundup ?? false,
+      roundupNarrative: result[0].roundupNarrative ?? null,
     };
   }
 
@@ -2746,6 +2749,7 @@ export async function getMatchContentUnified(matchId: string): Promise<UnifiedMa
       postMatchContent: roundupOnly[0].narrative,
       postMatchGeneratedAt: roundupOnly[0].publishedAt?.toISOString() ?? null,
       hasFullRoundup: true,
+      roundupNarrative: roundupOnly[0].narrative,
     };
   }
 
