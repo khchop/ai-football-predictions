@@ -1,0 +1,296 @@
+[
+  {
+    "modelId": "deepseek-v3.1",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "deepseek-r1",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "kimi-k2-0905",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "kimi-k2-instruct",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "qwen3-235b-instruct",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "qwen3-next-80b-instruct",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "qwen2.5-7b-turbo",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "qwen2.5-72b-turbo",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "llama-4-maverick",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "llama-4-scout",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "llama-3.3-70b-turbo",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "llama-3.1-8b-turbo",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "llama-3.1-405b-turbo",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "llama-3.2-3b-turbo",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "llama-3-8b-lite",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "llama-3-70b-reference",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "gpt-oss-20b",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "cogito-70b",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "cogito-109b-moe",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "cogito-405b",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "cogito-671b",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "ministral-3-14b",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "mistral-small-3-24b",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "mistral-7b-v0.2",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "mistral-7b-v0.3",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "nemotron-nano-9b-v2",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "gemma-3n-e4b",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "rnj-1-instruct",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "marin-8b-instruct",
+    "provider": "together",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "deepseek-r1-0528-syn",
+    "provider": "synthetic",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "kimi-k2-thinking-syn",
+    "provider": "synthetic",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "qwen3-235b-thinking-syn",
+    "provider": "synthetic",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "deepseek-v3-0324-syn",
+    "provider": "synthetic",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "deepseek-v3.1-terminus-syn",
+    "provider": "synthetic",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "deepseek-v3.2-syn",
+    "provider": "synthetic",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "minimax-m2-syn",
+    "provider": "synthetic",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "minimax-m2.1-syn",
+    "provider": "synthetic",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "kimi-k2.5-syn",
+    "provider": "synthetic",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "glm-4.6-syn",
+    "provider": "synthetic",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "glm-4.7-syn",
+    "provider": "synthetic",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "qwen3-coder-480b-syn",
+    "provider": "synthetic",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  },
+  {
+    "modelId": "gpt-oss-120b-syn",
+    "provider": "synthetic",
+    "success": false,
+    "errorMessage": "Placeholder fixture - run 'npx tsx scripts/generate-golden-fixtures.ts' to capture real baselines",
+    "timestamp": "2026-02-07T00:00:00.000Z"
+  }
+]
