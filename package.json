@@ -24,6 +24,8 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:integration": "vitest run src/__tests__/integration/",
+    "test:regression": "vitest run src/__tests__/integration/models/regression.test.ts",
+    "test:regression:live": "vitest run src/__tests__/integration/models/all-models.test.ts",
     "validate:models": "npx tsx scripts/validate-all-models.ts",
     "validate:synthetic": "npx tsx scripts/validate-synthetic-models.ts",
     "check:fallback": "npx tsx scripts/check-fallback-rate.ts",
