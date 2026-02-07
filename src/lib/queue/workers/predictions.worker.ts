@@ -6,7 +6,7 @@
  * Runs at T-30m before each match.
  */
 
-import { Worker, Job } from 'bullmq';
+import { Worker, Job, UnrecoverableError } from 'bullmq';
 import * as Sentry from '@sentry/nextjs';
 import { getQueueConnection, QUEUE_NAMES } from '../index';
 import type { PredictMatchPayload } from '../types';
@@ -113,11 +113,22 @@ export function createPredictionsWorker() {
          // Get analysis (odds excluded from prompt, but analysis contains other stats)
          const analysis = await getMatchAnalysisByMatchId(matchId);
          if (!analysis) {
-           log.warn(
-             { matchId, attemptsMade: job.attemptsMade, maxAttempts: job.opts.attempts },
-             `No analysis data found for match ${matchId} (attempt ${job.attemptsMade + 1}/${job.opts.attempts || 5}) - analysis may still be processing`
-           );
-           throw new Error(`No analysis data found for match ${matchId} - analysis may still be processing`);
+           if (allowRetroactive) {
+             // Retroactive jobs: No analysis means API had no data for this match (cup matches)
+             // This is permanent - don't retry
+             log.info(
+               { matchId },
+               `No analysis data exists for retroactive match ${matchId} - skipping predictions (API had no data for this match)`
+             );
+             throw new UnrecoverableError(`No analysis data exists for retroactive match ${matchId} - skipping predictions (API had no data for this match)`);
+           } else {
+             // Normal pre-match flow: Analysis may still be processing, retry
+             log.warn(
+               { matchId, attemptsMade: job.attemptsMade, maxAttempts: job.opts.attempts },
+               `No analysis data found for match ${matchId} (attempt ${job.attemptsMade + 1}/${job.opts.attempts || 5}) - analysis may still be processing`
+             );
+             throw new Error(`No analysis data found for match ${matchId} - analysis may still be processing`);
+           }
          }
         
         // Get standings
@@ -296,6 +307,16 @@ export function createPredictionsWorker() {
         };
        } catch (error: unknown) {
            const errorMsg = error instanceof Error ? error.message : String(error);
+
+           // Check if this is an expected permanent failure (retroactive no-analysis)
+           if (error instanceof UnrecoverableError) {
+             log.info({
+               matchId,
+               error: errorMsg
+             }, 'Permanent failure - not retrying');
+             throw error; // Re-throw as-is so BullMQ sees UnrecoverableError
+           }
+
            const errorType = classifyError(error);
 
            log.error({
