@@ -52,6 +52,9 @@ None.
 2. Run `npx tsx scripts/backfill-settlement.ts` against production
 3. ~~Run `npx tsx scripts/backfill-retroactive-predictions.ts --days 7` against production~~ -- automated in quick-017
 
+**Post quick-018:**
+1. Run database migration: `psql $DATABASE_URL -f drizzle/0013_drop_lineup_columns.sql` to drop 9 lineup columns
+
 ### Quick Tasks Completed
 
 | # | Description | Date | Commit | Directory |
@@ -64,11 +67,12 @@ None.
 | 014 | Fix Ahrefs SEO issues (redirects, orphans, schema) | 2026-02-06 | ca6f4f2 | [014-fix-ahrefs-seo-issues](./quick/014-fix-ahrefs-seo-issues/) |
 | 015 | Fix missing predictions (no analysis retry) | 2026-02-06 | e4b6021 | [015-fix-missing-predictions-no-analysis-retry](./quick/015-fix-missing-predictions-no-analysis-retry/) |
 | 017 | Automate retroactive backfill in hourly worker | 2026-02-07 | 7bb27e9 | [017-automate-retroactive-backfill](./quick/017-automate-retroactive-backfill/) |
+| 018 | Remove lineup dependency from prediction pipeline | 2026-02-07 | cccd0e7 | [018-remove-lineup-dependency](./quick/018-remove-lineup-dependency/) |
 
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed quick-017 (automate retroactive backfill)
+Stopped at: Completed quick-018 (remove lineup dependency)
 Resume file: None
 
 **Platform status:**
