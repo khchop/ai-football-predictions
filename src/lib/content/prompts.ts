@@ -88,16 +88,22 @@ ${data.h2hHistory.slice(0, 3).map(h => `- ${h.date}: ${h.homeTeam} vs ${h.awayTe
 Write a comprehensive match preview with the following sections in JSON format:
 
 {
-  "introduction": "2-3 paragraph introduction setting the scene (200-250 words). Include match importance, stakes, and context.",
-  "teamFormAnalysis": "Detailed analysis of both teams' recent form and current situation (250-300 words). Discuss momentum, injuries, key player availability.",
-  "headToHead": "H2H history analysis if data available, or tactical matchup discussion (150-200 words).",
-  "keyPlayers": "Players to watch from both teams (150-200 words). Focus on impact players.",
-  "tacticalAnalysis": "Expected tactics and game plan from both managers (200-250 words). Discuss formations and strategies.",
+  "introduction": "2-3 paragraph introduction setting the scene (200-250 words). First sentence MUST state which team bookmakers favor and at what odds (e.g., 'Bookmakers favor Arsenal at 1.65 to beat Chelsea in this Premier League clash'). Include match importance, stakes, and context.",
+  "teamFormAnalysis": "Detailed analysis of both teams' recent form and current situation (250-300 words). Use ONLY the form string (e.g., 'WWDWL') and goals data provided. Do NOT mention league table positions, relegation/title races, or player names.",
+  "headToHead": "H2H history analysis using ONLY the dates and scores provided. If no H2H data provided, write 'No recent head-to-head data available' (do not speculate). (150-200 words).",
   "prediction": "AI-powered prediction with reasoning (150-200 words). Reference the odds and AI model consensus.",
   "bettingInsights": "Betting tips and value bets based on the analysis (150-200 words). Suggest 2-3 betting markets with reasoning.",
   "metaDescription": "SEO-optimized meta description (150-160 characters exactly)",
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
 }
+
+CRITICAL ANTI-HALLUCINATION RULES:
+- Use ONLY the data provided above. Do NOT infer, guess, or add facts not explicitly in the data.
+- Do NOT mention league table positions, relegation/title races, or championship standings.
+- Do NOT mention player names, injuries, managers, or formations.
+- Do NOT mention specific dates of past matches unless provided in H2H data.
+- If data is not provided for a section, acknowledge it (e.g., "No H2H data available") instead of inventing content.
+- Focus on betting odds, AI predictions, form strings, and goal statistics ONLY.
 
 Writing Guidelines:
 - Write in a professional, engaging tone
@@ -440,8 +446,6 @@ export interface MatchPreviewResponse {
   introduction: string;
   teamFormAnalysis: string;
   headToHead: string;
-  keyPlayers: string;
-  tacticalAnalysis: string;
   prediction: string;
   bettingInsights: string;
   metaDescription: string;
