@@ -463,12 +463,11 @@ Plans:
   3. Per-model success rate calculated from diagnostic run with pass/fail/error counts
   4. Raw LLM responses captured and saved to file for debugging failed models
   5. Diagnostic report generated showing failure breakdown by category with fix recommendations
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 54-01: Create golden test fixtures representing diverse match scenarios
-- [ ] 54-02: Build diagnostic runner that tests each model and categorizes failures
-- [ ] 54-03: Generate diagnostic report with per-model results and fix recommendations
+- [ ] 54-01-PLAN.md — Diverse match scenario fixtures and failure categorization module
+- [ ] 54-02-PLAN.md — Diagnostic runner with raw response capture and report generation
 
 #### Phase 55: Category Fixes - Timeouts & Tags
 **Goal**: Fix timeout and thinking tag failures identified by diagnostics
@@ -593,11 +592,11 @@ Plans:
 | 51. Retroactive Backfill Script | v2.7 | 2/2 | Complete | 2026-02-06 |
 | 52. Monitoring & Observability | v2.7 | 3/3 | Complete | 2026-02-07 |
 | 53. Regression Protection | v2.8 | 2/2 | Complete | 2026-02-07 |
-| 54. Diagnostic Infrastructure | v2.8 | 0/3 | Not started | - |
+| 54. Diagnostic Infrastructure | v2.8 | 0/2 | Not started | - |
 | 55. Category Fixes - Timeouts & Tags | v2.8 | 0/2 | Not started | - |
 | 56. Category Fixes - Language & JSON | v2.8 | 0/2 | Not started | - |
 | 57. Category Fixes - Fallbacks & Validation | v2.8 | 0/3 | Not started | - |
 | 58. Observability & Monitoring | v2.8 | 0/3 | Not started | - |
 
 ---
-*Last updated: 2026-02-07 after phase 53 execution complete*
+*Last updated: 2026-02-07 after phase 54 planning complete*
