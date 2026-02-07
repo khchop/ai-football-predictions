@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 52 of 52 — v2.7 COMPLETE
 Plan: All plans complete
 Status: Milestone shipped — ready for next milestone planning
-Last activity: 2026-02-07 — Completed quick-019
+Last activity: 2026-02-07 — Completed quick-020
 
 Progress: [████████████████████████████████████████████████] 100% (12 milestones shipped)
 
@@ -69,11 +69,12 @@ None.
 | 017 | Automate retroactive backfill in hourly worker | 2026-02-07 | 7bb27e9 | [017-automate-retroactive-backfill](./quick/017-automate-retroactive-backfill/) |
 | 018 | Remove lineup dependency from prediction pipeline | 2026-02-07 | cccd0e7 | [018-remove-lineup-dependency](./quick/018-remove-lineup-dependency/) |
 | 019 | Fix retroactive backfill infinite retry on no data | 2026-02-07 | 54894f2 | [019-fix-retroactive-backfill-no-data-infinite-retry](./quick/019-fix-retroactive-backfill-no-data-infinite-retry/) |
+| 020 | Fix retroactive analysis for old matches | 2026-02-07 | 6e3fb28 | [020-retroactive-analysis-old-matches](./quick/020-retroactive-analysis-old-matches/) |
 
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed quick-019 (fix retroactive backfill no-data infinite retry)
+Stopped at: Completed quick-020 (fix retroactive analysis for old matches)
 Resume file: None
 
 **Platform status:**
@@ -86,4 +87,4 @@ Resume file: None
 **Next action:** `/gsd:new-milestone` to plan v2.8 (or `/clear` first for fresh context)
 
 ---
-*Last updated: 2026-02-07 after quick-019 completed*
+*Last updated: 2026-02-07 after quick-020 completed*
