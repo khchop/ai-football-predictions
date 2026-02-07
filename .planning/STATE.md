@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 54 of 58 (Diagnostic Infrastructure)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-07 — Completed quick-026-PLAN.md (fix match report overwrite & duplicates)
+Last activity: 2026-02-07 — Completed quick-026 (fix match report overwrite, preview data, duplicate predictions)
 
 Progress: [█████████████████████████████████████████████████████░] 91% (53/58 phases)
 
@@ -56,10 +56,16 @@ Recent decisions affecting current work:
 - Timeout escalation: Reasoning models need 60-90s but risk budget/pipeline issues
 - Unfixable models: Small models (3B-7B) may not support JSON reliably
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 026 | Fix match report overwrite, add preview data, remove duplicate predictions | 2026-02-07 | 3e4a953 | [026-fix-match-report-overwrite-duplicates](./quick/026-fix-match-report-overwrite-duplicates/) |
+
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed quick-026-PLAN.md (fix match report overwrite & duplicates)
+Stopped at: Completed quick-026 (fix match report overwrite, preview data, duplicate predictions)
 Resume file: None
 
 **Next action:** Execute 54-02-PLAN.md (diagnostic runner)
