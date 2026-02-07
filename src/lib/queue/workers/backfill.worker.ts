@@ -352,11 +352,11 @@ export function createBackfillWorker() {
           }
         }
 
-        // 7. Retroactive backfill - find matches from last 7 days with < 42 predictions
+        // 7. Retroactive backfill - find matches from last 30 days with < 42 predictions
         // Catches matches that slipped through the forward-looking pipeline
         // (server restarts, API failures, worker crashes)
         try {
-          const retroGaps = await getMatchesMissingRetroactivePredictions(7);
+          const retroGaps = await getMatchesMissingRetroactivePredictions(30);
 
           if (retroGaps.length > 0) {
             log.info({
@@ -368,7 +368,7 @@ export function createBackfillWorker() {
                 predictions: g.predictionCount,
                 hasAnalysis: g.hasAnalysis,
               })),
-            }, `Retroactive backfill: found ${retroGaps.length} match(es) with < 42 predictions in last 7 days`);
+            }, `Retroactive backfill: found ${retroGaps.length} match(es) with < 42 predictions in last 30 days`);
 
             for (const gap of retroGaps) {
               const match = gap.match;
