@@ -19,7 +19,6 @@ export const loggers = {
   // Workers (individual)
   fixturesWorker: createLogger('worker:fixtures'),
   analysisWorker: createLogger('worker:analysis'),
-  lineupsWorker: createLogger('worker:lineups'),
   oddsWorker: createLogger('worker:odds'),
   predictionsWorker: createLogger('worker:predictions'),
   liveScoreWorker: createLogger('worker:live-score'),
@@ -29,13 +28,12 @@ export const loggers = {
   modelRecoveryWorker: createLogger('worker:model-recovery'),
   standingsWorker: createLogger('worker:standings'),
   statsWorker: createLogger('worker:stats'),
-  
+
   // Football data
   apiFootball: createLogger('api-football'),
   matchAnalysis: createLogger('match-analysis'),
   standings: createLogger('standings'),
   h2h: createLogger('h2h'),
-  lineups: createLogger('lineups'),
   teamStats: createLogger('team-statistics'),
   
   // Infrastructure

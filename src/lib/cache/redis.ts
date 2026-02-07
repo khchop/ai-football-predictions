@@ -217,8 +217,7 @@ export const CACHE_TTL = {
    PREDICTIONS: 86400,          // 24 hours - static pre-match data
    ODDS: 600,                   // 10 minutes - matches intended behavior per worker comment (was 30 min)
    INJURIES: 7200,              // 2 hours - pre-match updates
-   LINEUPS: 300,                // 5 minutes - critical near kickoff (was 15 min)
-   
+
    // Database query caches
    MODELS: 300,                 // 5 minutes - rarely changes
    COMPETITIONS: 300,           // 5 minutes - rarely changes
@@ -373,8 +372,7 @@ export const cacheKeys = {
    prediction: (fixtureId: number) => `api:prediction:${fixtureId}`,
    odds: (fixtureId: number) => `api:odds:${fixtureId}`,
    injuries: (fixtureId: number) => `api:injuries:${fixtureId}`,
-   lineups: (fixtureId: number) => `api:lineups:${fixtureId}`,
-   
+
     // Database queries
     activeModels: () => 'db:models:active',
     activeCompetitions: () => 'db:competitions:active',

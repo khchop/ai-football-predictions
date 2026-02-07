@@ -115,11 +115,10 @@ export async function fetchFromAPIFootball<T>({ endpoint, params }: FetchOptions
 // ============================================================================
 
 import type { 
-  APIFootballResponse, 
+  APIFootballResponse,
   APIFootballPredictionResponse,
   APIFootballInjuryResponse,
-  APIFootballOddsResponse,
-  APIFootballLineupsResponse 
+  APIFootballOddsResponse
 } from '@/types';
 
 /**
@@ -204,25 +203,6 @@ export async function fetchOdds(fixtureId: number): Promise<APIFootballOddsRespo
     );
    } catch (error) {
      log.error({ fixtureId, error }, 'Error fetching odds');
-     return null;
-   }
-}
-
-/**
- * Fetch lineups for a fixture with caching
- */
-export async function fetchLineups(fixtureId: number): Promise<APIFootballLineupsResponse | null> {
-  try {
-    return await withCache(
-      cacheKeys.lineups(fixtureId),
-      CACHE_TTL.LINEUPS,
-      () => fetchFromAPIFootball<APIFootballLineupsResponse>({
-        endpoint: '/fixtures/lineups',
-        params: { fixture: fixtureId },
-      })
-    );
-   } catch (error) {
-     log.error({ fixtureId, error }, 'Error fetching lineups');
      return null;
    }
 }

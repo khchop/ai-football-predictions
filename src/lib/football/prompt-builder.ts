@@ -28,7 +28,7 @@ export interface BatchMatchContext extends PromptContext {
 // Scoring explanation is in system prompt - don't duplicate here
 const ANALYSIS_HEADER = `Analyze match data and predict final score.
 
-DATA FORMAT: H2H, Form (WDLWW), Stats (%), Lineups, Absences, Table Position
+DATA FORMAT: H2H, Form (WDLWW), Stats (%), Absences, Table Position
 
 KEY FACTORS: Home advantage (~0.4 goals), current form, H2H record, key injuries, league position
 
@@ -307,13 +307,7 @@ export function buildEnhancedPrompt(context: PromptContext | EnhancedPromptConte
        lines.push(`Away: ${analysis.awayTeamForm}${awayGoals}`);
      }
      lines.push('');
-     
-     // Lineups - compressed format (formation + notable absences only)
-     if (analysis.lineupsAvailable && analysis.homeFormation && analysis.awayFormation) {
-       lines.push(`LINEUPS: ${analysis.homeFormation} vs ${analysis.awayFormation} (confirmed)`);
-       lines.push('');
-     }
-     
+
      // Key absences
      const totalInjuries = (analysis.homeInjuriesCount || 0) + (analysis.awayInjuriesCount || 0);
      if (totalInjuries > 0) {
@@ -364,7 +358,7 @@ export function buildSimplePrompt(
 // NOTE: Removed "Odds (lower=likely)" to prevent model bias toward market expectations
 const BATCH_ANALYSIS_HEADER = `Predict scores for ALL matches. Output JSON array only.
 
-DATA: H2H, Form, Stats %, Lineups, Absences
+DATA: H2H, Form, Stats %, Absences
 
 `;
 
@@ -451,11 +445,6 @@ function buildCompactMatchSummary(context: BatchMatchContext, index: number, hom
       const keyInjuries = parseKeyInjuries(analysis.keyInjuries);
       const topInjuries = keyInjuries.slice(0, 4).map(i => `${i.playerName}(${i.teamName.substring(0, 3)})`).join(', ');
       lines.push(`    Absences: ${topInjuries}${keyInjuries.length > 4 ? ` +${keyInjuries.length - 4} more` : ''}`);
-    }
-    
-    // Lineups indicator
-    if (analysis.lineupsAvailable) {
-      lines.push(`    Lineups: ${analysis.homeFormation || '?'} vs ${analysis.awayFormation || '?'} (confirmed)`);
     }
   } else {
     lines.push(`    [No detailed analysis available]`);

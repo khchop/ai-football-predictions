@@ -92,14 +92,14 @@ export default async function AboutPage() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">2. AI Predictions</h3>
                 <p className="text-muted-foreground mb-4">
-                  About 1 hour before kickoff (when lineups are confirmed), we send the same data 
+                  About 30 minutes before kickoff, we send the same data
                   to all {modelCount} AI models. Each model analyzes the data and predicts the final score.
                 </p>
                 <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm">
                   <p className="text-muted-foreground mb-2"># Data provided to models:</p>
                   <p className="text-foreground text-xs">
                     Betting Odds | League Standings | Head-to-Head History<br />
-                    Recent Form | Team Comparison | Confirmed Lineups | Injuries
+                    Recent Form | Team Comparison | Injuries | League Standings
                   </p>
                 </div>
               </div>

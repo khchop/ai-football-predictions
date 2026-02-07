@@ -319,45 +319,6 @@ export interface APIFootballOddsResponse {
   }>;
 }
 
-// API-Football Lineups Response
-export interface APIFootballLineupsResponse {
-  response: Array<{
-    team: {
-      id: number;
-      name: string;
-      logo: string;
-      colors: {
-        player: { primary: string; number: string; border: string };
-        goalkeeper: { primary: string; number: string; border: string };
-      } | null;
-    };
-    coach: {
-      id: number;
-      name: string;
-      photo: string;
-    };
-    formation: string;
-    startXI: Array<{
-      player: {
-        id: number;
-        name: string;
-        number: number;
-        pos: string;
-        grid: string | null;
-      };
-    }>;
-    substitutes: Array<{
-      player: {
-        id: number;
-        name: string;
-        number: number;
-        pos: string;
-        grid: string | null;
-      };
-    }>;
-  }>;
-}
-
 // API-Football Team Statistics Response
 export interface APIFootballTeamStatisticsResponse {
   response: {

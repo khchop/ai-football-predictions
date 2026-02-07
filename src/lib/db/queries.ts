@@ -1635,7 +1635,7 @@ export async function getMatchesMissingOdds(hoursAhead: number = 6): Promise<Mat
   return results.map(r => r.match);
 }
 
-// Get matches missing bets (has lineups, < X hours to kickoff, no bets)
+// Get matches missing bets (has analysis, < X hours to kickoff, no predictions)
 // Deprecated: Use getMatchesMissingPredictions instead
 export async function getMatchesMissingBets(hoursAhead: number = 2): Promise<Match[]> {
   return getMatchesMissingPredictions(hoursAhead);
