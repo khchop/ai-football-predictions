@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 54 of 58 (Diagnostic Infrastructure)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-07 — Completed quick-031 (remove H2H section, refocus on AI consensus)
+Last activity: 2026-02-07 — Completed quick-032 (refocus match roundups on AI prediction accuracy)
 
 Progress: [█████████████████████████████████████████████████████░] 91% (53/58 phases)
 
@@ -34,6 +34,9 @@ Progress: [███████████████████████
 
 Recent decisions affecting current work:
 
+- quick-032: Omit empty event sections entirely — Prevents LLM from generating filler text about data absence
+- quick-032: Model predictions first in roundups — AI prediction accuracy is section 3, events become section 5 (conditional)
+- quick-032: CRITICAL RULES instruction block — Strong signal to LLM about non-negotiable behaviors (e.g., never mention data absence)
 - quick-031: Remove H2H section entirely — H2H data rarely available, low value; focus on AI consensus instead
 - quick-031: AI consensus language in predictions — State percentages (e.g., "45% draw, 35% home, 20% away") and confidence level
 - quick-031: Betting Insights as value betting guide — Highlight where AI predictions DIFFER from market odds
@@ -70,11 +73,12 @@ Recent decisions affecting current work:
 | 029 | Fix match preview text to focus on odds, predictions & outcomes instead of hallucinated facts | 2026-02-07 | c57f7f2 | [029-fix-match-preview-text-to-focus-on-odds-](./quick/029-fix-match-preview-text-to-focus-on-odds-/) |
 | 030 | Backfill script to regenerate all existing match previews with anti-hallucination prompt | 2026-02-07 | ec33e5f | [030-backfill-regenerate-match-previews-anti-](./quick/030-backfill-regenerate-match-previews-anti-/) |
 | 031 | Remove head-to-head section from match generation, refocus on AI consensus | 2026-02-07 | 77f105a | [031-remove-head-to-head-from-match-generatio](./quick/031-remove-head-to-head-from-match-generatio/) |
+| 032 | Fix match roundups: remove "no events" filler, refocus on AI prediction accuracy | 2026-02-07 | 929df88 | [032-fix-match-report-remove-no-events-focus-](./quick/032-fix-match-report-remove-no-events-focus-/) |
 
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed quick-031 (remove H2H, refocus on AI consensus)
+Stopped at: Completed quick-032 (refocus match roundups on AI prediction accuracy)
 Resume file: None
 
 **Next action:** Execute 54-02-PLAN.md (diagnostic runner)
