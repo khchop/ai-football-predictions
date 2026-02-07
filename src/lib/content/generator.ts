@@ -665,7 +665,7 @@ export async function generatePostMatchRoundup(matchId: string): Promise<string>
 
   const userPrompt = buildPostMatchRoundupPrompt(roundupData);
 
-  const systemPrompt = 'You are a professional football analyst writing post-match roundups for AI model prediction competitions. Generate factual, stats-heavy content with narrative analysis.';
+  const systemPrompt = 'You are an AI prediction analyst. You write about how AI models performed in predicting football match outcomes. You never discuss match events, tactics, or player performances — only model predictions, accuracy, and scoring.';
 
   // 10. Generate with LLM (temperature 0.3-0.5 for factual content)
   const result = await generateWithTogetherAI<PostMatchRoundupResponse>(

@@ -646,8 +646,6 @@ ${modelPredictions
 
   return `MATCH: ${homeTeam} vs ${awayTeam}
 COMPETITION: ${competition}
-VENUE: ${venue || 'TBD'}
-KICKOFF: ${kickoffTime}
 FINAL SCORE: ${finalScore.home} - ${finalScore.away}
 
 ## MODEL PREDICTIONS PERFORMANCE
@@ -656,48 +654,33 @@ ${predictionsTable}
 ## TOP 3 PERFORMERS (BY POINTS)
 ${topPerformers.map((m, i) => `${i + 1}. ${m.modelName}: ${m.prediction} (${m.points} pts)`).join('\n')}
 
-${eventsSection}## EXTENDED STATS
-${formattedStats.join('\n') || '  Stats unavailable'}
-
-## NARRATIVE ANGLES
-${anglesText}
-
 ## INSTRUCTIONS
 
-Write a comprehensive post-match roundup (1000+ words) in the following structure:
+Write a post-match AI prediction analysis (800+ words). This is EXCLUSIVELY about how AI models performed in predicting this match. Do NOT write about the match itself, tactics, player performances, events, or statistics.
 
-1. **Score Header** - Match title with final score and competition
-2. **Match Overview** - Opening paragraph (context, importance, AI prediction landscape)
-3. **Model Predictions Analysis** - LEAD SECTION: How AI models performed, highlight top/bottom performers, accuracy breakdown, which models got the tendency right vs exact score
-4. **Extended Statistics** - Possession, shots, xG analysis with bullet points
-5. **Key Events Timeline** - Major moments in chronological order (ONLY if event data was provided above; if not, skip this section entirely)
-6. **Narrative Analysis** - Deep dive: tactical insights, what the stats reveal, why models succeeded or failed
-7. **Narrative Angles** - Highlight if this was a derby, comeback, upset, or milestone
+Structure:
+
+1. **Title** — Match result with AI prediction angle (e.g. "AI Models Split on Chelsea 2-1 Win")
+2. **Prediction Landscape** — How many models predicted the correct result vs wrong result. What was the consensus prediction? Was the actual result a surprise to the AI models?
+3. **Top Performers** — Which models predicted closest to the actual score? Name each model, their prediction, and their points scored. What made their predictions stand out?
+4. **Worst Performers** — Which models were furthest off? What did they get wrong (wrong winner, wildly wrong scoreline)?
+5. **Tendency Analysis** — How many models got the match tendency right (home/draw/away) even if the exact score was wrong? What does this reveal about model calibration?
+6. **Score Distribution** — What was the spread of predictions? Were models clustered around a similar scoreline or scattered? Any exact score matches?
+7. **Takeaway** — What does this match tell us about current AI prediction accuracy? Which model families (Llama, Qwen, DeepSeek, etc.) performed best?
 
 CRITICAL RULES:
-- NEVER mention the absence of events, missing event data, or say "no events recorded"
-- If no match events timeline is provided above, simply skip that section — do NOT comment on its absence
-- The PRIMARY narrative focus must be AI model prediction accuracy and performance
-- Lead with which models predicted correctly, which were close, and which missed badly
-
-## WRITING GUIDELINES
-
-- PRIMARY FOCUS: AI model prediction accuracy — which models nailed it, which missed, and why
-- Reference specific model names and their exact predictions (no generic "Model 1")
-- Use a balanced tone: mix data-driven analysis with storytelling
-- Use facts ONLY from the provided data (no hallucinations)
-- NEVER mention the absence or lack of match events — if events aren't provided, focus elsewhere
-- Highlight prediction patterns: did most models predict the right tendency? Any exact scores?
-- Highlight unique angles: comebacks, upsets, derbies, milestones
-- Rich formatting: bullet points for stats, occasional emoji for emphasis
-- Plain text format with natural line breaks (no HTML tags or entities)
-- Focus on what the AI models reveal about this match
+- Write ONLY about AI model predictions and their accuracy
+- NEVER discuss match events, tactics, player performances, injuries, or statistics
+- NEVER mention "the absence of" anything — no filler about missing data
+- Reference specific model names and their exact predictions throughout
+- Every paragraph must contain model names and prediction data
+- Use facts ONLY from the provided data above
 
 ## OUTPUT FORMAT
 
 Return JSON only:
 {
-  "title": "SEO-optimized match title with final score",
+  "title": "SEO-optimized title focused on AI prediction performance",
   "scoreboard": {
     "homeTeam": "${homeTeam}",
     "awayTeam": "${awayTeam}",
@@ -705,20 +688,18 @@ Return JSON only:
     "awayScore": ${finalScore.away},
     "competition": "${competition}"
   },
-  "events": [
-    {"minute": 12, "type": "goal", "description": "Player Name scored"}
-  ],
+  "events": [],
   "stats": {
     "possession": "${stats.possession?.home || '?'}-${stats.possession?.away || '?'}",
     "shots": "${stats.shotsTotal?.home || '?'}-${stats.shotsTotal?.away || '?'}",
     "xG": "${stats.xG?.home.toFixed(2) || '?'}-${stats.xG?.away.toFixed(2) || '?'}"
   },
-  "modelPredictions": "Plain text summary of model predictions",
+  "modelPredictions": "Plain text summary of model predictions and accuracy",
   "topPerformers": [
     {"modelName": "Llama 3.3 70B", "prediction": "2-1", "points": 12}
   ],
-  "narrative": "Plain text narrative with natural paragraph breaks...",
-  "keywords": ["football", "${competition.toLowerCase()}", "${homeTeam.toLowerCase()}", "${awayTeam.toLowerCase()}", "match analysis"]
+  "narrative": "Plain text narrative focused entirely on AI model prediction performance...",
+  "keywords": ["ai predictions", "${competition.toLowerCase()}", "${homeTeam.toLowerCase()}", "${awayTeam.toLowerCase()}", "model accuracy"]
 }
 
 Return ONLY the JSON object.`;
