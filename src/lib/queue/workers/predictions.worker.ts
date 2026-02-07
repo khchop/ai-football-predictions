@@ -28,6 +28,7 @@ import { getStandingsForLeagues, getStandingFromMap } from '@/lib/football/stand
 import { getResult, calculateQuotas } from '@/lib/utils/scoring';
 import { generateBettingContent } from '@/lib/content/match-content';
 import { v4 as uuidv4 } from 'uuid';
+import { PredictionInsertSchema } from '@/lib/validation/prediction-schema';
 import { loggers } from '@/lib/logger/modules';
 import { getMatchWithRetry } from '@/lib/utils/retry-helpers';
 import { classifyErrorType, isModelSpecificFailure, ErrorType } from '@/lib/utils/retry-config';
@@ -234,6 +235,26 @@ export function createPredictionsWorker() {
                }
 
              const prediction = parsed.predictions[0];
+
+             // Validate prediction structure before database insert (REGR-02)
+             const insertValidation = PredictionInsertSchema.safeParse({
+               predictedHome: prediction.homeScore,
+               predictedAway: prediction.awayScore,
+               matchId,
+               modelId: provider.id,
+             });
+
+             if (!insertValidation.success) {
+               log.error({
+                 modelId: provider.id,
+                 matchId,
+                 issues: insertValidation.error.issues,
+                 rawValues: { home: prediction.homeScore, away: prediction.awayScore },
+               }, 'Prediction failed schema validation before database insert');
+               await recordModelFailure(provider.id, 'schema_validation_failed', ErrorType.PARSE_ERROR);
+               failCount++;
+               continue;
+             }
 
              // Determine result tendency (H/D/A)
              const result = getResult(prediction.homeScore, prediction.awayScore);

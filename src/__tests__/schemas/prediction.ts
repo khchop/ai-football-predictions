@@ -1,7 +1,13 @@
 /**
  * Prediction Validation Schemas
  *
- * Zod schemas for validating LLM prediction output structure.
+ * Production schema for database boundary validation:
+ * See src/lib/validation/prediction-schema.ts (PredictionInsertSchema)
+ *
+ * This file contains TEST schemas for validating LLM output format.
+ * The field names differ: LLM output uses match_id/home_score/away_score,
+ * while database insert uses matchId/predictedHome/predictedAway.
+ *
  * These validate JSON STRUCTURE, not exact values (LLM outputs are non-deterministic).
  */
 import { z } from 'zod';
