@@ -29,6 +29,21 @@ export async function register() {
           // Continue startup even if sync fails
         }
 
+        // 1.2. Run post-deploy tasks (idempotent, non-fatal)
+        try {
+          const { runPostDeployTasks } = await import('./lib/deploy/post-deploy');
+          const deployResult = await runPostDeployTasks();
+          loggers.instrumentation.info(
+            { ran: deployResult.ran, skipped: deployResult.skipped, failed: deployResult.failed },
+            'Post-deploy tasks completed'
+          );
+        } catch (deployError) {
+          loggers.instrumentation.warn(
+            { error: deployError instanceof Error ? deployError.message : String(deployError) },
+            'Post-deploy tasks failed (non-fatal)'
+          );
+        }
+
         // 1.5. Warm cache with frequently accessed data
         try {
           const { warmCache } = await import('./lib/cache/warming');
