@@ -29,7 +29,7 @@ import {
   computeContentHash,
   DEDUPLICATION_CONFIG,
 } from './deduplication';
-import { sanitizeContent, validateNoHtml } from './sanitization';
+import { sanitizeContent, validateNoHtml, textToParagraphs } from './sanitization';
 import { RetryableContentError } from '@/lib/errors/content-errors';
 
 /**
@@ -884,7 +884,7 @@ IMPORTANT: Write this roundup from a completely different angle than typical mat
 
 <div class="narrative">
   <h2>Match Analysis</h2>
-  ${sanitizedNarrative}
+  ${textToParagraphs(sanitizedNarrative)}
 </div>
 
 <div class="keywords">

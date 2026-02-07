@@ -64,6 +64,34 @@ export function sanitizeContent(content: string): string {
 }
 
 /**
+ * Convert plain text with paragraph separators to HTML paragraphs.
+ * Handles text with \n\n separators (output from sanitizeContent) and wraps
+ * each paragraph in <p> tags for proper DOM structure.
+ *
+ * @param text - Plain text with \n\n paragraph separators
+ * @returns HTML string with <p> tags wrapping each paragraph
+ */
+export function textToParagraphs(text: string): string {
+  if (!text || text.trim().length === 0) {
+    return '';
+  }
+
+  // If already contains <p> tags, assume it's already HTML-formatted
+  if (/<p[\s>]/i.test(text)) {
+    return text;
+  }
+
+  // Split on double newlines (paragraph separator)
+  const paragraphs = text
+    .split('\n\n')
+    .map((chunk) => chunk.trim())
+    .filter((chunk) => chunk.length > 0);
+
+  // Wrap each paragraph in <p> tags
+  return paragraphs.map((p) => `<p>${p}</p>`).join('\n');
+}
+
+/**
  * Validate content is HTML-free.
  * Throws if HTML tags or entities are detected.
  *
