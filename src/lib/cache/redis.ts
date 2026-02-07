@@ -8,6 +8,18 @@ import crypto from 'crypto';
 import { connection } from 'next/server';
 import { loggers } from '@/lib/logger/modules';
 
+/**
+ * Safe wrapper for Next.js connection() that's a no-op outside request scope.
+ * Workers (BullMQ) run outside HTTP request context, so connection() would throw.
+ */
+export async function safeConnection() {
+  try {
+    await connection();
+  } catch {
+    // Outside request scope (e.g. BullMQ worker) — safe to ignore
+  }
+}
+
 // Singleton Redis client
 let redisClient: Redis | null = null;
 let isRedisHealthy = false;
@@ -487,7 +499,7 @@ export async function withCache<T>(
    fetchFn: () => Promise<T>
 ): Promise<T> {
    // PPR: Signal request-time data access before using Date.now()
-   await connection();
+   await safeConnection();
 
    // Try to get from cache first (with graceful degradation)
    if (shouldUseRedis()) {

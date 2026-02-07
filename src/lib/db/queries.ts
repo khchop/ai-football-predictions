@@ -4,9 +4,7 @@ import { eq, and, desc, gte, lte, sql, inArray, ne, or, lt, not, isNull, isNotNu
 import type { NewCompetition, NewModel, Match, MatchAnalysis, Model, Competition, Bet, ModelBalance, Prediction, BlogPost, NewMatch, NewMatchAnalysis, NewBet, NewModelBalance, NewPrediction } from './schema';
 import { v4 as uuidv4 } from 'uuid';
 import { loggers } from '@/lib/logger/modules';
-import { connection } from 'next/server';
-
-import { withCache, cacheKeys, CACHE_TTL, cacheDelete, invalidateModelCountCaches } from '@/lib/cache/redis';
+import { withCache, cacheKeys, CACHE_TTL, cacheDelete, invalidateModelCountCaches, safeConnection } from '@/lib/cache/redis';
 import { calculateQuotaScores } from '@/lib/utils/scoring';
 
 /**
@@ -127,7 +125,7 @@ export async function upsertMatch(data: Omit<NewMatch, 'id'> & { id?: string }):
 }
 
 export async function getUpcomingMatches(hoursAhead: number = 48) {
-  await connection(); // PPR: Signal request-time data access
+  await safeConnection(); // PPR: Signal request-time data access
   const db = getDb();
   const now = new Date();
   const future = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
