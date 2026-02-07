@@ -421,7 +421,7 @@ export type NewBlogPost = typeof blogPosts.$inferInsert;
 // AI-generated match previews for SEO/GEO
 export const matchPreviews = pgTable('match_previews', {
   id: text('id').primaryKey(), // UUID
-  matchId: text('match_id').notNull(),
+  matchId: text('match_id').notNull().unique(),
   
   // Content sections
   introduction: text('introduction').notNull(), // Opening paragraph

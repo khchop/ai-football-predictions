@@ -132,4 +132,16 @@ const TASKS: PostDeployTask[] = [
       log.info('Queued deep retroactive backfill job (90 days)');
     },
   },
+  {
+    id: 'add-match-previews-unique-constraint-v1',
+    name: 'Add unique constraint on match_previews.match_id for upsert support',
+    run: async () => {
+      const db = getDb();
+      await db.execute(sql`
+        ALTER TABLE match_previews
+        ADD CONSTRAINT match_previews_match_id_unique UNIQUE (match_id)
+      `);
+      log.info('Added unique constraint on match_previews.match_id');
+    },
+  },
 ];
