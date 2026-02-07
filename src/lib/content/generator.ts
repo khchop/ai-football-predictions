@@ -6,6 +6,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
+import { sql } from 'drizzle-orm';
 import { getDb, matchPreviews, blogPosts, matchContent, matchRoundups } from '@/lib/db';
 import { loggers } from '@/lib/logger/modules';
 import type { NewMatchPreview, NewBlogPost, NewMatchRoundup } from '@/lib/db/schema';
@@ -905,7 +906,7 @@ IMPORTANT: Write this roundup from a completely different angle than typical mat
     .onConflictDoUpdate({
       target: matchContent.matchId,
       set: {
-        postMatchContent: roundupHtml,
+        postMatchContent: sql`CASE WHEN ${matchContent.postMatchContent} IS NULL THEN ${roundupHtml} ELSE ${matchContent.postMatchContent} END`,
         postMatchGeneratedAt: new Date().toISOString(),
         generatedBy: CONTENT_CONFIG.model,
         totalTokens: finalUsage.totalTokens,

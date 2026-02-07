@@ -2668,7 +2668,8 @@ export interface UnifiedMatchContent {
  * Get unified match content from both matchContent and matchRoundups tables.
  *
  * Priority logic for post-match content:
- * - Prefers matchRoundups.narrative (full 1000+ word analysis) over matchContent.postMatchContent (short summary)
+ * - Prefers matchContent.postMatchContent (model performance data from scoring worker)
+ * - Falls back to matchRoundups.narrative (generic roundup) when postMatchContent is null
  * - Uses COALESCE to return first non-null value
  *
  * Edge cases handled:
@@ -2694,8 +2695,8 @@ export async function getMatchContentUnified(matchId: string): Promise<UnifiedMa
       preMatchGeneratedAt: matchContent.preMatchGeneratedAt,
       bettingContent: matchContent.bettingContent,
       bettingGeneratedAt: matchContent.bettingGeneratedAt,
-      // COALESCE: prefer roundup narrative (long-form) over matchContent post-match (short)
-      postMatchContent: sql<string | null>`COALESCE(${matchRoundups.narrative}, ${matchContent.postMatchContent})`,
+      // COALESCE: prefer matchContent post-match (model performance focus) over roundup narrative
+      postMatchContent: sql<string | null>`COALESCE(${matchContent.postMatchContent}, ${matchRoundups.narrative})`,
       // Use roundup publishedAt if roundup exists, else matchContent timestamp
       postMatchGeneratedAt: sql<string | null>`
         CASE
