@@ -486,11 +486,12 @@ Plans:
   3. Server logs alert when match is within 2h of kickoff with no analysis job
   4. Bull Board queue metrics include "matches without predictions" count
   5. Settlement failure dashboard shows failed jobs with error reasons and retry controls
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 52-01: [TBD during plan-phase]
-- [ ] 52-02: [TBD during plan-phase]
+- [ ] 52-01-PLAN.md — Core pipeline coverage calculation module (types + getMatchCoverage)
+- [ ] 52-02-PLAN.md — Health endpoint enhancement, backfill alerts, queue metrics extension (MON-01, MON-03, MON-04)
+- [ ] 52-03-PLAN.md — Admin pipeline-health and settlement-failures endpoints (MON-02, MON-05)
 
 ## Progress
 
@@ -551,7 +552,7 @@ Phases execute in numeric order: 49 -> 50 -> 51 -> 52
 | 49. Pipeline Scheduling Fixes | v2.7 | 2/2 | Complete | 2026-02-06 |
 | 50. Settlement Investigation & Recovery | v2.7 | 2/2 | Complete | 2026-02-06 |
 | 51. Retroactive Backfill Script | v2.7 | 2/2 | Complete | 2026-02-06 |
-| 52. Monitoring & Observability | v2.7 | 0/TBD | Not started | - |
+| 52. Monitoring & Observability | v2.7 | 0/3 | Not started | - |
 
 ---
-*Last updated: 2026-02-06 after Phase 51 complete (2 plans executed, 6/6 RETRO requirements verified)*
+*Last updated: 2026-02-07 after Phase 52 planned (3 plans in 2 waves)*
