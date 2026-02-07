@@ -1,394 +1,403 @@
-# Feature Landscape: SEO/GEO Site Health Fixes
+# Feature Landscape: LLM 100% Prediction Coverage
 
-**Domain:** Technical SEO for Sports Prediction Platform
-**Researched:** 2026-02-05
-**Context:** Fixing 24 categories of SEO issues identified by Ahrefs audit on kroam.xyz
+**Domain:** Multi-model LLM reliability for structured JSON output
+**Researched:** 2026-02-07
+**Context:** 42 models (29 Together AI + 13 Synthetic), 3B-671B parameters, 13+ organizations
 
 ## Executive Summary
 
-SEO site health fixes fall into three impact tiers: **Critical** (Google explicitly penalizes, direct ranking impact), **High** (competitive advantage, affects discoverability), and **Low** (polish, indirect benefits). The 24 issues identified span all three tiers, with redirect architecture and indexation problems being the most severe.
+Achieving 100% prediction coverage across 42 diverse LLMs requires **per-model diagnostic capabilities** rather than universal fixes. The existing system has strong foundation (prompt variants, response handlers, timeout configs, retry logic, fallback chains), but lacks **visibility into per-model failure patterns** and **structured remediation workflows**.
 
-Based on 2026 SEO research, the priority order is:
-1. **Indexation blockers** (404s, noindex pages that should be indexed, orphan pages)
-2. **Redirect architecture** (301 vs 302 vs meta refresh, redirect chains)
-3. **Crawl efficiency** (canonical URLs, sitemap hygiene, internal linking)
-4. **Content optimization** (meta tags, structured data, hreflang)
-5. **Performance** (TTFB, Core Web Vitals)
-
----
+Research shows that the 2026 LLM observability landscape emphasizes per-model traces, real-time failure categorization, and multi-strategy parsing. The challenge is not "one prompt to rule them all" but "42 configurations validated with 42 diagnostic dashboards."
 
 ## Table Stakes
 
-Features users and search engines expect. Missing = penalties or invisibility.
+Features users expect. Missing = incomplete diagnostic capability.
 
-### Critical (Direct Ranking Impact)
-
-| Feature | Why Expected | Complexity | Phase Priority | Notes |
-|---------|--------------|------------|---------------|-------|
-| **HTTP 301 redirects for /matches/UUID** | Google penalizes meta refresh redirects; doesn't transfer link equity | Medium | Phase 1 | Replace 172 meta refresh + noindex with server-side 301 redirects. Current approach wastes crawl budget and loses link value. |
-| **Create /models and /leagues index pages** | 110 inlinks to 404 pages is severe crawl waste | Low | Phase 1 | These pages have significant link equity but return 404. Create paginated listing pages with filtering. |
-| **Fix orphan pages (65 models, 47 matches)** | Orphan pages waste crawl budget and can't rank | Medium | Phase 2 | Pages with zero internal links are invisible to crawlers. Add to internal linking widgets and index pages. |
-| **Canonical URL architecture** | 177 pages with wrong canonicals confuse Google | Medium | Phase 1 | Match pages pointing to / instead of /leagues/{slug}/{match} is incorrect. Fix generateMetadata in layout files. |
-| **301 redirects for www and protocol** | 302 redirects don't transfer link equity permanently | Low | Phase 1 | Change www.kroam.xyz and http redirects from 302 to 301. Should be middleware or hosting config. |
-| **Add missing pages to sitemap** | 7 league pages not in sitemap = not prioritized for crawling | Low | Phase 2 | Sitemap signals importance. Missing pages get lower crawl priority. |
-| **Remove non-canonical pages from sitemap** | 172 /matches/UUID in sitemap but they redirect | Low | Phase 2 | Sitemaps should only contain canonical URLs. Including redirects wastes crawl budget. |
-
-### High Priority (Indexation & Discovery)
-
-| Feature | Why Expected | Complexity | Phase Priority | Notes |
-|---------|--------------|------------|---------------|-------|
-| **H1 tags on match pages** | 350 match pages missing H1 signals weak content structure | Low | Phase 2 | Google uses H1 for content understanding. Missing H1s reduce topical authority. |
-| **Complete Open Graph tags** | 47 pages missing og:image reduces social sharing CTR | Low | Phase 3 | Not a direct ranking factor but affects user signals. Generate league/team badge images. |
-| **Optimize meta description length** | 132 pages with <100 char descriptions underutilize SERP space | Low | Phase 3 | Google shows 150-160 chars. Short descriptions miss persuasion opportunity. |
-| **Optimize meta description length (long)** | 8 pages with >160 char descriptions get truncated | Low | Phase 3 | Truncated descriptions look incomplete in SERPs, reducing CTR. |
-| **Optimize title tag length** | 36 pages with >60 char titles get truncated | Low | Phase 3 | Google shows ~60 chars (575px). Truncated titles lose impact. |
-| **Hreflang configuration** | Missing x-default + 4 uncrawled subdomains confuses language targeting | High | Phase 4 | Multi-language sites need hreflang to avoid duplicate content penalties. Subdomains returning 503 is critical. |
-| **Fix robots.txt on subdomains** | 4 language subdomains return 503 for robots.txt | High | Phase 4 | Inaccessible robots.txt blocks crawlers completely. This is critical for es/fr/it/de subdomains. |
-
----
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| **Per-model success rate tracking** | Can't optimize what you don't measure | Low | Database column + aggregation query |
+| **Raw response logging** | Need to see actual output to debug parsing failures | Low | Already captured in code, needs persistence |
+| **Failure categorization** | Different errors need different fixes (timeout vs parse vs empty) | Medium | Enum + error type detection |
+| **Prompt variant effectiveness tracking** | Need data to prove which variant works for which model | Medium | Track variant used + success/failure per model |
+| **Response handler effectiveness tracking** | Some handlers may hurt performance on certain models | Medium | Track handler used + parse success rate |
+| **Model-specific configuration override** | Some models need 90s timeout, others 15s | Low | Already exists (PromptConfig), needs UI exposure |
+| **Test fixture per model** | Can't validate fixes without repeatable test cases | Low | Extend existing Vitest suite with snapshots |
+| **Timeout failure detection** | Separate "model is slow" from "model is broken" | Low | Already detectable from error type |
+| **Parse failure detection** | JSON extraction failed vs JSON was invalid | Low | Add parse strategy used to error context |
+| **Empty response detection** | Model returned 200 but no content | Low | Already handled, needs explicit categorization |
 
 ## Differentiators
 
-Features that set the site apart. Not expected, but improve competitive position.
+Features that set this system apart. Not expected, but high value.
 
-### Performance Optimization
-
-| Feature | Value Proposition | Complexity | Phase Priority | Notes |
-|---------|-------------------|------------|---------------|-------|
-| **TTFB optimization for slow pages** | 28 pages with 2-7s TTFB hurt Core Web Vitals score | High | Phase 5 | TTFB >600ms is penalized. Requires database query optimization, caching strategy, or static generation. |
-| **Reduce redirect chains** | 1 chain (http://www → https://www → https://) wastes time | Low | Phase 1 | Each redirect adds 200-500ms. Single-hop redirects improve UX and rankings. |
-
-### Content Quality Signals
-
-| Feature | Value Proposition | Complexity | Phase Priority | Notes |
-|---------|-------------------|------------|---------------|-------|
-| **Fix structured data validation errors** | 2834+1531 errors reduce rich result eligibility | Medium-High | Phase 6 | Google won't show rich results with schema errors. Requires validation against schema.org and Google's specific requirements. |
-| **Increase internal link density** | 127+ pages with only 1 dofollow link are weak | Medium | Phase 2 | Pages with 3-5 internal links from relevant pages gain authority. Improves crawl depth distribution. |
-| **Eliminate internal links to redirect targets** | 30 pages linking to URLs that redirect | Low | Phase 3 | Direct links are more efficient. Reduces redirect overhead for users and crawlers. |
-
-### Architecture Improvements
-
-| Feature | Value Proposition | Complexity | Phase Priority | Notes |
-|---------|-------------------|------------|---------------|-------|
-| **Optimize league slug redirect strategy** | 35 internal links use long-form slugs that 308 redirect | Low | Phase 3 | Update internal link generation to use short-form slugs directly. Reduces redirect overhead. |
-| **Fix redirect approach for match UUID pages** | 172 pages using meta refresh instead of HTTP redirect | Medium | Phase 1 | Same issue as critical fix above. Consolidates redirect strategy. |
-| **Fix "Redirecting..." titles** | 172 /matches/UUID pages with poor title before redirect | Low | Phase 1 | Cosmetic but affects user experience for slow connections. |
-
----
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| **Automatic prompt variant discovery** | System tests all 4 variants on first failure, finds winner | High | Requires batch testing + heuristic ranking |
+| **Response handler A/B testing** | Compare 3 handlers on same response, pick best | Medium | Parse with all handlers, compare valid JSON rate |
+| **Model health dashboard** | Single page showing 42 models, color-coded health | Medium | UI + aggregation queries |
+| **Failure pattern clustering** | Group similar failures (all 3B models fail same way) | High | Requires NLP/similarity analysis of errors |
+| **Model family inheritance** | Configure all DeepSeek models at once, override individually | Medium | Hierarchical config system |
+| **Synthetic response validation** | Detect when model returns valid JSON but nonsense predictions | Medium | Check score ranges, detect patterns like "0-0 every time" |
+| **Regression detection** | Alert when previously-working model starts failing | Medium | Track success rate over time, alert on drops |
+| **Cost-adjusted reliability scoring** | "Best model" = reliability / cost, not just reliability | Low | Simple calculation from existing data |
+| **Batch prediction consistency check** | Detect when model returns different results for same input | Medium | Hash inputs, compare outputs across runs |
+| **Model retirement recommendations** | Identify models that consistently fail despite tuning | Low | Threshold-based (e.g., <50% success over 100 runs) |
 
 ## Anti-Features
 
-Features to explicitly NOT build. Common mistakes in SEO optimization.
+Features to explicitly NOT build. Common mistakes in this domain.
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| **Blocking /matches/UUID entirely** | URL exists in backlinks and search index | 301 redirect to canonical league URL, don't 404 or 410 |
-| **Aggressive pagination limits on index pages** | Reduces discoverability of deep content | Paginate but keep all pages indexable with self-referencing canonical tags |
-| **Noindex on paginated pages** | Google no longer uses rel=prev/next, needs each page indexable | Each paginated page should be indexable with its own canonical |
-| **Canonical consolidation of similar matches** | Each match is unique content, shouldn't point to generic page | Canonical should point to the page itself or the preferred URL for that specific match |
-| **Meta refresh with delay >0 seconds** | Google may not follow, wastes time | Use instant meta refresh (0 seconds) only as fallback if HTTP redirect impossible |
-| **Removing structured data due to errors** | Structured data is essential for rich results | Fix validation errors rather than removing schemas entirely |
-| **Over-optimization of meta descriptions** | Google rewrites 62%+ of descriptions anyway | Focus on natural, compelling copy within 150-160 chars, not keyword stuffing |
-| **Blocking Googlebot from JavaScript/CSS** | Prevents Google from rendering modern web apps correctly | Only block truly sensitive paths in robots.txt |
-| **Excessive internal linking** | 10+ links to same page looks spammy | 3-5 strategic links from relevant contexts is optimal |
-| **Creating low-quality index pages** | Thin content on /models or /leagues hurts more than helps | Add filtering, sorting, descriptions, and unique content to index pages |
-
----
+| **Universal prompt that works for all models** | Research shows model-specific configs are necessary | Maintain per-model config library, auto-select best |
+| **Automatic model disabling** | Kills models during temporary provider outages | Manual disable with recommendation, not auto-disable |
+| **Real-time model testing in production** | Production traffic shouldn't be test load | Separate test harness, run on-demand or scheduled |
+| **Trying all 42 models per match** | 42x API costs, 42x timeout risk | Use cost-tier system, run premium models selectively |
+| **Parsing with LLMs** | Using GPT-4 to fix broken JSON is expensive/slow | Multi-strategy parser with fallback hierarchy |
+| **Retraining models** | You don't own the models, can't retrain | Prompt engineering + response handling only |
+| **Model-specific code branches** | `if (model === 'deepseek-r1')` anti-pattern | Configuration-driven with PromptConfig system |
+| **Ignoring cost in health metrics** | "This model works great!" (costs $10 per prediction) | Always show cost-adjusted metrics |
+| **Version pinning without monitoring** | "DeepSeek V3.1 works" but V3.2 is broken | Version awareness + regression testing |
+| **Building custom LLM router** | Reinventing LangChain/LiteLLM poorly | Use existing infra (fallback chains already exist) |
 
 ## Feature Dependencies
 
-### Dependency Tree
-
 ```
-Phase 1: Foundation
-├─ 301 redirects for /matches/UUID (blocks orphan fixes)
-├─ Create /models and /leagues index pages (enables internal linking)
-├─ Fix canonical URLs (blocks sitemap cleanup)
-├─ Fix www/protocol redirects (infrastructure)
-└─ Eliminate redirect chains (infrastructure)
+Core Infrastructure (EXISTS)
+├── PromptConfig system (prompt variants + response handlers + timeouts)
+├── Multi-strategy parser (JSON extraction with 3 fallback strategies)
+├── Fallback chains (Together AI fallback for Synthetic models)
+├── Retry logic (3x exponential backoff)
+└── Vitest integration tests (all 42 models)
 
-Phase 2: Discoverability
-├─ Fix orphan pages (depends: index pages exist)
-├─ Add H1 tags to match pages
-├─ Increase internal link density (depends: index pages exist)
-├─ Clean up sitemap (depends: canonical URLs fixed)
-└─ Add missing pages to sitemap
+Per-Model Diagnostics (NEEDED FOR 100% COVERAGE)
+├── Persistence layer
+│   ├── prediction_attempts table (raw responses, errors, timing)
+│   ├── model_health_stats table (aggregated success rates)
+│   └── config_experiments table (variant/handler A/B test results)
+├── Classification layer
+│   ├── Error type detection (timeout, parse, empty, API error)
+│   ├── Parse strategy tracking (which handler succeeded)
+│   └── Response quality validation (valid JSON but bad predictions)
+└── Visualization layer
+    ├── Model health dashboard (42 cards, color-coded)
+    ├── Model detail page (error log, raw responses, config history)
+    └── Failure clustering view (group similar errors)
 
-Phase 3: Content Polish
-├─ Optimize meta descriptions (short)
-├─ Optimize meta descriptions (long)
-├─ Optimize title tags
-├─ Complete Open Graph tags
-├─ Fix internal links to redirects (depends: redirects fixed)
-└─ Optimize league slug usage
-
-Phase 4: Multi-Language
-├─ Fix robots.txt on subdomains (critical blocker)
-├─ Configure hreflang (depends: subdomains accessible)
-└─ Add x-default hreflang
-
-Phase 5: Performance
-└─ TTFB optimization (independent, high complexity)
-
-Phase 6: Advanced
-└─ Fix structured data validation (independent, high complexity)
+Automated Remediation (DIFFERENTIATOR)
+├── Prompt variant discovery (test all 4, rank by success)
+├── Response handler A/B testing (test all 3, pick winner)
+└── Config recommendation system (suggest timeouts, handlers)
 ```
-
-### Critical Path
-
-The critical path for maximum SEO impact:
-
-1. **Fix redirect architecture** → Enables link equity flow
-2. **Create index pages** → Enables internal linking strategy
-3. **Fix orphan pages** → Enables crawling of all content
-4. **Clean up sitemap** → Prioritizes important pages for crawling
-5. **Everything else** → Incremental improvements
-
----
 
 ## MVP Recommendation
 
-For immediate SEO impact (Phase 1 only):
+For milestone "Achieve 100% prediction coverage", prioritize:
 
-### Must Fix (Week 1)
-1. Replace meta refresh with HTTP 301 redirects for /matches/UUID (172 pages)
-2. Create /models and /leagues index pages (fixes 404s with 110 inlinks)
-3. Fix canonical URLs (177 pages pointing to / instead of league URL)
-4. Change www/protocol redirects from 302 to 301
-5. Eliminate redirect chain (http://www → https://)
+### Phase 1: Visibility (Week 1)
+1. **Persistence layer** - Log raw responses, errors, configs used
+2. **Failure categorization** - Enum for timeout/parse/empty/API errors
+3. **Model health dashboard** - Single page showing success rates per model
+4. **Manual config testing** - CLI tool to test all variants on one model
 
-### Quick Wins (Week 2)
-6. Fix "Redirecting..." titles on UUID pages
-7. Optimize internal link generation to use short-form league slugs
+### Phase 2: Diagnosis (Week 2)
+5. **Model detail page** - Deep dive into one model's failures
+6. **Raw response viewer** - See what model actually returned
+7. **Config history** - Track what configs have been tried
+8. **Failure filtering** - Show only timeouts, only parse errors, etc.
 
-**Expected impact:**
-- **Crawl budget**: 50%+ improvement (eliminating meta refresh, fixing 404s, reducing orphans)
-- **Link equity**: Proper flow through 301 redirects instead of loss through meta refresh
-- **Indexation**: All 172 match UUID pages properly consolidated to canonical URLs
+### Phase 3: Remediation (Week 3)
+9. **Prompt variant effectiveness** - Which variant works for which model family
+10. **Response handler effectiveness** - Which handler fixes which parse errors
+11. **Timeout tuning recommendations** - Suggest timeout based on P95 latency
+12. **Regression detection** - Alert when working model starts failing
 
-**Defer to post-MVP:**
-- Structured data fixes (complex, not blocking)
-- TTFB optimization (requires infrastructure work)
-- Hreflang configuration (requires subdomain access)
-- H1/meta tag optimization (polish, not critical)
+Defer to post-MVP:
+- **Automatic variant discovery** (High complexity, can be manual for 42 models)
+- **Failure pattern clustering** (Nice-to-have, not blocking coverage)
+- **Batch consistency checking** (Quality concern, not coverage blocker)
+- **Cost-adjusted scoring** (Optimization, coverage first)
 
----
+## Model Family Patterns (Research Findings)
 
-## Prioritization Matrix
+### DeepSeek Family (8 models: 2 Together + 6 Synthetic)
+**Common issues:**
+- **Thinking tags in output** (R1, R1-0528): Models output `<think>...</think>` tags that break JSON parsing
+- **JSON with explanations** (V3.2): Adds "Here's my prediction:" before JSON
+- **Slow reasoning models** (R1 variants): Need 60s+ timeouts
 
-### By SEO Impact (High to Low)
+**Remediation:**
+- R1 variants: `THINKING_STRIPPED` variant + `STRIP_THINKING_TAGS` handler + 60s timeout
+- V3.2: `JSON_STRICT` variant + `EXTRACT_JSON` handler + 45s timeout
+- V3.1, V3-0324: Standard config works
 
-| Tier | Issue | Impact | Effort | ROI | Phase |
-|------|-------|--------|--------|-----|-------|
-| **Critical** | 404 pages (/models, /leagues) | 10 | 3 | 3.3 | 1 |
-| **Critical** | Meta refresh → 301 redirects | 10 | 5 | 2.0 | 1 |
-| **Critical** | Fix canonical URLs | 10 | 4 | 2.5 | 1 |
-| **Critical** | Orphan pages (65 models, 47 matches) | 9 | 6 | 1.5 | 2 |
-| **High** | 302 → 301 redirects (www, protocol) | 8 | 2 | 4.0 | 1 |
-| **High** | Fix robots.txt on subdomains | 9 | 3 | 3.0 | 4 |
-| **High** | Sitemap hygiene (add/remove pages) | 7 | 3 | 2.3 | 2 |
-| **High** | Increase internal link density | 7 | 5 | 1.4 | 2 |
-| **Medium** | H1 tags (350 pages) | 6 | 2 | 3.0 | 2 |
-| **Medium** | Hreflang configuration | 6 | 7 | 0.9 | 4 |
-| **Medium** | Structured data validation | 6 | 8 | 0.8 | 6 |
-| **Medium** | TTFB optimization (28 pages) | 6 | 9 | 0.7 | 5 |
-| **Low** | Meta description length (<100 chars) | 4 | 2 | 2.0 | 3 |
-| **Low** | Title tag length (>60 chars) | 4 | 2 | 2.0 | 3 |
-| **Low** | Meta description length (>160 chars) | 3 | 1 | 3.0 | 3 |
-| **Low** | Complete Open Graph tags | 3 | 3 | 1.0 | 3 |
-| **Low** | Fix internal links to redirects | 3 | 2 | 1.5 | 3 |
-| **Low** | Optimize league slug usage | 2 | 2 | 1.0 | 3 |
-| **Low** | Fix "Redirecting..." titles | 2 | 1 | 2.0 | 1 |
-| **Low** | Eliminate redirect chains | 3 | 1 | 3.0 | 1 |
+**Sources:**
+- [DeepSeek JSON Mode docs](https://api-docs.deepseek.com/guides/json_mode) - MEDIUM confidence (official docs)
+- [Thinking tags + JSON mode conflict](https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues/575) - HIGH confidence (confirmed issue)
 
-### By Implementation Effort (Low to High)
+### Qwen Family (5 models: 4 Together + 1 Synthetic)
+**Common issues:**
+- **Thinking tags in reasoning models** (Qwen3-235B-Thinking): Similar to DeepSeek R1
+- **Reliable for standard models** (Qwen2.5, Qwen3 non-thinking): Generally work with base config
 
-| Effort Level | Issues | Estimated Time |
-|--------------|--------|----------------|
-| **Low (1-2)** | Meta descriptions (long), titles, redirect chains, "Redirecting..." titles, H1 tags, www/protocol redirects, internal links to redirects, league slug usage | 1-2 hours each |
-| **Medium (3-5)** | Create index pages, canonical URLs, sitemap cleanup, Open Graph tags, meta refresh → 301, robots.txt fix, internal link density | 4-8 hours each |
-| **High (6-9)** | Orphan pages, hreflang, structured data, TTFB optimization | 1-3 days each |
+**Remediation:**
+- Thinking variants: `THINKING_STRIPPED` + `STRIP_THINKING_TAGS` + 90s timeout
+- Standard variants: Base config (15s timeout sufficient)
 
----
+**Sources:**
+- [Qwen structured outputs](https://docs.vllm.ai/en/latest/features/structured_outputs/) - MEDIUM confidence
+- Model family reputation in 2026 - LOW confidence (WebSearch only)
 
-## Implementation Notes
+### GLM Family (2 models: Synthetic only)
+**Common issues:**
+- **Chinese language defaults**: Models prefer Chinese for reasoning
+- **Inconsistent JSON formatting**: May add explanations in Chinese
 
-### Redirect Strategy (Phase 1)
+**Remediation:**
+- `ENGLISH_ENFORCED` variant (GLM-4.6)
+- `ENGLISH_ENFORCED` + `EXTRACT_JSON` handler (GLM-4.7, more explanation-prone)
+- 60s timeout for both
 
-**Current state:** `/matches/{uuid}` returns 200 with meta refresh + noindex
-**Target state:** `/matches/{uuid}` returns 301 to `/leagues/{slug}/{match-slug}`
+**Sources:**
+- [Chinese LLM language defaults](https://intuitionlabs.ai/articles/chinese-open-source-llms-2025) - MEDIUM confidence
+- [GLM architecture and capabilities](https://www.interconnects.ai/p/chinas-top-19-open-model-labs) - LOW confidence
 
-**Implementation options:**
-1. **Next.js middleware** (recommended): Edge-based, fast, runs before page render
-2. **API route handler**: Server-side, more flexibility but slower
-3. **redirects in next.config.js**: Static redirects, good for known patterns but not dynamic UUIDs
+### Llama Family (8 models: All Together AI)
+**Common issues:**
+- **Small models struggle with JSON** (3.2-3B, 3-8B-Lite): Limited instruction-following
+- **Large models reliable** (3.1-405B, 4-Maverick, 3.3-70B): High JSON compliance
+- **Timeout variation by size**: 3B needs 15s, 405B may need 30s
 
-**Recommendation:** Use Next.js middleware with database lookup or Bloom filter optimization for UUID → canonical mapping.
+**Remediation:**
+- Small models (<10B): May need `JSON_STRICT` variant to enforce format
+- Large models (70B+): Standard config
+- Monitor P95 latency, adjust timeouts per model
 
-### Index Pages (Phase 1)
+**Sources:**
+- [Llama family structured outputs](https://docs.together.ai/docs/json-mode) - HIGH confidence (official Together AI docs)
+- [Small models JSON limitations](https://www.datacamp.com/blog/top-small-language-models) - LOW confidence (general discussion)
 
-**Requirements for /models and /leagues:**
-- Paginated listing (50-100 items per page)
-- Each page has self-referencing canonical
-- Filtering/sorting controls (with URL parameters)
-- Unique H1 and meta description per page
-- Breadcrumbs
-- Internal links to individual model/league pages
-- Schema.org CollectionPage or ItemList markup
+### Kimi/Moonshot Family (3 models: 2 Together + 1 Synthetic)
+**Common issues:**
+- **K2-Thinking tags**: Similar to DeepSeek/Qwen reasoning models
+- **K2.5 and K2-Instruct variants**: Generally reliable with standard config
 
-**Don't:** Create thin, auto-generated content. Add league descriptions, model comparisons, filtering guidance.
+**Remediation:**
+- K2-Thinking: `THINKING_STRIPPED` + `STRIP_THINKING_TAGS` + 60s timeout
+- K2.5, K2-Instruct: Base config
 
-### Canonical URL Architecture (Phase 1)
+**Sources:**
+- [Kimi K2 reasoning capabilities](https://recodechinaai.substack.com/p/kimi-k2-thinking-the-46m-model-shifting) - LOW confidence
+- Synthetic.new model behavior - Not documented (LOW confidence)
 
-**Current issue:** Match pages at `/leagues/{slug}/{match-slug}` have canonical pointing to `/`
+### MiniMax Family (2 models: Synthetic only)
+**Common issues:**
+- **Limited documentation**: Behavior patterns not well-documented in 2026
+- **MoE architecture**: May have variable latency (230B total, 10B active)
 
-**Fix:** Update `generateMetadata` in match page layout:
+**Remediation:**
+- Start with base config, monitor for failures
+- Likely need 30-45s timeout due to size
+
+**Sources:**
+- [MiniMax MoE architecture](https://intuitionlabs.ai/articles/chinese-open-source-llms-2025) - LOW confidence
+
+### Cogito Family (4 models: Together AI)
+**Common issues:**
+- **Limited community data**: Newer model family (2025-2026)
+- **Llama-based**: Should follow similar patterns to Meta Llama
+
+**Remediation:**
+- Start with standard config
+- Monitor for Llama-specific issues
+
+**Sources:**
+- Model provider descriptions - LOW confidence (no authoritative source)
+
+### GPT-OSS Family (2 models: 1 Together + 1 Synthetic)
+**Common issues:**
+- **Synthetic 120B variant prone to explanations**: May wrap JSON in text
+- **20B variant generally reliable**
+
+**Remediation:**
+- 120B: `JSON_STRICT` + `EXTRACT_JSON` + 45s timeout
+- 20B: Base config
+
+**Sources:**
+- Configuration already in codebase - MEDIUM confidence (empirical)
+
+## Known Failure Modes (2026 Research)
+
+### 1. Thinking Tag Leakage
+**Models affected:** DeepSeek R1/R1-0528, Qwen3-235B-Thinking, Kimi K2-Thinking
+**Symptom:** Response contains `<think>reasoning process</think>{"prediction": "data"}`
+**Root cause:** Reasoning models separate thinking from output, but `response_format: json_object` doesn't suppress tags
+**Detection:** Regex match for `<think>`, `<thinking>`, `<reasoning>` in raw response
+**Fix:** `STRIP_THINKING_TAGS` handler BEFORE JSON extraction
+
+**Sources:**
+- [DeepSeek R1 thinking suppression](https://github.com/Aider-AI/aider/issues/3008) - HIGH confidence
+- [vLLM reasoning output docs](https://docs.vllm.ai/en/stable/features/reasoning_outputs/) - HIGH confidence
+
+### 2. JSON Wrapper Text
+**Models affected:** DeepSeek V3.2, GLM-4.7, GPT-OSS-120B
+**Symptom:** "Here's my prediction: ```json\n{...}\n```"
+**Root cause:** Models add explanatory text despite `json_object` mode
+**Detection:** Response starts with natural language, JSON is embedded
+**Fix:** `EXTRACT_JSON` handler to strip markdown and text
+
+**Sources:**
+- [Getting structured responses guide](https://jss367.github.io/getting-structured-responses-from-deepseek-r1.html) - MEDIUM confidence
+- Empirical observation from existing code configs - MEDIUM confidence
+
+### 3. Language Mixing
+**Models affected:** GLM-4.6, GLM-4.7
+**Symptom:** JSON keys in English, but values or surrounding text in Chinese
+**Root cause:** Models trained primarily on Chinese, default to Chinese reasoning
+**Detection:** Unicode range check for Chinese characters
+**Fix:** `ENGLISH_ENFORCED` variant with explicit language instruction
+
+**Sources:**
+- [Chinese LLM bilingual capabilities](https://www.siliconflow.com/articles/en/best-open-source-LLM-for-Mandarin-Chinese) - LOW confidence
+- GLM documentation describes bilingual training - MEDIUM confidence
+
+### 4. Timeout on Reasoning Models
+**Models affected:** All reasoning/thinking models (R1, K2-Thinking, Qwen3-Thinking)
+**Symptom:** Request times out at 15s default
+**Root cause:** Models generate extensive CoT before final answer, tokens/sec is lower
+**Detection:** Request duration exceeds timeout, no response received
+**Fix:** Increase timeout to 60-90s via `PromptConfig.timeoutMs`
+
+**Sources:**
+- [Reasoning model latency characteristics](https://cameronrwolfe.substack.com/p/demystifying-reasoning-models) - MEDIUM confidence
+- Existing timeout configs in codebase - HIGH confidence (empirical)
+
+### 5. Small Model Instruction Drift
+**Models affected:** Llama 3.2 3B, Llama 3.1 8B, any <10B parameter models
+**Symptom:** Returns text response instead of JSON, ignores format instructions
+**Root cause:** Small models have limited instruction-following capability
+**Detection:** Response is valid English but not valid JSON
+**Fix:** `JSON_STRICT` variant with very explicit format rules, or consider model retirement
+
+**Sources:**
+- [Small model limitations](https://www.datacamp.com/blog/top-small-language-models) - LOW confidence
+- [SLM instruction-following trade-offs](https://www.bentoml.com/blog/the-best-open-source-small-language-models) - LOW confidence
+
+### 6. Empty Response (API-level)
+**Models affected:** Any model, intermittent
+**Symptom:** HTTP 200 response with empty `content` field
+**Root cause:** Model refused to generate, or provider issue
+**Detection:** `message.content` is null/empty/undefined
+**Fix:** Already handled in base.ts (checks content/reasoning/reasoning_details), triggers retry
+
+**Sources:**
+- [DeepSeek API empty content issue](https://api-docs.deepseek.com/guides/json_mode) - HIGH confidence (official warning)
+- Existing error handling in codebase - HIGH confidence
+
+### 7. Rate Limiting (429)
+**Models affected:** Any model during high load
+**Symptom:** HTTP 429 response
+**Root cause:** Provider API limits (Together AI, Synthetic)
+**Detection:** HTTP status 429
+**Fix:** Already handled via `RateLimitError` + exponential backoff + fallback chains
+
+**Sources:**
+- Existing retry logic in codebase - HIGH confidence
+
+## Validation and Testing Strategy
+
+### Current State (Strong Foundation)
+- **Vitest integration tests** for all 42 models (`all-models.test.ts`)
+- **Zod schema validation** (`PredictionOutputSchema`)
+- **Retry logic** with exponential backoff
+- **JSON mode enforcement** via `response_format: json_object`
+
+### Gaps for 100% Coverage
+1. **No per-model failure history** - Can't see "Model X failed 10 times this week"
+2. **No config experiment tracking** - Can't see "We tried JSON_STRICT, it didn't help"
+3. **No regression detection** - Can't detect "Model X was working yesterday"
+4. **No raw response storage** - Can't replay failures for debugging
+5. **No automated config tuning** - Manual trial-and-error for each model
+
+### Recommended Testing Infrastructure
+
 ```typescript
-export async function generateMetadata({ params }): Promise<Metadata> {
-  const canonicalUrl = `https://kroam.xyz/leagues/${params.slug}/${params.matchSlug}`;
-  return {
-    alternates: {
-      canonical: canonicalUrl
-    }
-  };
-}
+// 1. Per-model test harness (CLI tool)
+// Usage: npm run test:model -- deepseek-r1 --variants all
+// Tests all 4 prompt variants, 3 response handlers, outputs success matrix
+
+// 2. Response snapshot testing
+// Save raw responses from each model, detect when format changes
+// Example: tests/snapshots/deepseek-r1/success-001.json
+
+// 3. Regression test suite
+// Run nightly against all 42 models with fixed test case
+// Alert on any model dropping below 80% success rate
+
+// 4. Config validation
+// Validate that all models in index.ts have appropriate configs
+// Reasoning models MUST have timeout >= 60s
+// Chinese models MUST have ENGLISH_ENFORCED or explicitly waived
 ```
 
-**Verify:** Canonical should always point to the preferred URL for that specific content.
+## Open Questions and Research Gaps
 
-### Orphan Page Resolution (Phase 2)
+### High Priority (Blocking 100% Coverage)
+1. **Synthetic.new model behavior undocumented** - No official docs for 13 Synthetic-exclusive models
+2. **Optimal timeout per model unknown** - Need empirical P95 latency data
+3. **Effectiveness of prompt variants unproven** - No A/B test data yet
+4. **Small model viability uncertain** - Can 3B models ever reliably return JSON?
 
-**Strategy:**
-1. Add models to /models index page (grouped by league or sorted by performance)
-2. Add RelatedModelsWidget to league pages
-3. Add "Prediction Models" section to match pages linking to models used
-4. Update internal linking widgets to include orphan matches
-5. Add "Recent Matches" section to model pages
+### Medium Priority (Optimization)
+5. **Cost-reliability trade-offs not analyzed** - Which models give best value?
+6. **Fallback chain effectiveness unknown** - Do Together AI fallbacks actually work?
+7. **Batch vs single prediction performance** - Do batch predictions hurt success rate?
 
-**Target:** Every page should have 3-5 incoming internal links from relevant contexts.
+### Low Priority (Future Work)
+8. **Model version tracking** - How to detect when Together/Synthetic upgrades models?
+9. **Multi-provider strategies** - Should we try both providers for critical predictions?
+10. **Dynamic timeout adjustment** - Auto-increase timeout on 504 errors?
 
-### Structured Data Validation (Phase 6)
+## Confidence Assessment
 
-**Approach:**
-1. Test with official Schema.org validator (baseline)
-2. Test with Google Rich Results Test (production requirements)
-3. Fix errors in priority: syntax errors → missing required properties → type mismatches
-4. Validate in GSC after deployment
-
-**Common issues:**
-- Using outdated schema types (check schema.org for current types)
-- Missing required properties (name, image, offers for Product)
-- Incorrect property names (camelCase vs snake_case)
-- Wrong data types (string vs number, date format)
-
----
-
-## Complexity Estimates
-
-| Phase | Total Issues | Estimated Effort | Risk Level |
-|-------|--------------|------------------|------------|
-| Phase 1: Foundation | 7 issues | 2-3 days | Medium (redirect logic, canonical mapping) |
-| Phase 2: Discoverability | 5 issues | 3-4 days | Medium (orphan resolution requires content strategy) |
-| Phase 3: Content Polish | 7 issues | 2-3 days | Low (mostly template updates) |
-| Phase 4: Multi-Language | 3 issues | 2-3 days | High (subdomain infrastructure access required) |
-| Phase 5: Performance | 1 issue | 3-5 days | High (database optimization, caching) |
-| Phase 6: Advanced | 1 issue | 2-3 days | Medium (schema complexity) |
-| **TOTAL** | **24 issues** | **14-21 days** | - |
-
----
-
-## Success Metrics
-
-### Phase 1 Success Criteria
-- Zero 404 errors for /models and /leagues in GSC
-- Zero meta refresh redirects (all 172 converted to 301)
-- Zero canonical URLs pointing to /
-- All www/protocol redirects return 301
-- Zero redirect chains
-
-### Phase 2 Success Criteria
-- Zero orphan pages in Ahrefs audit
-- All match pages have H1 tags
-- Average internal link count per page >3
-- All important pages in sitemap
-- Zero redirect URLs in sitemap
-
-### Phase 3 Success Criteria
-- Meta descriptions 150-160 chars for all pages
-- Title tags 50-60 chars for all pages
-- All pages have complete Open Graph tags
-- Zero internal links pointing to redirect targets
-
-### Overall Success (All Phases)
-- Ahrefs site health score >90/100
-- Google Search Console: Zero indexation errors
-- Average crawl rate increase of 50%+
-- Structured data errors <10 (from 4365)
-
----
+| Area | Confidence | Reason |
+|------|------------|--------|
+| **Failure mode categories** | HIGH | Confirmed via official docs (DeepSeek, vLLM) + existing code |
+| **Thinking tag solutions** | HIGH | Multiple sources + existing working implementations |
+| **Model family patterns** | MEDIUM | Based on WebSearch + existing configs, not all tested |
+| **Small model limitations** | LOW | General articles, not specific to JSON tasks |
+| **Chinese model language issues** | MEDIUM | Documented in GLM literature, confirmed in code configs |
+| **Timeout requirements** | HIGH | Existing configs empirically validated |
+| **Cost data** | HIGH | Directly from Together AI and estimated for Synthetic |
 
 ## Sources
 
-### Redirect Architecture
-- [Understanding URL Redirection: Meta Refresh vs. 301 Redirects - Oreate AI](https://www.oreateai.com/blog/understanding-url-redirection-meta-refresh-vs-301-redirects/9a7cc25432c35b063fe1c3a07e8687b4)
-- [Redirects and Google Search | Google Search Central](https://developers.google.com/search/docs/crawling-indexing/301-redirects)
-- [What is 'meta refresh redirect' and why is it critical? | Ahrefs](https://help.ahrefs.com/en/articles/2433739-what-is-meta-refresh-redirect-and-why-is-it-considered-a-critical-issue)
-- [A Guide To 301 Vs. 302 Redirects For SEO](https://www.searchenginejournal.com/301-vs-302-redirects-seo/299843/)
-- [301 vs. 302 Redirect: Which to Choose for SEO and UX](https://www.semrush.com/blog/301-vs-302-redirect/)
+### Structured Output and JSON Mode
+- [Structured Outputs - vLLM](https://docs.vllm.ai/en/latest/features/structured_outputs/)
+- [Structured Outputs - Together.ai](https://docs.together.ai/docs/json-mode)
+- [DeepSeek JSON Mode](https://api-docs.deepseek.com/guides/json_mode)
+- [How to Ensure LLM Output Adheres to JSON Schema](https://modelmetry.com/blog/how-to-ensure-llm-output-adheres-to-a-json-schema)
 
-### Canonical URLs
-- [SEO: What are Canonical Tags? | Next.js](https://nextjs.org/learn/seo/canonical)
-- [Set Canonical URL in Next.js - Code Concisely](https://www.codeconcisely.com/posts/nextjs-canonical-url/)
-- [How to Use Canonical Tags and Hreflang in Next.js 15](https://www.buildwithmatija.com/blog/nextjs-advanced-seo-multilingual-canonical-tags)
-- [Google Updates JavaScript SEO Docs With Canonical Advice](https://www.searchenginejournal.com/google-updates-javascript-seo-docs-with-canonical-advice/563545/)
+### Thinking Tags and Reasoning Models
+- [DeepSeek R1 thinking tags issue](https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues/575)
+- [Removing thinking tags from DeepSeek R1](https://github.com/Aider-AI/aider/issues/3008)
+- [Reasoning Outputs - vLLM](https://docs.vllm.ai/en/stable/features/reasoning_outputs/)
+- [Constrained generation with reasoning](https://fireworks.ai/blog/constrained-generation-with-reasoning)
 
-### Orphan Pages & Internal Linking
-- [Are Orphan Pages the Hidden SEO Problem to Fix in 2026?](https://www.clickrank.ai/orphan-pages-how-to-fix/)
-- [Internal Linking Strategy: Complete SEO Guide for 2026](https://www.ideamagix.com/blog/internal-linking-strategy-seo-guide-2026/)
-- [Internal Linking Structure: Complete Guide to 2026 SEO Success](https://www.clickrank.ai/effective-internal-linking-structure/)
-- [Orphan Pages and Their Impact on SEO](https://neilpatel.com/blog/orphan-pages/)
+### Model Families and Capabilities
+- [Chinese Open-Source LLMs Overview](https://intuitionlabs.ai/articles/chinese-open-source-llms-2025)
+- [Top 10 Open Source LLMs 2026](https://o-mega.ai/articles/top-10-open-source-llms-the-deepseek-revolution-2026)
+- [Small Language Models Guide](https://www.datacamp.com/blog/top-small-language-models)
+- [Kimi K2 Thinking Model](https://recodechinaai.substack.com/p/kimi-k2-thinking-the-46m-model-shifting)
 
-### Structured Data
-- [Issues - Structured Data: Validation Errors | Screaming Frog](https://www.screamingfrog.co.uk/seo-spider/issues/structured-data/validation-errors/)
-- [Schema Markup Validation: Complete Guide & Tools 2026](https://koanthic.com/en/schema-markup-validation-complete-guide-tools-2026/)
-- [How to Fix Schema Validation Errors](https://neilpatel.com/blog/schema-errors/)
+### Production Reliability and Monitoring
+- [Multi-provider LLM orchestration in production](https://dev.to/ash_dubai/multi-provider-llm-orchestration-in-production-a-2026-guide-1g10)
+- [Best LLM monitoring tools 2026](https://www.braintrust.dev/articles/best-llm-monitoring-tools-2026)
+- [LLM Evaluation Landscape 2026](https://research.aimultiple.com/llm-eval-tools/)
+- [LLM Failure Modes](https://medium.com/@adnanmasood/a-field-guide-to-llm-failure-modes-5ffaeeb08e80)
 
-### Hreflang
-- [The Ultimate Guide to Hreflang Tag: Best Practices for SEO](https://www.weglot.com/guides/hreflang-tag)
-- [Hreflang Implementation Guide: Complete Technical Reference 2026](https://www.linkgraph.com/blog/hreflang-implementation-guide/)
-- [Localized Versions of your Pages | Google Search Central](https://developers.google.com/search/docs/specialty/international/localized-versions)
-- [How to Use Hreflang with Subdomains? | Flyrank](https://www.flyrank.com/blogs/seo-hub/how-to-use-hreflang-with-subdomains)
-
-### SEO Prioritization
-- [Will These 7 Winning On-Page Prioritization Strategies Elevate SEO in 2026?](https://www.clickrank.ai/on-page-prioritization/)
-- [SEO strategy in 2026: Where discipline meets results](https://searchengineland.com/seo-strategy-in-2026-where-discipline-meets-results-463255)
-
-### Index Pages
-- [SEO for Category Pages: 12 Proven Ways to Optimize](https://neilpatel.com/blog/seo-category-pages/)
-- [How To Use Ecommerce Category Page SEO To Drive Traffic (2026)](https://www.shopify.com/blog/ecommerce-category-page-seo)
-- [11 Ways to Improve E-commerce Category Pages for SEO](https://ahrefs.com/blog/seo-ecommerce-category-pages/)
-
-### Next.js Implementation
-- [Functions: redirect | Next.js](https://nextjs.org/docs/app/api-reference/functions/redirect)
-- [Middleware in Next.js: Authentication, Redirects, and More](https://medium.com/@narayanansundar02/middleware-in-next-js-authentication-redirects-and-more-5b6a59c81291)
-- [Next.js in 2026: Mastering Middleware, Server Actions, and Edge Functions](https://medium.com/@Amanda0/next-js-in-2026-mastering-middleware-server-actions-and-edge-functions-for-full-stack-d4ce24d61eea)
-
-### TTFB Optimization
-- [Optimizing TTFB in a Next.js App (step-by-step guide)](https://medium.com/@mrutyunjaya.9029/optimizing-ttfb-in-a-next-js-app-step-by-step-guide-e22d14a29868)
-- [The Ultimate Guide to improving Next.js TTFB slowness](http://www.catchmetrics.io/blog/the-ultimate-guide-to-improving-nextjs-ttfb-slowness-from-800ms-to-less100ms)
-- [How to Improve TTFB and Core Web Vitals in Next.js](https://medium.com/better-dev-nextjs-react/how-to-improve-ttfb-time-to-first-byte-and-core-web-vitals-in-next-js-3655891455d2)
-
-### Meta Tags
-- [Meta Title/Description Guide: 2026 Best Practices](https://www.stanventures.com/blog/meta-title-length-meta-description-length/)
-- [How to Write Meta Descriptions | Google Search Central](https://developers.google.com/search/docs/appearance/snippet)
-- [How to Optimize Title Tags & Meta Descriptions in 2026](https://www.straightnorth.com/blog/title-tags-and-meta-descriptions-how-to-write-and-optimize-them-in-2026/)
-
-### Sitemap Generation
-- [Metadata Files: sitemap.xml | Next.js](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap)
-- [Functions: generateSitemaps | Next.js](https://nextjs.org/docs/app/api-reference/functions/generate-sitemaps)
-- [SEO: XML Sitemaps | Next.js](https://nextjs.org/learn-pages-router/seo/crawling-and-indexing/xml-sitemaps)
-
-### Crawl Budget
-- [How to Manage Crawl Budget in Large-Scale Sites in 2026?](https://www.clickrank.ai/manage-crawl-budget/)
-- [Crawl Budget Optimization: Complete Guide for 2026](https://www.linkgraph.com/blog/crawl-budget-optimization-2/)
-- [Crawl Budget Management | Google Crawling Infrastructure](https://developers.google.com/crawling/docs/crawl-budget)
+### Validation and Testing
+- [Structured Output Generation Guide](https://medium.com/@emrekaratas-ai/structured-output-generation-in-llms-json-schema-and-grammar-based-decoding-6a5c58b698a6)
+- [LiteLLM JSON Mode](https://docs.litellm.ai/docs/completion/json_mode)
+- [StrictJSON Framework](https://github.com/tanchongmin/strictjson)
