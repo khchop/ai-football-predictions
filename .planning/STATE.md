@@ -48,6 +48,7 @@ Recent decisions affecting current work:
 
 - **Human action:** Run `npx tsx scripts/generate-golden-fixtures.ts` with API keys to capture real golden fixture baselines (placeholder data currently)
 - **Human action:** Configure GitHub branch protection — Settings > Branches > require "Model Regression Tests" status check
+- **Optional:** Regenerate match previews for existing matches to remove hallucinated content (new prompt only affects future generations)
 
 ### Blockers/Concerns
 
@@ -63,11 +64,12 @@ Recent decisions affecting current work:
 | 026 | Fix match report overwrite, add preview data, remove duplicate predictions | 2026-02-07 | 3e4a953 | [026-fix-match-report-overwrite-duplicates](./quick/026-fix-match-report-overwrite-duplicates/) |
 | 027 | Improve match detail text to 500+ words (preview + roundup narrative) | 2026-02-07 | 53ed692 | [027-improve-match-detail-text-500-words](./quick/027-improve-match-detail-text-500-words/) |
 | 028 | Fix HierarchyRequestError in match narrative rendering | 2026-02-07 | ce33711 | [028-fix-hierarchyrequesterror-insertbefore-d](./quick/028-fix-hierarchyrequesterror-insertbefore-d/) |
+| 029 | Fix match preview text to focus on odds, predictions & outcomes instead of hallucinated facts | 2026-02-07 | c57f7f2 | [029-fix-match-preview-text-to-focus-on-odds-](./quick/029-fix-match-preview-text-to-focus-on-odds-/) |
 
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed quick-028 (fix HierarchyRequestError in match narrative rendering)
+Stopped at: Completed quick-029 (fix match preview hallucination)
 Resume file: None
 
 **Next action:** Execute 54-02-PLAN.md (diagnostic runner)
