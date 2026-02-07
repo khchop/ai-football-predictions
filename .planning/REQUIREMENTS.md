@@ -17,9 +17,9 @@ Requirements for v2.8 Model Coverage milestone. Each maps to roadmap phases.
 
 ### Regression Protection
 
-- [ ] **REGR-01**: Regression test suite validates all currently-working models produce valid JSON
-- [ ] **REGR-02**: Zod schema validates prediction response structure (home_score, away_score as numbers)
-- [ ] **REGR-03**: Regression suite runs before and after any model config change
+- [x] **REGR-01**: Regression test suite validates all currently-working models produce valid JSON
+- [x] **REGR-02**: Zod schema validates prediction response structure (home_score, away_score as numbers)
+- [x] **REGR-03**: Regression suite runs before and after any model config change
 
 ### Per-Model Fixes
 
