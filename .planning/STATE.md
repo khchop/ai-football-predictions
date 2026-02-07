@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 54 of 58 (Diagnostic Infrastructure)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-07 — Completed quick-032 (refocus match roundups on AI prediction accuracy)
+Last activity: 2026-02-07 — Completed quick-034 (content generation fallback from Kimi K2 to Llama 4 Maverick)
 
 Progress: [█████████████████████████████████████████████████████░] 91% (53/58 phases)
 
@@ -79,6 +79,7 @@ Recent decisions affecting current work:
 | 031 | Remove head-to-head section from match generation, refocus on AI consensus | 2026-02-07 | 77f105a | [031-remove-head-to-head-from-match-generatio](./quick/031-remove-head-to-head-from-match-generatio/) |
 | 032 | Fix match roundups: remove "no events" filler, refocus on AI prediction accuracy | 2026-02-07 | 929df88 | [032-fix-match-report-remove-no-events-focus-](./quick/032-fix-match-report-remove-no-events-focus-/) |
 | 033 | Fix consensus percentages and upgrade to Kimi K2 Thinking | 2026-02-07 | aafcf66 | [033-fix-consensus-percentages-upgrade-conten](./quick/033-fix-consensus-percentages-upgrade-conten/) |
+| 034 | Content generation fallback from Kimi K2 to Llama 4 Maverick | 2026-02-07 | 0da46b0 | [034-content-fallback-model-kimi-errors](./quick/034-content-fallback-model-kimi-errors/) |
 
 ## Session Continuity
 
