@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 54 of 58 (Diagnostic Infrastructure)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-07 — Completed quick-027 (improve match detail text to 500+ words with preview + roundup)
+Last activity: 2026-02-07 — Completed quick-028 (fix HierarchyRequestError in match narrative rendering)
 
 Progress: [█████████████████████████████████████████████████████░] 91% (53/58 phases)
 
@@ -62,11 +62,12 @@ Recent decisions affecting current work:
 |---|-------------|------|--------|-----------|
 | 026 | Fix match report overwrite, add preview data, remove duplicate predictions | 2026-02-07 | 3e4a953 | [026-fix-match-report-overwrite-duplicates](./quick/026-fix-match-report-overwrite-duplicates/) |
 | 027 | Improve match detail text to 500+ words (preview + roundup narrative) | 2026-02-07 | 53ed692 | [027-improve-match-detail-text-500-words](./quick/027-improve-match-detail-text-500-words/) |
+| 028 | Fix HierarchyRequestError in match narrative rendering | 2026-02-07 | ce33711 | [028-fix-hierarchyrequesterror-insertbefore-d](./quick/028-fix-hierarchyrequesterror-insertbefore-d/) |
 
 ## Session Continuity
 
 Last session: 2026-02-07
-Stopped at: Completed quick-027 (improve match detail text to 500+ words)
+Stopped at: Completed quick-028 (fix HierarchyRequestError in match narrative rendering)
 Resume file: None
 
 **Next action:** Execute 54-02-PLAN.md (diagnostic runner)
