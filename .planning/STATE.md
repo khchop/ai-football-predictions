@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 Phase: 54 of 58 (Diagnostic Infrastructure)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-07 — Completed quick-035 (switch primary content model from Kimi K2 to DeepSeek V3.1)
+Last activity: 2026-02-07 — Completed quick-036 (refocus match roundup prompt on AI model performance)
 
 Progress: [█████████████████████████████████████████████████████░] 91% (53/58 phases)
 
@@ -81,6 +81,7 @@ Recent decisions affecting current work:
 | 033 | Fix consensus percentages and upgrade to Kimi K2 Thinking | 2026-02-07 | aafcf66 | [033-fix-consensus-percentages-upgrade-conten](./quick/033-fix-consensus-percentages-upgrade-conten/) |
 | 034 | Content generation fallback from Kimi K2 to Llama 4 Maverick | 2026-02-07 | 0da46b0 | [034-content-fallback-model-kimi-errors](./quick/034-content-fallback-model-kimi-errors/) |
 | 035 | Switch primary content model from Kimi K2 to DeepSeek V3.1 | 2026-02-07 | 218831d | [035-switch-primary-content-model-from-kimi-k](./quick/035-switch-primary-content-model-from-kimi-k/) |
+| 036 | Refocus match roundup prompt exclusively on AI model performance | 2026-02-07 | 14f59e9 | [036-refocus-match-roundup-prompt-on-ai-model](./quick/036-refocus-match-roundup-prompt-on-ai-model/) |
 
 ## Session Continuity
 
