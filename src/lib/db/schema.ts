@@ -108,6 +108,40 @@ export type NewModel = typeof models.$inferInsert;
 export type ModelUsage = typeof modelUsage.$inferSelect;
 export type NewModelUsage = typeof modelUsage.$inferInsert;
 
+// Daily per-model health metrics for observability & trend analysis
+export const llmModelStats = pgTable('llm_model_stats', {
+  id: text('id').primaryKey(), // UUID
+  date: text('date').notNull(), // YYYY-MM-DD (text, same as modelUsage.date)
+  modelId: text('model_id')
+    .notNull()
+    .references(() => models.id),
+
+  // Aggregate counts
+  successCount: integer('success_count').default(0),
+  failureCount: integer('failure_count').default(0),
+  totalAttempts: integer('total_attempts').default(0),
+  successRate: doublePrecision('success_rate').default(0), // Pre-calculated percentage 0-100
+
+  // Error category breakdown
+  timeoutErrors: integer('timeout_errors').default(0),
+  parseErrors: integer('parse_errors').default(0),
+  apiErrors: integer('api_errors').default(0),
+  languageErrors: integer('language_errors').default(0),
+  otherErrors: integer('other_errors').default(0),
+
+  // Metadata
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => [
+  unique('llm_model_stats_date_model_unique').on(table.date, table.modelId),
+  index('idx_llm_model_stats_date').on(table.date),
+  index('idx_llm_model_stats_model_id').on(table.modelId),
+  index('idx_llm_model_stats_date_model').on(table.date, table.modelId),
+]);
+
+export type LLMModelStat = typeof llmModelStats.$inferSelect;
+export type NewLLMModelStat = typeof llmModelStats.$inferInsert;
+
 // Circuit breaker state persistence (survives Redis restarts)
 export const circuitBreakerStates = pgTable('circuit_breaker_states', {
   service: text('service').primaryKey(), // 'api-football', 'together-predictions', etc.
