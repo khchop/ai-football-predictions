@@ -110,9 +110,9 @@ See `.planning/MILESTONES.md` for full details.
 
 </details>
 
-### 🚧 v2.9 Provider Unification & Maximum Coverage (In Progress)
+### v2.9 Provider Unification & Maximum Coverage (In Progress)
 
-**Milestone Goal:** Unify provider architecture with smart multi-provider routing (Synthetic → Together → OpenRouter), merge duplicate -syn model entries, re-activate 7 deprecated models via OpenRouter, and maximize model coverage to ~29 unique model IDs with multi-provider fallback chains.
+**Milestone Goal:** Unify provider architecture with smart multi-provider routing (Synthetic -> Together -> OpenRouter), merge duplicate -syn model entries, re-activate 7 deprecated models via OpenRouter, and maximize model coverage to ~29 unique model IDs with multi-provider fallback chains.
 
 #### Phase 59: Provider Integration Foundations
 
@@ -129,10 +129,10 @@ See `.planning/MILESTONES.md` for full details.
 4. Provider handles OpenRouter model ID format correctly (e.g., deepseek/deepseek-r1)
 5. Validation script confirms no duplicate model IDs across all providers
 
-**Plans:** TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 59-01: TBD
+- [ ] 59-01-PLAN.md -- OpenRouterProvider class, registry integration, and model ID validation script
 
 #### Phase 60: Multi-Provider Routing
 
@@ -276,7 +276,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 59 → 60 → 61 → 62 → 63 → 64 → 65 → 66
+Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> 63 -> 64 -> 65 -> 66
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -323,7 +323,7 @@ Phases execute in numeric order: 59 → 60 → 61 → 62 → 63 → 64 → 65 �
 | 41. Together AI Fallbacks | v2.5 | 4/4 | Complete | 2026-02-05 |
 | 42. Dynamic Model Counts | v2.5 | 2/2 | Complete | 2026-02-05 |
 | 43. Testing & Validation | v2.5 | 3/3 | Complete | 2026-02-05 |
-| 44. Foundation — Redirects, Canonicals & Index Pages | v2.6 | 3/3 | Complete | 2026-02-06 |
+| 44. Foundation -- Redirects, Canonicals & Index Pages | v2.6 | 3/3 | Complete | 2026-02-06 |
 | 45. Sitemap & Internal Linking | v2.6 | 4/4 | Complete | 2026-02-06 |
 | 46. Content Tags & Meta Optimization | v2.6 | 3/3 | Complete | 2026-02-06 |
 | 47. Structured Data Validation | v2.6 | 4/4 | Complete | 2026-02-06 |
@@ -338,7 +338,7 @@ Phases execute in numeric order: 59 → 60 → 61 → 62 → 63 → 64 → 65 �
 | 56. Category Fixes - Language & JSON | v2.8 | 2/2 | Complete | 2026-02-08 |
 | 57. Category Fixes - Fallbacks & Validation | v2.8 | 2/2 | Complete | 2026-02-08 |
 | 58. Observability & Monitoring | v2.8 | 3/3 | Complete | 2026-02-08 |
-| 59. Provider Integration Foundations | v2.9 | 0/TBD | Not started | - |
+| 59. Provider Integration Foundations | v2.9 | 0/1 | In progress | - |
 | 60. Multi-Provider Routing | v2.9 | 0/TBD | Not started | - |
 | 61. Provider Attribution | v2.9 | 0/TBD | Not started | - |
 | 62. Migration Script Development | v2.9 | 0/TBD | Not started | - |
@@ -348,4 +348,4 @@ Phases execute in numeric order: 59 → 60 → 61 → 62 → 63 → 64 → 65 �
 | 66. Provider Health Monitoring | v2.9 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-08 after v2.9 roadmap creation*
+*Last updated: 2026-02-08 after phase 59 planning*
