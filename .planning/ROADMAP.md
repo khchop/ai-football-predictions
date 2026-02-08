@@ -495,11 +495,11 @@ Plans:
   3. Models wrapping JSON in markdown or explanations receive extraction handler
   4. JSON extraction succeeds for models outputting ```json blocks or prefixes
   5. Regression test confirms no impact on models already returning clean JSON
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 56-01: Apply English enforcement variant to language-mixing models
-- [ ] 56-02: Enhance JSON extraction for models wrapping output in text
+- [ ] 56-01-PLAN.md — Audit and apply English enforcement to language-mixing models
+- [ ] 56-02-PLAN.md — Audit and enhance JSON extraction for models wrapping output in text
 
 #### Phase 57: Category Fixes - Fallbacks & Validation
 **Goal**: Expand fallback chains for unfixable models and validate 100% coverage
@@ -599,4 +599,4 @@ Plans:
 | 58. Observability & Monitoring | v2.8 | 0/3 | Not started | - |
 
 ---
-*Last updated: 2026-02-08 after phase 54 execution complete*
+*Last updated: 2026-02-08 after phase 56 planning complete*
