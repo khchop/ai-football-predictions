@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** The prediction pipeline must reliably generate scores from 42 LLMs before kickoff and accurately score them when matches complete
-**Current focus:** Phase 56 - Category Fixes: Language & JSON (v2.8 Model Coverage)
+**Current focus:** Phase 57 - Category Fixes: Fallbacks & Validation (v2.8 Model Coverage)
 
 ## Current Position
 
-Phase: 56 of 58 (Category Fixes - Language & JSON) — Complete
-Plan: 2 of 2 in phase 56
-Status: Phase complete
-Last activity: 2026-02-08 — Completed 56-02-PLAN.md (JSON extraction audit & validation)
+Phase: 57 of 58 (Category Fixes - Fallbacks & Validation) — In progress
+Plan: 1 of 2 in phase 57
+Status: In progress
+Last activity: 2026-02-08 — Completed 57-01-PLAN.md (Fallback audit & coverage validation)
 
-Progress: [███████████████████████████████████████████████████████░] 97% (56/58 phases)
+Progress: [███████████████████████████████████████████████████████░] 97% (57/58 phases, 57-01 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 187 (across phases 1-56)
+- Total plans completed: 188 (across phases 1-57)
 - Milestones shipped: 7 (v1.0 through v2.7)
 - Current milestone: v2.8 Model Coverage (phases 53-58)
 
@@ -34,6 +34,10 @@ Progress: [███████████████████████
 
 Recent decisions affecting current work:
 
+- 57-01: 3/13 Synthetic models mappable to Together AI; 10/13 exclusive — No additional fallback mappings possible
+- 57-01: 5 risk models identified (exclusive + default config) — deepseek-v3-0324-syn, deepseek-v3.1-terminus-syn, minimax-m2-syn, minimax-m2.1-syn, qwen3-coder-480b-syn
+- 57-01: Coverage validation is offline-only — No API keys needed, purely configuration validation
+- 57-01: Theoretical coverage 88.1% (37/42 models) — Risk models are warnings not failures
 - 56-02: No parser enhancements needed — Multi-layer defense (API + prompt + handler + parser) validated as comprehensive, matches 2026 best practices
 - 56-02: JSON configurations complete — All known JSON-wrapping models (DeepSeek V3.2, GPT-OSS 120B, GLM-4.7) already have JSON_STRICT + EXTRACT_JSON
 - 56-02: Belt-and-suspenders pattern validated — All problematic models use both prompt variant (prevention) + response handler (cleanup)
@@ -99,7 +103,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed Phase 56 (Category Fixes - Language & JSON)
-Resume file: .planning/phases/57-*/57-01-PLAN.md (if exists)
+Stopped at: Completed 57-01-PLAN.md (Fallback audit & coverage validation)
+Resume file: .planning/phases/57-category-fixes-fallbacks-validation/57-02-PLAN.md
 
-**Next action:** Begin Phase 57 or run diagnostics to validate all v2.8 fixes (timeouts, thinking tags, language, JSON)
+**Next action:** Execute 57-02-PLAN.md to complete Phase 57
