@@ -527,12 +527,12 @@ Plans:
   3. Historical success rate trends visible per model over 7/30/90 day windows
   4. Alert triggered when previously-working model drops below 90% success rate
   5. Before/after comparison report shows improvement from pre-milestone baseline
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 58-01: Create llm_model_stats database table and tracking infrastructure
-- [ ] 58-02: Build admin dashboard with per-model health visualization
-- [ ] 58-03: Add regression alert system and generate before/after report
+- [ ] 58-01-PLAN.md — Create llm_model_stats database table, migration, and stats query module
+- [ ] 58-02-PLAN.md — Build admin API and dashboard with per-model health visualization
+- [ ] 58-03-PLAN.md — Add BullMQ stats worker with regression alerts and before/after report
 
 ## Progress
 
