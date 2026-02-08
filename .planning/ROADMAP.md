@@ -498,8 +498,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 56-01-PLAN.md — Audit and apply English enforcement to language-mixing models
-- [ ] 56-02-PLAN.md — Audit and enhance JSON extraction for models wrapping output in text
+- [x] 56-01-PLAN.md — Audit and apply English enforcement to language-mixing models
+- [x] 56-02-PLAN.md — Audit and enhance JSON extraction for models wrapping output in text
 
 #### Phase 57: Category Fixes - Fallbacks & Validation
 **Goal**: Expand fallback chains for unfixable models and validate 100% coverage
@@ -594,9 +594,9 @@ Plans:
 | 53. Regression Protection | v2.8 | 2/2 | Complete | 2026-02-07 |
 | 54. Diagnostic Infrastructure | v2.8 | 2/2 | Complete | 2026-02-08 |
 | 55. Category Fixes - Timeouts & Tags | v2.8 | 2/2 | Complete | 2026-02-08 |
-| 56. Category Fixes - Language & JSON | v2.8 | 0/2 | Not started | - |
+| 56. Category Fixes - Language & JSON | v2.8 | 2/2 | Complete | 2026-02-08 |
 | 57. Category Fixes - Fallbacks & Validation | v2.8 | 0/3 | Not started | - |
 | 58. Observability & Monitoring | v2.8 | 0/3 | Not started | - |
 
 ---
-*Last updated: 2026-02-08 after phase 56 planning complete*
+*Last updated: 2026-02-08 after phase 56 execution complete*
