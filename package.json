@@ -29,6 +29,7 @@
     "validate:models": "npx tsx scripts/validate-all-models.ts",
     "validate:synthetic": "npx tsx scripts/validate-synthetic-models.ts",
     "diagnose": "npx tsx scripts/diagnostic/run-diagnostics.ts",
+    "analyze:timeouts": "npx tsx scripts/diagnostic/analyze-timeouts.ts",
     "check:fallback": "npx tsx scripts/check-fallback-rate.ts",
     "validate:production": "npm run check:fallback",
     "validate:all": "npm run validate:models && npm run check:fallback"
