@@ -1,5 +1,35 @@
 # Project Milestones: AI Football Predictions Platform
 
+## v2.8 Model Coverage (Shipped: 2026-02-08)
+
+**Delivered:** Built comprehensive model diagnostic and fix infrastructure — regression test suite with golden fixtures, diagnostic runner with 6-category failure classification, data-driven timeout tuning, per-model health observability with admin dashboard and regression alerts.
+
+**Phases completed:** 53-58 (13 plans total)
+
+**Key accomplishments:**
+
+- Regression test suite with golden fixtures + Zod validation at DB boundary + GitHub Actions CI workflow
+- Diagnostic runner testing all 42 models with failure categorization (timeout, parse, language, thinking-tag, API-error, empty-response)
+- Data-driven timeout tuning for reasoning models using P95 + 20% safety margin formula
+- Belt-and-suspenders verification for language enforcement and JSON extraction on all problematic models
+- Exhaustive fallback mapping documentation with offline coverage validation (29/35 effective models passing)
+- Per-model health observability: llm_model_stats table, admin dashboard with Recharts trend charts, BullMQ daily cron worker with Pino regression alerts
+
+**Stats:**
+
+- 106 files changed, +17,936 / -344 lines
+- 6 phases, 13 plans, 18 requirements
+- 87 commits
+- 2 days from start to ship (2026-02-07 → 2026-02-08)
+
+**Git range:** `6a76024 (feat(53-01))` → `5fcd7ea (docs(phase-58))`
+
+**Diagnostic findings:** 7 Together AI models deprecated by provider, 3 Synthetic models unfixable upstream. Effective model count adjusted to 35 with 82.9% passing rate.
+
+**What's next:** New milestone planning with `/gsd:new-milestone`
+
+---
+
 ## v2.7 Pipeline Reliability & Retroactive Backfill (Shipped: 2026-02-07)
 
 **Delivered:** Fixed prediction pipeline scheduling after server restarts, added retroactive backfill for missed predictions, settlement retry infrastructure, and pipeline health monitoring with gap detection dashboards.

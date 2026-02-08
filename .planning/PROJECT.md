@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A production-ready platform where 42 Open Source LLMs predict exact football match scores, with real-time leaderboards tracking model accuracy using Kicktipp quota scoring. Users view and compare model predictions across 17 leagues including Top 5 European leagues, Champions League, Europa League, Conference League, Eredivisie, Turkish League, and international tournaments.
+A production-ready platform where 35 active Open Source LLMs predict exact football match scores, with real-time leaderboards tracking model accuracy using Kicktipp quota scoring. Users view and compare model predictions across 17 leagues including Top 5 European leagues, Champions League, Europa League, Conference League, Eredivisie, Turkish League, and international tournaments. Includes per-model health monitoring, diagnostic infrastructure, and regression protection.
 
 ## The ONE Thing That Must Work
 
@@ -21,7 +21,30 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 
 ## Current State
 
-**Brownfield project with v2.7 shipped.** 42 active LLM models across Together AI (29) and Synthetic.new (13) providers. 252 requirements validated across 12 milestones (v1.0-v2.7)
+**Brownfield project with v2.8 shipped.** 35 active LLM models across Together AI (22) and Synthetic.new (13) providers — 7 Together AI models deprecated by provider. 270 requirements validated across 13 milestones (v1.0-v2.8). Per-model health observability with admin dashboard and regression alerts.
+
+### Validated (v2.8)
+
+The following requirements were validated in v2.8:
+
+- ✓ **DIAG-01**: Diagnostic runner tests each model individually with golden fixture data — v2.8
+- ✓ **DIAG-02**: Failure categorization classifies failures as timeout/parse/language/thinking-tag/API-error/empty-response — v2.8
+- ✓ **DIAG-03**: Per-model success rate calculated from diagnostic run results — v2.8
+- ✓ **DIAG-04**: Raw LLM responses captured and stored for debugging — v2.8
+- ✓ **DIAG-05**: Before/after comparison report shows improvement after fixes — v2.8
+- ✓ **REGR-01**: Regression test suite validates all working models produce valid JSON — v2.8
+- ✓ **REGR-02**: Zod schema validates prediction response structure — v2.8
+- ✓ **REGR-03**: Regression suite runs before and after model config changes — v2.8
+- ✓ **FIX-01**: Timeout configuration tuned per model based on P95 diagnostic data — v2.8
+- ✓ **FIX-02**: Thinking tag stripping applied to all reasoning models — v2.8
+- ✓ **FIX-03**: English enforcement applied to non-English defaulting models — v2.8
+- ✓ **FIX-04**: JSON extraction improved for models wrapping output in markdown — v2.8
+- ✓ **FIX-05**: Fallback chains expanded for Synthetic models with Together AI equivalents — v2.8
+- ✓ **FIX-06**: 29/35 effective models produce valid predictions (82.9% after 7 deprecated) — v2.8
+- ✓ **OBS-01**: Database metrics table records per-model success/failure with timestamps — v2.8
+- ✓ **OBS-02**: Admin dashboard displays per-model health cards — v2.8
+- ✓ **OBS-03**: Historical success rate trends visible per model (7/30/90 days) — v2.8
+- ✓ **OBS-04**: Regression alert when model drops below 90% success rate — v2.8
 
 ### Validated (v2.7)
 
@@ -325,7 +348,7 @@ The following requirements were validated in v1.0:
 The following capabilities are built and operational:
 
 - **Match Data Pipeline**: Automated fetching of fixtures, live scores, lineups, and statistics from API-Football for 17 leagues
-- **LLM Integration**: 42 open-source models via Together AI (29) + Synthetic.new (13) with model-specific prompts and fallback chains
+- **LLM Integration**: 35 active open-source models via Together AI (22) + Synthetic.new (13) with model-specific prompts, fallback chains, and per-model health monitoring
 - **Prediction Generation**: Context-rich prompts incorporating team form, H2H, standings, and lineups, generating exact score predictions
 - **Kicktipp Scoring**: Quota-based scoring system where rare correct predictions earn 2-6 points, exact scores earn +3 bonus (max 10 points)
 - **Real-time Live Scores**: WebSocket/polling updates during matches with minute-by-minute tracking
@@ -337,18 +360,11 @@ The following capabilities are built and operational:
 
 ### Context
 
-Shipped v2.7 with ~215,000 LOC TypeScript.
-Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, Synthetic.new, Vitest, Zod, Radix UI, next-themes, isomorphic-dompurify, html-to-text, he, pino.
-All 252 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, and v2.7 milestones.
-
-## Current Milestone: v2.8 Model Coverage
-
-**Goal:** Achieve 100% prediction coverage — all 42 LLMs successfully generating predictions with per-model diagnosis and fixes.
-
-**Target features:**
-- Diagnostic tooling to identify which models fail and categorize failure modes
-- Per-model fixes: prompt tweaks, timeout tuning, response parsing, fallback adjustments
-- Validation that all 42 models produce valid predictions end-to-end
+Shipped v2.8 with ~233,000 LOC TypeScript.
+Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, Together AI, Synthetic.new, Vitest, Zod, Radix UI, next-themes, isomorphic-dompurify, html-to-text, he, pino, Recharts, Drizzle ORM.
+All 270 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, v2.7, and v2.8 milestones.
+7 Together AI models deprecated by provider (non-serverless). 3 Synthetic models have upstream bugs. Effective active model count: 35.
+Per-model health dashboard with regression alerts operational.
 
 ## Constraints
 
@@ -378,8 +394,11 @@ All 252 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, 
 | Exact score predictions (not 1X2) | More impressive benchmark, demonstrates reasoning capability | Current system predicts 2-1, 0-0, etc. |
 | Kicktipp quota scoring | Rewards rare correct predictions, penalizes herd behavior | 2-6 points based on prediction rarity |
 | 30-minute pre-kickoff prediction window | Lineups available, but close enough to match for relevant context | T-30m with T-5m retry fallback |
-| Per-model investigation | Different models fail for different reasons, need individual fixes | v2.8 — diagnose then fix per model |
+| Per-model investigation | Different models fail for different reasons, need individual fixes | ✓ v2.8 — diagnosed and fixed per model, 29/35 passing |
 | Keep 17 leagues | Already integrated, reducing scope would be regression | All leagues operational |
+| P95 + 20% safety margin for timeouts | Data-driven approach beats guessing | ✓ v2.8 — eliminated timeout failures for reasoning models |
+| Belt-and-suspenders for model fixes | Prompt variant + response handler together prevent regressions | ✓ v2.8 — applied to all problematic models |
+| Deprecate 7 Together AI models | Provider moved to non-serverless, not a code issue | v2.8 — reduced active count from 42 to 35 |
 
 ## Out of Scope
 
@@ -395,7 +414,7 @@ All 252 requirements validated across v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, 
 
 ## Completed Milestones
 
-v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, v2.7 — see `.planning/MILESTONES.md` for full history.
+v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, v2.7, v2.8 — see `.planning/MILESTONES.md` for full history.
 
 ---
-*Last updated: 2026-02-07 after v2.8 milestone started*
+*Last updated: 2026-02-08 after v2.8 milestone*

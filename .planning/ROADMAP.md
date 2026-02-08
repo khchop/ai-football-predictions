@@ -601,4 +601,4 @@ Plans:
 | 58. Observability & Monitoring | v2.8 | 3/3 | Complete | 2026-02-08 |
 
 ---
-*Last updated: 2026-02-08 after phase 58 execution complete — v2.8 milestone shipped*
+*Last updated: 2026-02-08 after v2.8 milestone archived*
