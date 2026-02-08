@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 
 ## Current Position
 
-Phase: 60 of 66 (Multi-Provider Routing)
-Plan: 1 of 1 (100% phase complete)
-Status: Phase 60 complete - Multi-provider routing infrastructure with 3-tier fallback chains
-Last activity: 2026-02-08 — Completed 60-01-PLAN.md (MODEL_PROVIDER_ROUTES system, multi-provider routing, unified fallback config)
+Phase: 61 of 66 (Provider Attribution)
+Plan: 1 of 2 (50% phase complete)
+Status: In progress - Provider attribution schema and worker persistence complete
+Last activity: 2026-02-08 — Completed 61-01-PLAN.md (Provider attribution columns and prediction worker persistence)
 
-Progress: [███████████████████████████████████████████████████████████████████████████████████████░░░] 91%
+Progress: [████████████████████████████████████████████████████████████████████████████████████████░░] 92%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 160 plans (phases 1-60)
+- Total plans completed: 161 plans (phases 1-61)
 - Milestones shipped: 13 (v1.0 through v2.8)
-- v2.9 in progress: 2 of 8 phases complete (Phases 59-60)
+- v2.9 in progress: 3 of 8 phases complete (Phases 59-61 partial)
 
 **Recent Milestones:**
 - v2.8 Model Coverage: 13 plans, 2 days (2026-02-07 → 2026-02-08)
@@ -40,6 +40,8 @@ Progress: [███████████████████████
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- v2.9 (Phase 61): Nullable provider attribution columns preserve historical data integrity (no backfill)
+- v2.9 (Phase 61): TEXT column for attemptedProviders with JSON.stringify (JSONB deferred to future if needed)
 - v2.9 (Phase 60): Single source of truth - MODEL_FALLBACKS fully deleted, getFallbackProvider() refactored as thin wrapper over MODEL_PROVIDER_ROUTES
 - v2.9 (Phase 60): Only models with 2+ providers get entries in MODEL_PROVIDER_ROUTES (keeps config lean)
 - v2.9 (Phase 60): Consolidated model IDs are routing-level identifiers, not provider IDs (separation of concerns)
@@ -63,6 +65,11 @@ Recent decisions affecting current work:
 - **Model deactivation:** Deactivate 7 deprecated Together AI models in production database
 - **Verify:** Check admin dashboard model health cards at /admin after deploy
 
+### Post-Deploy Actions (v2.9 Phase 61)
+
+- **Database migration:** Apply `drizzle/0015_add_provider_attribution.sql` to production database
+- **Verify:** Check new predictions have `provider_used` populated after deploy
+
 ### Blockers/Concerns
 
 **Phase 64 (Model Re-Activation) research gap:**
@@ -78,7 +85,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 60 execution complete (60-01-PLAN.md finished)
-Resume file: .planning/phases/60-multi-provider-routing/60-01-SUMMARY.md
+Stopped at: Phase 61 Plan 01 execution complete (61-01-PLAN.md finished)
+Resume file: .planning/phases/61-provider-attribution/61-01-SUMMARY.md
 
-**Next action:** Continue with next phase in v2.9 Provider Unification milestone (Phase 61-64 or Phase 65-66)
+**Next action:** Continue Phase 61 with 61-02-PLAN.md (Admin Dashboard Provider Stats)
