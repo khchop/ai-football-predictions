@@ -2,12 +2,14 @@ import { LLMProvider } from '@/types';
 import { loggers } from '@/lib/logger/modules';
 import { TOGETHER_PROVIDERS } from './providers/together';
 import { SYNTHETIC_PROVIDERS } from './providers/synthetic';
+import { OPENROUTER_PROVIDERS } from './providers/openrouter';
 import { getAutoDisabledModelIds } from '@/lib/db/queries';
 import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
 import { getDb, models } from '@/lib/db';
 import { eq, sql } from 'drizzle-orm';
 
-// All available providers - Together AI + Synthetic.new
+// All non-conditional providers - Together AI + Synthetic.new
+// OpenRouter providers are conditional (only in getActiveProviders when API key set)
 // Together: 29 models, Synthetic: 13 exclusive models = 42 total
 export const ALL_PROVIDERS: LLMProvider[] = [
   ...TOGETHER_PROVIDERS,
@@ -171,6 +173,13 @@ export async function getActiveProviders(): Promise<LLMProvider[]> {
     );
   }
 
+  // Add OpenRouter providers if API key configured
+  if (process.env.OPENROUTER_API_KEY) {
+    activeProviders.push(
+      ...OPENROUTER_PROVIDERS.filter(p => !disabledIds.has(p.id))
+    );
+  }
+
   if (disabledIds.size > 0) {
     loggers.llm.info({
       disabledCount: disabledIds.size,
@@ -205,10 +214,11 @@ export function getProviderStats(): {
   premium: number;
   together: number;
   synthetic: number;
+  openrouter: number;
 } {
-  // Combine both provider arrays for tier counting
-  // Both TogetherProvider and SyntheticProvider have tier property
-  const allProviders = [...TOGETHER_PROVIDERS, ...SYNTHETIC_PROVIDERS];
+  // Combine all provider arrays for tier counting
+  // TogetherProvider, SyntheticProvider, and OpenRouterProvider all have tier property
+  const allProviders = [...TOGETHER_PROVIDERS, ...SYNTHETIC_PROVIDERS, ...OPENROUTER_PROVIDERS];
   return {
     total: allProviders.length,
     free: allProviders.filter(p => p.tier === 'free').length,
@@ -217,6 +227,7 @@ export function getProviderStats(): {
     premium: allProviders.filter(p => p.tier === 'premium').length,
     together: TOGETHER_PROVIDERS.length,
     synthetic: SYNTHETIC_PROVIDERS.length,
+    openrouter: OPENROUTER_PROVIDERS.length,
   };
 }
 
@@ -247,6 +258,7 @@ export async function getActiveModelCount(): Promise<number> {
 // Export providers
 export { TOGETHER_PROVIDERS };
 export { SYNTHETIC_PROVIDERS };
+export { OPENROUTER_PROVIDERS };
 
 // Re-export Together AI provider class for type checking
 export { TogetherProvider, type ModelTier, type ModelPricing } from './providers/together';
@@ -254,10 +266,13 @@ export { TogetherProvider, type ModelTier, type ModelPricing } from './providers
 // Re-export Synthetic provider class
 export { SyntheticProvider } from './providers/synthetic';
 
+// Re-export OpenRouter provider class
+export { OpenRouterProvider } from './providers/openrouter';
+
 // Re-export batch prediction types
 export { type BatchPredictionResult } from './providers/base';
-export { 
-  type BatchParsedResult, 
+export {
+  type BatchParsedResult,
   type BatchPredictionItem,
   BATCH_SYSTEM_PROMPT,
   parseBatchPredictionResponse,
