@@ -11,18 +11,18 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 ## Current Position
 
 Phase: 61 of 66 (Provider Attribution)
-Plan: 1 of 2 (50% phase complete)
-Status: In progress - Provider attribution schema and worker persistence complete
-Last activity: 2026-02-08 — Completed 61-01-PLAN.md (Provider attribution columns and prediction worker persistence)
+Plan: 2 of 2 (100% phase complete)
+Status: Phase complete - Admin dashboard shows provider distribution and fallback chain depth
+Last activity: 2026-02-08 — Completed 61-02-PLAN.md (Admin dashboard provider stats visualization)
 
-Progress: [████████████████████████████████████████████████████████████████████████████████████████░░] 92%
+Progress: [█████████████████████████████████████████████████████████████████████████████████████████░] 93%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 161 plans (phases 1-61)
+- Total plans completed: 162 plans (phases 1-61)
 - Milestones shipped: 13 (v1.0 through v2.8)
-- v2.9 in progress: 3 of 8 phases complete (Phases 59-61 partial)
+- v2.9 in progress: 4 of 8 phases complete (Phases 59-61 complete, 60 partial)
 
 **Recent Milestones:**
 - v2.8 Model Coverage: 13 plans, 2 days (2026-02-07 → 2026-02-08)
@@ -40,6 +40,8 @@ Progress: [███████████████████████
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- v2.9 (Phase 61): Conditional rendering for attribution UI sections (graceful degradation when no data)
+- v2.9 (Phase 61): json_array_length (not jsonb_array_length) for TEXT column depth analysis
 - v2.9 (Phase 61): Nullable provider attribution columns preserve historical data integrity (no backfill)
 - v2.9 (Phase 61): TEXT column for attemptedProviders with JSON.stringify (JSONB deferred to future if needed)
 - v2.9 (Phase 60): Single source of truth - MODEL_FALLBACKS fully deleted, getFallbackProvider() refactored as thin wrapper over MODEL_PROVIDER_ROUTES
@@ -69,6 +71,7 @@ Recent decisions affecting current work:
 
 - **Database migration:** Apply `drizzle/0015_add_provider_attribution.sql` to production database
 - **Verify:** Check new predictions have `provider_used` populated after deploy
+- **Verify:** Check admin dashboard at /admin for Provider Distribution and Fallback Chain Depth sections in Fallback Metrics card
 
 ### Blockers/Concerns
 
@@ -85,7 +88,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 61 Plan 01 execution complete (61-01-PLAN.md finished)
-Resume file: .planning/phases/61-provider-attribution/61-01-SUMMARY.md
+Stopped at: Phase 61 Plan 02 execution complete (61-02-PLAN.md finished) - Phase 61 complete
+Resume file: .planning/phases/61-provider-attribution/61-02-SUMMARY.md
 
-**Next action:** Continue Phase 61 with 61-02-PLAN.md (Admin Dashboard Provider Stats)
+**Next action:** Phase 61 complete. Ready to proceed to Phase 62 (Model Consolidation Migration) or other v2.9 phases.
