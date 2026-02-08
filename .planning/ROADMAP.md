@@ -14,7 +14,7 @@
 - **v2.5 Model Reliability & Dynamic Counts** - Phases 40-43 (shipped 2026-02-05)
 - **v2.6 SEO/GEO Site Health** - Phases 44-48 (shipped 2026-02-06)
 - **v2.7 Pipeline Reliability & Retroactive Backfill** - Phases 49-52 (shipped 2026-02-07)
-- 🚧 **v2.8 Model Coverage** - Phases 53-58 (in progress)
+- **v2.8 Model Coverage** - Phases 53-58 (shipped 2026-02-08)
 
 ## Phases
 
@@ -434,7 +434,8 @@ Plans:
 
 </details>
 
-### 🚧 v2.8 Model Coverage (In Progress)
+<details>
+<summary>v2.8 Model Coverage (Phases 53-58) - SHIPPED 2026-02-08</summary>
 
 **Milestone Goal:** Achieve 100% prediction coverage — all 42 LLMs successfully generating predictions with per-model diagnosis and fixes.
 
@@ -534,6 +535,8 @@ Plans:
 - [x] 58-02-PLAN.md — Build admin API and dashboard with per-model health visualization
 - [x] 58-03-PLAN.md — Add BullMQ stats worker with regression alerts and before/after report
 
+</details>
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -595,7 +598,7 @@ Plans:
 | 55. Category Fixes - Timeouts & Tags | v2.8 | 2/2 | Complete | 2026-02-08 |
 | 56. Category Fixes - Language & JSON | v2.8 | 2/2 | Complete | 2026-02-08 |
 | 57. Category Fixes - Fallbacks & Validation | v2.8 | 2/2 | Complete | 2026-02-08 |
-| 58. Observability & Monitoring | v2.8 | 0/3 | Not started | - |
+| 58. Observability & Monitoring | v2.8 | 3/3 | Complete | 2026-02-08 |
 
 ---
-*Last updated: 2026-02-08 after phase 57 execution complete*
+*Last updated: 2026-02-08 after phase 58 execution complete — v2.8 milestone shipped*
