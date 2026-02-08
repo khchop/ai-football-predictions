@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ModelHealthTable } from './model-health-table';
+import { ModelHealthCards } from './model-health-cards';
 import { CostSummary } from './cost-summary';
 import { FallbackMetrics } from './fallback-metrics';
-import { Activity, AlertTriangle, DollarSign, Lock, Loader2 } from 'lucide-react';
+import { Activity, AlertTriangle, DollarSign, Lock, Loader2, TrendingUp } from 'lucide-react';
 
 interface AdminData {
   models: Array<{
@@ -255,6 +256,20 @@ export function AdminDashboard() {
             ${data.budgetStatus.spent.toFixed(4)} / ${data.budgetStatus.dailyBudget.toFixed(2)}
           </p>
         </div>
+      </div>
+
+      {/* Model Health Trends (Phase 58-02) */}
+      <div className="card-gradient rounded-xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp className="h-5 w-5 text-primary" />
+          <div>
+            <h2 className="text-lg font-semibold">Model Health Trends</h2>
+            <p className="text-xs text-muted-foreground">
+              Per-model success rates and regression monitoring
+            </p>
+          </div>
+        </div>
+        <ModelHealthCards password={sessionStorage.getItem('admin_password') || password} />
       </div>
 
       {/* Cost Summary */}
