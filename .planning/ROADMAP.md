@@ -530,9 +530,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 58-01-PLAN.md — Create llm_model_stats database table, migration, and stats query module
-- [ ] 58-02-PLAN.md — Build admin API and dashboard with per-model health visualization
-- [ ] 58-03-PLAN.md — Add BullMQ stats worker with regression alerts and before/after report
+- [x] 58-01-PLAN.md — Create llm_model_stats database table, migration, and stats query module
+- [x] 58-02-PLAN.md — Build admin API and dashboard with per-model health visualization
+- [x] 58-03-PLAN.md — Add BullMQ stats worker with regression alerts and before/after report
 
 ## Progress
 

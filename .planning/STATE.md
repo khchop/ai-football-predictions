@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: 58 of 58 (Observability & Monitoring) — In progress
-Plan: 2 of 3 in phase 58
-Status: In progress
-Last activity: 2026-02-08 — Completed 58-02-PLAN.md (Admin API + model health cards)
+Phase: 58 of 58 (Observability & Monitoring) — Complete
+Plan: 3 of 3 in phase 58
+Status: Phase complete
+Last activity: 2026-02-08 — Completed 58-03-PLAN.md (Model stats worker + before/after report)
 
-Progress: [██████████████████████████████████████████████████████████░] 99% (57/58 phases, 58 plan 2/3)
+Progress: [████████████████████████████████████████████████████████████] 100% (58/58 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 191 (across phases 1-58)
+- Total plans completed: 192 (across phases 1-58)
 - Milestones shipped: 7 (v1.0 through v2.7)
 - Current milestone: v2.8 Model Coverage (phases 53-58)
 
@@ -41,6 +41,9 @@ Recent decisions affecting current work:
 - 58-02: Dual-mode API endpoint: no params = all models summary, ?modelId= = single model trends
 - 58-02: Click-to-expand modal for per-model detail charts (avoids grid reflow)
 - 58-02: Self-fetching component pattern (ModelHealthCards manages own data like FallbackMetrics)
+- 58-03: Regression detection runs inline after daily aggregation (not separate scheduled job)
+- 58-03: Startup backfill is non-fatal to avoid blocking worker initialization
+- 58-03: Before/after report auto-backfills missing stats data on first run
 - 57-02: 7 Together AI models deprecated (non-serverless) — need deactivation, not code fixes
 - 57-02: 3 Synthetic unfixable: glm-4.7-syn (SGLang bug), qwen3-235b-thinking-syn (thinking leak), deepseek-v3.2-syn (placeholder JSON)
 - 57-02: Adjusted active models: 35 (after removing 7 deprecated) — 29/35 passing (82.9%) with fallback recovery
@@ -90,7 +93,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 58-02-PLAN.md (Admin API + model health cards)
-Resume file: .planning/phases/58-observability-monitoring/58-03-PLAN.md
+Stopped at: Completed 58-03-PLAN.md (Model stats worker + before/after report)
+Resume file: N/A - Phase 58 complete, v2.8 milestone complete
 
-**Next action:** Execute 58-03-PLAN.md (Regression alerts and before/after comparison)
+**Next action:** v2.8 Model Coverage milestone complete. Run `npx tsx scripts/generate-before-after-report.ts` to generate the before/after comparison report. Apply migration drizzle/0014_add_llm_model_stats.sql to production database.
