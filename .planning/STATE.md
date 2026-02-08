@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: 54 of 58 (Diagnostic Infrastructure) — Complete
-Plan: 2 of 2 in phase 54
-Status: Complete
-Last activity: 2026-02-08 — Completed phase 54 (diagnostic infrastructure)
+Phase: 55 of 58 (Category Fixes - Timeouts & Tags) — In progress
+Plan: 1 of 2 in phase 55
+Status: In progress
+Last activity: 2026-02-08 — Completed 55-01-PLAN.md (timeout tuning)
 
-Progress: [██████████████████████████████████████████████████████░] 93% (54/58 phases)
+Progress: [██████████████████████████████████████████████████████░] 95% (55/58 phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 184 (across phases 1-54)
+- Total plans completed: 185 (across phases 1-55)
 - Milestones shipped: 7 (v1.0 through v2.7)
 - Current milestone: v2.8 Model Coverage (phases 53-58)
 
@@ -34,6 +34,9 @@ Progress: [███████████████████████
 
 Recent decisions affecting current work:
 
+- 55-01: P95 + 20% safety margin for timeout tuning — Data-driven formula balances reliability with reasonable overhead
+- 55-01: Conservative defaults without diagnostic data — DeepSeek R1 120s (Azure), Kimi K2 90s, Qwen3-235B 120s based on industry data
+- 55-01: Production timeout is PromptConfig.timeoutMs — REASONING_MODEL_IDS in test fixtures is for testing only (clarifies Pitfall 3)
 - 54-02: Use predictBatch not callAPI — Ensures response handlers (STRIP_THINKING_TAGS) apply correctly in diagnostic tests
 - 54-02: Exit 0 for diagnostic script — Informational tool (not gating), want report even if all models fail
 - 54-02: Per-model raw response files — Separate JSON file per model enables individual debugging without parsing large aggregate
@@ -90,7 +93,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed phase 54 (diagnostic infrastructure)
-Resume file: None
+Stopped at: Completed 55-01-PLAN.md (timeout tuning)
+Resume file: .planning/phases/55-category-fixes-timeouts-tags/55-02-PLAN.md
 
-**Next action:** Plan phase 55 (Category Fixes - Timeouts & Tags)
+**Next action:** Execute 55-02-PLAN.md (thinking tag prompt variant fixes)
