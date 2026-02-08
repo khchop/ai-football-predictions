@@ -97,7 +97,7 @@ export const DeepSeekR1_0528_SynProvider = new SyntheticProvider(
   {
     promptVariant: PromptVariant.THINKING_STRIPPED,
     responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
-    timeoutMs: 60000,
+    timeoutMs: 120000, // 2 min - same model as Together variant, needs extended timeout
   }
 );
 
@@ -113,7 +113,7 @@ export const KimiK2Thinking_SynProvider = new SyntheticProvider(
   {
     promptVariant: PromptVariant.THINKING_STRIPPED,
     responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
-    timeoutMs: 60000,
+    timeoutMs: 90000, // 90s - conservative increase for thinking model
   }
 );
 
@@ -129,7 +129,7 @@ export const Qwen3_235BThinking_SynProvider = new SyntheticProvider(
   {
     promptVariant: PromptVariant.THINKING_STRIPPED,
     responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
-    timeoutMs: 90000,
+    timeoutMs: 120000, // 2 min - large 235B thinking model warrants same buffer as DeepSeek R1
   }
 );
 

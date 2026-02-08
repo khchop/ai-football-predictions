@@ -28,8 +28,9 @@ Respond with JSON array containing match_id, home_score, away_score.`;
 /**
  * Timeout for reasoning models (deepseek-r1, kimi-thinking, qwen3-thinking)
  * These models have extended "thinking" phases and need more time
+ * Matches max PromptConfig.timeoutMs for reasoning models (deepseek-r1, qwen3-thinking)
  */
-export const REASONING_MODEL_TIMEOUT = 90000; // 90 seconds
+export const REASONING_MODEL_TIMEOUT = 120000; // 120 seconds (2 min)
 
 /**
  * Standard timeout for most models

@@ -101,7 +101,7 @@ export const DeepSeekR1Provider = new TogetherProvider(
   {
     promptVariant: PromptVariant.THINKING_STRIPPED,
     responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
-    timeoutMs: 60000,
+    timeoutMs: 120000, // 2 min - reasoning models need extended time for chain-of-thought processing
   }
 );
 
