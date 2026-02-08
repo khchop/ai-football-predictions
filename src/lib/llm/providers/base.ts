@@ -24,6 +24,8 @@ export type { BatchPredictionResult } from '@/types';
 export interface FallbackAPIResult {
   response: string;
   usedFallback: boolean;
+  providerUsed?: string;       // ID of the provider that succeeded
+  attemptedProviders?: string[]; // All provider IDs attempted (in order)
 }
 
 // Base class for LLM providers with common functionality
@@ -359,6 +361,88 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
   }
 
   /**
+   * Multi-provider routing: tries providers in order until one succeeds
+   * Used when caller provides explicit providerRoute array
+   * @private
+   */
+  private async callAPIWithMultiProviderRouting(
+    systemPrompt: string,
+    userPrompt: string,
+    providerRoute: string[]
+  ): Promise<FallbackAPIResult> {
+    // Validate route is non-empty (should never happen with validated MODEL_PROVIDER_ROUTES,
+    // but defensive against callers passing empty arrays)
+    if (providerRoute.length === 0) {
+      throw new Error('Provider route is empty — cannot route to any provider');
+    }
+
+    // Dynamic import to avoid circular dependency (base.ts -> index.ts -> base.ts)
+    const { getProviderById } = await import('../index');
+
+    const attemptedProviders: string[] = [];
+    let lastError: Error | null = null;
+
+    for (let i = 0; i < providerRoute.length && i < 3; i++) {
+      const providerId = providerRoute[i];
+      const provider = getProviderById(providerId);
+
+      if (!provider) {
+        logger.warn({ providerId, routeIndex: i }, 'Provider in route not found, skipping');
+        continue;
+      }
+
+      // Cycle detection: should never happen with validated routes, but defensive
+      if (attemptedProviders.includes(providerId)) {
+        logger.error({ providerId, attemptedProviders }, 'Cycle detected in provider routing');
+        break;
+      }
+
+      attemptedProviders.push(providerId);
+
+      try {
+        const response = await (provider as OpenAICompatibleProvider).callAPI(
+          systemPrompt,
+          userPrompt
+        );
+
+        const usedFallback = i > 0;
+
+        if (usedFallback) {
+          logger.info({
+            providerUsed: providerId,
+            attemptedProviders,
+            routeIndex: i,
+          }, 'Multi-provider fallback succeeded');
+        }
+
+        return {
+          response,
+          usedFallback,
+          providerUsed: providerId,
+          attemptedProviders,
+        };
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+
+        logger.warn({
+          providerId,
+          routeIndex: i,
+          error: lastError.message,
+          remainingProviders: providerRoute.length - i - 1,
+        }, 'Provider failed, trying next in route');
+      }
+    }
+
+    // All providers failed
+    logger.error({
+      attemptedProviders,
+      providerCount: attemptedProviders.length,
+    }, 'All providers in routing chain failed');
+
+    throw lastError || new Error('All providers in route failed');
+  }
+
+  /**
    * Call API with automatic fallback to Together AI on failure
    *
    * User decisions (from CONTEXT.md):
@@ -369,12 +453,22 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
    */
   async callAPIWithFallback(
     systemPrompt: string,
-    userPrompt: string
+    userPrompt: string,
+    providerRoute?: string[]
   ): Promise<FallbackAPIResult> {
+    // If explicit provider route given, use multi-provider routing
+    if (providerRoute && providerRoute.length > 0) {
+      return this.callAPIWithMultiProviderRouting(systemPrompt, userPrompt, providerRoute);
+    }
     try {
       // Try original model first
       const response = await this.callAPI(systemPrompt, userPrompt);
-      return { response, usedFallback: false };
+      return {
+        response,
+        usedFallback: false,
+        providerUsed: this.id,
+        attemptedProviders: [this.id]
+      };
     } catch (originalError) {
       // Get fallback provider for this model
       // Dynamic import to break circular dependency: index.ts -> synthetic.ts -> base.ts -> index.ts
@@ -406,7 +500,12 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
           fallbackModel: fallbackProvider.id,
         }, 'Fallback succeeded');
 
-        return { response: fallbackResult, usedFallback: true };
+        return {
+          response: fallbackResult,
+          usedFallback: true,
+          providerUsed: fallbackProvider.id,
+          attemptedProviders: [this.id, fallbackProvider.id]
+        };
       } catch (fallbackError) {
         // Fallback also failed - max depth 1, no more retries
         logger.error({

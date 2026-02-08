@@ -17,140 +17,137 @@ export const ALL_PROVIDERS: LLMProvider[] = [
 ];
 
 // ============================================================================
-// MODEL FALLBACKS
-// Maps Synthetic model IDs to Together AI equivalents (same or similar models)
-// Used when a Synthetic model fails and we want to try Together AI instead
+// MODEL PROVIDER ROUTES
+// Maps consolidated model IDs to ordered provider priority lists.
+// Each model tries providers in array order: first = primary, last = final fallback.
+// Max 3 providers per model. Validated at module load time.
+//
+// Consolidated model IDs are routing-level identifiers (the keys below).
+// They are NOT provider IDs — they name a model concept.
+// Workers currently use per-provider model IDs and getFallbackProvider();
+// Phase 62-64 will transition workers to pass providerRoute by consolidated ID.
+//
+// Provider ID conventions:
+//   - Together AI: model-name (e.g., 'deepseek-r1')
+//   - Synthetic: model-name-syn (e.g., 'deepseek-r1-0528-syn')
+//   - OpenRouter: model-name-or (e.g., 'deepseek-r1-or')
 // ============================================================================
 
-/**
- * Phase 57 Audit: 3/13 mappable, 10/13 exclusive
- *
- * Fallback mapping: Synthetic model ID -> Together AI model ID
- * Only includes models with close equivalents on both providers.
- *
- * Exhaustive Synthetic model fallback status (13 models):
- *
- * MAPPED (3/13) - Have Together AI fallbacks:
- * ┌─────────────────────────┬────────────────────┬──────────────────────────────────────────────┐
- * │ Synthetic Model ID      │ Together Fallback   │ Rationale                                    │
- * ├─────────────────────────┼────────────────────┼──────────────────────────────────────────────┤
- * │ deepseek-r1-0528-syn    │ deepseek-r1        │ Same model family, version difference only   │
- * │ kimi-k2-thinking-syn    │ kimi-k2-instruct   │ Same base model, thinking vs instruct tuning │
- * │ kimi-k2.5-syn           │ kimi-k2-instruct   │ Same Kimi family fallback                    │
- * └─────────────────────────┴────────────────────┴──────────────────────────────────────────────┘
- *
- * EXCLUSIVE (10/13) - No valid Together AI fallback:
- * ┌──────────────────────────────┬──────────────────────────────────────────────────────────────┬─────────────────────────────────┐
- * │ Synthetic Model ID           │ Reason No Fallback                                           │ Mitigation (prompt/handler)     │
- * ├──────────────────────────────┼──────────────────────────────────────────────────────────────┼─────────────────────────────────┤
- * │ deepseek-v3-0324-syn         │ DeepSeek V3 0324 not available on Together AI                 │ BASE + DEFAULT (default config) │
- * │ deepseek-v3.1-terminus-syn   │ DeepSeek V3.1 Terminus not available on Together AI           │ BASE + DEFAULT (default config) │
- * │ deepseek-v3.2-syn            │ DeepSeek V3.2 not available on Together AI                    │ JSON_STRICT + EXTRACT_JSON      │
- * │ minimax-m2-syn               │ MiniMax M2 not available on Together AI                       │ BASE + DEFAULT (default config) │
- * │ minimax-m2.1-syn             │ MiniMax M2.1 not available on Together AI                     │ BASE + DEFAULT (default config) │
- * │ glm-4.6-syn                  │ GLM 4.6 not available on Together AI                          │ ENGLISH_ENFORCED + DEFAULT      │
- * │ glm-4.7-syn                  │ GLM 4.7 not available on Together AI                          │ ENGLISH_ENFORCED + EXTRACT_JSON │
- * │ qwen3-coder-480b-syn         │ Qwen3 Coder 480B not available on Together AI                 │ BASE + DEFAULT (default config) │
- * │ gpt-oss-120b-syn             │ Together only has GPT-OSS 20B (different size, not equivalent)│ JSON_STRICT + EXTRACT_JSON      │
- * │ qwen3-235b-thinking-syn      │ Together has Qwen3 235B Instruct but NOT Thinking variant;    │ THINKING_STRIPPED +             │
- * │                              │ cross-variant fallback risks different output style            │ STRIP_THINKING_TAGS             │
- * └──────────────────────────────┴──────────────────────────────────────────────────────────────┴─────────────────────────────────┘
- *
- * Risk models (exclusive + default config, no special handling):
- * - deepseek-v3-0324-syn, deepseek-v3.1-terminus-syn, minimax-m2-syn, minimax-m2.1-syn, qwen3-coder-480b-syn
- */
-export const MODEL_FALLBACKS: Record<string, string> = {
-  // DeepSeek R1 variants (reasoning models)
-  // Synthetic R1 0528 -> Together R1 (version difference, same model family)
-  'deepseek-r1-0528-syn': 'deepseek-r1',
+export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
+  // --- 3-tier: Synthetic -> Together -> OpenRouter ---
+  'deepseek-r1': ['deepseek-r1-0528-syn', 'deepseek-r1', 'deepseek-r1-or'],
 
-  // Kimi K2 variants (Thinking -> Instruct fallback)
-  // Same base model, different tuning (thinking vs instruction-following)
-  'kimi-k2-thinking-syn': 'kimi-k2-instruct',
+  // --- 2-tier: Synthetic -> Together ---
+  'kimi-k2-thinking': ['kimi-k2-thinking-syn', 'kimi-k2-instruct'],
+  'kimi-k2.5': ['kimi-k2.5-syn', 'kimi-k2-instruct'],
 
-  // Kimi K2.5 (non-thinking variant)
-  'kimi-k2.5-syn': 'kimi-k2-instruct',
+  // --- 2-tier: Together -> OpenRouter ---
+  'qwen3-235b': ['qwen3-235b-instruct', 'qwen3-235b-or'],
+  'llama-4-scout': ['llama-4-scout', 'llama-4-scout-or'],
 };
 
-let fallbacksValidated = false;
-
 /**
- * Get fallback provider for a Synthetic model
- * @param syntheticModelId - The Synthetic model ID that failed
- * @returns The equivalent Together AI provider, or undefined if no fallback exists
- */
-export function getFallbackProvider(syntheticModelId: string): LLMProvider | undefined {
-  if (!fallbacksValidated) {
-    validateFallbackMapping();
-    fallbacksValidated = true;
-  }
-
-  const fallbackId = MODEL_FALLBACKS[syntheticModelId];
-  if (!fallbackId) {
-    return undefined;
-  }
-
-  // Check if Together API key is configured
-  if (!process.env.TOGETHER_API_KEY) {
-    return undefined;
-  }
-
-  return ALL_PROVIDERS.find(p => p.id === fallbackId);
-}
-
-/**
- * Validate fallback mapping at startup
+ * Validate provider routes at module load time
  * Checks:
- * 1. All fallback target models exist in ALL_PROVIDERS
- * 2. No cycles in fallback chain (though with max depth 1, cycles are unlikely but still bad config)
+ * 1. All provider IDs in routes exist in ALL_PROVIDERS + OPENROUTER_PROVIDERS
+ * 2. No duplicate provider IDs within a route (cycle detection)
+ * 3. Max 3 providers per route
+ * 4. No empty routes
  */
-function validateFallbackMapping(): void {
-  const providerIds = new Set(ALL_PROVIDERS.map(p => p.id));
+function validateProviderRoutes(): void {
+  // Build set of all available provider IDs
+  const availableProviderIds = new Set(ALL_PROVIDERS.map(p => p.id));
 
-  for (const [syntheticId, fallbackId] of Object.entries(MODEL_FALLBACKS)) {
-    // Check fallback target exists
-    if (!providerIds.has(fallbackId)) {
+  // Conditionally include OpenRouter providers if API key is set
+  const hasOpenRouterKey = !!process.env.OPENROUTER_API_KEY;
+  if (hasOpenRouterKey) {
+    for (const p of OPENROUTER_PROVIDERS) {
+      availableProviderIds.add(p.id);
+    }
+  }
+
+  for (const [consolidatedId, providers] of Object.entries(MODEL_PROVIDER_ROUTES)) {
+    // Check for empty routes
+    if (providers.length === 0) {
       throw new Error(
-        `Invalid fallback mapping: ${syntheticId} -> ${fallbackId}. ` +
-        `Target model "${fallbackId}" not found in ALL_PROVIDERS. ` +
-        `Available providers: ${[...providerIds].join(', ')}`
+        `Invalid provider route for "${consolidatedId}": route is empty. ` +
+        `Each model must have at least one provider.`
       );
     }
 
-    // Check for direct self-reference (model can't be its own fallback)
-    if (syntheticId === fallbackId) {
+    // Check max depth (3 providers)
+    if (providers.length > 3) {
       throw new Error(
-        `Invalid fallback mapping: ${syntheticId} -> ${fallbackId}. ` +
-        `Model cannot be its own fallback.`
+        `Invalid provider route for "${consolidatedId}": route has ${providers.length} providers. ` +
+        `Maximum 3 providers per route allowed.`
       );
     }
 
-    // Check for simple cycle (A -> B -> A)
-    // With max depth 1 this is the only cycle pattern that matters
-    const fallbackOfFallback = MODEL_FALLBACKS[fallbackId];
-    if (fallbackOfFallback === syntheticId) {
+    // Check for duplicates within the route (cycle detection)
+    const uniqueProviders = new Set(providers);
+    if (uniqueProviders.size !== providers.length) {
       throw new Error(
-        `Cycle detected in fallback mapping: ${syntheticId} -> ${fallbackId} -> ${syntheticId}. ` +
-        `Fallback chains must not form cycles.`
+        `Invalid provider route for "${consolidatedId}": route contains duplicate providers. ` +
+        `Route: [${providers.join(', ')}]. Each provider can only appear once per route.`
       );
+    }
+
+    // Check that all provider IDs exist
+    for (const providerId of providers) {
+      if (!availableProviderIds.has(providerId)) {
+        // Check if it's an OpenRouter provider but key not set
+        const isOpenRouterProvider = OPENROUTER_PROVIDERS.some(p => p.id === providerId);
+        if (isOpenRouterProvider && !hasOpenRouterKey) {
+          loggers.llm.warn({
+            consolidatedId,
+            providerId,
+          }, 'Provider route references OpenRouter provider but OPENROUTER_API_KEY not set — provider will be unavailable');
+        } else {
+          throw new Error(
+            `Invalid provider route for "${consolidatedId}": provider "${providerId}" not found. ` +
+            `Available providers: ${[...availableProviderIds].join(', ')}`
+          );
+        }
+      }
     }
   }
 
   loggers.llm.info({
-    mappingCount: Object.keys(MODEL_FALLBACKS).length,
-    mappings: MODEL_FALLBACKS,
-  }, 'Fallback mapping validated successfully');
+    routeCount: Object.keys(MODEL_PROVIDER_ROUTES).length,
+    routes: MODEL_PROVIDER_ROUTES,
+  }, 'Provider routes validated successfully');
 }
 
-// ============================================================================
-// USAGE NOTES:
-// - Call getFallbackProvider(modelId) when a Synthetic model fails
-// - Returns undefined if no fallback exists or TOGETHER_API_KEY not set
-// - Integration into prediction pipeline is a future enhancement
-// - 3/13 Synthetic models have fallbacks; 10/13 are exclusive (Phase 57 audit)
-// - 5 risk models use default config without fallbacks (see table above)
-// - Run `npm run validate:coverage` to check model coverage status
-// ============================================================================
+/**
+ * Returns the next fallback provider for a given provider ID.
+ * Thin wrapper over MODEL_PROVIDER_ROUTES — finds the provider in any route
+ * and returns the next provider in the chain.
+ *
+ * Used by the single-fallback path in callAPIWithFallback (workers that don't
+ * yet pass providerRoute). Will be removed in Phase 62-64 when all callers
+ * transition to explicit providerRoute.
+ */
+export function getFallbackProvider(modelId: string): LLMProvider | undefined {
+  // Search MODEL_PROVIDER_ROUTES for this provider ID
+  for (const [, providers] of Object.entries(MODEL_PROVIDER_ROUTES)) {
+    const idx = providers.indexOf(modelId);
+    if (idx !== -1 && idx < providers.length - 1) {
+      // Return the next provider in the chain
+      const nextId = providers[idx + 1];
+      return getProviderById(nextId);
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Get the provider route for a consolidated model ID
+ * @param consolidatedModelId - The consolidated model ID (routing-level identifier)
+ * @returns Array of provider IDs in priority order, or undefined if no route exists
+ */
+export function getRouteForModel(consolidatedModelId: string): string[] | undefined {
+  return MODEL_PROVIDER_ROUTES[consolidatedModelId];
+}
 
 // Get active providers (checks if API keys are configured and filters auto-disabled models)
 export async function getActiveProviders(): Promise<LLMProvider[]> {
@@ -192,7 +189,11 @@ export async function getActiveProviders(): Promise<LLMProvider[]> {
 
 // Get provider by ID
 export function getProviderById(id: string): LLMProvider | undefined {
-  return ALL_PROVIDERS.find(p => p.id === id);
+  // Check core providers first (Together + Synthetic)
+  const core = ALL_PROVIDERS.find(p => p.id === id);
+  if (core) return core;
+  // Check OpenRouter providers (conditional, but needed for routing)
+  return OPENROUTER_PROVIDERS.find(p => p.id === id);
 }
 
 // Get all free providers
@@ -277,3 +278,6 @@ export {
   BATCH_SYSTEM_PROMPT,
   parseBatchPredictionResponse,
 } from './prompt';
+
+// Validate provider routes at module load time
+validateProviderRoutes();
