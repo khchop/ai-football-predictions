@@ -24,6 +24,15 @@ interface FallbackStats {
     totalFallbacksToday: number;
     modelsExceeding2x: number;
   };
+  providerDistribution: Array<{
+    provider: string;
+    count: number;
+    percentage: number;
+  }>;
+  fallbackDepth: Array<{
+    depth: number;
+    count: number;
+  }>;
 }
 
 export function FallbackMetrics() {
@@ -134,6 +143,48 @@ export function FallbackMetrics() {
           <p className="text-xl font-bold text-amber-400">{data.summary.modelsExceeding2x}</p>
         </div>
       </div>
+
+      {/* Provider Distribution (Phase 61) */}
+      {data.providerDistribution && data.providerDistribution.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-sm font-medium text-muted-foreground mb-3">Provider Distribution (Today)</h3>
+          <div className="space-y-3">
+            {data.providerDistribution.map(item => (
+              <div key={item.provider}>
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm font-medium">{item.provider}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {item.count} ({item.percentage.toFixed(1)}%)
+                  </span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full"
+                    style={{ width: `${Math.min(item.percentage, 100)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Fallback Chain Depth (Phase 61) */}
+      {data.fallbackDepth && data.fallbackDepth.length > 0 && (
+        <div className="mb-6 border-t border-border/50 pt-4">
+          <h3 className="text-sm font-medium text-muted-foreground mb-3">Fallback Chain Depth</h3>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            {data.fallbackDepth.map(item => (
+              <div key={item.depth} className="p-2 rounded-lg bg-muted/50">
+                <div className="text-xs text-muted-foreground">
+                  {item.depth === 0 ? 'Direct' : `${item.depth} fallback${item.depth > 1 ? 's' : ''}`}
+                </div>
+                <div className="text-lg font-bold">{item.count}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Fallback stats table */}
       <div className="overflow-x-auto">
