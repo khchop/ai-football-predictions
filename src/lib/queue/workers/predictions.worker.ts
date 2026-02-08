@@ -206,6 +206,12 @@ export function createPredictionsWorker() {
               const rawResponse = apiResult.response;
               const usedFallback = apiResult.usedFallback;
 
+              // Provider attribution (Phase 61): capture which provider actually served the request
+              const providerUsed = apiResult.providerUsed || provider.id;
+              const attemptedProviders = apiResult.attemptedProviders
+                ? JSON.stringify(apiResult.attemptedProviders)
+                : null;
+
               // Validate response before parsing (defensive null check)
               if (!rawResponse || typeof rawResponse !== 'string') {
                 const errorType = ErrorType.PARSE_ERROR; // Empty response treated as parse error
@@ -269,6 +275,8 @@ export function createPredictionsWorker() {
                predictedResult: result,
                status: 'pending',
                usedFallback,  // Track fallback usage
+               providerUsed,           // Phase 61: actual provider that served request
+               attemptedProviders,     // Phase 61: JSON array of all attempted providers
              });
 
              // Track successful model but DON'T record health yet
@@ -278,6 +286,7 @@ export function createPredictionsWorker() {
                 modelId: provider.id,
                 prediction: `${prediction.homeScore}-${prediction.awayScore}`,
                 usedFallback,
+                ...(providerUsed !== provider.id ? { providerUsed } : {}),
               }, `${usedFallback ? '↩' : '✓'} Prediction generated${usedFallback ? ' (via fallback)' : ''}`);
               successCount++;
               } catch (modelError: unknown) {
