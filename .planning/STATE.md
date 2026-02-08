@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** The prediction pipeline must reliably generate scores from 42 LLMs before kickoff and accurately score them when matches complete
-**Current focus:** Phase 55 - Category Fixes: Timeouts & Tags (v2.8 Model Coverage)
+**Current focus:** Phase 56 - Category Fixes: Language & JSON (v2.8 Model Coverage)
 
 ## Current Position
 
-Phase: 55 of 58 (Category Fixes - Timeouts & Tags) — Complete
-Plan: 2 of 2 in phase 55
-Status: Phase complete
-Last activity: 2026-02-08 — Completed 55-02-PLAN.md (thinking tag audit & regression validation)
+Phase: 56 of 58 (Category Fixes - Language & JSON) — In progress
+Plan: 1 of 2 in phase 56
+Status: In progress
+Last activity: 2026-02-08 — Completed 56-01-PLAN.md (language enforcement audit)
 
-Progress: [██████████████████████████████████████████████████████░] 95% (55/58 phases)
+Progress: [███████████████████████████████████████████████████████░] 96% (56/58 phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 185 (across phases 1-55)
+- Total plans completed: 186 (across phases 1-56)
 - Milestones shipped: 7 (v1.0 through v2.7)
 - Current milestone: v2.8 Model Coverage (phases 53-58)
 
@@ -34,6 +34,9 @@ Progress: [███████████████████████
 
 Recent decisions affecting current work:
 
+- 56-01: No code changes for language enforcement — GLM-4.6 and GLM-4.7 already correctly configured with ENGLISH_ENFORCED
+- 56-01: Audit-first pattern for fixes — Verify current state before making changes, require diagnostic evidence before applying fixes
+- 56-01: No preemptive enforcement — All Together AI and non-GLM Synthetic models are English-trained, no enforcement needed per research Pitfall 1
 - 55-01: P95 + 20% safety margin for timeout tuning — Data-driven formula balances reliability with reasonable overhead
 - 55-01: Conservative defaults without diagnostic data — DeepSeek R1 120s (Azure), Kimi K2 90s, Qwen3-235B 120s based on industry data
 - 55-01: Production timeout is PromptConfig.timeoutMs — REASONING_MODEL_IDS in test fixtures is for testing only (clarifies Pitfall 3)
@@ -93,7 +96,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed Phase 55 (Category Fixes - Timeouts & Tags)
-Resume file: .planning/phases/56-language-json-fixes/56-01-PLAN.md (if exists)
+Stopped at: Completed Phase 56-01 (Language enforcement audit)
+Resume file: .planning/phases/56-language-json-fixes/56-02-PLAN.md (if exists)
 
-**Next action:** Begin Phase 56 (Category Fixes - Language & JSON) or run diagnostics to validate Phase 55 fixes
+**Next action:** Begin Phase 56-02 (JSON extraction fixes) or run diagnostics to validate language/JSON fixes
