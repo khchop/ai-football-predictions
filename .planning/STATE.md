@@ -4,17 +4,15 @@
 
 See: .planning/PROJECT.md (updated 2026-02-08)
 
-**Core value:** The prediction pipeline must reliably generate scores from 35 active LLMs before kickoff and accurately score them when matches complete
-**Current focus:** Planning next milestone
+**Core value:** The prediction pipeline must reliably generate scores from LLMs before kickoff and accurately score them when matches complete
+**Current focus:** v2.9 Provider Unification & Maximum Coverage
 
 ## Current Position
 
-Phase: 58 of 58 — All phases complete
-Plan: All plans complete
-Status: v2.8 milestone shipped
-Last activity: 2026-02-08 — v2.8 Model Coverage milestone archived
-
-Progress: [████████████████████████████████████████████████████████████] 100% (58/58 phases complete, 13 milestones shipped)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-08 — Milestone v2.9 started
 
 ## Performance Metrics
 
@@ -49,12 +47,12 @@ All v2.8 decisions archived to `.planning/milestones/v2.8-ROADMAP.md`.
 
 ### Blockers/Concerns
 
-None — milestone complete, ready for next milestone planning.
+None — ready for v2.9 milestone.
 
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: v2.8 milestone archived
+Stopped at: Starting v2.9 milestone
 Resume file: N/A
 
-**Next action:** Run `/gsd:new-milestone` to plan next milestone (start with `/clear` for fresh context).
+**Next action:** Define requirements for v2.9 Provider Unification.

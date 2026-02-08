@@ -19,6 +19,18 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 - **Model developers** seeking benchmarks beyond traditional NLP tasks
 - **Casual users** who enjoy comparing "AI vs AI" predictions
 
+## Current Milestone: v2.9 Provider Unification & Maximum Coverage
+
+**Goal:** Unify provider architecture with smart multi-provider routing (Synthetic → Together → OpenRouter), merge duplicate -syn model entries, re-activate 7 deprecated models via OpenRouter, and maximize model coverage.
+
+**Target features:**
+- Add OpenRouter as third provider with OPENROUTER_API_KEY
+- Smart provider routing: each model has ordered provider priority list
+- Merge 13 -syn Synthetic models into base counterparts (consolidate prediction history)
+- Re-activate 7 deprecated Together AI models via OpenRouter
+- Rename Synthetic-only models (drop -syn suffix)
+- Target: ~29 unique model IDs with multi-provider fallback chains
+
 ## Current State
 
 **Brownfield project with v2.8 shipped.** 35 active LLM models across Together AI (22) and Synthetic.new (13) providers — 7 Together AI models deprecated by provider. 270 requirements validated across 13 milestones (v1.0-v2.8). Per-model health observability with admin dashboard and regression alerts.
@@ -417,4 +429,4 @@ Per-model health dashboard with regression alerts operational.
 v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, v2.7, v2.8 — see `.planning/MILESTONES.md` for full history.
 
 ---
-*Last updated: 2026-02-08 after v2.8 milestone*
+*Last updated: 2026-02-08 after v2.9 milestone start*
