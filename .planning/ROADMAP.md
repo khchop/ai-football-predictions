@@ -482,8 +482,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 55-01-PLAN.md — Tune per-model timeouts based on diagnostic P95 latency data
-- [ ] 55-02-PLAN.md — Audit thinking tag handlers and run regression validation
+- [x] 55-01-PLAN.md — Tune per-model timeouts based on diagnostic P95 latency data (2026-02-08)
+- [x] 55-02-PLAN.md — Audit thinking tag handlers and run regression validation (2026-02-08)
 
 #### Phase 56: Category Fixes - Language & JSON
 **Goal**: Fix language mixing and JSON extraction failures identified by diagnostics
@@ -593,7 +593,7 @@ Plans:
 | 52. Monitoring & Observability | v2.7 | 3/3 | Complete | 2026-02-07 |
 | 53. Regression Protection | v2.8 | 2/2 | Complete | 2026-02-07 |
 | 54. Diagnostic Infrastructure | v2.8 | 2/2 | Complete | 2026-02-08 |
-| 55. Category Fixes - Timeouts & Tags | v2.8 | 0/2 | Not started | - |
+| 55. Category Fixes - Timeouts & Tags | v2.8 | 2/2 | Complete | 2026-02-08 |
 | 56. Category Fixes - Language & JSON | v2.8 | 0/2 | Not started | - |
 | 57. Category Fixes - Fallbacks & Validation | v2.8 | 0/3 | Not started | - |
 | 58. Observability & Monitoring | v2.8 | 0/3 | Not started | - |
