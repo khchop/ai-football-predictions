@@ -479,11 +479,11 @@ Plans:
   3. Thinking tag leakage eliminated from all reasoning model responses
   4. Models returning `<think>` or `<reasoning>` tags receive tag stripping handler
   5. Regression test confirms working models unaffected by timeout/handler changes
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 55-01: Tune per-model timeouts based on diagnostic P95 latency data
-- [ ] 55-02: Apply thinking tag stripping to identified reasoning models
+- [ ] 55-01-PLAN.md — Tune per-model timeouts based on diagnostic P95 latency data
+- [ ] 55-02-PLAN.md — Audit thinking tag handlers and run regression validation
 
 #### Phase 56: Category Fixes - Language & JSON
 **Goal**: Fix language mixing and JSON extraction failures identified by diagnostics
