@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 54 of 58 (Diagnostic Infrastructure)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-07 — Completed quick-036 (refocus match roundup prompt on AI model performance)
+Last activity: 2026-02-08 — Completed 54-02-PLAN.md (diagnostic runner and report generator)
 
 Progress: [█████████████████████████████████████████████████████░] 91% (53/58 phases)
 
@@ -34,6 +34,9 @@ Progress: [███████████████████████
 
 Recent decisions affecting current work:
 
+- 54-02: Use predictBatch not callAPI — Ensures response handlers (STRIP_THINKING_TAGS) apply correctly in diagnostic tests
+- 54-02: Exit 0 for diagnostic script — Informational tool (not gating), want report even if all models fail
+- 54-02: Per-model raw response files — Separate JSON file per model enables individual debugging without parsing large aggregate
 - quick-033: Pre-calculated consensus before prompting — Calculate H/D/A percentages from DB predictions before prompt building (prevents LLM fabrication)
 - quick-033: Kimi K2 Thinking for content — Upgrade to reasoning model via Synthetic API (~$5/month vs ~$0.71/month for quality)
 - quick-033: Thinking tag stripping pattern — Strip <think>...</think> BEFORE JSON parsing to prevent parse errors
@@ -56,6 +59,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
+- **Human action:** Run `npm run diagnose` with API keys to generate initial diagnostic report (54-02)
 - **Human action:** Run `npx tsx scripts/generate-golden-fixtures.ts` with API keys to capture real golden fixture baselines (placeholder data currently)
 - **Human action:** Configure GitHub branch protection — Settings > Branches > require "Model Regression Tests" status check
 - **Optional:** Run `npx tsx scripts/backfill-match-previews.ts` to regenerate all existing match previews with anti-hallucination prompt (quick-030)
@@ -85,8 +89,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-07
-Stopped at: Completed quick-033 (fix consensus percentages, upgrade to Kimi K2 Thinking)
-Resume file: None
+Last session: 2026-02-08
+Stopped at: Completed 54-02-PLAN.md (diagnostic runner and report generator)
+Resume file: .planning/phases/54-diagnostic-infrastructure/54-03-PLAN.md
 
-**Next action:** Execute 54-02-PLAN.md (diagnostic runner)
+**Next action:** Execute 54-03-PLAN.md (diagnostic fixes based on report findings)
