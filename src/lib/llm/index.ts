@@ -10,7 +10,7 @@ import { eq, sql } from 'drizzle-orm';
 
 // All non-conditional providers - Together AI + Synthetic.new
 // OpenRouter providers are conditional (only in getActiveProviders when API key set)
-// Together: 29 models, Synthetic: 13 exclusive models = 42 total
+// Together: 29 models, Synthetic: 10 exclusive models = 39 total
 export const ALL_PROVIDERS: LLMProvider[] = [
   ...TOGETHER_PROVIDERS,
   ...SYNTHETIC_PROVIDERS,
@@ -29,19 +29,13 @@ export const ALL_PROVIDERS: LLMProvider[] = [
 //
 // Provider ID conventions:
 //   - Together AI: model-name (e.g., 'deepseek-r1')
-//   - Synthetic: model-name-syn (e.g., 'deepseek-r1-0528-syn')
+//   - Synthetic: model-name (e.g., 'qwen3-235b-thinking')
 //   - OpenRouter: model-name-or (e.g., 'deepseek-r1-or')
 // ============================================================================
 
 export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
-  // --- 3-tier: Synthetic -> Together -> OpenRouter ---
-  'deepseek-r1': ['deepseek-r1-0528-syn', 'deepseek-r1', 'deepseek-r1-or'],
-
-  // --- 2-tier: Synthetic -> Together ---
-  'kimi-k2-thinking': ['kimi-k2-thinking-syn', 'kimi-k2-instruct'],
-  'kimi-k2.5': ['kimi-k2.5-syn', 'kimi-k2-instruct'],
-
   // --- 2-tier: Together -> OpenRouter ---
+  'deepseek-r1': ['deepseek-r1', 'deepseek-r1-or'],
   'qwen3-235b': ['qwen3-235b-instruct', 'qwen3-235b-or'],
   'llama-4-scout': ['llama-4-scout', 'llama-4-scout-or'],
 };
