@@ -189,10 +189,10 @@ Plans:
 4. Rollback script tested and verified on staging data
 5. Dry-run mode shows exactly what changes would be made without committing
 
-**Plans:** TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 62-01: TBD
+- [ ] 62-01-PLAN.md -- Forward migration script with dedup/validation/dry-run + rollback script
 
 #### Phase 63: Model Consolidation Execution
 
