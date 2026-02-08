@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** The prediction pipeline must reliably generate scores from 42 LLMs before kickoff and accurately score them when matches complete
-**Current focus:** Phase 57 - Category Fixes: Fallbacks & Validation (v2.8 Model Coverage)
+**Current focus:** Phase 58 - Observability & Monitoring (v2.8 Model Coverage)
 
 ## Current Position
 
-Phase: 57 of 58 (Category Fixes - Fallbacks & Validation) — Complete
-Plan: 2 of 2 in phase 57
-Status: Phase complete
-Last activity: 2026-02-08 — Completed 57-02-PLAN.md (Diagnostic validation & coverage assessment)
+Phase: 58 of 58 (Observability & Monitoring) — In progress
+Plan: 1 of 3 in phase 58
+Status: In progress
+Last activity: 2026-02-08 — Completed 58-01-PLAN.md (Model stats data layer)
 
-Progress: [█████████████████████████████████████████████████████████░] 98% (57/58 phases)
+Progress: [█████████████████████████████████████████████████████████░] 98% (57/58 phases, 58 plan 1/3)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 189 (across phases 1-57)
+- Total plans completed: 190 (across phases 1-58)
 - Milestones shipped: 7 (v1.0 through v2.7)
 - Current milestone: v2.8 Model Coverage (phases 53-58)
 
@@ -34,6 +34,10 @@ Progress: [███████████████████████
 
 Recent decisions affecting current work:
 
+- 58-01: Success = prediction exists for model+date; failure = active model missing prediction where pipeline ran
+- 58-01: Error categories best-effort from models.failureReason (latest error only, not per-prediction)
+- 58-01: Health thresholds: >=90% healthy, >=80% warning, <80% critical
+- 58-01: Regression detection: >10% drop AND current rate <90% (dual threshold prevents alert fatigue)
 - 57-02: 7 Together AI models deprecated (non-serverless) — need deactivation, not code fixes
 - 57-02: 3 Synthetic unfixable: glm-4.7-syn (SGLang bug), qwen3-235b-thinking-syn (thinking leak), deepseek-v3.2-syn (placeholder JSON)
 - 57-02: Adjusted active models: 35 (after removing 7 deprecated) — 29/35 passing (82.9%) with fallback recovery
@@ -83,7 +87,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed Phase 57 (Category Fixes - Fallbacks & Validation)
-Resume file: None
+Stopped at: Completed 58-01-PLAN.md (Model stats data layer)
+Resume file: .planning/phases/58-observability-monitoring/58-02-PLAN.md
 
-**Next action:** Begin Phase 58 (Observability & Monitoring) or deactivate 7 deprecated Together AI models first
+**Next action:** Execute 58-02-PLAN.md (Admin API endpoint for model health) then 58-03-PLAN.md (Dashboard visualization)
