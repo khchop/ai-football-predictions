@@ -27,6 +27,15 @@ interface FallbackStats {
     totalFallbacksToday: number;
     modelsExceeding2x: number;
   };
+  providerDistribution: Array<{
+    provider: string;
+    count: number;
+    percentage: number;
+  }>;
+  fallbackDepth: Array<{
+    depth: number;
+    count: number;
+  }>;
 }
 
 /**
@@ -164,6 +173,57 @@ export async function GET(request: NextRequest) {
       if (exceeds2x) modelsExceeding2x++;
     }
 
+    // Provider distribution (Phase 61): which providers are actually serving predictions
+    const providerDistResult = await db.execute<{
+      provider_used: string;
+      count: string;
+    }>(sql`
+      SELECT
+        provider_used,
+        COUNT(*)::text as count
+      FROM predictions
+      WHERE created_at >= ${todayStart.toISOString()}
+        AND provider_used IS NOT NULL
+      GROUP BY provider_used
+      ORDER BY COUNT(*) DESC
+    `);
+
+    // Calculate total for percentages
+    const totalWithAttribution = providerDistResult.rows.reduce(
+      (sum, row) => sum + parseInt(row.count, 10), 0
+    );
+
+    const providerDistribution = providerDistResult.rows.map(row => ({
+      provider: row.provider_used,
+      count: parseInt(row.count, 10),
+      percentage: totalWithAttribution > 0
+        ? (parseInt(row.count, 10) / totalWithAttribution) * 100
+        : 0,
+    }));
+
+    // Fallback depth analysis (Phase 61): how deep are fallback chains going
+    const fallbackDepthResult = await db.execute<{
+      depth: string;
+      count: string;
+    }>(sql`
+      SELECT
+        CASE
+          WHEN used_fallback = false OR used_fallback IS NULL THEN '0'
+          WHEN attempted_providers IS NULL THEN '1'
+          ELSE (json_array_length(attempted_providers::json) - 1)::text
+        END as depth,
+        COUNT(*)::text as count
+      FROM predictions
+      WHERE created_at >= ${todayStart.toISOString()}
+      GROUP BY depth
+      ORDER BY depth
+    `);
+
+    const fallbackDepth = fallbackDepthResult.rows.map(row => ({
+      depth: parseInt(row.depth, 10),
+      count: parseInt(row.count, 10),
+    }));
+
     const response: FallbackStats = {
       stats,
       summary: {
@@ -171,6 +231,8 @@ export async function GET(request: NextRequest) {
         totalFallbacksToday,
         modelsExceeding2x,
       },
+      providerDistribution,
+      fallbackDepth,
     };
 
     return NextResponse.json(response, {
