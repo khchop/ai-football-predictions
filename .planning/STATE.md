@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 
 ## Current Position
 
-Phase: 62 of 66 (Migration Script Development)
-Plan: 1 of 1 (100% phase complete)
-Status: Phase complete - Built migration scripts for model consolidation (forward + rollback)
-Last activity: 2026-02-08 — Completed 62-01-PLAN.md (Migration script development with dedup and validation)
+Phase: 63 of 66 (Model Consolidation Execution)
+Plan: 1 of 2 (50% phase in progress)
+Status: In progress - Updated provider configuration and created rename migration script
+Last activity: 2026-02-08 — Completed 63-01-PLAN.md (Provider configuration update and rename migration script)
 
-Progress: [██████████████████████████████████████████████████████████████████████████████████████████░] 94%
+Progress: [██████████████████████████████████████████████████████████████████████████████████████████░] 95%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 163 plans (phases 1-62)
+- Total plans completed: 164 plans (phases 1-63)
 - Milestones shipped: 13 (v1.0 through v2.8)
-- v2.9 in progress: 5 of 8 phases complete (Phases 59-62 complete, 60 partial)
+- v2.9 in progress: 5 of 8 phases complete (Phases 59-62 complete, 63 partial, 60 partial)
 
 **Recent Milestones:**
 - v2.8 Model Coverage: 13 plans, 2 days (2026-02-07 → 2026-02-08)
@@ -40,6 +40,7 @@ Progress: [███████████████████████
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- v2.9 (Phase 63): Delete stub target model rows before renaming -syn models (CONS-04 - handles sync-models stubs)
 - v2.9 (Phase 62): Create base model rows during migration to satisfy FK constraints (Deviation Rule 3)
 - v2.9 (Phase 62): Defer FK constraints during migration to allow orphaned FKs temporarily (SET CONSTRAINTS ALL DEFERRED)
 - v2.9 (Phase 62): Skip NULL provider_used rows in rollback (cannot determine original provider safely)
@@ -76,11 +77,14 @@ Recent decisions affecting current work:
 - **Verify:** Check new predictions have `provider_used` populated after deploy
 - **Verify:** Check admin dashboard at /admin for Provider Distribution and Fallback Chain Depth sections in Fallback Metrics card
 
-### Post-Deploy Actions (v2.9 Phase 62)
+### Post-Deploy Actions (v2.9 Phase 63 Plan 01)
 
-- **Migration scripts ready:** Phase 63 will execute forward migration (`scripts/migrate-consolidate-models.ts`)
-- **Rollback available:** If needed, run `scripts/rollback-consolidate-models.ts` BEFORE Phase 63
-- **Test with --dry-run:** Always preview migrations before execution
+- **Provider configuration updated:** Code now reflects 39 total models (29 Together + 10 Synthetic)
+- **Migration scripts ready:** Phase 63 Plan 02 will execute migrations
+  - `scripts/rename-syn-models.ts` - Rename 10 Synthetic-exclusive model IDs (drop -syn suffix)
+  - `scripts/post-consolidation.ts` - Deactivate old models and verify integrity
+- **Test with --dry-run:** Both scripts support --dry-run for safe preview
+- **Rollback available:** If needed, run `scripts/rollback-consolidate-models.ts` BEFORE executing migrations
 
 ### Blockers/Concerns
 
@@ -98,7 +102,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 62 Plan 01 execution complete (62-01-PLAN.md finished) - Phase 62 complete
-Resume file: .planning/phases/62-migration-script-development/62-01-SUMMARY.md
+Stopped at: Phase 63 Plan 01 execution complete (63-01-PLAN.md finished)
+Resume file: .planning/phases/63-model-consolidation-execution/63-01-SUMMARY.md
 
-**Next action:** Phase 62 complete. Ready to proceed to Phase 63 (Model Consolidation Execution) or other v2.9 phases.
+**Next action:** Ready to proceed to Phase 63 Plan 02 (Execute migration scripts) or other v2.9 phases.
