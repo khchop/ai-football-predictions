@@ -15,7 +15,7 @@
  * Phase 57: Fallback expansion audit and coverage validation
  */
 
-import { ALL_PROVIDERS, MODEL_FALLBACKS } from '../../src/lib/llm';
+import { ALL_PROVIDERS, MODEL_PROVIDER_ROUTES } from '../../src/lib/llm';
 import { PromptVariant } from '../../src/lib/llm/prompt-variants';
 import { ResponseHandler } from '../../src/lib/llm/response-handlers';
 
@@ -84,9 +84,17 @@ function validateModel(provider: typeof ALL_PROVIDERS[number]): ModelValidation 
   const isSynthetic = provider.name === 'synthetic';
   const providerType: 'together' | 'synthetic' = isSynthetic ? 'synthetic' : 'together';
 
-  // Fallback check (only relevant for Synthetic models)
-  const hasFallback = isSynthetic && provider.id in MODEL_FALLBACKS;
-  const fallbackTarget = hasFallback ? MODEL_FALLBACKS[provider.id] : null;
+  // Fallback check: does this provider appear in any route with a next provider?
+  let hasFallback = false;
+  let fallbackTarget: string | null = null;
+  for (const providers of Object.values(MODEL_PROVIDER_ROUTES)) {
+    const idx = providers.indexOf(provider.id);
+    if (idx !== -1 && idx < providers.length - 1) {
+      hasFallback = true;
+      fallbackTarget = providers[idx + 1];
+      break;
+    }
+  }
 
   // Prompt config check
   const promptConfig = providerImpl.promptConfig as {

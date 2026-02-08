@@ -18,7 +18,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 import { getDb } from '../src/lib/db';
 import { sql } from 'drizzle-orm';
-import { MODEL_FALLBACKS } from '../src/lib/llm';
+import { MODEL_PROVIDER_ROUTES } from '../src/lib/llm';
 
 // ============================================================================
 // CONFIGURATION
@@ -126,10 +126,17 @@ async function main() {
   console.log('\n' + '-'.repeat(60));
   console.log('\n=== MODELS WITH FALLBACK CONFIGURED ===\n');
 
-  const modelsWithFallback = Object.keys(MODEL_FALLBACKS);
+  // Extract all provider IDs that have fallbacks (all except last in each route)
+  const modelsWithFallback: string[] = [];
+  for (const providers of Object.values(MODEL_PROVIDER_ROUTES)) {
+    // All providers except the last one have a fallback option
+    for (let i = 0; i < providers.length - 1; i++) {
+      modelsWithFallback.push(providers[i]);
+    }
+  }
   console.log(`Configured fallback mappings: ${modelsWithFallback.length}`);
-  for (const [source, target] of Object.entries(MODEL_FALLBACKS)) {
-    console.log(`  ${source} -> ${target}`);
+  for (const [consolidatedId, providers] of Object.entries(MODEL_PROVIDER_ROUTES)) {
+    console.log(`  ${consolidatedId}: ${providers.join(' -> ')}`);
   }
   console.log('');
 

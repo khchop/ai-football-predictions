@@ -4,7 +4,7 @@ import { sql } from 'drizzle-orm';
 import { requireAdminAuth } from '@/lib/utils/admin-auth';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 import { sanitizeError } from '@/lib/utils/error-sanitizer';
-import { MODEL_FALLBACKS, getProviderById, TogetherProvider, SyntheticProvider } from '@/lib/llm';
+import { MODEL_PROVIDER_ROUTES, getProviderById, TogetherProvider, SyntheticProvider, OpenRouterProvider } from '@/lib/llm';
 
 interface FallbackStat {
   modelId: string;
@@ -39,8 +39,8 @@ function estimateCostForPredictions(providerId: string, count: number): number {
   const provider = getProviderById(providerId);
   if (!provider) return 0;
 
-  // Type guard: Only TogetherProvider and SyntheticProvider have pricing
-  if (!(provider instanceof TogetherProvider) && !(provider instanceof SyntheticProvider)) {
+  // Type guard: Only TogetherProvider, SyntheticProvider, and OpenRouterProvider have pricing
+  if (!(provider instanceof TogetherProvider) && !(provider instanceof SyntheticProvider) && !(provider instanceof OpenRouterProvider)) {
     return 0;
   }
 
@@ -86,7 +86,14 @@ export async function GET(request: NextRequest) {
 
     // Aggregate fallback statistics from predictions table
     // Group by modelId, count total and fallback predictions
-    const modelsWithFallback = Object.keys(MODEL_FALLBACKS);
+    // Get all provider IDs that appear in any route (these models participate in fallback)
+    const modelsInRoutes = new Set<string>();
+    for (const providers of Object.values(MODEL_PROVIDER_ROUTES)) {
+      for (const providerId of providers) {
+        modelsInRoutes.add(providerId);
+      }
+    }
+    const modelsWithFallback = [...modelsInRoutes];
     const result = await db.execute<{
       modelId: string;
       totalPredictions: string;
@@ -115,8 +122,15 @@ export async function GET(request: NextRequest) {
       const fallbackCount = parseInt(row.fallbackCount, 10);
       const fallbackRate = totalPredictions > 0 ? fallbackCount / totalPredictions : 0;
 
-      // Get fallback target for this model
-      const fallbackTargetId = MODEL_FALLBACKS[row.modelId];
+      // Find the next provider in route for this model (its fallback target)
+      let fallbackTargetId: string | null = null;
+      for (const providers of Object.values(MODEL_PROVIDER_ROUTES)) {
+        const idx = providers.indexOf(row.modelId);
+        if (idx !== -1 && idx < providers.length - 1) {
+          fallbackTargetId = providers[idx + 1];
+          break;
+        }
+      }
       const originalProvider = getProviderById(row.modelId);
       const fallbackProvider = fallbackTargetId ? getProviderById(fallbackTargetId) : null;
 

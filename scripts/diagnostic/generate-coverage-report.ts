@@ -7,7 +7,7 @@
  *
  * Reads:
  * - Diagnostic result JSON files from src/__tests__/diagnostic-results/raw-responses/
- * - MODEL_FALLBACKS from src/lib/llm/index.ts for fallback status
+ * - MODEL_PROVIDER_ROUTES from src/lib/llm/index.ts for fallback status
  * - ALL_PROVIDERS from src/lib/llm for full model inventory
  *
  * Writes:
@@ -19,7 +19,7 @@
 import path from 'path';
 import { readdir, readFile, mkdir, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
-import { ALL_PROVIDERS, MODEL_FALLBACKS } from '../../src/lib/llm';
+import { ALL_PROVIDERS, MODEL_PROVIDER_ROUTES } from '../../src/lib/llm';
 import {
   type DiagnosticResult,
   type FailureCategory,
@@ -190,7 +190,7 @@ function classifyModel(
   if (config.hasFallback) {
     return {
       status: 'FAIL-FIXABLE',
-      notes: `Has fallback to ${MODEL_FALLBACKS[provider.id]}`,
+      notes: `Has fallback route configured`,
     };
   }
 
@@ -473,7 +473,12 @@ async function main(): Promise<void> {
 
   console.log(`Loaded ${diagnosticResults.size} diagnostic result(s)`);
   console.log(`Model inventory: ${ALL_PROVIDERS.length} providers`);
-  console.log(`Fallback mappings: ${Object.keys(MODEL_FALLBACKS).length}`);
+  // Count providers with fallbacks (all except last in each route)
+  let fallbackMappingCount = 0;
+  for (const providers of Object.values(MODEL_PROVIDER_ROUTES)) {
+    fallbackMappingCount += Math.max(0, providers.length - 1);
+  }
+  console.log(`Fallback mappings: ${fallbackMappingCount}`);
   console.log('');
 
   // Build coverage entries for all models in inventory
@@ -482,8 +487,17 @@ async function main(): Promise<void> {
   for (const provider of ALL_PROVIDERS) {
     const isSynthetic = provider.name === 'synthetic';
     const providerType: 'together' | 'synthetic' = isSynthetic ? 'synthetic' : 'together';
-    const hasFallback = isSynthetic && provider.id in MODEL_FALLBACKS;
-    const fallbackTarget = hasFallback ? MODEL_FALLBACKS[provider.id] : null;
+    // Check if this provider has a fallback in any route
+    let hasFallback = false;
+    let fallbackTarget: string | null = null;
+    for (const providers of Object.values(MODEL_PROVIDER_ROUTES)) {
+      const idx = providers.indexOf(provider.id);
+      if (idx !== -1 && idx < providers.length - 1) {
+        hasFallback = true;
+        fallbackTarget = providers[idx + 1];
+        break;
+      }
+    }
     const config = getProviderConfig(provider);
     const severity = getModelSeverity(provider);
     const diagnosticResult = diagnosticResults.get(provider.id);
