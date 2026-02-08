@@ -93,13 +93,50 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (To be filled by roadmapper) | | |
+| PROV-01 | Phase 59 | Pending |
+| PROV-02 | Phase 59 | Pending |
+| PROV-03 | Phase 59 | Pending |
+| PROV-04 | Phase 59 | Pending |
+| PROV-05 | Phase 59 | Pending |
+| ROUT-01 | Phase 60 | Pending |
+| ROUT-02 | Phase 60 | Pending |
+| ROUT-03 | Phase 60 | Pending |
+| ROUT-04 | Phase 60 | Pending |
+| ROUT-05 | Phase 60 | Pending |
+| ROUT-06 | Phase 60 | Pending |
+| ATTR-01 | Phase 61 | Pending |
+| ATTR-02 | Phase 61 | Pending |
+| ATTR-03 | Phase 61 | Pending |
+| ATTR-04 | Phase 61 | Pending |
+| CONS-01 | Phase 62 | Pending |
+| CONS-02 | Phase 62 | Pending |
+| CONS-05 | Phase 62 | Pending |
+| CONS-08 | Phase 62 | Pending |
+| CONS-03 | Phase 63 | Pending |
+| CONS-04 | Phase 63 | Pending |
+| CONS-06 | Phase 63 | Pending |
+| CONS-07 | Phase 63 | Pending |
+| REACT-01 | Phase 64 | Pending |
+| REACT-02 | Phase 64 | Pending |
+| REACT-03 | Phase 64 | Pending |
+| REACT-04 | Phase 64 | Pending |
+| REACT-05 | Phase 64 | Pending |
+| COST-01 | Phase 65 | Pending |
+| COST-02 | Phase 65 | Pending |
+| COST-03 | Phase 65 | Pending |
+| COST-04 | Phase 65 | Pending |
+| HLTH-01 | Phase 66 | Pending |
+| HLTH-02 | Phase 66 | Pending |
+| HLTH-03 | Phase 66 | Pending |
+| HLTH-04 | Phase 66 | Pending |
 
 **Coverage:**
 - v2.9 requirements: 30 total
-- Mapped to phases: 0
-- Unmapped: 30
+- Mapped to phases: 30
+- Unmapped: 0
+
+**Coverage validation:** 100% ✓
 
 ---
 *Requirements defined: 2026-02-08*
-*Last updated: 2026-02-08 after initial definition*
+*Last updated: 2026-02-08 after v2.9 roadmap creation*
