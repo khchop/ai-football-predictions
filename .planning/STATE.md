@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 
 ## Current Position
 
-Phase: 59 of 66 (Provider Integration Foundations)
+Phase: 60 of 66 (Multi-Provider Routing)
 Plan: 1 of 1 (100% phase complete)
-Status: Phase 59 complete - OpenRouter provider infrastructure ready
-Last activity: 2026-02-08 — Completed 59-01-PLAN.md (OpenRouterProvider class, registry integration, validation tooling)
+Status: Phase 60 complete - Multi-provider routing infrastructure with 3-tier fallback chains
+Last activity: 2026-02-08 — Completed 60-01-PLAN.md (MODEL_PROVIDER_ROUTES system, multi-provider routing, unified fallback config)
 
-Progress: [█████████████████████████████████████████████████████████████████████████████████████░░░░] 89%
+Progress: [███████████████████████████████████████████████████████████████████████████████████████░░░] 91%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 159 plans (phases 1-59)
+- Total plans completed: 160 plans (phases 1-60)
 - Milestones shipped: 13 (v1.0 through v2.8)
-- v2.9 in progress: 1 of 8 phases complete (Phase 59)
+- v2.9 in progress: 2 of 8 phases complete (Phases 59-60)
 
 **Recent Milestones:**
 - v2.8 Model Coverage: 13 plans, 2 days (2026-02-07 → 2026-02-08)
@@ -40,12 +40,14 @@ Progress: [███████████████████████
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- v2.9 (Phase 60): Single source of truth - MODEL_FALLBACKS fully deleted, getFallbackProvider() refactored as thin wrapper over MODEL_PROVIDER_ROUTES
+- v2.9 (Phase 60): Only models with 2+ providers get entries in MODEL_PROVIDER_ROUTES (keeps config lean)
+- v2.9 (Phase 60): Consolidated model IDs are routing-level identifiers, not provider IDs (separation of concerns)
 - v2.9: Conditional provider inclusion pattern (API-key-gated, not in ALL_PROVIDERS to avoid errors)
 - v2.9: Model ID namespacing with provider suffixes (-or) to avoid conflicts across providers
 - v2.9: Test model instances for structural validation only (live API validation deferred to Phase 60/64)
 - v2.8: P95 + 20% safety margin for timeouts (data-driven approach beats guessing)
 - v2.8: Belt-and-suspenders for model fixes (prompt variant + response handler together prevent regressions)
-- v2.8: Deprecate 7 Together AI models (provider moved to non-serverless, not a code issue)
 
 ### Pending Todos
 
@@ -76,7 +78,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 59 execution complete (59-01-PLAN.md finished)
-Resume file: .planning/phases/59-provider-integration-foundations/59-01-SUMMARY.md
+Stopped at: Phase 60 execution complete (60-01-PLAN.md finished)
+Resume file: .planning/phases/60-multi-provider-routing/60-01-SUMMARY.md
 
-**Next action:** `/gsd:plan-phase 60` to create execution plans for Model Expansion (add 20-30 OpenRouter models)
+**Next action:** Continue with next phase in v2.9 Provider Unification milestone (Phase 61-64 or Phase 65-66)
