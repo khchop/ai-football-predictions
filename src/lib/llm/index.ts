@@ -21,8 +21,41 @@ export const ALL_PROVIDERS: LLMProvider[] = [
 // ============================================================================
 
 /**
+ * Phase 57 Audit: 3/13 mappable, 10/13 exclusive
+ *
  * Fallback mapping: Synthetic model ID -> Together AI model ID
- * Only includes models with close equivalents on both providers
+ * Only includes models with close equivalents on both providers.
+ *
+ * Exhaustive Synthetic model fallback status (13 models):
+ *
+ * MAPPED (3/13) - Have Together AI fallbacks:
+ * ┌─────────────────────────┬────────────────────┬──────────────────────────────────────────────┐
+ * │ Synthetic Model ID      │ Together Fallback   │ Rationale                                    │
+ * ├─────────────────────────┼────────────────────┼──────────────────────────────────────────────┤
+ * │ deepseek-r1-0528-syn    │ deepseek-r1        │ Same model family, version difference only   │
+ * │ kimi-k2-thinking-syn    │ kimi-k2-instruct   │ Same base model, thinking vs instruct tuning │
+ * │ kimi-k2.5-syn           │ kimi-k2-instruct   │ Same Kimi family fallback                    │
+ * └─────────────────────────┴────────────────────┴──────────────────────────────────────────────┘
+ *
+ * EXCLUSIVE (10/13) - No valid Together AI fallback:
+ * ┌──────────────────────────────┬──────────────────────────────────────────────────────────────┬─────────────────────────────────┐
+ * │ Synthetic Model ID           │ Reason No Fallback                                           │ Mitigation (prompt/handler)     │
+ * ├──────────────────────────────┼──────────────────────────────────────────────────────────────┼─────────────────────────────────┤
+ * │ deepseek-v3-0324-syn         │ DeepSeek V3 0324 not available on Together AI                 │ BASE + DEFAULT (default config) │
+ * │ deepseek-v3.1-terminus-syn   │ DeepSeek V3.1 Terminus not available on Together AI           │ BASE + DEFAULT (default config) │
+ * │ deepseek-v3.2-syn            │ DeepSeek V3.2 not available on Together AI                    │ JSON_STRICT + EXTRACT_JSON      │
+ * │ minimax-m2-syn               │ MiniMax M2 not available on Together AI                       │ BASE + DEFAULT (default config) │
+ * │ minimax-m2.1-syn             │ MiniMax M2.1 not available on Together AI                     │ BASE + DEFAULT (default config) │
+ * │ glm-4.6-syn                  │ GLM 4.6 not available on Together AI                          │ ENGLISH_ENFORCED + DEFAULT      │
+ * │ glm-4.7-syn                  │ GLM 4.7 not available on Together AI                          │ ENGLISH_ENFORCED + EXTRACT_JSON │
+ * │ qwen3-coder-480b-syn         │ Qwen3 Coder 480B not available on Together AI                 │ BASE + DEFAULT (default config) │
+ * │ gpt-oss-120b-syn             │ Together only has GPT-OSS 20B (different size, not equivalent)│ JSON_STRICT + EXTRACT_JSON      │
+ * │ qwen3-235b-thinking-syn      │ Together has Qwen3 235B Instruct but NOT Thinking variant;    │ THINKING_STRIPPED +             │
+ * │                              │ cross-variant fallback risks different output style            │ STRIP_THINKING_TAGS             │
+ * └──────────────────────────────┴──────────────────────────────────────────────────────────────┴─────────────────────────────────┘
+ *
+ * Risk models (exclusive + default config, no special handling):
+ * - deepseek-v3-0324-syn, deepseek-v3.1-terminus-syn, minimax-m2-syn, minimax-m2.1-syn, qwen3-coder-480b-syn
  */
 export const MODEL_FALLBACKS: Record<string, string> = {
   // DeepSeek R1 variants (reasoning models)
@@ -35,13 +68,6 @@ export const MODEL_FALLBACKS: Record<string, string> = {
 
   // Kimi K2.5 (non-thinking variant)
   'kimi-k2.5-syn': 'kimi-k2-instruct',
-
-  // Note: Most Synthetic models are exclusive and have no Together AI equivalent:
-  // - DeepSeek V3 variants (0324, Terminus, V3.2) - not on Together
-  // - MiniMax M2/M2.1 - not on Together
-  // - GLM 4.6/4.7 - not on Together
-  // - Qwen3 Coder 480B - not on Together
-  // - GPT-OSS 120B - Together only has 20B
 };
 
 let fallbacksValidated = false;
@@ -119,7 +145,9 @@ function validateFallbackMapping(): void {
 // - Call getFallbackProvider(modelId) when a Synthetic model fails
 // - Returns undefined if no fallback exists or TOGETHER_API_KEY not set
 // - Integration into prediction pipeline is a future enhancement
-// - Currently 3 fallbacks configured (deepseek-r1, kimi-k2-thinking, kimi-k2.5)
+// - 3/13 Synthetic models have fallbacks; 10/13 are exclusive (Phase 57 audit)
+// - 5 risk models use default config without fallbacks (see table above)
+// - Run `npm run validate:coverage` to check model coverage status
 // ============================================================================
 
 // Get active providers (checks if API keys are configured and filters auto-disabled models)
