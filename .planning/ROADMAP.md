@@ -196,11 +196,11 @@ Plans:
 
 #### Phase 63: Model Consolidation Execution
 
-**Goal:** 13 -syn models merged into base IDs, 6 Synthetic-only models renamed, all prediction history preserved
+**Goal:** 3 consolidated -syn models merged into base IDs, provider routes updated, all prediction history preserved with cache invalidation and integrity verification
 
 **Depends on:** Phase 62
 
-**Requirements:** CONS-03, CONS-04, CONS-06, CONS-07
+**Requirements:** CONS-04, CONS-06, CONS-07
 
 **Success Criteria** (what must be TRUE):
 1. Foreign keys updated across all referencing tables (predictions, llm_model_stats, bets, model_balances)
@@ -209,10 +209,11 @@ Plans:
 4. Post-migration validation confirms zero orphaned foreign keys and referential integrity intact
 5. Before/after comparison report shows correct row counts and prediction preservation
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 63-01: TBD
+- [ ] 63-01-PLAN.md -- Update provider routes and Synthetic config, create post-consolidation script
+- [ ] 63-02-PLAN.md -- Execute migration on production, deploy, verify integrity and leaderboard
 
 #### Phase 64: Model Re-Activation
 
@@ -343,10 +344,10 @@ Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> 63 -> 64 -> 65 -> 66
 | 60. Multi-Provider Routing | v2.9 | 1/1 | Complete | 2026-02-08 |
 | 61. Provider Attribution | v2.9 | 2/2 | Complete | 2026-02-08 |
 | 62. Migration Script Development | v2.9 | 1/1 | Complete | 2026-02-08 |
-| 63. Model Consolidation Execution | v2.9 | 0/TBD | Not started | - |
+| 63. Model Consolidation Execution | v2.9 | 0/2 | Not started | - |
 | 64. Model Re-Activation | v2.9 | 0/TBD | Not started | - |
 | 65. Cost Tracking & Budget Control | v2.9 | 0/TBD | Not started | - |
 | 66. Provider Health Monitoring | v2.9 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-08 after phase 62 execution*
+*Last updated: 2026-02-08 after phase 63 planning*
