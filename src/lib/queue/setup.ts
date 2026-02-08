@@ -5,7 +5,7 @@
  * Call this once when the app starts (from instrumentation.ts).
  */
 
-import { fixturesQueue, backfillQueue, contentQueue, modelRecoveryQueue, standingsQueue, JOB_TYPES } from './index';
+import { fixturesQueue, backfillQueue, contentQueue, modelRecoveryQueue, standingsQueue, modelStatsQueue, JOB_TYPES } from './index';
 import { loggers } from '@/lib/logger/modules';
 import { startPeriodicMetricsLogging } from '@/lib/logger/metrics';
 import { Queue } from 'bullmq';
@@ -338,6 +338,20 @@ export async function setupRepeatableJobs(): Promise<void> {
      }
    );
 
+   // Aggregate daily model stats at 00:05 UTC
+   await registerRepeatableJob(
+     modelStatsQueue,
+     'aggregate-daily-stats',
+     {},
+     {
+       repeat: {
+         pattern: '5 0 * * *', // 00:05 UTC daily
+         tz: 'UTC',
+       },
+       jobId: 'model-stats-daily-aggregation',
+     }
+   );
+
    // ============================================================================
    // MONITORING JOBS
    // ============================================================================
@@ -422,6 +436,13 @@ export async function removeRepeatableJobs(): Promise<void> {
     await standingsQueue.removeRepeatableByKey(job.key);
     log.info({ queue: 'standings-queue', jobName: job.name, pattern: job.pattern }, 'Removed repeatable job');
   }
-  
+
+  // Remove from model stats queue
+  const modelStatsRepeatableJobs = await modelStatsQueue.getRepeatableJobs();
+  for (const job of modelStatsRepeatableJobs) {
+    await modelStatsQueue.removeRepeatableByKey(job.key);
+    log.info({ queue: 'model-stats-queue', jobName: job.name, pattern: job.pattern }, 'Removed repeatable job');
+  }
+
   log.info('All repeatable jobs removed');
 }

@@ -28,6 +28,7 @@ export const loggers = {
   modelRecoveryWorker: createLogger('worker:model-recovery'),
   standingsWorker: createLogger('worker:standings'),
   statsWorker: createLogger('worker:stats'),
+  modelStatsWorker: createLogger('worker:model-stats'),
 
   // Football data
   apiFootball: createLogger('api-football'),

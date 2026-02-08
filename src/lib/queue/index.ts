@@ -183,6 +183,7 @@ export const QUEUE_NAMES = {
   MODEL_RECOVERY: 'model-recovery-queue',
   STANDINGS: 'standings-queue',
   STATS: 'stats-queue',
+  MODEL_STATS: 'model-stats-queue',
 } as const;
 
 // Queue-specific timeout configurations
@@ -192,6 +193,7 @@ const QUEUE_TIMEOUTS = {
   [QUEUE_NAMES.BACKFILL]: 5 * 60 * 1000,     // 5 minutes - many database operations
   [QUEUE_NAMES.SETTLEMENT]: 3 * 60 * 1000,   // 3 minutes - scoring many predictions
   [QUEUE_NAMES.STATS]: 2 * 60 * 1000,        // 2 minutes - stats calculation
+  [QUEUE_NAMES.MODEL_STATS]: 3 * 60 * 1000,  // 3 minutes - daily model stats aggregation
   default: 2 * 60 * 1000,                     // 2 minutes - default for fast operations
 } as const;
 
@@ -202,6 +204,7 @@ const WORKER_LOCK_DURATIONS = {
   [QUEUE_NAMES.BACKFILL]: 5 * 60 * 1000,     // 5 minutes
   [QUEUE_NAMES.SETTLEMENT]: 3 * 60 * 1000,   // 3 minutes
   [QUEUE_NAMES.STATS]: 2 * 60 * 1000,        // 2 minutes
+  [QUEUE_NAMES.MODEL_STATS]: 3 * 60 * 1000,  // 3 minutes
   default: 30 * 1000,                        // 30 seconds - prevents stalled marking
 } as const;
 
@@ -356,6 +359,13 @@ export function getStatsQueue(): Queue {
 }
 export const statsQueue = createLazyQueueProxy(getStatsQueue);
 
+let _modelStatsQueue: Queue | null = null;
+export function getModelStatsQueue(): Queue {
+  if (!_modelStatsQueue) _modelStatsQueue = createQueue(QUEUE_NAMES.MODEL_STATS);
+  return _modelStatsQueue;
+}
+export const modelStatsQueue = createLazyQueueProxy(getModelStatsQueue);
+
 // Legacy queue (kept for backward compatibility)
 let _matchQueue: Queue | null = null;
 export function getMatchQueue(): Queue {
@@ -391,6 +401,8 @@ export function getQueue(queueName: string): Queue {
       return standingsQueue;
     case QUEUE_NAMES.STATS:
       return statsQueue;
+    case QUEUE_NAMES.MODEL_STATS:
+      return modelStatsQueue;
     default:
       throw new Error(`Unknown queue name: ${queueName}`);
   }
@@ -410,6 +422,7 @@ export function getAllQueues(): Queue[] {
     getModelRecoveryQueue(),
     getStandingsQueue(),
     getStatsQueue(),
+    getModelStatsQueue(),
   ];
 }
 
