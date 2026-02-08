@@ -385,6 +385,10 @@ export const predictions = pgTable('predictions', {
   status: text('status').default('pending'), // 'pending' | 'scored' | 'void'
   usedFallback: boolean('used_fallback').default(false),
 
+  // Provider attribution (Phase 61)
+  providerUsed: text('provider_used'), // Which provider actually served the request (nullable for historical data)
+  attemptedProviders: text('attempted_providers'), // JSON-stringified array of attempted provider IDs (nullable for historical data)
+
   // Timestamps
   createdAt: timestamp('created_at').default(sql`now()`),
   scoredAt: timestamp('scored_at'),
@@ -395,6 +399,8 @@ export const predictions = pgTable('predictions', {
   index('idx_predictions_status').on(table.status),
   index('idx_predictions_created_at').on(table.createdAt),
   index('idx_predictions_match_status').on(table.matchId, table.status), // Composite index for queries filtering by match + status
+  index('idx_predictions_provider_used').on(table.providerUsed), // Phase 61: Admin dashboard provider queries
+  index('idx_predictions_created_provider').on(table.createdAt, table.providerUsed), // Phase 61: Time-filtered provider distribution
   check('predictions_tendency_points_check', sql`${table.tendencyPoints} = 0 OR (${table.tendencyPoints} >= 2 AND ${table.tendencyPoints} <= 6)`),
 ]);
 
