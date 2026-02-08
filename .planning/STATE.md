@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 
 ## Current Position
 
-Phase: 57 of 58 (Category Fixes - Fallbacks & Validation) — In progress
-Plan: 1 of 2 in phase 57
-Status: In progress
-Last activity: 2026-02-08 — Completed 57-01-PLAN.md (Fallback audit & coverage validation)
+Phase: 57 of 58 (Category Fixes - Fallbacks & Validation) — Complete
+Plan: 2 of 2 in phase 57
+Status: Phase complete
+Last activity: 2026-02-08 — Completed 57-02-PLAN.md (Diagnostic validation & coverage assessment)
 
-Progress: [███████████████████████████████████████████████████████░] 97% (57/58 phases, 57-01 done)
+Progress: [█████████████████████████████████████████████████████████░] 98% (57/58 phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 188 (across phases 1-57)
+- Total plans completed: 189 (across phases 1-57)
 - Milestones shipped: 7 (v1.0 through v2.7)
 - Current milestone: v2.8 Model Coverage (phases 53-58)
 
@@ -34,55 +34,35 @@ Progress: [███████████████████████
 
 Recent decisions affecting current work:
 
+- 57-02: 7 Together AI models deprecated (non-serverless) — need deactivation, not code fixes
+- 57-02: 3 Synthetic unfixable: glm-4.7-syn (SGLang bug), qwen3-235b-thinking-syn (thinking leak), deepseek-v3.2-syn (placeholder JSON)
+- 57-02: Adjusted active models: 35 (after removing 7 deprecated) — 29/35 passing (82.9%) with fallback recovery
+- 57-02: 2 models recoverable via existing fallback: deepseek-r1-0528-syn, kimi-k2.5-syn
 - 57-01: 3/13 Synthetic models mappable to Together AI; 10/13 exclusive — No additional fallback mappings possible
 - 57-01: 5 risk models identified (exclusive + default config) — deepseek-v3-0324-syn, deepseek-v3.1-terminus-syn, minimax-m2-syn, minimax-m2.1-syn, qwen3-coder-480b-syn
-- 57-01: Coverage validation is offline-only — No API keys needed, purely configuration validation
 - 57-01: Theoretical coverage 88.1% (37/42 models) — Risk models are warnings not failures
-- 56-02: No parser enhancements needed — Multi-layer defense (API + prompt + handler + parser) validated as comprehensive, matches 2026 best practices
-- 56-02: JSON configurations complete — All known JSON-wrapping models (DeepSeek V3.2, GPT-OSS 120B, GLM-4.7) already have JSON_STRICT + EXTRACT_JSON
-- 56-02: Belt-and-suspenders pattern validated — All problematic models use both prompt variant (prevention) + response handler (cleanup)
-- 56-01: No code changes for language enforcement — GLM-4.6 and GLM-4.7 already correctly configured with ENGLISH_ENFORCED
-- 56-01: Audit-first pattern for fixes — Verify current state before making changes, require diagnostic evidence before applying fixes
-- 56-01: No preemptive enforcement — All Together AI and non-GLM Synthetic models are English-trained, no enforcement needed per research Pitfall 1
-- 55-01: P95 + 20% safety margin for timeout tuning — Data-driven formula balances reliability with reasonable overhead
-- 55-01: Conservative defaults without diagnostic data — DeepSeek R1 120s (Azure), Kimi K2 90s, Qwen3-235B 120s based on industry data
-- 55-01: Production timeout is PromptConfig.timeoutMs — REASONING_MODEL_IDS in test fixtures is for testing only (clarifies Pitfall 3)
-- 54-02: Use predictBatch not callAPI — Ensures response handlers (STRIP_THINKING_TAGS) apply correctly in diagnostic tests
-- 54-02: Exit 0 for diagnostic script — Informational tool (not gating), want report even if all models fail
-- 54-02: Per-model raw response files — Separate JSON file per model enables individual debugging without parsing large aggregate
-- quick-033: Pre-calculated consensus before prompting — Calculate H/D/A percentages from DB predictions before prompt building (prevents LLM fabrication)
-- quick-033: Kimi K2 Thinking for content — Upgrade to reasoning model via Synthetic API (~$5/month vs ~$0.71/month for quality)
-- quick-033: Thinking tag stripping pattern — Strip <think>...</think> BEFORE JSON parsing to prevent parse errors
-- quick-033: Explicit prompt interpolation — Inject exact numbers into prompt instructions instead of relying on LLM to honor separate data
-- quick-032: Omit empty event sections entirely — Prevents LLM from generating filler text about data absence
-- quick-032: Model predictions first in roundups — AI prediction accuracy is section 3, events become section 5 (conditional)
-- quick-032: CRITICAL RULES instruction block — Strong signal to LLM about non-negotiable behaviors (e.g., never mention data absence)
-- quick-031: Remove H2H section entirely — H2H data rarely available, low value; focus on AI consensus instead
-- quick-031: AI consensus language in predictions — State percentages (e.g., "45% draw, 35% home, 20% away") and confidence level
-- quick-031: Betting Insights as value betting guide — Highlight where AI predictions DIFFER from market odds
-- 54-01: Priority-ordered failure categorization — timeout > api-error > empty > language > thinking-tag > parse prevents misclassification
-- 54-01: diag- prefix for diagnostic match IDs — Avoids collision with existing test-validation-001 fixture
-- 53-02: Separate test vs production schemas — Test schemas validate LLM output, production validates DB insert (different field names, different concerns)
-- 53-02: CI offline tests only — Fast feedback (<10s), no API keys, sufficient for regression detection
-- 53-01: Golden fixtures over live tests — Offline validation prevents API rate limits, enables fast CI (<5s tests)
-- 53-01: Structure validation, not exact scores — LLM outputs are non-deterministic, fixtures validate JSON structure only
+- 56-02: Belt-and-suspenders pattern validated — All problematic models use both prompt variant + response handler
+- 56-01: Audit-first pattern for fixes — Verify current state before making changes
+- 55-01: P95 + 20% safety margin for timeout tuning — Data-driven formula
+- 54-02: Use predictBatch not callAPI — Ensures response handlers apply correctly
+- 53-02: CI offline tests only — Fast feedback (<10s), no API keys
 - v2.8: Protect-first approach — regression tests before fixes prevent whack-a-mole oscillation
 - v2.8: Diagnose before fix — systematic testing with golden fixtures replaces guesswork
-- v2.8: Category-based fixes — group failures by type (timeout, tags, language, JSON) for targeted solutions
+- v2.8: Category-based fixes — group failures by type for targeted solutions
 
 ### Pending Todos
 
-- **Human action:** Run `npm run diagnose` with API keys to generate initial diagnostic report (54-02)
-- **Human action:** Run `npx tsx scripts/generate-golden-fixtures.ts` with API keys to capture real golden fixture baselines (placeholder data currently)
+- **Action needed:** Deactivate 7 deprecated Together AI models in database (qwen2.5-72b-turbo, llama-4-scout, llama-3.1-405b-turbo, llama-3-70b-reference, cogito-70b, cogito-109b-moe, cogito-405b)
+- **Action needed:** Investigate 3 fixable Together AI empty-response failures (kimi-k2-instruct, nemotron-nano-9b-v2, gemma-3n-e4b)
+- **Human action:** Run `npx tsx scripts/generate-golden-fixtures.ts` with API keys to capture real golden fixture baselines
 - **Human action:** Configure GitHub branch protection — Settings > Branches > require "Model Regression Tests" status check
-- **Optional:** Run `npx tsx scripts/backfill-match-previews.ts` to regenerate all existing match previews with anti-hallucination prompt (quick-030)
 
 ### Blockers/Concerns
 
-**v2.8 Known Risks:**
-- Whack-a-mole pitfall: Fixing Model A breaks Model B (mitigated by regression suite in Phase 53)
-- Timeout escalation: Reasoning models need 60-90s but risk budget/pipeline issues
-- Unfixable models: Small models (3B-7B) may not support JSON reliably
+**v2.8 Diagnostic Findings:**
+- 7 Together AI models deprecated to non-serverless — biggest gap in model count
+- GLM 4.7 has SGLang structured output bug at Synthetic provider — monitoring for fix
+- 95% target achievable at ~90.6% when excluding deprecated + unfixable models from denominator
 
 ### Quick Tasks Completed
 
@@ -103,7 +83,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 57-01-PLAN.md (Fallback audit & coverage validation)
-Resume file: .planning/phases/57-category-fixes-fallbacks-validation/57-02-PLAN.md
+Stopped at: Completed Phase 57 (Category Fixes - Fallbacks & Validation)
+Resume file: None
 
-**Next action:** Execute 57-02-PLAN.md to complete Phase 57
+**Next action:** Begin Phase 58 (Observability & Monitoring) or deactivate 7 deprecated Together AI models first
