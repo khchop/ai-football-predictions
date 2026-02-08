@@ -132,7 +132,7 @@ See `.planning/MILESTONES.md` for full details.
 **Plans:** 1 plan
 
 Plans:
-- [ ] 59-01-PLAN.md -- OpenRouterProvider class, registry integration, and model ID validation script
+- [x] 59-01-PLAN.md -- OpenRouterProvider class, registry integration, and model ID validation script
 
 #### Phase 60: Multi-Provider Routing
 
@@ -338,7 +338,7 @@ Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> 63 -> 64 -> 65 -> 66
 | 56. Category Fixes - Language & JSON | v2.8 | 2/2 | Complete | 2026-02-08 |
 | 57. Category Fixes - Fallbacks & Validation | v2.8 | 2/2 | Complete | 2026-02-08 |
 | 58. Observability & Monitoring | v2.8 | 3/3 | Complete | 2026-02-08 |
-| 59. Provider Integration Foundations | v2.9 | 0/1 | In progress | - |
+| 59. Provider Integration Foundations | v2.9 | 1/1 | Complete | 2026-02-08 |
 | 60. Multi-Provider Routing | v2.9 | 0/TBD | Not started | - |
 | 61. Provider Attribution | v2.9 | 0/TBD | Not started | - |
 | 62. Migration Script Development | v2.9 | 0/TBD | Not started | - |
@@ -348,4 +348,4 @@ Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> 63 -> 64 -> 65 -> 66
 | 66. Provider Health Monitoring | v2.9 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-08 after phase 59 planning*
+*Last updated: 2026-02-08 after phase 59 execution*
