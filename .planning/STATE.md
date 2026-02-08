@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 
 ## Current Position
 
-Phase: 61 of 66 (Provider Attribution)
-Plan: 2 of 2 (100% phase complete)
-Status: Phase complete - Admin dashboard shows provider distribution and fallback chain depth
-Last activity: 2026-02-08 — Completed 61-02-PLAN.md (Admin dashboard provider stats visualization)
+Phase: 62 of 66 (Migration Script Development)
+Plan: 1 of 1 (100% phase complete)
+Status: Phase complete - Built migration scripts for model consolidation (forward + rollback)
+Last activity: 2026-02-08 — Completed 62-01-PLAN.md (Migration script development with dedup and validation)
 
-Progress: [█████████████████████████████████████████████████████████████████████████████████████████░] 93%
+Progress: [██████████████████████████████████████████████████████████████████████████████████████████░] 94%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 162 plans (phases 1-61)
+- Total plans completed: 163 plans (phases 1-62)
 - Milestones shipped: 13 (v1.0 through v2.8)
-- v2.9 in progress: 4 of 8 phases complete (Phases 59-61 complete, 60 partial)
+- v2.9 in progress: 5 of 8 phases complete (Phases 59-62 complete, 60 partial)
 
 **Recent Milestones:**
 - v2.8 Model Coverage: 13 plans, 2 days (2026-02-07 → 2026-02-08)
@@ -40,6 +40,9 @@ Progress: [███████████████████████
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- v2.9 (Phase 62): Create base model rows during migration to satisfy FK constraints (Deviation Rule 3)
+- v2.9 (Phase 62): Defer FK constraints during migration to allow orphaned FKs temporarily (SET CONSTRAINTS ALL DEFERRED)
+- v2.9 (Phase 62): Skip NULL provider_used rows in rollback (cannot determine original provider safely)
 - v2.9 (Phase 61): Conditional rendering for attribution UI sections (graceful degradation when no data)
 - v2.9 (Phase 61): json_array_length (not jsonb_array_length) for TEXT column depth analysis
 - v2.9 (Phase 61): Nullable provider attribution columns preserve historical data integrity (no backfill)
@@ -73,6 +76,12 @@ Recent decisions affecting current work:
 - **Verify:** Check new predictions have `provider_used` populated after deploy
 - **Verify:** Check admin dashboard at /admin for Provider Distribution and Fallback Chain Depth sections in Fallback Metrics card
 
+### Post-Deploy Actions (v2.9 Phase 62)
+
+- **Migration scripts ready:** Phase 63 will execute forward migration (`scripts/migrate-consolidate-models.ts`)
+- **Rollback available:** If needed, run `scripts/rollback-consolidate-models.ts` BEFORE Phase 63
+- **Test with --dry-run:** Always preview migrations before execution
+
 ### Blockers/Concerns
 
 **Phase 64 (Model Re-Activation) research gap:**
@@ -81,14 +90,15 @@ Recent decisions affecting current work:
 - Resolution: Call OpenRouter API during phase 64 planning to verify model availability and IDs
 
 **Phase 62-63 (Migration) complexity:**
-- Model consolidation requires foreign key updates across 4 tables (predictions, llm_model_stats, bets, model_balances)
+- Model consolidation requires foreign key updates across 5 tables (predictions, llm_model_stats, bets, model_balances, model_usage)
 - High risk of referential integrity issues if not properly validated
-- Resolution: Comprehensive pre/post validation with expand/contract pattern and rollback capability built into migration script
+- Resolution: ✅ RESOLVED - Phase 62 complete with comprehensive pre/post validation, deduplication, and rollback capability
+- Migration scripts tested with --dry-run, ready for Phase 63 execution
 
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 61 Plan 02 execution complete (61-02-PLAN.md finished) - Phase 61 complete
-Resume file: .planning/phases/61-provider-attribution/61-02-SUMMARY.md
+Stopped at: Phase 62 Plan 01 execution complete (62-01-PLAN.md finished) - Phase 62 complete
+Resume file: .planning/phases/62-migration-script-development/62-01-SUMMARY.md
 
-**Next action:** Phase 61 complete. Ready to proceed to Phase 62 (Model Consolidation Migration) or other v2.9 phases.
+**Next action:** Phase 62 complete. Ready to proceed to Phase 63 (Model Consolidation Execution) or other v2.9 phases.
