@@ -171,8 +171,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 61-01-PLAN.md -- Schema migration, Drizzle schema update, and worker attribution persistence
-- [ ] 61-02-PLAN.md -- Admin API extension and dashboard provider distribution UI
+- [x] 61-01-PLAN.md -- Schema migration, Drizzle schema update, and worker attribution persistence
+- [x] 61-02-PLAN.md -- Admin API extension and dashboard provider distribution UI
 
 #### Phase 62: Migration Script Development
 
@@ -341,7 +341,7 @@ Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> 63 -> 64 -> 65 -> 66
 | 58. Observability & Monitoring | v2.8 | 3/3 | Complete | 2026-02-08 |
 | 59. Provider Integration Foundations | v2.9 | 1/1 | Complete | 2026-02-08 |
 | 60. Multi-Provider Routing | v2.9 | 1/1 | Complete | 2026-02-08 |
-| 61. Provider Attribution | v2.9 | 0/2 | Not started | - |
+| 61. Provider Attribution | v2.9 | 2/2 | Complete | 2026-02-08 |
 | 62. Migration Script Development | v2.9 | 0/TBD | Not started | - |
 | 63. Model Consolidation Execution | v2.9 | 0/TBD | Not started | - |
 | 64. Model Re-Activation | v2.9 | 0/TBD | Not started | - |
@@ -349,4 +349,4 @@ Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> 63 -> 64 -> 65 -> 66
 | 66. Provider Health Monitoring | v2.9 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-08 after phase 61 planning*
+*Last updated: 2026-02-08 after phase 61 execution*
