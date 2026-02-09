@@ -59,9 +59,7 @@ export class OpenRouterProvider extends OpenAICompatibleProvider {
 }
 
 // ============================================================================
-// TEST MODELS FROM OPENROUTER
-// These models validate provider structure and integration.
-// Actual API acceptance of model IDs deferred to Phase 60/64 when connected to routing.
+// EXISTING OPENROUTER PROVIDERS (3)
 // ============================================================================
 
 // 1. DeepSeek R1 (Reasoning model)
@@ -76,7 +74,7 @@ export const DeepSeekR1_OR = new OpenRouterProvider(
   {
     promptVariant: PromptVariant.THINKING_STRIPPED,
     responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
-    timeoutMs: 120000, // 2 min - reasoning models need extended time
+    timeoutMs: 120000,
   }
 );
 
@@ -92,7 +90,7 @@ export const Qwen3_235B_OR = new OpenRouterProvider(
   {}
 );
 
-// 3. Llama 4 Scout (Model from deprecated Together list - validates re-activation path)
+// 3. Llama 4 Scout
 export const Llama4Scout_OR = new OpenRouterProvider(
   'llama-4-scout-or',
   'openrouter',
@@ -104,8 +102,282 @@ export const Llama4Scout_OR = new OpenRouterProvider(
   {}
 );
 
+// ============================================================================
+// TOGETHER AI MODELS → OPENROUTER FALLBACKS (13)
+// ============================================================================
+
+// 4. Llama 4 Maverick
+export const Llama4Maverick_OR = new OpenRouterProvider(
+  'llama-4-maverick-or',
+  'openrouter',
+  'meta-llama/llama-4-maverick-17b-128e-instruct',
+  'Llama 4 Maverick (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.10, completionPer1M: 0.25 },
+  false,
+  {}
+);
+
+// 5. Llama 3.3 70B
+export const Llama33_70B_OR = new OpenRouterProvider(
+  'llama-3.3-70b-or',
+  'openrouter',
+  'meta-llama/llama-3.3-70b-instruct',
+  'Llama 3.3 70B (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.10, completionPer1M: 0.20 },
+  false,
+  {}
+);
+
+// 6. Llama 3.1 8B
+export const Llama31_8B_OR = new OpenRouterProvider(
+  'llama-3.1-8b-or',
+  'openrouter',
+  'meta-llama/llama-3.1-8b-instruct',
+  'Llama 3.1 8B (OpenRouter)',
+  'free',
+  { promptPer1M: 0.00, completionPer1M: 0.00 },
+  false,
+  {}
+);
+
+// 7. Llama 3.1 405B
+export const Llama31_405B_OR = new OpenRouterProvider(
+  'llama-3.1-405b-or',
+  'openrouter',
+  'meta-llama/llama-3.1-405b-instruct',
+  'Llama 3.1 405B (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.80, completionPer1M: 0.80 },
+  false,
+  {}
+);
+
+// 8. Llama 3.2 3B
+export const Llama32_3B_OR = new OpenRouterProvider(
+  'llama-3.2-3b-or',
+  'openrouter',
+  'meta-llama/llama-3.2-3b-instruct',
+  'Llama 3.2 3B (OpenRouter)',
+  'free',
+  { promptPer1M: 0.00, completionPer1M: 0.00 },
+  false,
+  {}
+);
+
+// 9. Llama 3 8B
+export const Llama3_8B_OR = new OpenRouterProvider(
+  'llama-3-8b-or',
+  'openrouter',
+  'meta-llama/llama-3-8b-instruct',
+  'Llama 3 8B (OpenRouter)',
+  'free',
+  { promptPer1M: 0.00, completionPer1M: 0.00 },
+  false,
+  {}
+);
+
+// 10. Llama 3 70B
+export const Llama3_70B_OR = new OpenRouterProvider(
+  'llama-3-70b-or',
+  'openrouter',
+  'meta-llama/llama-3-70b-instruct',
+  'Llama 3 70B (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.10, completionPer1M: 0.20 },
+  false,
+  {}
+);
+
+// 11. Qwen3 Next 80B
+export const Qwen3Next80B_OR = new OpenRouterProvider(
+  'qwen3-next-80b-or',
+  'openrouter',
+  'qwen/qwen3-next-80b-a3b-instruct-2509',
+  'Qwen3 Next 80B (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.10, completionPer1M: 0.20 },
+  false,
+  {}
+);
+
+// 12. Qwen 2.5 7B
+export const Qwen25_7B_OR = new OpenRouterProvider(
+  'qwen2.5-7b-or',
+  'openrouter',
+  'qwen/qwen-2.5-7b-instruct',
+  'Qwen 2.5 7B (OpenRouter)',
+  'free',
+  { promptPer1M: 0.00, completionPer1M: 0.00 },
+  false,
+  {}
+);
+
+// 13. Qwen 2.5 72B
+export const Qwen25_72B_OR = new OpenRouterProvider(
+  'qwen2.5-72b-or',
+  'openrouter',
+  'qwen/qwen-2.5-72b-instruct',
+  'Qwen 2.5 72B (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.18, completionPer1M: 0.30 },
+  false,
+  {}
+);
+
+// 14. Cogito 671B
+export const Cogito671B_OR = new OpenRouterProvider(
+  'cogito-671b-or',
+  'openrouter',
+  'deepcogito/cogito-v2.1-671b',
+  'Cogito 671B (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.40, completionPer1M: 1.20 },
+  false,
+  {}
+);
+
+// 15. Ministral 3 14B
+export const Ministral3_14B_OR = new OpenRouterProvider(
+  'ministral-3-14b-or',
+  'openrouter',
+  'mistralai/ministral-14b-2512',
+  'Ministral 3 14B (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.05, completionPer1M: 0.10 },
+  false,
+  {}
+);
+
+// 16. RNJ-1 Instruct
+export const RNJ1Instruct_OR = new OpenRouterProvider(
+  'rnj-1-instruct-or',
+  'openrouter',
+  'essentialai/rnj-1-instruct',
+  'RNJ-1 Instruct (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.08, completionPer1M: 0.15 },
+  false,
+  {}
+);
+
+// ============================================================================
+// SYNTHETIC MODELS → OPENROUTER FALLBACKS (6)
+// ============================================================================
+
+// 17. DeepSeek V3.2 (needs JSON_STRICT + EXTRACT_JSON like primary)
+export const DeepSeekV32_OR = new OpenRouterProvider(
+  'deepseek-v3.2-or',
+  'openrouter',
+  'deepseek/deepseek-v3.2',
+  'DeepSeek V3.2 (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.30, completionPer1M: 0.88 },
+  false,
+  {
+    promptVariant: PromptVariant.JSON_STRICT,
+    responseHandler: ResponseHandler.EXTRACT_JSON,
+    timeoutMs: 45000,
+  }
+);
+
+// 18. MiniMax M2
+export const MiniMaxM2_OR = new OpenRouterProvider(
+  'minimax-m2-or',
+  'openrouter',
+  'minimax/minimax-m2',
+  'MiniMax M2 (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.30, completionPer1M: 0.60 },
+  false,
+  {}
+);
+
+// 19. MiniMax M2.1
+export const MiniMaxM21_OR = new OpenRouterProvider(
+  'minimax-m2.1-or',
+  'openrouter',
+  'minimax/minimax-m2.1',
+  'MiniMax M2.1 (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.35, completionPer1M: 0.70 },
+  false,
+  {}
+);
+
+// 20. GLM 4.6 (needs ENGLISH_ENFORCED like primary)
+export const GLM46_OR = new OpenRouterProvider(
+  'glm-4.6-or',
+  'openrouter',
+  'z-ai/glm-4.6v',
+  'GLM 4.6 (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.20, completionPer1M: 0.40 },
+  false,
+  {
+    promptVariant: PromptVariant.ENGLISH_ENFORCED,
+    responseHandler: ResponseHandler.DEFAULT,
+    timeoutMs: 60000,
+  }
+);
+
+// 21. GLM 4.7 (needs ENGLISH_ENFORCED + EXTRACT_JSON like primary)
+export const GLM47_OR = new OpenRouterProvider(
+  'glm-4.7-or',
+  'openrouter',
+  'z-ai/glm-4.7',
+  'GLM 4.7 (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.25, completionPer1M: 0.50 },
+  false,
+  {
+    promptVariant: PromptVariant.ENGLISH_ENFORCED,
+    responseHandler: ResponseHandler.EXTRACT_JSON,
+    timeoutMs: 60000,
+  }
+);
+
+// 22. Qwen3 Coder 480B
+export const Qwen3Coder480B_OR = new OpenRouterProvider(
+  'qwen3-coder-480b-or',
+  'openrouter',
+  'qwen/qwen3-coder-480b-a35b-07-25',
+  'Qwen3 Coder 480B (OpenRouter)',
+  'premium',
+  { promptPer1M: 1.50, completionPer1M: 3.00 },
+  true,
+  {}
+);
+
+// ============================================================================
+// ALL OPENROUTER PROVIDERS (22)
+// ============================================================================
+
 export const OPENROUTER_PROVIDERS: OpenRouterProvider[] = [
+  // Existing (3)
   DeepSeekR1_OR,
   Qwen3_235B_OR,
   Llama4Scout_OR,
+  // Together AI fallbacks (13)
+  Llama4Maverick_OR,
+  Llama33_70B_OR,
+  Llama31_8B_OR,
+  Llama31_405B_OR,
+  Llama32_3B_OR,
+  Llama3_8B_OR,
+  Llama3_70B_OR,
+  Qwen3Next80B_OR,
+  Qwen25_7B_OR,
+  Qwen25_72B_OR,
+  Cogito671B_OR,
+  Ministral3_14B_OR,
+  RNJ1Instruct_OR,
+  // Synthetic fallbacks (6)
+  DeepSeekV32_OR,
+  MiniMaxM2_OR,
+  MiniMaxM21_OR,
+  GLM46_OR,
+  GLM47_OR,
+  Qwen3Coder480B_OR,
 ];

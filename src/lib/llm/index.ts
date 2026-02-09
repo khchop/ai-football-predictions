@@ -34,10 +34,31 @@ export const ALL_PROVIDERS: LLMProvider[] = [
 // ============================================================================
 
 export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
-  // --- 2-tier: Together -> OpenRouter ---
+  // --- Together -> OpenRouter (16 models) ---
   'deepseek-r1': ['deepseek-r1', 'deepseek-r1-or'],
-  'qwen3-235b': ['qwen3-235b-instruct', 'qwen3-235b-or'],
   'llama-4-scout': ['llama-4-scout', 'llama-4-scout-or'],
+  'llama-4-maverick': ['llama-4-maverick', 'llama-4-maverick-or'],
+  'llama-3.3-70b-turbo': ['llama-3.3-70b-turbo', 'llama-3.3-70b-or'],
+  'llama-3.1-8b-turbo': ['llama-3.1-8b-turbo', 'llama-3.1-8b-or'],
+  'llama-3.1-405b-turbo': ['llama-3.1-405b-turbo', 'llama-3.1-405b-or'],
+  'llama-3.2-3b-turbo': ['llama-3.2-3b-turbo', 'llama-3.2-3b-or'],
+  'llama-3-8b-lite': ['llama-3-8b-lite', 'llama-3-8b-or'],
+  'llama-3-70b-reference': ['llama-3-70b-reference', 'llama-3-70b-or'],
+  'qwen3-235b': ['qwen3-235b-instruct', 'qwen3-235b-or'],
+  'qwen3-next-80b': ['qwen3-next-80b-instruct', 'qwen3-next-80b-or'],
+  'qwen2.5-7b': ['qwen2.5-7b-turbo', 'qwen2.5-7b-or'],
+  'qwen2.5-72b': ['qwen2.5-72b-turbo', 'qwen2.5-72b-or'],
+  'cogito-671b': ['cogito-671b', 'cogito-671b-or'],
+  'ministral-3-14b': ['ministral-3-14b', 'ministral-3-14b-or'],
+  'rnj-1-instruct': ['rnj-1-instruct', 'rnj-1-instruct-or'],
+
+  // --- Synthetic -> OpenRouter (6 models) ---
+  'deepseek-v3.2': ['deepseek-v3.2', 'deepseek-v3.2-or'],
+  'minimax-m2': ['minimax-m2', 'minimax-m2-or'],
+  'minimax-m2.1': ['minimax-m2.1', 'minimax-m2.1-or'],
+  'glm-4.6': ['glm-4.6', 'glm-4.6-or'],
+  'glm-4.7': ['glm-4.7', 'glm-4.7-or'],
+  'qwen3-coder-480b': ['qwen3-coder-480b', 'qwen3-coder-480b-or'],
 };
 
 /**
@@ -165,9 +186,16 @@ export async function getActiveProviders(): Promise<LLMProvider[]> {
   }
 
   // Add OpenRouter providers if API key configured
+  // Exclude fallback-only providers (those appearing as non-primary in routes)
   if (process.env.OPENROUTER_API_KEY) {
+    const fallbackProviderIds = new Set<string>();
+    for (const route of Object.values(MODEL_PROVIDER_ROUTES)) {
+      for (let i = 1; i < route.length; i++) {
+        fallbackProviderIds.add(route[i]);
+      }
+    }
     activeProviders.push(
-      ...OPENROUTER_PROVIDERS.filter(p => !disabledIds.has(p.id))
+      ...OPENROUTER_PROVIDERS.filter(p => !disabledIds.has(p.id) && !fallbackProviderIds.has(p.id))
     );
   }
 
