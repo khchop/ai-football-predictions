@@ -34,7 +34,7 @@ export const ALL_PROVIDERS: LLMProvider[] = [
 // ============================================================================
 
 export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
-  // --- Together -> OpenRouter (16 models) ---
+  // --- Together -> OpenRouter (25 models) ---
   'deepseek-r1': ['deepseek-r1', 'deepseek-r1-or'],
   'llama-4-scout': ['llama-4-scout', 'llama-4-scout-or'],
   'llama-4-maverick': ['llama-4-maverick', 'llama-4-maverick-or'],
@@ -51,14 +51,27 @@ export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
   'cogito-671b': ['cogito-671b', 'cogito-671b-or'],
   'ministral-3-14b': ['ministral-3-14b', 'ministral-3-14b-or'],
   'rnj-1-instruct': ['rnj-1-instruct', 'rnj-1-instruct-or'],
+  'deepseek-v3.1': ['deepseek-v3.1', 'deepseek-v3.1-or'],
+  'kimi-k2-0905': ['kimi-k2-0905', 'kimi-k2-0905-or'],
+  'kimi-k2-instruct': ['kimi-k2-instruct', 'kimi-k2-instruct-or'],
+  'gpt-oss-20b': ['gpt-oss-20b', 'gpt-oss-20b-or'],
+  'mistral-small-3-24b': ['mistral-small-3-24b', 'mistral-small-3-24b-or'],
+  'mistral-7b-v0.2': ['mistral-7b-v0.2', 'mistral-7b-v0.2-or'],
+  'mistral-7b-v0.3': ['mistral-7b-v0.3', 'mistral-7b-v0.3-or'],
+  'nemotron-nano-9b-v2': ['nemotron-nano-9b-v2', 'nemotron-nano-9b-v2-or'],
+  'gemma-3n-e4b': ['gemma-3n-e4b', 'gemma-3n-e4b-or'],
 
-  // --- Synthetic -> OpenRouter (6 models) ---
+  // --- Synthetic -> OpenRouter (10 models) ---
   'deepseek-v3.2': ['deepseek-v3.2', 'deepseek-v3.2-or'],
   'minimax-m2': ['minimax-m2', 'minimax-m2-or'],
   'minimax-m2.1': ['minimax-m2.1', 'minimax-m2.1-or'],
   'glm-4.6': ['glm-4.6', 'glm-4.6-or'],
   'glm-4.7': ['glm-4.7', 'glm-4.7-or'],
   'qwen3-coder-480b': ['qwen3-coder-480b', 'qwen3-coder-480b-or'],
+  'qwen3-235b-thinking': ['qwen3-235b-thinking', 'qwen3-235b-thinking-or'],
+  'deepseek-v3-0324': ['deepseek-v3-0324', 'deepseek-v3-0324-or'],
+  'deepseek-v3.1-terminus': ['deepseek-v3.1-terminus', 'deepseek-v3.1-terminus-or'],
+  'gpt-oss-120b': ['gpt-oss-120b', 'gpt-oss-120b-or'],
 };
 
 /**
