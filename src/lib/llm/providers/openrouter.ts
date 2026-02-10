@@ -263,6 +263,119 @@ export const RNJ1Instruct_OR = new OpenRouterProvider(
 );
 
 // ============================================================================
+// TOGETHER AI MODELS → OPENROUTER FALLBACKS - BATCH 2 (9)
+// Added: 2026-02-10 (Quick-37)
+// ============================================================================
+
+// 17. DeepSeek V3.1
+export const DeepSeekV31_OR = new OpenRouterProvider(
+  'deepseek-v3.1-or',
+  'openrouter',
+  'deepseek/deepseek-chat-v3.1',
+  'DeepSeek V3.1 (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.15, completionPer1M: 0.75 },
+  false,
+  {}
+);
+
+// 18. Kimi K2 0905
+export const KimiK2_0905_OR = new OpenRouterProvider(
+  'kimi-k2-0905-or',
+  'openrouter',
+  'moonshotai/kimi-k2-0905',
+  'Kimi K2 0905 (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.39, completionPer1M: 1.90 },
+  false,
+  {}
+);
+
+// 19. Kimi K2 Instruct
+export const KimiK2Instruct_OR = new OpenRouterProvider(
+  'kimi-k2-instruct-or',
+  'openrouter',
+  'moonshotai/kimi-k2',
+  'Kimi K2 Instruct (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.50, completionPer1M: 2.40 },
+  false,
+  {}
+);
+
+// 20. GPT-OSS 20B
+export const GPTOSS20B_OR = new OpenRouterProvider(
+  'gpt-oss-20b-or',
+  'openrouter',
+  'openai/gpt-oss-20b',
+  'GPT-OSS 20B (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.03, completionPer1M: 0.14 },
+  false,
+  {}
+);
+
+// 21. Mistral Small 3 24B
+export const MistralSmall3_24B_OR = new OpenRouterProvider(
+  'mistral-small-3-24b-or',
+  'openrouter',
+  'mistralai/mistral-small-24b-instruct-2501',
+  'Mistral Small 3 24B (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.05, completionPer1M: 0.08 },
+  false,
+  {}
+);
+
+// 22. Mistral 7B v0.2
+export const Mistral7Bv02_OR = new OpenRouterProvider(
+  'mistral-7b-v0.2-or',
+  'openrouter',
+  'mistralai/mistral-7b-instruct-v0.2',
+  'Mistral 7B v0.2 (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.20, completionPer1M: 0.20 },
+  false,
+  {}
+);
+
+// 23. Mistral 7B v0.3
+export const Mistral7Bv03_OR = new OpenRouterProvider(
+  'mistral-7b-v0.3-or',
+  'openrouter',
+  'mistralai/mistral-7b-instruct-v0.3',
+  'Mistral 7B v0.3 (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.20, completionPer1M: 0.20 },
+  false,
+  {}
+);
+
+// 24. Nemotron Nano 9B v2
+export const NemotronNano9Bv2_OR = new OpenRouterProvider(
+  'nemotron-nano-9b-v2-or',
+  'openrouter',
+  'nvidia/nemotron-nano-9b-v2',
+  'Nemotron Nano 9B v2 (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.04, completionPer1M: 0.16 },
+  false,
+  {}
+);
+
+// 25. Gemma 3n E4B
+export const Gemma3nE4B_OR = new OpenRouterProvider(
+  'gemma-3n-e4b-or',
+  'openrouter',
+  'google/gemma-3n-e4b-it',
+  'Gemma 3n E4B (OpenRouter)',
+  'free',
+  { promptPer1M: 0.02, completionPer1M: 0.04 },
+  false,
+  {}
+);
+
+// ============================================================================
 // SYNTHETIC MODELS → OPENROUTER FALLBACKS (6)
 // ============================================================================
 
@@ -351,7 +464,68 @@ export const Qwen3Coder480B_OR = new OpenRouterProvider(
 );
 
 // ============================================================================
-// ALL OPENROUTER PROVIDERS (22)
+// SYNTHETIC MODELS → OPENROUTER FALLBACKS - BATCH 2 (4)
+// Added: 2026-02-10 (Quick-37)
+// ============================================================================
+
+// 26. Qwen3 235B Thinking (needs THINKING_STRIPPED + STRIP_THINKING_TAGS like primary)
+export const Qwen3_235BThinking_OR = new OpenRouterProvider(
+  'qwen3-235b-thinking-or',
+  'openrouter',
+  'qwen/qwen3-235b-a22b-thinking-2507',
+  'Qwen3 235B Thinking (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.11, completionPer1M: 0.60 },
+  false,
+  {
+    promptVariant: PromptVariant.THINKING_STRIPPED,
+    responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
+    timeoutMs: 120000,
+  }
+);
+
+// 27. DeepSeek V3 0324
+export const DeepSeekV3_0324_OR = new OpenRouterProvider(
+  'deepseek-v3-0324-or',
+  'openrouter',
+  'deepseek/deepseek-chat-v3-0324',
+  'DeepSeek V3 0324 (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.19, completionPer1M: 0.87 },
+  false,
+  {}
+);
+
+// 28. DeepSeek V3.1 Terminus
+export const DeepSeekV31Terminus_OR = new OpenRouterProvider(
+  'deepseek-v3.1-terminus-or',
+  'openrouter',
+  'deepseek/deepseek-v3.1-terminus',
+  'DeepSeek V3.1 Terminus (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.21, completionPer1M: 0.79 },
+  false,
+  {}
+);
+
+// 29. GPT-OSS 120B (needs JSON_STRICT + EXTRACT_JSON like primary)
+export const GPTOSS120B_OR = new OpenRouterProvider(
+  'gpt-oss-120b-or',
+  'openrouter',
+  'openai/gpt-oss-120b',
+  'GPT-OSS 120B (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.039, completionPer1M: 0.19 },
+  false,
+  {
+    promptVariant: PromptVariant.JSON_STRICT,
+    responseHandler: ResponseHandler.EXTRACT_JSON,
+    timeoutMs: 45000,
+  }
+);
+
+// ============================================================================
+// ALL OPENROUTER PROVIDERS (35)
 // ============================================================================
 
 export const OPENROUTER_PROVIDERS: OpenRouterProvider[] = [
@@ -359,7 +533,7 @@ export const OPENROUTER_PROVIDERS: OpenRouterProvider[] = [
   DeepSeekR1_OR,
   Qwen3_235B_OR,
   Llama4Scout_OR,
-  // Together AI fallbacks (13)
+  // Together AI fallbacks - Batch 1 (13)
   Llama4Maverick_OR,
   Llama33_70B_OR,
   Llama31_8B_OR,
@@ -373,11 +547,26 @@ export const OPENROUTER_PROVIDERS: OpenRouterProvider[] = [
   Cogito671B_OR,
   Ministral3_14B_OR,
   RNJ1Instruct_OR,
-  // Synthetic fallbacks (6)
+  // Together AI fallbacks - Batch 2 (9)
+  DeepSeekV31_OR,
+  KimiK2_0905_OR,
+  KimiK2Instruct_OR,
+  GPTOSS20B_OR,
+  MistralSmall3_24B_OR,
+  Mistral7Bv02_OR,
+  Mistral7Bv03_OR,
+  NemotronNano9Bv2_OR,
+  Gemma3nE4B_OR,
+  // Synthetic fallbacks - Batch 1 (6)
   DeepSeekV32_OR,
   MiniMaxM2_OR,
   MiniMaxM21_OR,
   GLM46_OR,
   GLM47_OR,
   Qwen3Coder480B_OR,
+  // Synthetic fallbacks - Batch 2 (4)
+  Qwen3_235BThinking_OR,
+  DeepSeekV3_0324_OR,
+  DeepSeekV31Terminus_OR,
+  GPTOSS120B_OR,
 ];
