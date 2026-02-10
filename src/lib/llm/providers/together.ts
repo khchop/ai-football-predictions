@@ -67,9 +67,9 @@ export class TogetherProvider extends OpenAICompatibleProvider {
 }
 
 // ============================================================================
-// 29 OPEN SOURCE MODELS FROM TOGETHER AI
+// 30 OPEN SOURCE MODELS FROM TOGETHER AI
 // All models support json_object mode via Together AI
-// Updated: January 23, 2026
+// Updated: February 10, 2026
 // Direct provider pricing (no markup)
 // Removed: thinking models, GLM (Chinese), unavailable models
 // ============================================================================
@@ -106,7 +106,7 @@ export const DeepSeekR1Provider = new TogetherProvider(
 );
 
 // ============================================================================
-// MOONSHOT (2 models)
+// MOONSHOT (3 models)
 // ============================================================================
 
 // 3. Kimi K2 Instruct 0905
@@ -131,11 +131,22 @@ export const KimiK2InstructProvider = new TogetherProvider(
   false
 );
 
+// 5. Kimi K2.5
+export const KimiK25Provider = new TogetherProvider(
+  'kimi-k2.5',
+  'together',
+  'moonshotai/Kimi-K2.5',
+  'Kimi K2.5 (Moonshot)',
+  'budget',
+  { promptPer1M: 1.00, completionPer1M: 3.00 },
+  false
+);
+
 // ============================================================================
 // QWEN (4 models)
 // ============================================================================
 
-// 5. Qwen3 235B A22B Instruct (non-thinking version)
+// 6. Qwen3 235B A22B Instruct (non-thinking version)
 export const Qwen3_235BInstructProvider = new TogetherProvider(
   'qwen3-235b-instruct',
   'together',
@@ -146,7 +157,7 @@ export const Qwen3_235BInstructProvider = new TogetherProvider(
   true
 );
 
-// 6. Qwen3 Next 80B Instruct
+// 7. Qwen3 Next 80B Instruct
 export const Qwen3Next80BInstructProvider = new TogetherProvider(
   'qwen3-next-80b-instruct',
   'together',
@@ -157,7 +168,7 @@ export const Qwen3Next80BInstructProvider = new TogetherProvider(
   false
 );
 
-// 7. Qwen 2.5 7B Turbo
+// 8. Qwen 2.5 7B Turbo
 export const Qwen25_7BTurboProvider = new TogetherProvider(
   'qwen2.5-7b-turbo',
   'together',
@@ -168,7 +179,7 @@ export const Qwen25_7BTurboProvider = new TogetherProvider(
   false
 );
 
-// 8. Qwen 2.5 72B Turbo
+// 9. Qwen 2.5 72B Turbo
 export const Qwen25_72BTurboProvider = new TogetherProvider(
   'qwen2.5-72b-turbo',
   'together',
@@ -183,7 +194,7 @@ export const Qwen25_72BTurboProvider = new TogetherProvider(
 // META LLAMA (8 models)
 // ============================================================================
 
-// 9. Llama 4 Maverick
+// 10. Llama 4 Maverick
 export const Llama4MaverickProvider = new TogetherProvider(
   'llama-4-maverick',
   'together',
@@ -194,7 +205,7 @@ export const Llama4MaverickProvider = new TogetherProvider(
   false
 );
 
-// 10. Llama 4 Scout
+// 11. Llama 4 Scout
 export const Llama4ScoutProvider = new TogetherProvider(
   'llama-4-scout',
   'together',
@@ -205,7 +216,7 @@ export const Llama4ScoutProvider = new TogetherProvider(
   false
 );
 
-// 11. Llama 3.3 70B Turbo
+// 12. Llama 3.3 70B Turbo
 export const Llama33_70BTurboProvider = new TogetherProvider(
   'llama-3.3-70b-turbo',
   'together',
@@ -216,7 +227,7 @@ export const Llama33_70BTurboProvider = new TogetherProvider(
   false
 );
 
-// 12. Llama 3.1 8B Turbo
+// 13. Llama 3.1 8B Turbo
 export const Llama31_8BTurboProvider = new TogetherProvider(
   'llama-3.1-8b-turbo',
   'together',
@@ -227,7 +238,7 @@ export const Llama31_8BTurboProvider = new TogetherProvider(
   false
 );
 
-// 13. Llama 3.1 405B Turbo
+// 14. Llama 3.1 405B Turbo
 export const Llama31_405BTurboProvider = new TogetherProvider(
   'llama-3.1-405b-turbo',
   'together',
@@ -238,7 +249,7 @@ export const Llama31_405BTurboProvider = new TogetherProvider(
   true
 );
 
-// 14. Llama 3.2 3B Turbo
+// 15. Llama 3.2 3B Turbo
 export const Llama32_3BTurboProvider = new TogetherProvider(
   'llama-3.2-3b-turbo',
   'together',
@@ -249,7 +260,7 @@ export const Llama32_3BTurboProvider = new TogetherProvider(
   false
 );
 
-// 15. Llama 3 8B Lite
+// 16. Llama 3 8B Lite
 export const Llama3_8BLiteProvider = new TogetherProvider(
   'llama-3-8b-lite',
   'together',
@@ -260,7 +271,7 @@ export const Llama3_8BLiteProvider = new TogetherProvider(
   false
 );
 
-// 16. Llama 3 70B Reference
+// 17. Llama 3 70B Reference
 export const Llama3_70BReferenceProvider = new TogetherProvider(
   'llama-3-70b-reference',
   'together',
@@ -275,7 +286,7 @@ export const Llama3_70BReferenceProvider = new TogetherProvider(
 // OPENAI OSS (1 model)
 // ============================================================================
 
-// 17. GPT-OSS 20B
+// 18. GPT-OSS 20B
 export const GPTOSS20BProvider = new TogetherProvider(
   'gpt-oss-20b',
   'together',
@@ -290,7 +301,7 @@ export const GPTOSS20BProvider = new TogetherProvider(
 // DEEP COGITO (4 models)
 // ============================================================================
 
-// 18. Cogito v2 70B
+// 19. Cogito v2 70B
 export const Cogito70BProvider = new TogetherProvider(
   'cogito-70b',
   'together',
@@ -301,7 +312,7 @@ export const Cogito70BProvider = new TogetherProvider(
   false
 );
 
-// 19. Cogito v2 109B MoE
+// 20. Cogito v2 109B MoE
 export const Cogito109BMoEProvider = new TogetherProvider(
   'cogito-109b-moe',
   'together',
@@ -312,7 +323,7 @@ export const Cogito109BMoEProvider = new TogetherProvider(
   false
 );
 
-// 20. Cogito v2 405B
+// 21. Cogito v2 405B
 export const Cogito405BProvider = new TogetherProvider(
   'cogito-405b',
   'together',
@@ -323,7 +334,7 @@ export const Cogito405BProvider = new TogetherProvider(
   true
 );
 
-// 21. Cogito v2.1 671B
+// 22. Cogito v2.1 671B
 export const Cogito671BProvider = new TogetherProvider(
   'cogito-671b',
   'together',
@@ -338,7 +349,7 @@ export const Cogito671BProvider = new TogetherProvider(
 // MISTRAL (4 models)
 // ============================================================================
 
-// 22. Ministral 3 14B
+// 23. Ministral 3 14B
 export const Ministral3_14BProvider = new TogetherProvider(
   'ministral-3-14b',
   'together',
@@ -349,7 +360,7 @@ export const Ministral3_14BProvider = new TogetherProvider(
   false
 );
 
-// 23. Mistral Small 3 24B
+// 24. Mistral Small 3 24B
 export const MistralSmall3_24BProvider = new TogetherProvider(
   'mistral-small-3-24b',
   'together',
@@ -360,7 +371,7 @@ export const MistralSmall3_24BProvider = new TogetherProvider(
   false
 );
 
-// 24. Mistral 7B v0.2
+// 25. Mistral 7B v0.2
 export const Mistral7Bv02Provider = new TogetherProvider(
   'mistral-7b-v0.2',
   'together',
@@ -371,7 +382,7 @@ export const Mistral7Bv02Provider = new TogetherProvider(
   false
 );
 
-// 25. Mistral 7B v0.3
+// 26. Mistral 7B v0.3
 export const Mistral7Bv03Provider = new TogetherProvider(
   'mistral-7b-v0.3',
   'together',
@@ -386,7 +397,7 @@ export const Mistral7Bv03Provider = new TogetherProvider(
 // NVIDIA (1 model)
 // ============================================================================
 
-// 26. Nemotron Nano 9B v2
+// 27. Nemotron Nano 9B v2
 export const NemotronNano9Bv2Provider = new TogetherProvider(
   'nemotron-nano-9b-v2',
   'together',
@@ -401,7 +412,7 @@ export const NemotronNano9Bv2Provider = new TogetherProvider(
 // GOOGLE (1 model)
 // ============================================================================
 
-// 27. Gemma 3n E4B
+// 28. Gemma 3n E4B
 export const Gemma3nE4BProvider = new TogetherProvider(
   'gemma-3n-e4b',
   'together',
@@ -416,7 +427,7 @@ export const Gemma3nE4BProvider = new TogetherProvider(
 // OTHER (2 models)
 // ============================================================================
 
-// 28. Rnj-1 Instruct
+// 29. Rnj-1 Instruct
 export const Rnj1InstructProvider = new TogetherProvider(
   'rnj-1-instruct',
   'together',
@@ -427,7 +438,7 @@ export const Rnj1InstructProvider = new TogetherProvider(
   false
 );
 
-// 29. Marin 8B Instruct
+// 30. Marin 8B Instruct
 export const Marin8BInstructProvider = new TogetherProvider(
   'marin-8b-instruct',
   'together',
@@ -446,56 +457,58 @@ export const TOGETHER_PROVIDERS = [
   // DeepSeek (2)
   DeepSeekV31Provider,           // 1  - $0.60/$1.25
   DeepSeekR1Provider,            // 2  - $3.00/$7.00 (premium)
-  
-  // Moonshot (2)
+
+  // Moonshot (3)
   KimiK2_0905Provider,           // 3  - $1.00/$3.00
   KimiK2InstructProvider,        // 4  - $1.00/$3.00
-  
+  KimiK25Provider,               // 5  - $1.00/$3.00
+
   // Qwen (4)
-  Qwen3_235BInstructProvider,    // 5  - $0.65/$3.00 (premium)
-  Qwen3Next80BInstructProvider,  // 6  - $0.15/$1.50
-  Qwen25_7BTurboProvider,        // 7  - $0.30/$0.30
-  Qwen25_72BTurboProvider,       // 8  - $1.20/$1.20
-  
+  Qwen3_235BInstructProvider,    // 6  - $0.65/$3.00 (premium)
+  Qwen3Next80BInstructProvider,  // 7  - $0.15/$1.50
+  Qwen25_7BTurboProvider,        // 8  - $0.30/$0.30
+  Qwen25_72BTurboProvider,       // 9  - $1.20/$1.20
+
   // Meta Llama (8)
-  Llama4MaverickProvider,        // 9  - $0.27/$0.85
-  Llama4ScoutProvider,           // 10 - $0.18/$0.59
-  Llama33_70BTurboProvider,      // 11 - $0.88/$0.88
-  Llama31_8BTurboProvider,       // 12 - $0.18/$0.18
-  Llama31_405BTurboProvider,     // 13 - $3.50/$3.50 (premium)
-  Llama32_3BTurboProvider,       // 14 - $0.06/$0.06
-  Llama3_8BLiteProvider,         // 15 - $0.10/$0.10
-  Llama3_70BReferenceProvider,   // 16 - $0.90/$0.90
-  
+  Llama4MaverickProvider,        // 10 - $0.27/$0.85
+  Llama4ScoutProvider,           // 11 - $0.18/$0.59
+  Llama33_70BTurboProvider,      // 12 - $0.88/$0.88
+  Llama31_8BTurboProvider,       // 13 - $0.18/$0.18
+  Llama31_405BTurboProvider,     // 14 - $3.50/$3.50 (premium)
+  Llama32_3BTurboProvider,       // 15 - $0.06/$0.06
+  Llama3_8BLiteProvider,         // 16 - $0.10/$0.10
+  Llama3_70BReferenceProvider,   // 17 - $0.90/$0.90
+
   // OpenAI OSS (1)
-  GPTOSS20BProvider,             // 17 - $0.05/$0.20
-  
+  GPTOSS20BProvider,             // 18 - $0.05/$0.20
+
   // Deep Cogito (4)
-  Cogito70BProvider,             // 18 - $0.88/$0.88
-  Cogito109BMoEProvider,         // 19 - $0.18/$0.59
-  Cogito405BProvider,            // 20 - $3.50/$3.50 (premium)
-  Cogito671BProvider,            // 21 - $1.25/$1.25 (premium)
-  
+  Cogito70BProvider,             // 19 - $0.88/$0.88
+  Cogito109BMoEProvider,         // 20 - $0.18/$0.59
+  Cogito405BProvider,            // 21 - $3.50/$3.50 (premium)
+  Cogito671BProvider,            // 22 - $1.25/$1.25 (premium)
+
   // Mistral (4)
-  Ministral3_14BProvider,        // 22 - $0.80/$0.80
-  MistralSmall3_24BProvider,     // 23 - $0.80/$0.80
-  Mistral7Bv02Provider,          // 24 - $0.20/$0.20
-  Mistral7Bv03Provider,          // 25 - $0.20/$0.20
-  
+  Ministral3_14BProvider,        // 23 - $0.80/$0.80
+  MistralSmall3_24BProvider,     // 24 - $0.80/$0.80
+  Mistral7Bv02Provider,          // 25 - $0.20/$0.20
+  Mistral7Bv03Provider,          // 26 - $0.20/$0.20
+
   // NVIDIA (1)
-  NemotronNano9Bv2Provider,      // 26 - $0.88/$0.88
-  
+  NemotronNano9Bv2Provider,      // 27 - $0.88/$0.88
+
   // Google (1)
-  Gemma3nE4BProvider,            // 27 - $0.02/$0.04
-  
+  Gemma3nE4BProvider,            // 28 - $0.02/$0.04
+
   // Other (2)
-  Rnj1InstructProvider,          // 28 - $0.88/$0.88
-  Marin8BInstructProvider,       // 29 - $0.20/$0.20
+  Rnj1InstructProvider,          // 29 - $0.88/$0.88
+  Marin8BInstructProvider,       // 30 - $0.20/$0.20
 ];
 
 // ============================================================================
-// Summary (Updated January 2026):
-// - 29 open-source models with full JSON support
+// Summary (Updated February 2026):
+// - 30 open-source models with full JSON support
+// - Added: Kimi K2.5 (Moonshot AI)
 // - Removed: thinking models, GLM (Chinese output), unavailable models
 // - All models support json_object mode via Together AI
 // - Direct provider pricing (no OpenRouter markup)

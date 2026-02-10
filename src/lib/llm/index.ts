@@ -10,7 +10,7 @@ import { eq, sql } from 'drizzle-orm';
 
 // All non-conditional providers - Together AI + Synthetic.new
 // OpenRouter providers are conditional (only in getActiveProviders when API key set)
-// Together: 29 models, Synthetic: 10 exclusive models = 39 total
+// Together: 30 models, Synthetic: 11 models = 41 total
 export const ALL_PROVIDERS: LLMProvider[] = [
   ...TOGETHER_PROVIDERS,
   ...SYNTHETIC_PROVIDERS,
@@ -34,7 +34,7 @@ export const ALL_PROVIDERS: LLMProvider[] = [
 // ============================================================================
 
 export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
-  // --- Together -> OpenRouter (25 models) ---
+  // --- Together -> OpenRouter (25 routes) ---
   'deepseek-r1': ['deepseek-r1', 'deepseek-r1-or'],
   'llama-4-scout': ['llama-4-scout', 'llama-4-scout-or'],
   'llama-4-maverick': ['llama-4-maverick', 'llama-4-maverick-or'],
@@ -54,6 +54,7 @@ export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
   'deepseek-v3.1': ['deepseek-v3.1', 'deepseek-v3.1-or'],
   'kimi-k2-0905': ['kimi-k2-0905', 'kimi-k2-0905-or'],
   'kimi-k2-instruct': ['kimi-k2-instruct', 'kimi-k2-instruct-or'],
+  'kimi-k2.5': ['kimi-k2.5', 'kimi-k2.5-syn', 'kimi-k2.5-or'],
   'gpt-oss-20b': ['gpt-oss-20b', 'gpt-oss-20b-or'],
   'mistral-small-3-24b': ['mistral-small-3-24b', 'mistral-small-3-24b-or'],
   'mistral-7b-v0.2': ['mistral-7b-v0.2', 'mistral-7b-v0.2-or'],

@@ -263,8 +263,8 @@ export const RNJ1Instruct_OR = new OpenRouterProvider(
 );
 
 // ============================================================================
-// TOGETHER AI MODELS → OPENROUTER FALLBACKS - BATCH 2 (9)
-// Added: 2026-02-10 (Quick-37)
+// TOGETHER AI MODELS → OPENROUTER FALLBACKS - BATCH 2 (10)
+// Added: 2026-02-10 (Quick-37 + Quick-38)
 // ============================================================================
 
 // 17. DeepSeek V3.1
@@ -303,7 +303,19 @@ export const KimiK2Instruct_OR = new OpenRouterProvider(
   {}
 );
 
-// 20. GPT-OSS 20B
+// 20. Kimi K2.5
+export const KimiK25_OR = new OpenRouterProvider(
+  'kimi-k2.5-or',
+  'openrouter',
+  'moonshotai/kimi-k2.5',
+  'Kimi K2.5 (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.45, completionPer1M: 2.25 },
+  false,
+  {}
+);
+
+// 21. GPT-OSS 20B
 export const GPTOSS20B_OR = new OpenRouterProvider(
   'gpt-oss-20b-or',
   'openrouter',
@@ -315,7 +327,7 @@ export const GPTOSS20B_OR = new OpenRouterProvider(
   {}
 );
 
-// 21. Mistral Small 3 24B
+// 22. Mistral Small 3 24B
 export const MistralSmall3_24B_OR = new OpenRouterProvider(
   'mistral-small-3-24b-or',
   'openrouter',
@@ -327,7 +339,7 @@ export const MistralSmall3_24B_OR = new OpenRouterProvider(
   {}
 );
 
-// 22. Mistral 7B v0.2
+// 23. Mistral 7B v0.2
 export const Mistral7Bv02_OR = new OpenRouterProvider(
   'mistral-7b-v0.2-or',
   'openrouter',
@@ -339,7 +351,7 @@ export const Mistral7Bv02_OR = new OpenRouterProvider(
   {}
 );
 
-// 23. Mistral 7B v0.3
+// 24. Mistral 7B v0.3
 export const Mistral7Bv03_OR = new OpenRouterProvider(
   'mistral-7b-v0.3-or',
   'openrouter',
@@ -351,7 +363,7 @@ export const Mistral7Bv03_OR = new OpenRouterProvider(
   {}
 );
 
-// 24. Nemotron Nano 9B v2
+// 25. Nemotron Nano 9B v2
 export const NemotronNano9Bv2_OR = new OpenRouterProvider(
   'nemotron-nano-9b-v2-or',
   'openrouter',
@@ -363,7 +375,7 @@ export const NemotronNano9Bv2_OR = new OpenRouterProvider(
   {}
 );
 
-// 25. Gemma 3n E4B
+// 26. Gemma 3n E4B
 export const Gemma3nE4B_OR = new OpenRouterProvider(
   'gemma-3n-e4b-or',
   'openrouter',
@@ -379,7 +391,7 @@ export const Gemma3nE4B_OR = new OpenRouterProvider(
 // SYNTHETIC MODELS → OPENROUTER FALLBACKS (6)
 // ============================================================================
 
-// 17. DeepSeek V3.2 (needs JSON_STRICT + EXTRACT_JSON like primary)
+// 27. DeepSeek V3.2 (needs JSON_STRICT + EXTRACT_JSON like primary)
 export const DeepSeekV32_OR = new OpenRouterProvider(
   'deepseek-v3.2-or',
   'openrouter',
@@ -395,7 +407,7 @@ export const DeepSeekV32_OR = new OpenRouterProvider(
   }
 );
 
-// 18. MiniMax M2
+// 28. MiniMax M2
 export const MiniMaxM2_OR = new OpenRouterProvider(
   'minimax-m2-or',
   'openrouter',
@@ -407,7 +419,7 @@ export const MiniMaxM2_OR = new OpenRouterProvider(
   {}
 );
 
-// 19. MiniMax M2.1
+// 29. MiniMax M2.1
 export const MiniMaxM21_OR = new OpenRouterProvider(
   'minimax-m2.1-or',
   'openrouter',
@@ -419,7 +431,7 @@ export const MiniMaxM21_OR = new OpenRouterProvider(
   {}
 );
 
-// 20. GLM 4.6 (needs ENGLISH_ENFORCED like primary)
+// 30. GLM 4.6 (needs ENGLISH_ENFORCED like primary)
 export const GLM46_OR = new OpenRouterProvider(
   'glm-4.6-or',
   'openrouter',
@@ -435,7 +447,7 @@ export const GLM46_OR = new OpenRouterProvider(
   }
 );
 
-// 21. GLM 4.7 (needs ENGLISH_ENFORCED + EXTRACT_JSON like primary)
+// 31. GLM 4.7 (needs ENGLISH_ENFORCED + EXTRACT_JSON like primary)
 export const GLM47_OR = new OpenRouterProvider(
   'glm-4.7-or',
   'openrouter',
@@ -451,7 +463,7 @@ export const GLM47_OR = new OpenRouterProvider(
   }
 );
 
-// 22. Qwen3 Coder 480B
+// 32. Qwen3 Coder 480B
 export const Qwen3Coder480B_OR = new OpenRouterProvider(
   'qwen3-coder-480b-or',
   'openrouter',
@@ -468,7 +480,7 @@ export const Qwen3Coder480B_OR = new OpenRouterProvider(
 // Added: 2026-02-10 (Quick-37)
 // ============================================================================
 
-// 26. Qwen3 235B Thinking (needs THINKING_STRIPPED + STRIP_THINKING_TAGS like primary)
+// 33. Qwen3 235B Thinking (needs THINKING_STRIPPED + STRIP_THINKING_TAGS like primary)
 export const Qwen3_235BThinking_OR = new OpenRouterProvider(
   'qwen3-235b-thinking-or',
   'openrouter',
@@ -484,7 +496,7 @@ export const Qwen3_235BThinking_OR = new OpenRouterProvider(
   }
 );
 
-// 27. DeepSeek V3 0324
+// 34. DeepSeek V3 0324
 export const DeepSeekV3_0324_OR = new OpenRouterProvider(
   'deepseek-v3-0324-or',
   'openrouter',
@@ -496,7 +508,7 @@ export const DeepSeekV3_0324_OR = new OpenRouterProvider(
   {}
 );
 
-// 28. DeepSeek V3.1 Terminus
+// 35. DeepSeek V3.1 Terminus
 export const DeepSeekV31Terminus_OR = new OpenRouterProvider(
   'deepseek-v3.1-terminus-or',
   'openrouter',
@@ -508,7 +520,7 @@ export const DeepSeekV31Terminus_OR = new OpenRouterProvider(
   {}
 );
 
-// 29. GPT-OSS 120B (needs JSON_STRICT + EXTRACT_JSON like primary)
+// 36. GPT-OSS 120B (needs JSON_STRICT + EXTRACT_JSON like primary)
 export const GPTOSS120B_OR = new OpenRouterProvider(
   'gpt-oss-120b-or',
   'openrouter',
@@ -525,7 +537,7 @@ export const GPTOSS120B_OR = new OpenRouterProvider(
 );
 
 // ============================================================================
-// ALL OPENROUTER PROVIDERS (35)
+// ALL OPENROUTER PROVIDERS (36)
 // ============================================================================
 
 export const OPENROUTER_PROVIDERS: OpenRouterProvider[] = [
@@ -547,10 +559,11 @@ export const OPENROUTER_PROVIDERS: OpenRouterProvider[] = [
   Cogito671B_OR,
   Ministral3_14B_OR,
   RNJ1Instruct_OR,
-  // Together AI fallbacks - Batch 2 (9)
+  // Together AI fallbacks - Batch 2 (10)
   DeepSeekV31_OR,
   KimiK2_0905_OR,
   KimiK2Instruct_OR,
+  KimiK25_OR,
   GPTOSS20B_OR,
   MistralSmall3_24B_OR,
   Mistral7Bv02_OR,

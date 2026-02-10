@@ -73,12 +73,12 @@ export class SyntheticProvider extends OpenAICompatibleProvider {
 }
 
 // ============================================================================
-// 10 SYNTHETIC-EXCLUSIVE MODELS
+// 11 SYNTHETIC-EXCLUSIVE MODELS
 // Models available on Synthetic.new but not on Together AI
-// Updated: February 2026 (Phase 63 - CONS-03)
+// Updated: February 10, 2026 (Quick-38)
 // Pricing: Placeholder estimates based on model size (pricing TBD)
 // Model IDs use hf:org/model format
-// Note: 3 models consolidated (deepseek-r1-0528, kimi-k2-thinking, kimi-k2.5) - see Phase 62
+// Note: Added Kimi K2.5 back as 3-provider model (Together primary, Synthetic 2nd, OR 3rd)
 // ============================================================================
 
 // ============================================================================
@@ -173,6 +173,22 @@ export const MiniMaxM21_SynProvider = new SyntheticProvider(
 );
 
 // ============================================================================
+// MOONSHOT (1) - Budget Tier
+// Kimi K2.5 also available on Synthetic
+// ============================================================================
+
+// 11. Kimi K2.5
+export const KimiK25_SynProvider = new SyntheticProvider(
+  'kimi-k2.5-syn',
+  'synthetic',
+  'hf:moonshotai/Kimi-K2.5',
+  'Kimi K2.5 (Synthetic)',
+  'budget',
+  { promptPer1M: 1.00, completionPer1M: 3.00 },
+  false
+);
+
+// ============================================================================
 // GLM (2) - Budget Tier
 // ZAI GLM models (may output Chinese text)
 // ============================================================================
@@ -247,7 +263,7 @@ export const GPTOSS120B_SynProvider = new SyntheticProvider(
 );
 
 // ============================================================================
-// Export all Synthetic providers (10 models with model-specific configurations)
+// Export all Synthetic providers (11 models with model-specific configurations)
 // ============================================================================
 
 export const SYNTHETIC_PROVIDERS = [
@@ -272,13 +288,16 @@ export const SYNTHETIC_PROVIDERS = [
 
   // OpenAI OSS (1) - Budget
   GPTOSS120B_SynProvider,             // 10 - $1.20/$2.40
+
+  // Moonshot (1) - Budget
+  KimiK25_SynProvider,                // 11 - $1.00/$3.00
 ];
 
 // ============================================================================
-// Summary (February 2026 - Phase 63):
-// - 10 Synthetic-exclusive models (not available on Together AI)
-// - 3 models consolidated in Phase 62 (deepseek-r1-0528, kimi-k2-thinking, kimi-k2.5)
-// - 10 models ACTIVE with model-specific prompt variants and response handlers
+// Summary (February 10, 2026 - Quick-38):
+// - 11 Synthetic models (10 exclusive + 1 shared with Together AI)
+// - Added Kimi K2.5 (shared with Together AI - 3-provider route)
+// - 11 models ACTIVE with model-specific prompt variants and response handlers
 // - 0 models DISABLED (all re-enabled with appropriate configurations)
 // - Prompt variants: THINKING_STRIPPED (reasoning), ENGLISH_ENFORCED (GLM), JSON_STRICT (DeepSeek V3.2, GPT-OSS)
 // - Response handlers: STRIP_THINKING_TAGS, EXTRACT_JSON, DEFAULT
