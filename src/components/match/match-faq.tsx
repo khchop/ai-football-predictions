@@ -1,7 +1,8 @@
 'use client';
 
 import type { Match, Competition } from '@/lib/db/schema';
-import { generateMatchFAQs, type FAQItem } from './MatchFAQSchema';
+import { generateMatchFAQs, type FAQItem, type PredictionSummary } from './MatchFAQSchema';
+import { useMatch } from './use-match';
 import {
   Accordion,
   AccordionContent,
@@ -18,11 +19,16 @@ interface MatchFAQProps {
   competition: Competition;
   /** AI-generated FAQs (optional). Falls back to template-based if not provided. */
   aiFaqs?: FAQItem[] | null;
+  predictionSummary?: PredictionSummary;
 }
 
-export function MatchFAQ({ match, competition, aiFaqs }: MatchFAQProps) {
-  // Use AI-generated FAQs if available, otherwise fall back to template-based
-  const faqs = aiFaqs && aiFaqs.length > 0 ? aiFaqs : generateMatchFAQs(match, competition);
+export function MatchFAQ({ match, competition, aiFaqs, predictionSummary }: MatchFAQProps) {
+  const { analysis } = useMatch();
+
+  // Use AI-generated FAQs if available, otherwise fall back to template-based with enrichment
+  const faqs = aiFaqs && aiFaqs.length > 0
+    ? aiFaqs
+    : generateMatchFAQs(match, competition, { predictions: predictionSummary, analysis });
 
   return (
     <section className="mt-16 pt-8 border-t border-border/50">

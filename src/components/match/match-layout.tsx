@@ -5,6 +5,7 @@ import { MatchHero } from './match-hero';
 import { MatchNarrative } from './match-narrative';
 import { SortablePredictionsTable } from './sortable-predictions-table';
 import { MatchFAQ, type FAQItem } from './match-faq';
+import type { PredictionSummary } from './MatchFAQSchema';
 import { Bot } from 'lucide-react';
 
 interface Prediction {
@@ -22,6 +23,7 @@ interface Prediction {
 interface MatchLayoutProps {
   predictions: Prediction[];
   faqs?: FAQItem[] | null;
+  predictionSummary?: PredictionSummary;
 }
 
 /**
@@ -41,7 +43,7 @@ interface MatchLayoutProps {
  * </MatchDataProvider>
  * ```
  */
-export function MatchLayout({ predictions, faqs }: MatchLayoutProps) {
+export function MatchLayout({ predictions, faqs, predictionSummary }: MatchLayoutProps) {
   const { match, competition, matchState } = useMatch();
 
   return (
@@ -67,7 +69,12 @@ export function MatchLayout({ predictions, faqs }: MatchLayoutProps) {
       />
 
       {/* FAQ - Always visible (has its own heading) */}
-      <MatchFAQ match={match} competition={competition} aiFaqs={faqs} />
+      <MatchFAQ
+        match={match}
+        competition={competition}
+        aiFaqs={faqs}
+        predictionSummary={predictionSummary}
+      />
     </div>
   );
 }

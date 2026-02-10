@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 import { MatchPageSchema } from '@/components/MatchPageSchema';
 import { buildMatchMetadata } from '@/lib/seo/metadata';
 import { mapMatchToSeoData } from '@/lib/seo/types';
-import { generateMatchFAQs } from '@/components/match/MatchFAQSchema';
+import { generateMatchFAQs, type PredictionSummary } from '@/components/match/MatchFAQSchema';
 import { getMatchFAQContent, getMatchContentTimestamp } from '@/lib/content/match-content';
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
 import { buildMatchBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
@@ -142,9 +142,6 @@ export default async function MatchPage({ params }: MatchPageProps) {
     matchData.slug || ''
   );
 
-  // Generate FAQs: use AI-generated if available, fall back to template-based
-  const faqs = aiFaqs && aiFaqs.length > 0 ? aiFaqs : generateMatchFAQs(matchData, competition);
-
   // Format predictions for SortablePredictionsTable interface
   const formattedPredictions = predictions.map(p => ({
     id: p.predictionId,
@@ -157,6 +154,56 @@ export default async function MatchPage({ params }: MatchPageProps) {
     isExact: p.exactScoreBonus !== null && p.exactScoreBonus > 0,
     isCorrectResult: p.tendencyPoints !== null && p.tendencyPoints > 0,
   }));
+
+  // Build prediction summary for FAQ enrichment
+  const predictionSummary: PredictionSummary | undefined = predictions.length > 0 ? (() => {
+    const homeWinCount = predictions.filter(p => p.predictedHome > p.predictedAway).length;
+    const drawCount = predictions.filter(p => p.predictedHome === p.predictedAway).length;
+    const awayWinCount = predictions.filter(p => p.predictedHome < p.predictedAway).length;
+
+    // Find most predicted scoreline
+    const scorelineCounts = new Map<string, number>();
+    for (const p of predictions) {
+      const key = `${p.predictedHome}-${p.predictedAway}`;
+      scorelineCounts.set(key, (scorelineCounts.get(key) || 0) + 1);
+    }
+    const [topScoreline, topScorelineCount] = [...scorelineCounts.entries()]
+      .sort((a, b) => b[1] - a[1])[0] || ['', 0];
+
+    // Finished match stats
+    const isFinished = matchData.status === 'finished';
+    const correctResultCount = isFinished
+      ? predictions.filter(p => p.tendencyPoints !== null && p.tendencyPoints > 0).length
+      : undefined;
+    const exactScoreCount = isFinished
+      ? predictions.filter(p => p.exactScoreBonus !== null && p.exactScoreBonus > 0).length
+      : undefined;
+    const topScorerNames = isFinished
+      ? predictions
+          .filter(p => p.totalPoints !== null && p.totalPoints > 0)
+          .sort((a, b) => (b.totalPoints ?? 0) - (a.totalPoints ?? 0))
+          .slice(0, 3)
+          .map(p => p.modelDisplayName)
+      : undefined;
+
+    return {
+      totalModels: predictions.length,
+      modelNames: predictions.map(p => p.modelDisplayName).slice(0, 5),
+      homeWinCount,
+      drawCount,
+      awayWinCount,
+      topScoreline: topScoreline || undefined,
+      topScorelineCount: topScorelineCount || undefined,
+      correctResultCount,
+      exactScoreCount,
+      topScorerNames: topScorerNames?.length ? topScorerNames : undefined,
+    };
+  })() : undefined;
+
+  // Generate FAQs: use AI-generated if available, fall back to template-based with enrichment
+  const faqs = aiFaqs && aiFaqs.length > 0
+    ? aiFaqs
+    : generateMatchFAQs(matchData, competition, { predictions: predictionSummary, analysis });
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -182,6 +229,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
         <MatchLayout
           predictions={formattedPredictions}
           faqs={aiFaqs}
+          predictionSummary={predictionSummary}
         />
       </MatchDataProvider>
     </div>
