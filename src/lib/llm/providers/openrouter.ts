@@ -537,7 +537,45 @@ export const GPTOSS120B_OR = new OpenRouterProvider(
 );
 
 // ============================================================================
-// ALL OPENROUTER PROVIDERS (36)
+// OPENROUTER-ONLY PRIMARY MODELS (2)
+// Models only available on OpenRouter, used as standalone primaries
+// Added: 2026-02-10 (Quick-38)
+// ============================================================================
+
+// 37. GLM 4.7 Flash (needs ENGLISH_ENFORCED + EXTRACT_JSON like GLM 4.7)
+export const GLM47Flash_OR = new OpenRouterProvider(
+  'glm-4.7-flash',
+  'openrouter',
+  'z-ai/glm-4.7-flash',
+  'GLM 4.7 Flash (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.06, completionPer1M: 0.40 },
+  false,
+  {
+    promptVariant: PromptVariant.ENGLISH_ENFORCED,
+    responseHandler: ResponseHandler.EXTRACT_JSON,
+    timeoutMs: 60000,
+  }
+);
+
+// 38. DeepSeek R1 0528 (needs THINKING_STRIPPED + STRIP_THINKING_TAGS like DeepSeek R1)
+export const DeepSeekR1_0528_OR = new OpenRouterProvider(
+  'deepseek-r1-0528',
+  'openrouter',
+  'deepseek/deepseek-r1-0528',
+  'DeepSeek R1 0528 (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.40, completionPer1M: 1.75 },
+  false,
+  {
+    promptVariant: PromptVariant.THINKING_STRIPPED,
+    responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
+    timeoutMs: 120000,
+  }
+);
+
+// ============================================================================
+// ALL OPENROUTER PROVIDERS (38)
 // ============================================================================
 
 export const OPENROUTER_PROVIDERS: OpenRouterProvider[] = [
@@ -582,4 +620,7 @@ export const OPENROUTER_PROVIDERS: OpenRouterProvider[] = [
   DeepSeekV3_0324_OR,
   DeepSeekV31Terminus_OR,
   GPTOSS120B_OR,
+  // OpenRouter-only primaries (2)
+  GLM47Flash_OR,
+  DeepSeekR1_0528_OR,
 ];
