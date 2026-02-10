@@ -87,6 +87,7 @@ export class SyntheticProvider extends OpenAICompatibleProvider {
 // ============================================================================
 
 // 1. Qwen3 235B Thinking
+// Reasoning model: tokens consumed by thinking before content; needs high max_tokens + no json_object
 export const Qwen3_235BThinking_SynProvider = new SyntheticProvider(
   'qwen3-235b-thinking',
   'synthetic',
@@ -98,7 +99,10 @@ export const Qwen3_235BThinking_SynProvider = new SyntheticProvider(
   {
     promptVariant: PromptVariant.THINKING_STRIPPED,
     responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
-    timeoutMs: 120000, // 2 min - large 235B thinking model warrants same buffer as DeepSeek R1
+    timeoutMs: 120000,
+    supportsJsonMode: false,
+    maxTokensSingle: 2000,
+    maxTokensBatch: 3000,
   }
 );
 
@@ -130,6 +134,7 @@ export const DeepSeekV31_Terminus_SynProvider = new SyntheticProvider(
 );
 
 // 4. DeepSeek V3.2
+// Dumps reasoning text into content field before JSON; needs no json_object + EXTRACT_JSON + more tokens
 export const DeepSeekV32_SynProvider = new SyntheticProvider(
   'deepseek-v3.2',
   'synthetic',
@@ -142,6 +147,9 @@ export const DeepSeekV32_SynProvider = new SyntheticProvider(
     promptVariant: PromptVariant.JSON_STRICT,
     responseHandler: ResponseHandler.EXTRACT_JSON,
     timeoutMs: 45000,
+    supportsJsonMode: false,
+    maxTokensSingle: 1000,
+    maxTokensBatch: 1500,
   }
 );
 
@@ -151,6 +159,7 @@ export const DeepSeekV32_SynProvider = new SyntheticProvider(
 // ============================================================================
 
 // 5. MiniMax M2
+// Works without json_object on Synthetic (returns clean JSON)
 export const MiniMaxM2_SynProvider = new SyntheticProvider(
   'minimax-m2',
   'synthetic',
@@ -158,10 +167,14 @@ export const MiniMaxM2_SynProvider = new SyntheticProvider(
   'MiniMax M2',
   'budget',
   { promptPer1M: 0.50, completionPer1M: 1.00 },
-  false
+  false,
+  {
+    supportsJsonMode: false,
+  }
 );
 
 // 6. MiniMax M2.1
+// Works without json_object but wraps in markdown code fence; needs EXTRACT_JSON
 export const MiniMaxM21_SynProvider = new SyntheticProvider(
   'minimax-m2.1',
   'synthetic',
@@ -169,7 +182,11 @@ export const MiniMaxM21_SynProvider = new SyntheticProvider(
   'MiniMax M2.1',
   'budget',
   { promptPer1M: 0.55, completionPer1M: 1.10 },
-  false
+  false,
+  {
+    supportsJsonMode: false,
+    responseHandler: ResponseHandler.EXTRACT_JSON,
+  }
 );
 
 // ============================================================================
@@ -178,6 +195,7 @@ export const MiniMaxM21_SynProvider = new SyntheticProvider(
 // ============================================================================
 
 // 11. Kimi K2.5
+// Reasoning model on Synthetic: tokens consumed by thinking; needs high max_tokens + no json_object
 export const KimiK25_SynProvider = new SyntheticProvider(
   'kimi-k2.5-syn',
   'synthetic',
@@ -185,7 +203,12 @@ export const KimiK25_SynProvider = new SyntheticProvider(
   'Kimi K2.5 (Synthetic)',
   'budget',
   { promptPer1M: 1.00, completionPer1M: 3.00 },
-  false
+  false,
+  {
+    supportsJsonMode: false,
+    maxTokensSingle: 2000,
+    maxTokensBatch: 3000,
+  }
 );
 
 // ============================================================================
@@ -194,6 +217,7 @@ export const KimiK25_SynProvider = new SyntheticProvider(
 // ============================================================================
 
 // 7. GLM 4.6
+// Outputs <think> tags in content field; needs STRIP_THINKING_TAGS + no json_object + more tokens
 export const GLM46_SynProvider = new SyntheticProvider(
   'glm-4.6',
   'synthetic',
@@ -204,12 +228,16 @@ export const GLM46_SynProvider = new SyntheticProvider(
   false,
   {
     promptVariant: PromptVariant.ENGLISH_ENFORCED,
-    responseHandler: ResponseHandler.DEFAULT,
+    responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
     timeoutMs: 60000,
+    supportsJsonMode: false,
+    maxTokensSingle: 1000,
+    maxTokensBatch: 1500,
   }
 );
 
 // 8. GLM 4.7
+// SGLang bug: "json_object are currently not supported for GLM 4.7"
 export const GLM47_SynProvider = new SyntheticProvider(
   'glm-4.7',
   'synthetic',
@@ -222,6 +250,9 @@ export const GLM47_SynProvider = new SyntheticProvider(
     promptVariant: PromptVariant.ENGLISH_ENFORCED,
     responseHandler: ResponseHandler.EXTRACT_JSON,
     timeoutMs: 60000,
+    supportsJsonMode: false,
+    maxTokensSingle: 1000,
+    maxTokensBatch: 1500,
   }
 );
 
@@ -247,6 +278,7 @@ export const Qwen3Coder480B_SynProvider = new SyntheticProvider(
 // ============================================================================
 
 // 10. GPT-OSS 120B
+// Doesn't support json_object; uses ~130 completion tokens internally before content
 export const GPTOSS120B_SynProvider = new SyntheticProvider(
   'gpt-oss-120b',
   'synthetic',
@@ -259,6 +291,9 @@ export const GPTOSS120B_SynProvider = new SyntheticProvider(
     promptVariant: PromptVariant.JSON_STRICT,
     responseHandler: ResponseHandler.EXTRACT_JSON,
     timeoutMs: 45000,
+    supportsJsonMode: false,
+    maxTokensSingle: 1000,
+    maxTokensBatch: 1500,
   }
 );
 

@@ -10,7 +10,8 @@ import { eq, sql } from 'drizzle-orm';
 
 // All non-conditional providers - Together AI + Synthetic.new
 // OpenRouter providers are conditional (only in getActiveProviders when API key set)
-// Together: 30 models, Synthetic: 11 models = 41 total
+// Together: 23 active models, Synthetic: 11 models = 34 total
+// 7 Together models removed (non-serverless): 4 migrated to OpenRouter-primary, 3 deactivated
 export const ALL_PROVIDERS: LLMProvider[] = [
   ...TOGETHER_PROVIDERS,
   ...SYNTHETIC_PROVIDERS,
@@ -34,20 +35,16 @@ export const ALL_PROVIDERS: LLMProvider[] = [
 // ============================================================================
 
 export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
-  // --- Together -> OpenRouter (25 routes) ---
+  // --- Together -> OpenRouter ---
   'deepseek-r1': ['deepseek-r1', 'deepseek-r1-or'],
-  'llama-4-scout': ['llama-4-scout', 'llama-4-scout-or'],
   'llama-4-maverick': ['llama-4-maverick', 'llama-4-maverick-or'],
   'llama-3.3-70b-turbo': ['llama-3.3-70b-turbo', 'llama-3.3-70b-or'],
   'llama-3.1-8b-turbo': ['llama-3.1-8b-turbo', 'llama-3.1-8b-or'],
-  'llama-3.1-405b-turbo': ['llama-3.1-405b-turbo', 'llama-3.1-405b-or'],
   'llama-3.2-3b-turbo': ['llama-3.2-3b-turbo', 'llama-3.2-3b-or'],
   'llama-3-8b-lite': ['llama-3-8b-lite', 'llama-3-8b-or'],
-  'llama-3-70b-reference': ['llama-3-70b-reference', 'llama-3-70b-or'],
   'qwen3-235b': ['qwen3-235b-instruct', 'qwen3-235b-or'],
   'qwen3-next-80b': ['qwen3-next-80b-instruct', 'qwen3-next-80b-or'],
   'qwen2.5-7b': ['qwen2.5-7b-turbo', 'qwen2.5-7b-or'],
-  'qwen2.5-72b': ['qwen2.5-72b-turbo', 'qwen2.5-72b-or'],
   'cogito-671b': ['cogito-671b', 'cogito-671b-or'],
   'ministral-3-14b': ['ministral-3-14b', 'ministral-3-14b-or'],
   'rnj-1-instruct': ['rnj-1-instruct', 'rnj-1-instruct-or'],
@@ -62,7 +59,13 @@ export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
   'nemotron-nano-9b-v2': ['nemotron-nano-9b-v2', 'nemotron-nano-9b-v2-or'],
   'gemma-3n-e4b': ['gemma-3n-e4b', 'gemma-3n-e4b-or'],
 
-  // --- Synthetic -> OpenRouter (10 models) ---
+  // --- OpenRouter-primary (migrated from Together, no longer serverless) ---
+  'llama-4-scout': ['llama-4-scout-or'],
+  'llama-3.1-405b-turbo': ['llama-3.1-405b-or'],
+  'llama-3-70b-reference': ['llama-3-70b-or'],
+  'qwen2.5-72b': ['qwen2.5-72b-or'],
+
+  // --- Synthetic -> OpenRouter ---
   'deepseek-v3.2': ['deepseek-v3.2', 'deepseek-v3.2-or'],
   'minimax-m2': ['minimax-m2', 'minimax-m2-or'],
   'minimax-m2.1': ['minimax-m2.1', 'minimax-m2.1-or'],

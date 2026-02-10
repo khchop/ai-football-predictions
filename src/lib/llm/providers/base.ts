@@ -217,12 +217,14 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
     const modelTimeout = this.promptConfig?.timeoutMs;
     const timeout = modelTimeout ?? (isBatch ? this.batchRequestTimeout : this.requestTimeout);
     
-    // OPTIMIZED: Reduced max_tokens since JSON responses are small
-    // Single prediction: ~60-80 tokens (with array format and match_id)
-    // Batch of 10: ~600-800 tokens
-    // Increased from 100 to 150 to prevent truncation for single predictions
-    const maxTokens = isBatch ? 800 : 150;
-    
+    // Max tokens: use model-specific config or defaults
+    const maxTokens = isBatch
+      ? (this.promptConfig?.maxTokensBatch ?? 800)
+      : (this.promptConfig?.maxTokensSingle ?? 150);
+
+    // JSON mode: some models don't support response_format (e.g., GLM on SGLang, Synthetic models)
+    const supportsJsonMode = this.promptConfig?.supportsJsonMode !== false;
+
     try {
       // Use fetchWithRetry for automatic retry on transient failures
        // Retries: 429 (rate limit), 5xx (server errors), timeouts
@@ -240,12 +242,10 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
                { role: 'system', content: enhancedSystemPrompt },
                { role: 'user', content: userPrompt },
              ],
-              // OPTIMIZED: Moderate temperature for more varied predictions while maintaining coherence
-              // Increased from 0.3 to 0.5 to encourage diversity (Jan 2026 - prompt diversity improvements)
               temperature: 0.5,
              max_tokens: maxTokens,
-             // Force JSON output mode for all models
-             response_format: { type: 'json_object' },
+             // Only include response_format when model supports it
+             ...(supportsJsonMode ? { response_format: { type: 'json_object' } } : {}),
            }),
          },
          TOGETHER_PREDICTION_RETRY,

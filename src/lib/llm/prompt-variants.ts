@@ -66,6 +66,30 @@ export interface PromptConfig {
 
   /** Timeout in milliseconds (30000-90000 typical range) */
   timeoutMs?: number;
+
+  /**
+   * Whether the model supports `response_format: { type: 'json_object' }`.
+   * When false, the parameter is omitted from the API request.
+   * Defaults to true for backward compatibility.
+   *
+   * Set to false for:
+   * - Synthetic.new models that return empty/text with json_object (MiniMax, GLM, GPT-OSS 120B)
+   * - Models that explicitly error on json_object (GLM 4.7 SGLang bug)
+   */
+  supportsJsonMode?: boolean;
+
+  /**
+   * Max tokens for single-match predictions (default: 150).
+   * Increase for reasoning/thinking models that need token budget
+   * for internal reasoning before outputting JSON.
+   */
+  maxTokensSingle?: number;
+
+  /**
+   * Max tokens for batch predictions (default: 800).
+   * Increase for reasoning models.
+   */
+  maxTokensBatch?: number;
 }
 
 /**

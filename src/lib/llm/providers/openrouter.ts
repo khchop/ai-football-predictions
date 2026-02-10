@@ -542,7 +542,7 @@ export const GPTOSS120B_OR = new OpenRouterProvider(
 // Added: 2026-02-10 (Quick-38)
 // ============================================================================
 
-// 37. GLM 4.7 Flash (needs ENGLISH_ENFORCED + EXTRACT_JSON like GLM 4.7)
+// 37. GLM 4.7 Flash (GLM models don't support json_object; needs ENGLISH_ENFORCED + EXTRACT_JSON)
 export const GLM47Flash_OR = new OpenRouterProvider(
   'glm-4.7-flash',
   'openrouter',
@@ -555,6 +555,9 @@ export const GLM47Flash_OR = new OpenRouterProvider(
     promptVariant: PromptVariant.ENGLISH_ENFORCED,
     responseHandler: ResponseHandler.EXTRACT_JSON,
     timeoutMs: 60000,
+    supportsJsonMode: false,
+    maxTokensSingle: 1000,
+    maxTokensBatch: 1500,
   }
 );
 

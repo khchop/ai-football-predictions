@@ -67,11 +67,10 @@ export class TogetherProvider extends OpenAICompatibleProvider {
 }
 
 // ============================================================================
-// 30 OPEN SOURCE MODELS FROM TOGETHER AI
-// All models support json_object mode via Together AI
-// Updated: February 10, 2026
-// Direct provider pricing (no markup)
-// Removed: thinking models, GLM (Chinese), unavailable models
+// 23 ACTIVE TOGETHER AI MODELS (30 defined, 7 removed from array)
+// Updated: February 10, 2026 (Model Debug Session)
+// Most models use json_object mode; some use supportsJsonMode: false
+// Model-specific max_tokens configured where needed
 // ============================================================================
 
 // ============================================================================
@@ -79,6 +78,7 @@ export class TogetherProvider extends OpenAICompatibleProvider {
 // ============================================================================
 
 // 1. DeepSeek V3.1
+// Occasionally generates verbose output; bump max_tokens to avoid truncation
 export const DeepSeekV31Provider = new TogetherProvider(
   'deepseek-v3.1',
   'together',
@@ -86,7 +86,11 @@ export const DeepSeekV31Provider = new TogetherProvider(
   'DeepSeek V3.1',
   'budget',
   { promptPer1M: 0.60, completionPer1M: 1.25 },
-  false
+  false,
+  {
+    maxTokensSingle: 500,
+    maxTokensBatch: 1000,
+  }
 );
 
 // 2. DeepSeek R1
@@ -132,6 +136,8 @@ export const KimiK2InstructProvider = new TogetherProvider(
 );
 
 // 5. Kimi K2.5
+// Reasoning model: internal thinking consumes tokens before generating content
+// Needs supportsJsonMode: false + high max_tokens (same as Synthetic counterpart)
 export const KimiK25Provider = new TogetherProvider(
   'kimi-k2.5',
   'together',
@@ -139,7 +145,12 @@ export const KimiK25Provider = new TogetherProvider(
   'Kimi K2.5 (Moonshot)',
   'budget',
   { promptPer1M: 1.00, completionPer1M: 3.00 },
-  false
+  false,
+  {
+    supportsJsonMode: false,
+    maxTokensSingle: 2000,
+    maxTokensBatch: 3000,
+  }
 );
 
 // ============================================================================
@@ -147,6 +158,7 @@ export const KimiK25Provider = new TogetherProvider(
 // ============================================================================
 
 // 6. Qwen3 235B A22B Instruct (non-thinking version)
+// Note: Returns error JSON with json_object mode; needs more tokens for internal reasoning
 export const Qwen3_235BInstructProvider = new TogetherProvider(
   'qwen3-235b-instruct',
   'together',
@@ -154,7 +166,11 @@ export const Qwen3_235BInstructProvider = new TogetherProvider(
   'Qwen3 235B Instruct (Alibaba)',
   'premium',
   { promptPer1M: 0.65, completionPer1M: 3.00 },
-  true
+  true,
+  {
+    maxTokensSingle: 500,
+    maxTokensBatch: 1000,
+  }
 );
 
 // 7. Qwen3 Next 80B Instruct
@@ -287,6 +303,7 @@ export const Llama3_70BReferenceProvider = new TogetherProvider(
 // ============================================================================
 
 // 18. GPT-OSS 20B
+// Note: Doesn't support json_object mode; returns clean JSON without it
 export const GPTOSS20BProvider = new TogetherProvider(
   'gpt-oss-20b',
   'together',
@@ -294,7 +311,12 @@ export const GPTOSS20BProvider = new TogetherProvider(
   'GPT-OSS 20B (OpenAI)',
   'ultra-budget',
   { promptPer1M: 0.05, completionPer1M: 0.20 },
-  false
+  false,
+  {
+    supportsJsonMode: false,
+    maxTokensSingle: 300,
+    maxTokensBatch: 1000,
+  }
 );
 
 // ============================================================================
@@ -463,57 +485,49 @@ export const TOGETHER_PROVIDERS = [
   KimiK2InstructProvider,        // 4  - $1.00/$3.00
   KimiK25Provider,               // 5  - $1.00/$3.00
 
-  // Qwen (4)
+  // Qwen (2) — Qwen 2.5 72B removed (non-serverless on Together)
   Qwen3_235BInstructProvider,    // 6  - $0.65/$3.00 (premium)
   Qwen3Next80BInstructProvider,  // 7  - $0.15/$1.50
   Qwen25_7BTurboProvider,        // 8  - $0.30/$0.30
-  Qwen25_72BTurboProvider,       // 9  - $1.20/$1.20
 
-  // Meta Llama (8)
-  Llama4MaverickProvider,        // 10 - $0.27/$0.85
-  Llama4ScoutProvider,           // 11 - $0.18/$0.59
-  Llama33_70BTurboProvider,      // 12 - $0.88/$0.88
-  Llama31_8BTurboProvider,       // 13 - $0.18/$0.18
-  Llama31_405BTurboProvider,     // 14 - $3.50/$3.50 (premium)
-  Llama32_3BTurboProvider,       // 15 - $0.06/$0.06
-  Llama3_8BLiteProvider,         // 16 - $0.10/$0.10
-  Llama3_70BReferenceProvider,   // 17 - $0.90/$0.90
+  // Meta Llama (4) — Scout, 405B, 3-70B removed (non-serverless on Together)
+  Llama4MaverickProvider,        // 9  - $0.27/$0.85
+  Llama33_70BTurboProvider,      // 10 - $0.88/$0.88
+  Llama31_8BTurboProvider,       // 11 - $0.18/$0.18
+  Llama32_3BTurboProvider,       // 12 - $0.06/$0.06
+  Llama3_8BLiteProvider,         // 13 - $0.10/$0.10
 
   // OpenAI OSS (1)
-  GPTOSS20BProvider,             // 18 - $0.05/$0.20
+  GPTOSS20BProvider,             // 14 - $0.05/$0.20
 
-  // Deep Cogito (4)
-  Cogito70BProvider,             // 19 - $0.88/$0.88
-  Cogito109BMoEProvider,         // 20 - $0.18/$0.59
-  Cogito405BProvider,            // 21 - $3.50/$3.50 (premium)
-  Cogito671BProvider,            // 22 - $1.25/$1.25 (premium)
+  // Deep Cogito (1) — 70B, 109B MoE, 405B removed (non-serverless on Together, no OpenRouter)
+  Cogito671BProvider,            // 15 - $1.25/$1.25 (premium)
 
   // Mistral (4)
-  Ministral3_14BProvider,        // 23 - $0.80/$0.80
-  MistralSmall3_24BProvider,     // 24 - $0.80/$0.80
-  Mistral7Bv02Provider,          // 25 - $0.20/$0.20
-  Mistral7Bv03Provider,          // 26 - $0.20/$0.20
+  Ministral3_14BProvider,        // 16 - $0.80/$0.80
+  MistralSmall3_24BProvider,     // 17 - $0.80/$0.80
+  Mistral7Bv02Provider,          // 18 - $0.20/$0.20
+  Mistral7Bv03Provider,          // 19 - $0.20/$0.20
 
   // NVIDIA (1)
-  NemotronNano9Bv2Provider,      // 27 - $0.88/$0.88
+  NemotronNano9Bv2Provider,      // 20 - $0.88/$0.88
 
   // Google (1)
-  Gemma3nE4BProvider,            // 28 - $0.02/$0.04
+  Gemma3nE4BProvider,            // 21 - $0.02/$0.04
 
   // Other (2)
-  Rnj1InstructProvider,          // 29 - $0.88/$0.88
-  Marin8BInstructProvider,       // 30 - $0.20/$0.20
+  Rnj1InstructProvider,          // 22 - $0.88/$0.88
+  Marin8BInstructProvider,       // 23 - $0.20/$0.20
 ];
 
 // ============================================================================
-// Summary (Updated February 2026):
-// - 30 open-source models with full JSON support
-// - Added: Kimi K2.5 (Moonshot AI)
-// - Removed: thinking models, GLM (Chinese output), unavailable models
-// - All models support json_object mode via Together AI
+// Summary (Updated February 10, 2026 - Model Debug Session):
+// - 23 active Together AI models in TOGETHER_PROVIDERS array
+// - 7 models removed (non-serverless on Together): Qwen 2.5 72B, Llama 4 Scout,
+//   Llama 3.1 405B, Llama 3 70B (migrated to OpenRouter-primary),
+//   Cogito 70B, Cogito 109B MoE, Cogito 405B (deactivated, no replacement)
+// - Model-specific configs: supportsJsonMode, maxTokensSingle, maxTokensBatch
+// - Models with supportsJsonMode: false: GPT-OSS 20B, Kimi K2.5
+// - Models with increased maxTokens: DeepSeek V3.1, Qwen3 235B, Kimi K2.5, GPT-OSS 20B
 // - Direct provider pricing (no OpenRouter markup)
-// - Provider diversity: 9 different providers
-// - Better reliability: single-hop API, no routing layer
-// - Lower latency: direct connection to Together AI infrastructure
-// - Estimated cost at 25 matches/day: ~$7.50-10/month (5-15% savings vs OpenRouter)
 // ============================================================================
