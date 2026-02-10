@@ -13,14 +13,14 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 Phase: 63 of 66 (Model Consolidation Execution)
 Plan: 1 of 2 (50% phase in progress)
 Status: In progress - Updated provider configuration and created rename migration script
-Last activity: 2026-02-08 — Completed 63-01-PLAN.md (Provider configuration update and rename migration script)
+Last activity: 2026-02-10 — Completed quick-37 (Add OpenRouter fallback routes for 13 models)
 
 Progress: [██████████████████████████████████████████████████████████████████████████████████████████░] 95%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 164 plans (phases 1-63)
+- Total plans completed: 164 plans (phases 1-63) + 1 quick task (quick-37)
 - Milestones shipped: 13 (v1.0 through v2.8)
 - v2.9 in progress: 5 of 8 phases complete (Phases 59-62 complete, 63 partial, 60 partial)
 
@@ -40,6 +40,9 @@ Progress: [███████████████████████
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- Quick-37: qwen3-235b-thinking-or uses THINKING_STRIPPED + STRIP_THINKING_TAGS to match primary provider behavior
+- Quick-37: gpt-oss-120b-or uses JSON_STRICT + EXTRACT_JSON to match primary provider behavior
+- Quick-37: All OpenRouter fallback providers mirror primary provider's special prompt configurations for transparent failover
 - v2.9 (Phase 63): Delete stub target model rows before renaming -syn models (CONS-04 - handles sync-models stubs)
 - v2.9 (Phase 62): Create base model rows during migration to satisfy FK constraints (Deviation Rule 3)
 - v2.9 (Phase 62): Defer FK constraints during migration to allow orphaned FKs temporarily (SET CONSTRAINTS ALL DEFERRED)
@@ -101,8 +104,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-08
-Stopped at: Phase 63 Plan 01 execution complete (63-01-PLAN.md finished)
-Resume file: .planning/phases/63-model-consolidation-execution/63-01-SUMMARY.md
+Last session: 2026-02-10
+Stopped at: Quick task 37 execution complete (quick-37 finished)
+Resume file: .planning/quick/37-add-openrouter-fallback-routes-for-17-mo/37-SUMMARY.md
 
 **Next action:** Ready to proceed to Phase 63 Plan 02 (Execute migration scripts) or other v2.9 phases.
