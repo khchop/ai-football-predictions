@@ -94,7 +94,7 @@ Recent decisions affecting current work:
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 37 | Add OpenRouter fallback routes for 13 models | 2026-02-10 | d212d4a | [37-add-openrouter-fallback-routes-for-17-mo](./quick/37-add-openrouter-fallback-routes-for-17-mo/) |
-| 38 | Add 3 new models (Kimi K2.5, GLM 4.7 Flash, DeepSeek R1-0528) | 2026-02-10 | 4bfccbc | [38-add-3-new-models-kimi-k2-5-glm-4-7-flash](./quick/38-add-3-new-models-kimi-k2-5-glm-4-7-flash/) |
+| 38 | Add 3 new models (Kimi K2.5, GLM 4.7 Flash, DeepSeek R1-0528) | 2026-02-10 | fd42f10 | [38-add-3-new-models-kimi-k2-5-glm-4-7-flash](./quick/38-add-3-new-models-kimi-k2-5-glm-4-7-flash/) |
 
 ### Blockers/Concerns
 
