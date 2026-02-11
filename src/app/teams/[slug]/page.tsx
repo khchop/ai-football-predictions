@@ -1,5 +1,6 @@
 import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { getTeamBySlug } from '@/lib/football/teams';
 import {
   getTeamStats,
@@ -30,7 +31,8 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export const revalidate = 300; // 5 min ISR
+// Note: revalidate config removed - incompatible with cacheComponents: true (PPR)
+// Caching now handled by Redis at data layer (getTeamStats, etc.)
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -161,7 +163,17 @@ export default async function TeamPage({ params, searchParams }: PageProps) {
         <div>
           <h1 className="text-3xl font-bold">{team.id}</h1>
           <p className="text-muted-foreground">
-            {competition?.name ?? team.league} — {stats.totalMatches} matches tracked
+            {competition ? (
+              <Link
+                href={`/leagues/${competition.id}`}
+                className="hover:text-primary transition-colors hover:underline"
+              >
+                {competition.name}
+              </Link>
+            ) : (
+              team.league
+            )}{' '}
+            — {stats.totalMatches} matches tracked
           </p>
         </div>
 

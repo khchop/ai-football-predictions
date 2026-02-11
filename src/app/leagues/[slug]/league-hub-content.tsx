@@ -26,6 +26,7 @@ import { LeagueTrendChart } from '@/components/league/league-trend-chart';
 import { generateLeagueFAQs } from '@/lib/league/generate-league-faqs';
 import { getLeagueTrends } from '@/lib/league/get-league-trends';
 import { getCompetitionByIdOrAlias } from '@/lib/football/competitions';
+import { getTeamByIdOrAlias } from '@/lib/football/teams';
 
 interface LeagueHubContentProps {
   competitionId: string;
@@ -144,7 +145,22 @@ async function LeagueStandingsTable({ competitionId }: { competitionId: string }
             {standings.map((team) => (
               <tr key={team.teamId} className="border-b border-border/30 hover:bg-muted/20">
                 <td className="px-4 py-3">{team.position}</td>
-                <td className="px-4 py-3 font-medium">{team.teamName}</td>
+                <td className="px-4 py-3 font-medium">
+                  {(() => {
+                    const teamConfig = getTeamByIdOrAlias(team.teamName);
+                    return teamConfig ? (
+                      <Link
+                        href={`/teams/${teamConfig.slug}`}
+                        className="hover:text-primary transition-colors hover:underline"
+                        prefetch={false}
+                      >
+                        {team.teamName}
+                      </Link>
+                    ) : (
+                      team.teamName
+                    );
+                  })()}
+                </td>
                 <td className="px-4 py-3 text-center">{team.played}</td>
                 <td className="px-4 py-3 text-center">{team.won}</td>
                 <td className="px-4 py-3 text-center">{team.drawn}</td>
