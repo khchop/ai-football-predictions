@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { MapPin, Star, AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { MatchTime } from '@/components/client-date';
+import { getTeamByIdOrAlias } from '@/lib/football/teams';
 
 interface MatchCardProps {
   match: {
@@ -88,18 +89,21 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
     ? `/leagues/${match.competition.id}/${match.slug}`
     : `/matches/${match.id}`;
 
+  // Get team configs for link generation
+  const homeTeamConfig = getTeamByIdOrAlias(match.homeTeam);
+  const awayTeamConfig = getTeamByIdOrAlias(match.awayTeam);
+
   return (
-    <Link
-      href={matchUrl}
+    <div
       className={cn(
-        "group block relative rounded-lg border border-border/50 bg-card backdrop-blur-sm overflow-hidden transition-all duration-200 cursor-pointer",
+        "group block relative rounded-lg border border-border/50 bg-card backdrop-blur-sm overflow-hidden transition-all duration-200",
         "hover:bg-card/80 hover:border-border",
         isLive && "border-red-500/50 ring-1 ring-red-500/20",
         showGoalAnimation && "animate-goal-flash"
       )}
     >
         {/* Invisible click target overlay - ensures entire card is clickable */}
-        <span className="absolute inset-0 z-0" aria-hidden="true" />
+        <a href={matchUrl} className="absolute inset-0 z-0 cursor-pointer" aria-label={`View ${match.homeTeam} vs ${match.awayTeam} match details`} />
 
         {/* Live indicator bar */}
         {isLive && (
@@ -107,7 +111,7 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
         )}
         
         {/* Compact Header */}
-        <div className="px-3 py-1.5 border-b border-border/30 flex items-center justify-between gap-2">
+        <div className="relative z-10 px-3 py-1.5 border-b border-border/30 flex items-center justify-between gap-2">
           <div className="flex items-center gap-1 min-w-0 flex-1">
             <span className="text-[11px] font-medium text-muted-foreground truncate">
               {match.competition.name}
@@ -144,7 +148,7 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
         </div>
 
         {/* Compact Match Content */}
-        <div className="px-3 py-2">
+        <div className="relative z-10 px-3 py-2">
           {/* Compact Teams and Score - Single Line Layout */}
           <div className="flex items-center justify-between gap-2">
             {/* Home Team - Compact */}
@@ -169,16 +173,31 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p 
-                  className={cn(
-                    "font-medium text-[13px] leading-tight truncate",
-                    isFinished && match.homeScore !== null && match.awayScore !== null &&
-                    match.homeScore > match.awayScore && "text-green-400"
-                  )}
-                  title={match.homeTeam}
-                >
-                  {match.homeTeam}
-                </p>
+                {homeTeamConfig ? (
+                  <Link
+                    href={`/teams/${homeTeamConfig.slug}`}
+                    className={cn(
+                      "font-medium text-[13px] leading-tight truncate block hover:text-primary transition-colors",
+                      isFinished && match.homeScore !== null && match.awayScore !== null &&
+                      match.homeScore > match.awayScore && "text-green-400"
+                    )}
+                    title={match.homeTeam}
+                    prefetch={false}
+                  >
+                    {match.homeTeam}
+                  </Link>
+                ) : (
+                  <p
+                    className={cn(
+                      "font-medium text-[13px] leading-tight truncate",
+                      isFinished && match.homeScore !== null && match.awayScore !== null &&
+                      match.homeScore > match.awayScore && "text-green-400"
+                    )}
+                    title={match.homeTeam}
+                  >
+                    {match.homeTeam}
+                  </p>
+                )}
               </div>
               {/* Compact Injuries indicator */}
               {analysis?.homeInjuriesCount && analysis.homeInjuriesCount > 0 && !isFinished && (
@@ -218,16 +237,31 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
                 <AlertTriangle className="h-3 w-3 text-red-400 flex-shrink-0" />
               )}
               <div className="min-w-0 flex-1 text-right">
-                <p 
-                  className={cn(
-                    "font-medium text-[13px] leading-tight truncate",
-                    isFinished && match.homeScore !== null && match.awayScore !== null &&
-                    match.awayScore > match.homeScore && "text-green-400"
-                  )}
-                  title={match.awayTeam}
-                >
-                  {match.awayTeam}
-                </p>
+                {awayTeamConfig ? (
+                  <Link
+                    href={`/teams/${awayTeamConfig.slug}`}
+                    className={cn(
+                      "font-medium text-[13px] leading-tight truncate block hover:text-primary transition-colors",
+                      isFinished && match.homeScore !== null && match.awayScore !== null &&
+                      match.awayScore > match.homeScore && "text-green-400"
+                    )}
+                    title={match.awayTeam}
+                    prefetch={false}
+                  >
+                    {match.awayTeam}
+                  </Link>
+                ) : (
+                  <p
+                    className={cn(
+                      "font-medium text-[13px] leading-tight truncate",
+                      isFinished && match.homeScore !== null && match.awayScore !== null &&
+                      match.awayScore > match.homeScore && "text-green-400"
+                    )}
+                    title={match.awayTeam}
+                  >
+                    {match.awayTeam}
+                  </p>
+                )}
               </div>
               <div className="flex-shrink-0 h-6 w-6 rounded bg-muted/50 flex items-center justify-center overflow-hidden relative">
                 {match.awayTeamLogo ? (
@@ -344,6 +378,6 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
             </div>
           )}
         </div>
-    </Link>
+    </div>
   );
 }
