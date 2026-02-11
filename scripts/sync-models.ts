@@ -15,7 +15,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 import { getDb } from '../src/lib/db';
 import { models } from '../src/lib/db/schema';
-import { TOGETHER_PROVIDERS } from '../src/lib/llm/providers/together';
+import { OPENROUTER_PROVIDERS } from '../src/lib/llm/providers/openrouter';
 import { eq } from 'drizzle-orm';
 
 async function syncModels() {
@@ -25,7 +25,7 @@ async function syncModels() {
   
   try {
     // Get all active providers from code
-    const providers = TOGETHER_PROVIDERS;
+    const providers = OPENROUTER_PROVIDERS;
     console.log(`📦 Found ${providers.length} providers in code`);
     
     let added = 0;
