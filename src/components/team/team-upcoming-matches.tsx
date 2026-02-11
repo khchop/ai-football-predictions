@@ -4,6 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { UpcomingMatchWithPredictions } from '@/lib/db/queries/team-stats';
+import { getTeamByIdOrAlias } from '@/lib/football/teams';
 
 interface TeamUpcomingMatchesProps {
   matches: UpcomingMatchWithPredictions[];
@@ -21,13 +22,19 @@ export function TeamUpcomingMatches({ matches, teamName }: TeamUpcomingMatchesPr
     <div className="space-y-3">
       {matches.map((match) => {
         const matchUrl = match.slug ? `/matches/${match.slug}` : null;
+        const homeConfig = getTeamByIdOrAlias(match.homeTeam);
+        const awayConfig = getTeamByIdOrAlias(match.awayTeam);
 
-        const cardContent = (
-          <Card className={cn(
-            "bg-card/50 border-border/50",
-            matchUrl && "hover:bg-card/80 hover:border-border cursor-pointer transition-colors"
-          )}>
-            <CardContent className="p-4">
+        return (
+          <div key={match.matchId} className="relative">
+            <Card className={cn(
+              "bg-card/50 border-border/50",
+              matchUrl && "hover:bg-card/80 hover:border-border transition-colors"
+            )}>
+              {matchUrl && (
+                <a href={matchUrl} className="absolute inset-0 z-0" aria-label={`View ${match.homeTeam} vs ${match.awayTeam} match details`} />
+              )}
+              <CardContent className="p-4 relative z-10">
                 {/* Teams and logos */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3 flex-1">
@@ -50,24 +57,48 @@ export function TeamUpcomingMatches({ matches, teamName }: TeamUpcomingMatchesPr
                           </span>
                         </div>
                       )}
-                      <span className={cn(
-                        "font-medium",
-                        match.homeTeam === teamName && "font-semibold"
-                      )}>
-                        {match.homeTeam}
-                      </span>
+                      {homeConfig ? (
+                        <Link
+                          href={`/teams/${homeConfig.slug}`}
+                          className={cn(
+                            "font-medium hover:text-primary transition-colors hover:underline relative",
+                            match.homeTeam === teamName && "font-semibold"
+                          )}
+                        >
+                          {match.homeTeam}
+                        </Link>
+                      ) : (
+                        <span className={cn(
+                          "font-medium",
+                          match.homeTeam === teamName && "font-semibold"
+                        )}>
+                          {match.homeTeam}
+                        </span>
+                      )}
                     </div>
 
                     <span className="text-muted-foreground px-2">vs</span>
 
                     {/* Away team */}
                     <div className="flex items-center gap-2 flex-1 justify-end">
-                      <span className={cn(
-                        "font-medium",
-                        match.awayTeam === teamName && "font-semibold"
-                      )}>
-                        {match.awayTeam}
-                      </span>
+                      {awayConfig ? (
+                        <Link
+                          href={`/teams/${awayConfig.slug}`}
+                          className={cn(
+                            "font-medium hover:text-primary transition-colors hover:underline relative",
+                            match.awayTeam === teamName && "font-semibold"
+                          )}
+                        >
+                          {match.awayTeam}
+                        </Link>
+                      ) : (
+                        <span className={cn(
+                          "font-medium",
+                          match.awayTeam === teamName && "font-semibold"
+                        )}>
+                          {match.awayTeam}
+                        </span>
+                      )}
                       {match.awayTeamLogo ? (
                         <div className="h-8 w-8 rounded bg-muted/50 flex items-center justify-center overflow-hidden">
                           <Image
@@ -148,15 +179,6 @@ export function TeamUpcomingMatches({ matches, teamName }: TeamUpcomingMatchesPr
                 )}
               </CardContent>
             </Card>
-          );
-
-        return matchUrl ? (
-          <Link key={match.matchId} href={matchUrl}>
-            {cardContent}
-          </Link>
-        ) : (
-          <div key={match.matchId}>
-            {cardContent}
           </div>
         );
       })}

@@ -4,6 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { RecentMatchWithAccuracy } from '@/lib/db/queries/team-stats';
+import { getTeamByIdOrAlias } from '@/lib/football/teams';
 
 interface TeamRecentMatchesProps {
   matches: RecentMatchWithAccuracy[];
@@ -21,6 +22,8 @@ export function TeamRecentMatches({ matches, teamName }: TeamRecentMatchesProps)
     <div className="space-y-2">
       {matches.map((match) => {
         const matchUrl = match.slug ? `/matches/${match.slug}` : null;
+        const homeConfig = getTeamByIdOrAlias(match.homeTeam);
+        const awayConfig = getTeamByIdOrAlias(match.awayTeam);
 
         // Determine accuracy bar color
         const accuracyColor = match.accuracyPct >= 70
@@ -29,12 +32,16 @@ export function TeamRecentMatches({ matches, teamName }: TeamRecentMatchesProps)
             ? 'bg-yellow-500'
             : 'bg-red-500';
 
-        const cardContent = (
-          <Card className={cn(
-            "bg-card/50 border-border/50",
-            matchUrl && "hover:bg-card/80 hover:border-border cursor-pointer transition-colors"
-          )}>
-            <CardContent className="p-4">
+        return (
+          <div key={match.matchId} className="relative">
+            <Card className={cn(
+              "bg-card/50 border-border/50",
+              matchUrl && "hover:bg-card/80 hover:border-border transition-colors"
+            )}>
+              {matchUrl && (
+                <a href={matchUrl} className="absolute inset-0 z-0" aria-label={`View ${match.homeTeam} vs ${match.awayTeam} match details`} />
+              )}
+              <CardContent className="p-4 relative z-10">
                 <div className="flex items-center justify-between gap-4">
                   {/* Left side: Teams and score */}
                   <div className="flex items-center gap-3 flex-1">
@@ -73,21 +80,45 @@ export function TeamRecentMatches({ matches, teamName }: TeamRecentMatchesProps)
 
                       {/* Score and team names */}
                       <div className="flex items-center gap-2">
-                        <span className={cn(
-                          "text-sm",
-                          match.homeTeam === teamName && "font-bold"
-                        )}>
-                          {match.homeTeam}
-                        </span>
+                        {homeConfig ? (
+                          <Link
+                            href={`/teams/${homeConfig.slug}`}
+                            className={cn(
+                              "text-sm hover:text-primary transition-colors hover:underline relative",
+                              match.homeTeam === teamName && "font-bold"
+                            )}
+                          >
+                            {match.homeTeam}
+                          </Link>
+                        ) : (
+                          <span className={cn(
+                            "text-sm",
+                            match.homeTeam === teamName && "font-bold"
+                          )}>
+                            {match.homeTeam}
+                          </span>
+                        )}
                         <span className="font-mono font-bold">
                           {match.homeScore} - {match.awayScore}
                         </span>
-                        <span className={cn(
-                          "text-sm",
-                          match.awayTeam === teamName && "font-bold"
-                        )}>
-                          {match.awayTeam}
-                        </span>
+                        {awayConfig ? (
+                          <Link
+                            href={`/teams/${awayConfig.slug}`}
+                            className={cn(
+                              "text-sm hover:text-primary transition-colors hover:underline relative",
+                              match.awayTeam === teamName && "font-bold"
+                            )}
+                          >
+                            {match.awayTeam}
+                          </Link>
+                        ) : (
+                          <span className={cn(
+                            "text-sm",
+                            match.awayTeam === teamName && "font-bold"
+                          )}>
+                            {match.awayTeam}
+                          </span>
+                        )}
                       </div>
 
                       {/* Away team logo */}
@@ -147,15 +178,6 @@ export function TeamRecentMatches({ matches, teamName }: TeamRecentMatchesProps)
                 </div>
               </CardContent>
             </Card>
-          );
-
-        return matchUrl ? (
-          <Link key={match.matchId} href={matchUrl}>
-            {cardContent}
-          </Link>
-        ) : (
-          <div key={match.matchId}>
-            {cardContent}
           </div>
         );
       })}
