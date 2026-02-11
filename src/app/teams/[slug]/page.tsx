@@ -1,7 +1,7 @@
 import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getTeamBySlug } from '@/lib/football/teams';
-import { getTeamStats, getTeamMatches } from '@/lib/db/queries/team-stats';
+import { getTeamStats, getTeamMatches, getTeamFormGuide, getTeamModelLeaderboard, type TeamLeaderboardPeriod } from '@/lib/db/queries/team-stats';
 import { buildSportsTeamSchema } from '@/lib/seo/schema/team';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { buildTeamTitle, buildTeamDescription } from '@/lib/seo/metadata';
@@ -10,14 +10,20 @@ import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
 import { buildTeamBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 import { getCompetitionById } from '@/lib/football/competitions';
 import { Card, CardContent } from '@/components/ui/card';
+import { TeamModelLeaderboard } from '@/components/team/team-model-leaderboard';
+import { TeamLeaderboardFilter } from '@/components/team/team-leaderboard-filter';
+import { TeamFormIndicator } from '@/components/team/team-form-indicator';
+import { TeamStatsOverview } from '@/components/team/team-stats-overview';
+import { cn } from '@/lib/utils';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export const revalidate = 300; // 5 min ISR
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const team = getTeamBySlug(slug);
 
@@ -84,8 +90,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function TeamPage({ params }: PageProps) {
+export default async function TeamPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const resolvedSearchParams = await searchParams;
   const team = getTeamBySlug(slug);
 
   if (!team) {
@@ -97,10 +104,17 @@ export default async function TeamPage({ params }: PageProps) {
     permanentRedirect(`/teams/${team.slug}`);
   }
 
+  // Parse timePeriod from search params
+  const timePeriod = typeof resolvedSearchParams.timePeriod === 'string'
+    ? resolvedSearchParams.timePeriod as TeamLeaderboardPeriod
+    : 'all';
+
   // Parallel data fetch
-  const [stats, recentMatches] = await Promise.all([
+  const [stats, recentMatches, formGuide, leaderboard] = await Promise.all([
     getTeamStats(team.id),
     getTeamMatches(team.id, { limit: 10, status: 'finished' }),
+    getTeamFormGuide(team.id, 5),
+    getTeamModelLeaderboard(team.id, { timePeriod }),
   ]);
 
   // Build schema.org structured data
@@ -140,70 +154,84 @@ export default async function TeamPage({ params }: PageProps) {
           </p>
         </div>
 
-        {/* Stats overview card */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Record */}
-          <Card className="bg-card/50 border-border/50">
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold">
-                {stats.wins}-{stats.draws}-{stats.losses}
-              </div>
-              <p className="text-sm text-muted-foreground">Record (W-D-L)</p>
-            </CardContent>
-          </Card>
+        {/* Stats overview section */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4">Statistics</h2>
+          <TeamStatsOverview stats={stats} />
+        </section>
 
-          {/* Goals Scored */}
-          <Card className="bg-card/50 border-border/50">
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold">{stats.goalsScored}</div>
-              <p className="text-sm text-muted-foreground">Goals Scored</p>
-            </CardContent>
-          </Card>
+        {/* Form section */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4">Recent Form</h2>
+          <TeamFormIndicator form={formGuide} />
+        </section>
 
-          {/* Goals Conceded */}
-          <Card className="bg-card/50 border-border/50">
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold">{stats.goalsConceded}</div>
-              <p className="text-sm text-muted-foreground">Goals Conceded</p>
-            </CardContent>
-          </Card>
-
-          {/* Clean Sheets */}
-          <Card className="bg-card/50 border-border/50">
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold">{stats.cleanSheets}</div>
-              <p className="text-sm text-muted-foreground">Clean Sheets</p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Model Leaderboard section */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">AI Model Leaderboard for {team.id}</h2>
+            <TeamLeaderboardFilter teamSlug={team.slug} />
+          </div>
+          <TeamModelLeaderboard entries={leaderboard} />
+        </section>
 
         {/* Recent matches section */}
         <section>
           <h2 className="text-xl font-semibold mb-4">Recent Matches</h2>
           {recentMatches.length > 0 ? (
             <div className="space-y-2">
-              {recentMatches.map((match) => (
-                <Card key={match.matchId} className="bg-card/50 border-border/50">
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className={match.isHome ? 'font-semibold' : ''}>
-                        {match.homeTeam}
+              {recentMatches.map((match) => {
+                // Calculate result from team's perspective for badge
+                const isHome = match.isHome;
+                const homeScore = match.homeScore ?? 0;
+                const awayScore = match.awayScore ?? 0;
+                let result: 'W' | 'D' | 'L' | null = null;
+
+                if (match.homeScore !== null && match.awayScore !== null) {
+                  if (homeScore === awayScore) {
+                    result = 'D';
+                  } else if (isHome) {
+                    result = homeScore > awayScore ? 'W' : 'L';
+                  } else {
+                    result = awayScore > homeScore ? 'W' : 'L';
+                  }
+                }
+
+                return (
+                  <Card key={match.matchId} className="bg-card/50 border-border/50">
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {result && (
+                          <div
+                            className={cn(
+                              'h-6 w-6 rounded-full flex items-center justify-center text-xs font-semibold',
+                              result === 'W' && 'bg-green-500/20 text-green-400',
+                              result === 'D' && 'bg-yellow-500/20 text-yellow-400',
+                              result === 'L' && 'bg-red-500/20 text-red-400'
+                            )}
+                          >
+                            {result}
+                          </div>
+                        )}
+                        <span className={match.isHome ? 'font-semibold' : ''}>
+                          {match.homeTeam}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {match.homeScore !== null
+                            ? `${match.homeScore} - ${match.awayScore}`
+                            : 'vs'}
+                        </span>
+                        <span className={!match.isHome ? 'font-semibold' : ''}>
+                          {match.awayTeam}
+                        </span>
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(match.kickoffTime).toLocaleDateString()}
                       </span>
-                      <span className="text-muted-foreground">
-                        {match.homeScore !== null
-                          ? `${match.homeScore} - ${match.awayScore}`
-                          : 'vs'}
-                      </span>
-                      <span className={!match.isHome ? 'font-semibold' : ''}>
-                        {match.awayTeam}
-                      </span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(match.kickoffTime).toLocaleDateString()}
-                    </span>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           ) : (
             <p className="text-muted-foreground">No recent matches found.</p>
