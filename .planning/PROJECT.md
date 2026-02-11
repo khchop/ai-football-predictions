@@ -19,21 +19,22 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 - **Model developers** seeking benchmarks beyond traditional NLP tasks
 - **Casual users** who enjoy comparing "AI vs AI" predictions
 
-## Current Milestone: v2.9 Provider Unification & Maximum Coverage
+## Current Milestone: v3.0 Club/Team Pages
 
-**Goal:** Unify provider architecture with smart multi-provider routing (Synthetic → Together → OpenRouter), merge duplicate -syn model entries, re-activate 7 deprecated models via OpenRouter, and maximize model coverage.
+**Goal:** Add dedicated team pages (`/teams/[slug]`) for every club across all 17 leagues, with per-club model leaderboards, upcoming/recent match predictions, AI-generated club analysis, and full SEO optimization.
 
 **Target features:**
-- Add OpenRouter as third provider with OPENROUTER_API_KEY
-- Smart provider routing: each model has ordered provider priority list
-- Merge 13 -syn Synthetic models into base counterparts (consolidate prediction history)
-- Re-activate 7 deprecated Together AI models via OpenRouter
-- Rename Synthetic-only models (drop -syn suffix)
-- Target: ~29 unique model IDs with multi-provider fallback chains
+- `/teams/[slug]` pages for every club across all 17 leagues
+- Per-club model leaderboard with time period filters (all-time, weekly, monthly, season)
+- Upcoming match predictions and recent results per club
+- AI-generated club analysis content (form, model prediction trends, patterns)
+- Full SEO: Schema.org SportsTeam, FAQ section, meta descriptions, sitemap, OG images
+- `/teams` index page for browsing all clubs
+- Discovery links from league pages and match detail pages
 
 ## Current State
 
-**Brownfield project with v2.8 shipped.** 35 active LLM models across Together AI (22) and Synthetic.new (13) providers — 7 Together AI models deprecated by provider. 270 requirements validated across 13 milestones (v1.0-v2.8). Per-model health observability with admin dashboard and regression alerts.
+**Brownfield project with v2.9 in progress (95%).** ~39 active LLM models across Together AI (29), Synthetic.new (10), and OpenRouter (fallback) providers with smart multi-provider routing. 270+ requirements validated across 13 milestones (v1.0-v2.8). Per-model health observability with admin dashboard and regression alerts. Provider attribution tracking for fallback chain transparency.
 
 ### Validated (v2.8)
 
@@ -426,7 +427,7 @@ Per-model health dashboard with regression alerts operational.
 
 ## Completed Milestones
 
-v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, v2.7, v2.8 — see `.planning/MILESTONES.md` for full history.
+v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, v2.7, v2.8, v2.9 (in progress) — see `.planning/MILESTONES.md` for full history.
 
 ---
-*Last updated: 2026-02-08 after v2.9 milestone start*
+*Last updated: 2026-02-11 after v3.0 milestone start*
