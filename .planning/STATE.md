@@ -11,18 +11,18 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 ## Current Position
 
 Phase: 69 of 71 (UI Components & Match Display)
-Plan: 1 of 1 in current phase
-Status: Plan 69-01 complete
-Last activity: 2026-02-11 - Completed 69-01-PLAN.md (Team Model Leaderboard & Enhanced Stats)
+Plan: 2 of 2 in current phase
+Status: Plan 69-02 complete
+Last activity: 2026-02-11 - Completed 69-02-PLAN.md (Match Prediction Display & Accuracy Trends)
 
-Progress: [█████████████████████████████████████████░] 98% (62 of 66 v2.9 phases complete, v3.0 Phase 67-69 complete: 5 of 5 plans done)
+Progress: [█████████████████████████████████████████░] 98% (62 of 66 v2.9 phases complete, v3.0 Phase 67-69 complete: 6 of 6 plans done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 169 plans (phases 1-63, 67-01, 67-02, 68-01, 68-02, 69-01) + 3 quick tasks (quick-37, quick-38, quick-39)
+- Total plans completed: 170 plans (phases 1-63, 67-01, 67-02, 68-01, 68-02, 69-01, 69-02) + 3 quick tasks (quick-37, quick-38, quick-39)
 - Milestones shipped: 13 (v1.0 through v2.8), v2.9 95% complete
-- v3.0 in progress: Phase 67 complete (2/2), Phase 68 complete (2/2), Phase 69 complete (1/1, 2026-02-11)
+- v3.0 in progress: Phase 67 complete (2/2), Phase 68 complete (2/2), Phase 69 complete (2/2, 2026-02-11)
 
 **Recent Milestones:**
 - v2.9 Provider Unification: 8 phases (59-66), in progress (phases 59-62 complete)
@@ -51,6 +51,9 @@ Recent decisions affecting current work:
 - [Phase 69-01]: Map 'season' period to dateFrom (Aug 1) for current season filtering in getTeamModelLeaderboard
 - [Phase 69-01]: Form indicator renders left-to-right as oldest-to-newest for timeline UX
 - [Phase 69-01]: Add W/D/L colored circle badges to recent matches for visual result indication
+- [Phase 69-02]: Use horizontal stacked bar with green/yellow/blue segments for prediction distribution
+- [Phase 69-02]: Weekly accuracy aggregation (last 20 weeks) for trend chart balances data density with patterns
+- [Phase 69-02]: Accuracy color thresholds: green 70%+, yellow 40-70%, red <40% aligned with form indicators
 
 ### Pending Todos
 
@@ -61,9 +64,9 @@ Recent decisions affecting current work:
 **v3.0 todos:**
 - Phase 67: ✅ Complete (67-01 team mapping, 67-02 stats queries & cache)
 - Phase 68: ✅ Complete (68-01 team SEO infrastructure, 68-02 team page routes)
-- Phase 69: ✅ Complete (69-01 team leaderboard & enhanced stats)
+- Phase 69: ✅ Complete (69-01 team leaderboard & enhanced stats, 69-02 match display & accuracy charts)
 - Phase 70-71: Next up (predictions, AI content)
-- Post-69 deployment: Test team page leaderboards with real prediction data
+- Post-69 deployment: Test team page match predictions and accuracy trends with real data
 - Decide canonical URL strategy for duplicate content (leaderboard vs team pages)
 - Phase 71: Estimate AI content generation cost (200+ teams × LLM calls)
 
@@ -81,10 +84,10 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Phase 69 complete (team model leaderboard & enhanced stats)
+Stopped at: Phase 69 complete (match display & accuracy trends - all v3.0 club pages features done)
 Resume file: .planning/phases/70-team-predictions/70-01-PLAN.md (if exists, else Phase 71)
 
 **Next action:** Begin Phase 70 (Team Predictions) or Phase 71 (AI Content Generation)
 
 ---
-*Last updated: 2026-02-11 after completing 69-01*
+*Last updated: 2026-02-11 after completing 69-02*
