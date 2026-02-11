@@ -5,7 +5,8 @@ import Image from 'next/image';
 import { format, parseISO, isAfter } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { MapPin, Star, AlertTriangle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { MatchTime } from '@/components/client-date';
 import { getTeamByIdOrAlias } from '@/lib/football/teams';
 
@@ -93,17 +94,31 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
   const homeTeamConfig = getTeamByIdOrAlias(match.homeTeam);
   const awayTeamConfig = getTeamByIdOrAlias(match.awayTeam);
 
+  const router = useRouter();
+  const handleCardClick = useCallback((e: React.MouseEvent) => {
+    // Don't navigate if user clicked a link (team name links)
+    const target = e.target as HTMLElement;
+    if (target.closest('a[href^="/teams/"]')) return;
+    // Support cmd/ctrl+click to open in new tab
+    if (e.metaKey || e.ctrlKey) {
+      window.open(matchUrl, '_blank');
+    } else {
+      router.push(matchUrl);
+    }
+  }, [matchUrl, router]);
+
   return (
     <div
+      onClick={handleCardClick}
       className={cn(
-        "group block relative rounded-lg border border-border/50 bg-card backdrop-blur-sm overflow-hidden transition-all duration-200",
+        "group block relative rounded-lg border border-border/50 bg-card backdrop-blur-sm overflow-hidden transition-all duration-200 cursor-pointer",
         "hover:bg-card/80 hover:border-border",
         isLive && "border-red-500/50 ring-1 ring-red-500/20",
         showGoalAnimation && "animate-goal-flash"
       )}
     >
-        {/* Invisible click target overlay - ensures entire card is clickable */}
-        <a href={matchUrl} className="absolute inset-0 z-0 cursor-pointer" aria-label={`View ${match.homeTeam} vs ${match.awayTeam} match details`} />
+        {/* Hidden link for SEO/accessibility - not clickable, card onClick handles navigation */}
+        <a href={matchUrl} className="absolute inset-0 z-0 pointer-events-none" aria-label={`View ${match.homeTeam} vs ${match.awayTeam} match details`} tabIndex={-1} />
 
         {/* Live indicator bar */}
         {isLive && (
@@ -177,7 +192,7 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
                   <Link
                     href={`/teams/${homeTeamConfig.slug}`}
                     className={cn(
-                      "font-medium text-[13px] leading-tight truncate block hover:text-primary transition-colors",
+                      "relative z-20 font-medium text-[13px] leading-tight truncate block hover:text-primary transition-colors",
                       isFinished && match.homeScore !== null && match.awayScore !== null &&
                       match.homeScore > match.awayScore && "text-green-400"
                     )}
@@ -241,7 +256,7 @@ export function MatchCard({ match, analysis, showPredictions = false, prediction
                   <Link
                     href={`/teams/${awayTeamConfig.slug}`}
                     className={cn(
-                      "font-medium text-[13px] leading-tight truncate block hover:text-primary transition-colors",
+                      "relative z-20 font-medium text-[13px] leading-tight truncate block hover:text-primary transition-colors",
                       isFinished && match.homeScore !== null && match.awayScore !== null &&
                       match.awayScore > match.homeScore && "text-green-400"
                     )}
