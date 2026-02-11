@@ -6,26 +6,26 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** The prediction pipeline must reliably generate scores from 42 LLMs ~30 minutes before kickoff and accurately calculate Kicktipp quota points when matches complete
 
-**Current focus:** v3.0 Club/Team Pages - Phase 69 UI Components & Match Display
+**Current focus:** v3.0 Club/Team Pages - Phase 71 AI Content & FAQ Generation
 
 ## Current Position
 
-Phase: 70 of 71 (Navigation & Cross-linking)
-Plan: 2 of 2 in current phase
-Status: Phase 70 complete
-Last activity: 2026-02-11 - Completed quick task 041: Remove Together AI provider, move all models to OpenRouter, deduplicate model entries
+Phase: 71 of 71 (AI Content & FAQ Generation)
+Plan: 0 of TBD in current phase
+Status: Phase 71 not yet planned
+Last activity: 2026-02-11 - Fixed match card navigation (quick-042)
 
-Progress: [█████████████████████████████████████████░] 99% (62 of 66 v2.9 phases complete, v3.0 Phase 67-70 complete: 8 of 8 plans done)
+Progress: [██████████████████████████████████████████░] 99% (v2.9 complete, v3.0 Phases 67-70 complete, Phase 71 remaining)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 172 plans (phases 1-63, 67-01, 67-02, 68-01, 68-02, 69-01, 69-02, 70-01, 70-02) + 3 quick tasks (quick-37, quick-38, quick-39)
-- Milestones shipped: 13 (v1.0 through v2.8), v2.9 95% complete
-- v3.0 in progress: Phase 67 complete (2/2), Phase 68 complete (2/2), Phase 69 complete (2/2), Phase 70 complete (2/2, 2026-02-11)
+- Total plans completed: 172 plans (phases 1-62, 67-70) + 5 quick tasks (quick-037 through quick-041)
+- Milestones shipped: 14 (v1.0 through v2.9)
+- v3.0 in progress: Phases 67-70 complete (8/8 plans), Phase 71 remaining
 
 **Recent Milestones:**
-- v2.9 Provider Unification: 8 phases (59-66), in progress (phases 59-62 complete)
+- v2.9 Provider Unification: Phases 59-62 built infra, quick-040/041 completed by removing Synthetic+Together (shipped 2026-02-11)
 - v2.8 Model Coverage: 13 plans, 2 days (2026-02-07 to 2026-02-08)
 - v2.7 Pipeline Reliability: 9 plans, 2 days (2026-02-06 to 2026-02-07)
 
@@ -60,30 +60,17 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-**v2.9 todos:**
-- Complete phases 63-66 (model consolidation execution, re-activation, cost tracking, health monitoring)
-- Investigate 3 fixable Together AI empty-response failures (kimi-k2-instruct, nemotron-nano-9b-v2, gemma-3n-e4b)
-
 **v3.0 todos:**
-- Phase 67: ✅ Complete (67-01 team mapping, 67-02 stats queries & cache)
-- Phase 68: ✅ Complete (68-01 team SEO infrastructure, 68-02 team page routes)
-- Phase 69: ✅ Complete (69-01 team leaderboard & enhanced stats, 69-02 match display & accuracy charts)
-- Phase 70: ✅ Complete (70-01 bidirectional nav links, 70-02 team links in match components)
-- Phase 71: Next up (AI content generation)
+- Phase 71: Next up (AI content generation for team pages)
+- Estimate AI content generation cost (200+ teams × LLM calls)
 - Post-deployment: Test team page internal linking graph in Search Console
 - Decide canonical URL strategy for duplicate content (leaderboard vs team pages)
-- Phase 71: Estimate AI content generation cost (200+ teams × LLM calls)
 
 ### Blockers/Concerns
 
-**v2.9 blockers:**
-- Phase 63: Model consolidation execution requires production migration coordination
-- Phase 64-66: Plan details TBD (awaiting Phase 63 completion)
-
 **v3.0 considerations:**
-- No blockers - independent feature milestone
-- Research complete with HIGH confidence
-- All patterns proven in existing codebase
+- No blockers - v2.9 complete, v3.0 phases 67-70 done
+- Phase 71 (AI content) needs planning — estimate cost before committing
 
 ### Quick Tasks Completed
 
@@ -91,14 +78,15 @@ Recent decisions affecting current work:
 |---|-------------|------|--------|-----------|
 | 040 | Remove all Synthetic providers, use OpenRouter when possible | 2026-02-11 | e8bd822 | [040-remove-synthetic-providers-use-openroute](./quick/040-remove-synthetic-providers-use-openroute/) |
 | 041 | Remove Together AI provider, move all models to OpenRouter, deduplicate model entries | 2026-02-11 | 0dba995 | [041-remove-together-ai-provider-move-all-mod](./quick/041-remove-together-ai-provider-move-all-mod/) |
+| 042 | Fix match card click navigation - card body to match detail, team names to team pages | 2026-02-11 | 8a65d44 | [042-fix-match-boxes-linking-to-team-pages-in](./quick/42-fix-match-boxes-linking-to-team-pages-in/) |
 
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Phase 70 complete (navigation & cross-linking - all internal links implemented)
+Stopped at: v2.9 cleaned up (phases 63-66 superseded), v3.0 phase 71 next
 Resume file: .planning/phases/71-ai-content-generation/ (if exists)
 
 **Next action:** Begin Phase 71 (AI Content Generation) or verify v3.0 completion
 
 ---
-*Last updated: 2026-02-11 after completing 70-02*
+*Last updated: 2026-02-11 after quick-042 (match card navigation fix)*

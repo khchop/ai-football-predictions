@@ -15,8 +15,8 @@
 - ✅ **v2.6 SEO/GEO Site Health** - Phases 44-48 (shipped 2026-02-06)
 - ✅ **v2.7 Pipeline Reliability & Retroactive Backfill** - Phases 49-52 (shipped 2026-02-07)
 - ✅ **v2.8 Model Coverage** - Phases 53-58 (shipped 2026-02-08)
-- 🚧 **v2.9 Provider Unification & Maximum Coverage** - Phases 59-66 (in progress)
-- 📋 **v3.0 Club/Team Pages** - Phases 67-71 (planned)
+- ✅ **v2.9 Provider Unification & Maximum Coverage** - Phases 59-62 + quick-040/041 (shipped 2026-02-11)
+- 🚧 **v3.0 Club/Team Pages** - Phases 67-71 (in progress)
 
 ## Phases
 
@@ -111,9 +111,9 @@ See `.planning/MILESTONES.md` for full details.
 
 </details>
 
-### v2.9 Provider Unification & Maximum Coverage (In Progress)
+### v2.9 Provider Unification & Maximum Coverage (Complete)
 
-**Milestone Goal:** Unify provider architecture with smart multi-provider routing (Synthetic -> Together -> OpenRouter), merge duplicate -syn model entries, re-activate 7 deprecated models via OpenRouter, and maximize model coverage to ~29 unique model IDs with multi-provider fallback chains.
+**Milestone Goal:** Unify provider architecture with smart multi-provider routing, merge duplicate -syn model entries, and maximize model coverage. Phases 59-62 built the infrastructure; quick-040 removed Synthetic providers and quick-041 removed Together AI, moving all 42 models to OpenRouter as the single provider. Phases 63-66 were superseded by these quick tasks.
 
 #### Phase 59: Provider Integration Foundations
 
@@ -195,88 +195,11 @@ Plans:
 Plans:
 - [x] 62-01-PLAN.md -- Forward migration script with dedup/validation/dry-run + rollback script
 
-#### Phase 63: Model Consolidation Execution
+#### Phases 63-66: Superseded by Quick Tasks
 
-**Goal:** 3 consolidated -syn models merged into base IDs, provider routes updated, all prediction history preserved with cache invalidation and integrity verification
+Phases 63 (Model Consolidation Execution), 64 (Model Re-Activation), 65 (Cost Tracking), and 66 (Provider Health Monitoring) were superseded by quick-040 (remove Synthetic providers) and quick-041 (remove Together AI, move all models to OpenRouter). The multi-provider architecture was simplified to a single OpenRouter provider, eliminating the need for consolidation migrations, re-activation, and multi-provider cost/health tracking.
 
-**Depends on:** Phase 62
-
-**Requirements:** CONS-03, CONS-04, CONS-06, CONS-07
-
-**Success Criteria** (what must be TRUE):
-1. Foreign keys updated across all referencing tables (predictions, llm_model_stats, bets, model_balances)
-2. Leaderboard aggregates recalculated after model consolidation match historical totals
-3. Cache invalidation covers all model-keyed caches after migration
-4. Post-migration validation confirms zero orphaned foreign keys and referential integrity intact
-5. Before/after comparison report shows correct row counts and prediction preservation
-
-**Plans:** 2 plans
-
-Plans:
-- [ ] 63-01-PLAN.md -- Update provider routes and Synthetic config, create post-consolidation script
-- [ ] 63-02-PLAN.md -- Execute migration on production, deploy, verify integrity and leaderboard
-
-#### Phase 64: Model Re-Activation
-
-**Goal:** 7 deprecated Together AI models re-activated via OpenRouter with validated output quality
-
-**Depends on:** Phase 63
-
-**Requirements:** REACT-01, REACT-02, REACT-03, REACT-04, REACT-05
-
-**Success Criteria** (what must be TRUE):
-1. 7 deprecated Together AI models re-activated with OpenRouter as primary provider
-2. Re-activated models use correct OpenRouter model IDs verified against OpenRouter API
-3. Re-activated models tested for valid JSON prediction output before going live
-4. Dynamic model count (getActiveModelCount) reflects new consolidated count across SEO, content, and system prompts
-5. Homepage and leaderboard display updated model count without manual intervention
-
-**Plans:** TBD
-
-Plans:
-- [ ] 64-01: TBD
-
-#### Phase 65: Cost Tracking & Budget Control
-
-**Goal:** Cost tracking per provider with budget circuit breakers preventing cost overruns during fallback
-
-**Depends on:** Phase 64
-
-**Requirements:** COST-01, COST-02, COST-03, COST-04
-
-**Success Criteria** (what must be TRUE):
-1. Actual provider cost tracked per prediction including fallback costs
-2. Budget circuit breaker pauses OpenRouter fallback when daily cost exceeds threshold
-3. Cost comparison visible per provider in admin dashboard
-4. Warning logged when fallback to more expensive provider is triggered
-5. Daily cost report shows actual vs budgeted spend with provider breakdown
-
-**Plans:** TBD
-
-Plans:
-- [ ] 65-01: TBD
-
-#### Phase 66: Provider Health Monitoring
-
-**Goal:** Per-provider health observability with regression alerts and latency tracking
-
-**Depends on:** Phase 65
-
-**Requirements:** HLTH-01, HLTH-02, HLTH-03, HLTH-04
-
-**Success Criteria** (what must be TRUE):
-1. Per-provider success rate tracked (not just per-model) and visible in admin dashboard
-2. Provider latency tracked and visible with P50/P95/P99 percentiles
-3. Provider health cards added to admin dashboard alongside model health cards
-4. Regression alert when provider-wide success rate drops below 90% threshold
-5. Fallback analytics dashboard shows provider routing paths and success rates
-
-**Plans:** TBD
-
-Plans:
-- [ ] 66-01: TBD
-
-### v3.0 Club/Team Pages (Planned)
+### v3.0 Club/Team Pages (In Progress)
 
 **Milestone Goal:** Add dedicated team pages for every club across all 17 leagues with per-club model leaderboards, upcoming/recent match predictions, AI-generated club analysis, and full SEO optimization.
 
@@ -284,7 +207,7 @@ Plans:
 
 **Goal:** Team name normalization, query infrastructure, and caching strategy established
 
-**Depends on:** Phase 66 (v2.9 complete)
+**Depends on:** v2.9 complete
 
 **Requirements:** PAGE-03
 
@@ -386,7 +309,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> 63 -> 64 -> 65 -> 66 -> 67 -> 68 -> 69 -> 70 -> 71
+Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> (63-66 superseded) -> 67 -> 68 -> 69 -> 70 -> 71
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -452,10 +375,7 @@ Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> 63 -> 64 -> 65 -> 66 ->
 | 60. Multi-Provider Routing | v2.9 | 1/1 | Complete | 2026-02-08 |
 | 61. Provider Attribution | v2.9 | 2/2 | Complete | 2026-02-08 |
 | 62. Migration Script Development | v2.9 | 1/1 | Complete | 2026-02-08 |
-| 63. Model Consolidation Execution | v2.9 | 0/2 | Not started | - |
-| 64. Model Re-Activation | v2.9 | 0/TBD | Not started | - |
-| 65. Cost Tracking & Budget Control | v2.9 | 0/TBD | Not started | - |
-| 66. Provider Health Monitoring | v2.9 | 0/TBD | Not started | - |
+| 63-66. Superseded by quick-040/041 | v2.9 | - | Superseded | 2026-02-11 |
 | 67. Foundation & Data Layer | v3.0 | 2/2 | Complete | 2026-02-11 |
 | 68. Routes, SEO & Basic Pages | v3.0 | 2/2 | Complete | 2026-02-11 |
 | 69. UI Components & Match Display | v3.0 | 2/2 | Complete | 2026-02-11 |
@@ -463,4 +383,4 @@ Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> 63 -> 64 -> 65 -> 66 ->
 | 71. AI Content & FAQ Generation | v3.0 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-11 after phase 70 execution complete*
+*Last updated: 2026-02-11 — v2.9 complete (phases 63-66 superseded by quick-040/041), v3.0 phases 67-70 complete*
