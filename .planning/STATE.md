@@ -13,7 +13,7 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 Phase: 70 of 71 (Navigation & Cross-linking)
 Plan: 2 of 2 in current phase
 Status: Phase 70 complete
-Last activity: 2026-02-11 - Completed quick task 040: Remove all Synthetic providers, use OpenRouter when possible
+Last activity: 2026-02-11 - Completed quick task 041: Remove Together AI provider, move all models to OpenRouter, deduplicate model entries
 
 Progress: [█████████████████████████████████████████░] 99% (62 of 66 v2.9 phases complete, v3.0 Phase 67-70 complete: 8 of 8 plans done)
 
@@ -90,6 +90,7 @@ Recent decisions affecting current work:
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 040 | Remove all Synthetic providers, use OpenRouter when possible | 2026-02-11 | e8bd822 | [040-remove-synthetic-providers-use-openroute](./quick/040-remove-synthetic-providers-use-openroute/) |
+| 041 | Remove Together AI provider, move all models to OpenRouter, deduplicate model entries | 2026-02-11 | 0dba995 | [041-remove-together-ai-provider-move-all-mod](./quick/041-remove-together-ai-provider-move-all-mod/) |
 
 ## Session Continuity
 
