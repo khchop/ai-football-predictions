@@ -1,7 +1,15 @@
 import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getTeamBySlug } from '@/lib/football/teams';
-import { getTeamStats, getTeamMatches, getTeamFormGuide, getTeamModelLeaderboard, type TeamLeaderboardPeriod } from '@/lib/db/queries/team-stats';
+import {
+  getTeamStats,
+  getTeamFormGuide,
+  getTeamModelLeaderboard,
+  getTeamUpcomingWithPredictions,
+  getTeamRecentWithAccuracy,
+  getTeamAccuracyTrend,
+  type TeamLeaderboardPeriod
+} from '@/lib/db/queries/team-stats';
 import { buildSportsTeamSchema } from '@/lib/seo/schema/team';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
 import { buildTeamTitle, buildTeamDescription } from '@/lib/seo/metadata';
@@ -9,12 +17,13 @@ import { BASE_URL } from '@/lib/seo/constants';
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
 import { buildTeamBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 import { getCompetitionById } from '@/lib/football/competitions';
-import { Card, CardContent } from '@/components/ui/card';
 import { TeamModelLeaderboard } from '@/components/team/team-model-leaderboard';
 import { TeamLeaderboardFilter } from '@/components/team/team-leaderboard-filter';
 import { TeamFormIndicator } from '@/components/team/team-form-indicator';
 import { TeamStatsOverview } from '@/components/team/team-stats-overview';
-import { cn } from '@/lib/utils';
+import { TeamUpcomingMatches } from '@/components/team/team-upcoming-matches';
+import { TeamRecentMatches } from '@/components/team/team-recent-matches';
+import { TeamAccuracyTrendChart } from '@/components/team/team-accuracy-trend-chart';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -110,11 +119,13 @@ export default async function TeamPage({ params, searchParams }: PageProps) {
     : 'all';
 
   // Parallel data fetch
-  const [stats, recentMatches, formGuide, leaderboard] = await Promise.all([
+  const [stats, formGuide, leaderboard, upcomingMatches, recentWithAccuracy, accuracyTrend] = await Promise.all([
     getTeamStats(team.id),
-    getTeamMatches(team.id, { limit: 10, status: 'finished' }),
     getTeamFormGuide(team.id, 5),
     getTeamModelLeaderboard(team.id, { timePeriod }),
+    getTeamUpcomingWithPredictions(team.id, 5),
+    getTeamRecentWithAccuracy(team.id, 10),
+    getTeamAccuracyTrend(team.id),
   ]);
 
   // Build schema.org structured data
@@ -175,67 +186,22 @@ export default async function TeamPage({ params, searchParams }: PageProps) {
           <TeamModelLeaderboard entries={leaderboard} />
         </section>
 
-        {/* Recent matches section */}
+        {/* Model Accuracy Trend section */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4">Model Accuracy Over Time</h2>
+          <TeamAccuracyTrendChart data={accuracyTrend} />
+        </section>
+
+        {/* Upcoming Matches section */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4">Upcoming Matches</h2>
+          <TeamUpcomingMatches matches={upcomingMatches} teamName={team.id} />
+        </section>
+
+        {/* Recent Matches section */}
         <section>
           <h2 className="text-xl font-semibold mb-4">Recent Matches</h2>
-          {recentMatches.length > 0 ? (
-            <div className="space-y-2">
-              {recentMatches.map((match) => {
-                // Calculate result from team's perspective for badge
-                const isHome = match.isHome;
-                const homeScore = match.homeScore ?? 0;
-                const awayScore = match.awayScore ?? 0;
-                let result: 'W' | 'D' | 'L' | null = null;
-
-                if (match.homeScore !== null && match.awayScore !== null) {
-                  if (homeScore === awayScore) {
-                    result = 'D';
-                  } else if (isHome) {
-                    result = homeScore > awayScore ? 'W' : 'L';
-                  } else {
-                    result = awayScore > homeScore ? 'W' : 'L';
-                  }
-                }
-
-                return (
-                  <Card key={match.matchId} className="bg-card/50 border-border/50">
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {result && (
-                          <div
-                            className={cn(
-                              'h-6 w-6 rounded-full flex items-center justify-center text-xs font-semibold',
-                              result === 'W' && 'bg-green-500/20 text-green-400',
-                              result === 'D' && 'bg-yellow-500/20 text-yellow-400',
-                              result === 'L' && 'bg-red-500/20 text-red-400'
-                            )}
-                          >
-                            {result}
-                          </div>
-                        )}
-                        <span className={match.isHome ? 'font-semibold' : ''}>
-                          {match.homeTeam}
-                        </span>
-                        <span className="text-muted-foreground">
-                          {match.homeScore !== null
-                            ? `${match.homeScore} - ${match.awayScore}`
-                            : 'vs'}
-                        </span>
-                        <span className={!match.isHome ? 'font-semibold' : ''}>
-                          {match.awayTeam}
-                        </span>
-                      </div>
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(match.kickoffTime).toLocaleDateString()}
-                      </span>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-muted-foreground">No recent matches found.</p>
-          )}
+          <TeamRecentMatches matches={recentWithAccuracy} teamName={team.id} />
         </section>
       </div>
     </>
