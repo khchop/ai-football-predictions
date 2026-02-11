@@ -407,13 +407,22 @@ export const cacheKeys = {
 
     // Model count (for dynamic UI references)
     activeModelCount: () => 'db:models:count:active',
+
+    // Team page caches (Phase 67 - v3.0)
+    teamPageStats: (teamSlug: string) => `db:team:${teamSlug}:stats`,
+    teamPageMatches: (teamSlug: string) => `db:team:${teamSlug}:matches`,
+    teamPageLeaderboard: (teamSlug: string, period: string) => `db:team:${teamSlug}:leaderboard:${period}`,
+    teamPageForm: (teamSlug: string) => `db:team:${teamSlug}:form`,
   } as const;
 
 /**
  * Invalidate caches when match finishes
  * Called from scoring logic AFTER transaction commits
  */
-export async function invalidateMatchCaches(matchId: string): Promise<void> {
+export async function invalidateMatchCaches(
+  matchId: string,
+  teamInfo?: { homeTeam: string; awayTeam: string }
+): Promise<void> {
   const redis = getRedis();
   if (!redis) return;
 
@@ -432,6 +441,11 @@ export async function invalidateMatchCaches(matchId: string): Promise<void> {
       // Invalidate specific match predictions cache
       cacheDelete(cacheKeys.matchPredictions(matchId)),
     ]);
+
+    // Also invalidate team-specific caches if team info provided
+    if (teamInfo) {
+      await invalidateTeamCaches(teamInfo.homeTeam, teamInfo.awayTeam);
+    }
 
     loggers.cache.info({ matchId }, 'Invalidated match caches (leaderboard, stats, predictions)');
   } catch (error) {
@@ -487,6 +501,56 @@ export async function invalidateModelCountCaches(): Promise<void> {
     loggers.cache.error({
       error: error instanceof Error ? error.message : String(error)
     }, 'Failed to invalidate model count caches');
+  }
+}
+
+/**
+ * Invalidate caches for specific teams involved in a match
+ * Called from scoring logic to targeted-invalidate only affected teams
+ * Prevents thundering herd by invalidating 2 teams instead of 200+
+ */
+export async function invalidateTeamCaches(
+  homeTeam: string,
+  awayTeam: string
+): Promise<void> {
+  const redis = getRedis();
+  if (!redis) return;
+
+  // Lazy import to avoid circular dependency (teams.ts may import cache utilities)
+  const { getTeamByIdOrAlias } = await import('@/lib/football/teams');
+
+  const homeConfig = getTeamByIdOrAlias(homeTeam);
+  const awayConfig = getTeamByIdOrAlias(awayTeam);
+
+  if (!homeConfig || !awayConfig) {
+    loggers.cache.warn({ homeTeam, awayTeam }, 'Team config not found for cache invalidation — skipping team cache clear');
+    return;
+  }
+
+  const homeSlug = homeConfig.slug;
+  const awaySlug = awayConfig.slug;
+
+  try {
+    await Promise.all([
+      // Home team caches
+      cacheDelete(cacheKeys.teamPageStats(homeSlug)),
+      cacheDelete(cacheKeys.teamPageMatches(homeSlug)),
+      cacheDelete(cacheKeys.teamPageForm(homeSlug)),
+      // Away team caches
+      cacheDelete(cacheKeys.teamPageStats(awaySlug)),
+      cacheDelete(cacheKeys.teamPageMatches(awaySlug)),
+      cacheDelete(cacheKeys.teamPageForm(awaySlug)),
+      // Leaderboard caches for both teams (all periods)
+      cacheDeletePattern(`db:team:${homeSlug}:leaderboard:*`),
+      cacheDeletePattern(`db:team:${awaySlug}:leaderboard:*`),
+    ]);
+
+    loggers.cache.info({ homeSlug, awaySlug }, 'Invalidated team caches (targeted, 2 teams)');
+  } catch (error) {
+    loggers.cache.error({
+      homeTeam, awayTeam,
+      error: error instanceof Error ? error.message : String(error),
+    }, 'Error invalidating team caches');
   }
 }
 
