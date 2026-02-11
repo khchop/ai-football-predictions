@@ -6,23 +6,23 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** The prediction pipeline must reliably generate scores from 42 LLMs ~30 minutes before kickoff and accurately calculate Kicktipp quota points when matches complete
 
-**Current focus:** v3.0 Club/Team Pages - Phase 68 Routes, SEO & Basic Pages
+**Current focus:** v3.0 Club/Team Pages - Phase 69 UI Components & Match Display
 
 ## Current Position
 
-Phase: 68 of 71 (Routes, SEO & Basic Pages)
-Plan: 2 of 2 in current phase
-Status: Plan 68-02 complete
-Last activity: 2026-02-11 - Completed 68-02-PLAN.md (Team Page Routes)
+Phase: 69 of 71 (UI Components & Match Display)
+Plan: 1 of 1 in current phase
+Status: Plan 69-01 complete
+Last activity: 2026-02-11 - Completed 69-01-PLAN.md (Team Model Leaderboard & Enhanced Stats)
 
-Progress: [█████████████████████████████████████████░] 97% (62 of 66 v2.9 phases complete, v3.0 Phase 67-68 complete: 4 of 4 plans done)
+Progress: [█████████████████████████████████████████░] 98% (62 of 66 v2.9 phases complete, v3.0 Phase 67-69 complete: 5 of 5 plans done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 168 plans (phases 1-63, 67-01, 67-02, 68-01, 68-02) + 3 quick tasks (quick-37, quick-38, quick-39)
+- Total plans completed: 169 plans (phases 1-63, 67-01, 67-02, 68-01, 68-02, 69-01) + 3 quick tasks (quick-37, quick-38, quick-39)
 - Milestones shipped: 13 (v1.0 through v2.8), v2.9 95% complete
-- v3.0 in progress: Phase 67 complete (2/2), Phase 68 complete (2/2 plans done, 2026-02-11)
+- v3.0 in progress: Phase 67 complete (2/2), Phase 68 complete (2/2), Phase 69 complete (1/1, 2026-02-11)
 
 **Recent Milestones:**
 - v2.9 Provider Unification: 8 phases (59-66), in progress (phases 59-62 complete)
@@ -48,6 +48,9 @@ Recent decisions affecting current work:
 - v3.0 Phase 68-01: Parallel Promise.all for team stats in sitemap generation
 - [Phase 68-02]: Use 300s ISR revalidation for team detail pages (balance freshness vs performance)
 - [Phase 68-02]: Exclude international competitions from teams index (national teams, not clubs)
+- [Phase 69-01]: Map 'season' period to dateFrom (Aug 1) for current season filtering in getTeamModelLeaderboard
+- [Phase 69-01]: Form indicator renders left-to-right as oldest-to-newest for timeline UX
+- [Phase 69-01]: Add W/D/L colored circle badges to recent matches for visual result indication
 
 ### Pending Todos
 
@@ -58,8 +61,9 @@ Recent decisions affecting current work:
 **v3.0 todos:**
 - Phase 67: ✅ Complete (67-01 team mapping, 67-02 stats queries & cache)
 - Phase 68: ✅ Complete (68-01 team SEO infrastructure, 68-02 team page routes)
-- Phase 69-71: Next up (team enhancements, predictions, AI content)
-- Post-68 deployment: Deploy Phase 67 migration before deploying Phase 68 pages
+- Phase 69: ✅ Complete (69-01 team leaderboard & enhanced stats)
+- Phase 70-71: Next up (predictions, AI content)
+- Post-69 deployment: Test team page leaderboards with real prediction data
 - Decide canonical URL strategy for duplicate content (leaderboard vs team pages)
 - Phase 71: Estimate AI content generation cost (200+ teams × LLM calls)
 
@@ -77,10 +81,10 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Phase 68 complete (team SEO infrastructure + team page routes)
-Resume file: .planning/phases/69-team-enhancements/69-01-PLAN.md (next phase)
+Stopped at: Phase 69 complete (team model leaderboard & enhanced stats)
+Resume file: .planning/phases/70-team-predictions/70-01-PLAN.md (if exists, else Phase 71)
 
-**Next action:** Begin Phase 69 (Team Enhancements) - logos, enhanced stats, filtering
+**Next action:** Begin Phase 70 (Team Predictions) or Phase 71 (AI Content Generation)
 
 ---
-*Last updated: 2026-02-11 after completing 68-02*
+*Last updated: 2026-02-11 after completing 69-01*
