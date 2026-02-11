@@ -80,3 +80,18 @@ export function buildLeaderboardBreadcrumbs(): BreadcrumbItem[] {
     { name: 'Leaderboard', href: '' }, // Current page
   ];
 }
+
+/**
+ * Build breadcrumbs for team pages
+ * Home > Teams > Team
+ */
+export function buildTeamBreadcrumbs(
+  teamName: string,
+  _teamSlug: string
+): BreadcrumbItem[] {
+  return [
+    { name: 'Home', href: '/' },
+    { name: 'Teams', href: '/teams' },
+    { name: teamName, href: '' }, // Current page
+  ];
+}

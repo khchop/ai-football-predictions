@@ -109,6 +109,24 @@ export function buildLeagueDescription(leagueName: string, modelCount: number): 
 }
 
 /**
+ * Build team page title: "{Team Name} AI Predictions & Stats | Kroam"
+ * Drops " | Kroam" suffix if title exceeds 60 chars
+ */
+export function buildTeamTitle(teamName: string): string {
+  const base = `${teamName} AI Predictions & Stats`;
+  const withBrand = `${base} | Kroam`;
+  return withBrand.length <= MAX_TITLE_LENGTH ? withBrand : base;
+}
+
+/**
+ * Build team description with 100-160 char enforcement
+ */
+export function buildTeamDescription(teamName: string, stats: { wins: number; draws: number; losses: number; totalMatches: number }, modelCount: number): string {
+  const base = `${teamName} stats: ${stats.wins}W-${stats.draws}D-${stats.losses}L from ${stats.totalMatches} matches. AI predictions from ${modelCount} models on Kroam.`;
+  return enforceDescriptionLength(base);
+}
+
+/**
  * Build model description with 100-160 char enforcement
  */
 export function buildModelDescription(modelName: string, accuracy: number, modelCount: number): string {
