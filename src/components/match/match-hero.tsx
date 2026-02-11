@@ -6,7 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
 import { Trophy } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { getTeamByIdOrAlias } from '@/lib/football/teams';
 
 /**
  * MatchHero - Single authoritative score/VS display for match pages.
@@ -35,6 +37,10 @@ export function MatchHero() {
   const isCancelled = match.status === 'cancelled';
   const isHalftime = liveMinute === 'HT';
 
+  // Get team configs for link generation
+  const homeTeamConfig = getTeamByIdOrAlias(match.homeTeam);
+  const awayTeamConfig = getTeamByIdOrAlias(match.awayTeam);
+
   return (
     <section className="bg-card border-border border rounded-xl p-6 md:p-8 overflow-hidden">
       {/* Live indicator bar */}
@@ -62,18 +68,34 @@ export function MatchHero() {
               </span>
             )}
           </div>
-          <p
-            className={cn(
-              'font-bold text-lg md:text-xl',
-              matchState === 'finished' &&
-                match.homeScore !== null &&
-                match.awayScore !== null &&
-                match.homeScore > match.awayScore &&
-                'text-green-400'
-            )}
-          >
-            {match.homeTeam}
-          </p>
+          {homeTeamConfig ? (
+            <Link
+              href={`/teams/${homeTeamConfig.slug}`}
+              className={cn(
+                'font-bold text-lg md:text-xl hover:text-primary transition-colors hover:underline',
+                matchState === 'finished' &&
+                  match.homeScore !== null &&
+                  match.awayScore !== null &&
+                  match.homeScore > match.awayScore &&
+                  'text-green-400'
+              )}
+            >
+              {match.homeTeam}
+            </Link>
+          ) : (
+            <p
+              className={cn(
+                'font-bold text-lg md:text-xl',
+                matchState === 'finished' &&
+                  match.homeScore !== null &&
+                  match.awayScore !== null &&
+                  match.homeScore > match.awayScore &&
+                  'text-green-400'
+              )}
+            >
+              {match.homeTeam}
+            </p>
+          )}
         </div>
 
         {/* Score/VS - Large centered */}
@@ -137,18 +159,34 @@ export function MatchHero() {
               </span>
             )}
           </div>
-          <p
-            className={cn(
-              'font-bold text-lg md:text-xl',
-              matchState === 'finished' &&
-                match.homeScore !== null &&
-                match.awayScore !== null &&
-                match.awayScore > match.homeScore &&
-                'text-green-400'
-            )}
-          >
-            {match.awayTeam}
-          </p>
+          {awayTeamConfig ? (
+            <Link
+              href={`/teams/${awayTeamConfig.slug}`}
+              className={cn(
+                'font-bold text-lg md:text-xl hover:text-primary transition-colors hover:underline',
+                matchState === 'finished' &&
+                  match.homeScore !== null &&
+                  match.awayScore !== null &&
+                  match.awayScore > match.homeScore &&
+                  'text-green-400'
+              )}
+            >
+              {match.awayTeam}
+            </Link>
+          ) : (
+            <p
+              className={cn(
+                'font-bold text-lg md:text-xl',
+                matchState === 'finished' &&
+                  match.homeScore !== null &&
+                  match.awayScore !== null &&
+                  match.awayScore > match.homeScore &&
+                  'text-green-400'
+              )}
+            >
+              {match.awayTeam}
+            </p>
+          )}
         </div>
       </div>
 
