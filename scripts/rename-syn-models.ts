@@ -6,11 +6,12 @@
  *
  * This migration:
  * 1. Validates that target model_ids do NOT already exist (safety check)
- * 2. Renames model_id in models table FIRST (due to FK constraints)
+ * 2. Creates new model rows (copy from old) so FK tables can reference them
  * 3. Updates model_id across all 5 FK tables: predictions, llm_model_stats, bets, model_balances, model_usage
- * 4. Validates no old model_ids remain and row counts match pre-migration
- * 5. Supports --dry-run mode for safe previewing
- * 6. Is idempotent (safe to run multiple times)
+ * 4. Deletes old model rows (no longer referenced)
+ * 5. Validates no old model_ids remain and row counts match pre-migration
+ * 6. Supports --dry-run mode for safe previewing
+ * 7. Is idempotent (safe to run multiple times)
  *
  * Unlike the consolidation migration (Phase 62), this is a straightforward rename operation:
  * - No deduplication needed (no matching base models exist for these 10)
@@ -203,10 +204,9 @@ async function executeRename(
 
   const results: RenameResult[] = [];
 
-  // Begin transaction with deferred constraints
-  console.log('Beginning transaction with deferred constraints...');
+  // Begin transaction
+  console.log('Beginning transaction...');
   await db.execute(sql`BEGIN`);
-  await db.execute(sql`SET CONSTRAINTS ALL DEFERRED`);
 
   try {
     // Step 0: Delete stub target model rows if they exist (created by sync-models)
@@ -224,29 +224,33 @@ async function executeRename(
       console.log(`  ✓ No stub rows to delete`);
     }
 
-    // Step 1: Rename in models table (FK constraint source)
-    console.log('\nStep 1: Renaming in models table (FK constraint source)...');
+    // Step 1: Create new model rows by copying from old rows (avoids FK constraint issues)
+    // We INSERT new rows first so FK tables can reference them, then update FKs, then delete old rows
+    console.log('\nStep 1: Creating new model rows (copy from old)...');
     for (const [oldId, newId] of Object.entries(RENAME_MAP)) {
+      // Copy all columns except id (which we replace with newId)
+      const oldRow = await db.execute(sql`SELECT * FROM models WHERE id = ${oldId}`);
+      if (oldRow.rows.length === 0) {
+        if (isVerbose) console.log(`  ⚠ ${oldId}: not found, skipping`);
+        continue;
+      }
+      const row = oldRow.rows[0] as any;
       const result = await db.execute(sql`
-        UPDATE models
-        SET id = ${newId}
-        WHERE id = ${oldId}
+        INSERT INTO models (id, provider, model_name, display_name, model_description, is_premium, active, created_at,
+          current_streak, current_streak_type, best_streak, worst_streak, best_exact_streak, best_tendency_streak)
+        VALUES (${newId}, ${row.provider}, ${row.model_name}, ${row.display_name}, ${row.model_description},
+          ${row.is_premium}, ${row.active}, ${row.created_at}, ${row.current_streak}, ${row.current_streak_type},
+          ${row.best_streak}, ${row.worst_streak}, ${row.best_exact_streak}, ${row.best_tendency_streak})
+        ON CONFLICT (id) DO NOTHING
       `);
 
-      const updatedRows = result.rowCount || 0;
-      results.push({
-        tableName: 'models',
-        oldId,
-        newId,
-        updatedRows,
-      });
-
+      const insertedRows = result.rowCount || 0;
       if (isVerbose) {
-        console.log(`  ✓ ${oldId} -> ${newId}: ${updatedRows} rows`);
+        console.log(`  ✓ ${oldId} -> ${newId}: ${insertedRows > 0 ? 'created' : 'already exists'}`);
       }
     }
 
-    // Step 2: Rename in predictions table
+    // Step 2: Rename in predictions table (FK tables first, now that new model rows exist)
     console.log('\nStep 2: Renaming in predictions table...');
     for (const [oldId, newId] of Object.entries(RENAME_MAP)) {
       const result = await db.execute(sql`
@@ -353,6 +357,26 @@ async function executeRename(
 
       if (isVerbose) {
         console.log(`  ✓ ${oldId} -> ${newId}: ${updatedRows} rows`);
+      }
+    }
+
+    // Step 7: Delete old model rows (all FK references now point to new IDs)
+    console.log('\nStep 7: Deleting old model rows...');
+    for (const [oldId, newId] of Object.entries(RENAME_MAP)) {
+      const result = await db.execute(sql`
+        DELETE FROM models WHERE id = ${oldId}
+      `);
+
+      const deletedRows = result.rowCount || 0;
+      results.push({
+        tableName: 'models_delete',
+        oldId,
+        newId,
+        updatedRows: deletedRows,
+      });
+
+      if (isVerbose) {
+        console.log(`  ✓ Deleted old row: ${oldId} (${deletedRows} rows)`);
       }
     }
 
@@ -510,16 +534,16 @@ async function postValidate(
     console.log('✓ PASS: No orphaned FK references');
   }
 
-  // Check 4: Verify no -syn suffixes remain in ANY table
-  console.log('\nCheck 4: Verifying no -syn suffixes remain...');
+  // Check 4: Verify none of the 10 renamed -syn IDs remain (the 3 consolidated -syn models are handled by post-consolidation)
+  console.log('\nCheck 4: Verifying no renamed -syn IDs remain...');
   const remainingSynSuffixes = await db.execute(sql`
     SELECT
-      (SELECT COUNT(*)::int FROM models WHERE id LIKE '%-syn') AS models_syn,
-      (SELECT COUNT(*)::int FROM predictions WHERE model_id LIKE '%-syn') AS predictions_syn,
-      (SELECT COUNT(*)::int FROM llm_model_stats WHERE model_id LIKE '%-syn') AS stats_syn,
-      (SELECT COUNT(*)::int FROM bets WHERE model_id LIKE '%-syn') AS bets_syn,
-      (SELECT COUNT(*)::int FROM model_balances WHERE model_id LIKE '%-syn') AS balances_syn,
-      (SELECT COUNT(*)::int FROM model_usage WHERE model_id LIKE '%-syn') AS usage_syn
+      (SELECT COUNT(*)::int FROM models WHERE id IN (${sql.join(oldIds.map(id => sql.raw(`'${id}'`)), sql`, `)})) AS models_syn,
+      (SELECT COUNT(*)::int FROM predictions WHERE model_id IN (${sql.join(oldIds.map(id => sql.raw(`'${id}'`)), sql`, `)})) AS predictions_syn,
+      (SELECT COUNT(*)::int FROM llm_model_stats WHERE model_id IN (${sql.join(oldIds.map(id => sql.raw(`'${id}'`)), sql`, `)})) AS stats_syn,
+      (SELECT COUNT(*)::int FROM bets WHERE model_id IN (${sql.join(oldIds.map(id => sql.raw(`'${id}'`)), sql`, `)})) AS bets_syn,
+      (SELECT COUNT(*)::int FROM model_balances WHERE model_id IN (${sql.join(oldIds.map(id => sql.raw(`'${id}'`)), sql`, `)})) AS balances_syn,
+      (SELECT COUNT(*)::int FROM model_usage WHERE model_id IN (${sql.join(oldIds.map(id => sql.raw(`'${id}'`)), sql`, `)})) AS usage_syn
   `);
 
   const synRow = remainingSynSuffixes.rows[0] as any;
@@ -598,7 +622,7 @@ async function main() {
   console.log('='.repeat(80));
 
   const totalUpdated = renameResults.reduce((sum, r) => sum + r.updatedRows, 0);
-  console.log(`✓ Renamed ${Object.keys(RENAME_MAP).length} model IDs across 6 tables`);
+  console.log(`✓ Renamed ${Object.keys(RENAME_MAP).length} model IDs across all tables`);
   console.log(`✓ Total rows updated: ${totalUpdated}`);
   console.log('✓ All validation checks passed');
   console.log('✓ Migration completed successfully');

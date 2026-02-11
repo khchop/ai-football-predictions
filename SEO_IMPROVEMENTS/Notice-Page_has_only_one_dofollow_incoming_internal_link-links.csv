@@ -1,0 +1,21 @@
+Link type,Is nofollow,Source URL,Source HTTP status code,Target URL,Target HTTP status code,Anchor,No. of dofollow inlinks to target,No. of nofollow inlinks to target,Is source canonical,Is source noindex,Is target canonical,Is target noindex,Is link internal
+Href link,false,https://kroam.xyz/leagues/eredivisie,200,https://kroam.xyz/leaderboard?competition=eredivisie,200,View Full Leaderboard,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/blog,200,https://kroam.xyz/blog?competition=ucl,200,🏆UEFA Champions League,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/blog,200,https://kroam.xyz/blog?competition=seriea,200,⚽Serie A,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/,200,https://kroam.xyz/matches?tab=finished,200,View all,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/leagues/bundesliga,200,https://kroam.xyz/leaderboard?competition=bundesliga,200,View Full Leaderboard,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/blog,200,https://kroam.xyz/blog?competition=uecl,200,💎UEFA Conference League,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/leagues/ucl,200,https://kroam.xyz/leaderboard?competition=ucl,200,View Full Leaderboard,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/blog,200,https://kroam.xyz/blog?competition=epl,200,🦁Premier League,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/blog,200,https://kroam.xyz/blog?competition=uel,200,🏅UEFA Europa League,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/blog,200,https://kroam.xyz/blog?competition=superlig,200,🌙Turkish Super Lig,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/leagues/seriea,200,https://kroam.xyz/leaderboard?competition=seriea,200,View Full Leaderboard,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/blog,200,https://kroam.xyz/blog?competition=bundesliga,200,⚽Bundesliga,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/blog,200,https://kroam.xyz/blog?competition=ligue1,200,🥖Ligue 1,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/blog,200,https://kroam.xyz/blog?competition=eredivisie,200,🌷Eredivisie,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/blog,200,https://kroam.xyz/blog?competition=laliga,200,🐂La Liga,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/leagues/superlig,200,https://kroam.xyz/leaderboard?competition=superlig,200,View Full Leaderboard,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/leagues/epl,200,https://kroam.xyz/leaderboard?competition=epl,200,View Full Leaderboard,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/leagues/ligue1,200,https://kroam.xyz/leaderboard?competition=ligue1,200,View Full Leaderboard,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/leagues/laliga,200,https://kroam.xyz/leaderboard?competition=laliga,200,View Full Leaderboard,1,0,true,false,false,false,true
+Href link,false,https://kroam.xyz/leagues/uel,200,https://kroam.xyz/leaderboard?competition=uel,200,View Full Leaderboard,1,0,true,false,false,false,true

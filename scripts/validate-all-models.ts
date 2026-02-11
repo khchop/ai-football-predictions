@@ -1,7 +1,7 @@
 /**
  * Validate All Models Script
  *
- * Tests all 23 Together AI LLM models with sample predictions to verify:
+ * Tests all 38 OpenRouter LLM models with sample predictions to verify:
  * - JSON parsing works correctly
  * - All models return valid prediction structure
  *
@@ -15,7 +15,7 @@ import path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 import pLimit from 'p-limit';
-import { ALL_PROVIDERS, TOGETHER_PROVIDERS } from '../src/lib/llm';
+import { ALL_PROVIDERS } from '../src/lib/llm';
 import { PredictionOutputSchema } from '../src/__tests__/schemas/prediction';
 import type { LLMProvider } from '../src/types';
 
@@ -153,30 +153,23 @@ async function validateModel(provider: LLMProvider): Promise<ValidationResult> {
 
 async function main() {
   console.log('\n=== All Models Validation ===\n');
-  console.log(`Testing ${ALL_PROVIDERS.length} models (${TOGETHER_PROVIDERS.length} Together)\n`);
+  console.log(`Testing ${ALL_PROVIDERS.length} OpenRouter models\n`);
 
   // Check API keys
-  const hasTogetherKey = !!process.env.TOGETHER_API_KEY;
-  const hasSyntheticKey = !!process.env.SYNTHETIC_API_KEY;
+  const hasOpenRouterKey = !!process.env.OPENROUTER_API_KEY;
 
-  console.log(`Together API: ${hasTogetherKey ? 'configured' : 'MISSING'}`);
-  console.log(`Synthetic API: ${hasSyntheticKey ? 'configured' : 'MISSING'}`);
+  console.log(`OpenRouter API: ${hasOpenRouterKey ? 'configured' : 'MISSING'}`);
   console.log(`Concurrency limit: ${CONCURRENCY_LIMIT}`);
   console.log(`Previously disabled models: ${PREVIOUSLY_DISABLED_MODELS.length}`);
   console.log('');
 
-  if (!hasTogetherKey && !hasSyntheticKey) {
-    console.error('ERROR: No API keys configured. Set TOGETHER_API_KEY and/or SYNTHETIC_API_KEY in .env.local');
+  if (!hasOpenRouterKey) {
+    console.error('ERROR: No API key configured. Set OPENROUTER_API_KEY in .env.local');
     process.exit(1);
   }
 
-  // Filter providers based on available API keys
-  const providersToTest = ALL_PROVIDERS.filter(p => {
-    if (p.id.endsWith('-syn')) {
-      return hasSyntheticKey;
-    }
-    return hasTogetherKey;
-  });
+  // All providers are OpenRouter now
+  const providersToTest = ALL_PROVIDERS;
 
   console.log(`Testing ${providersToTest.length} models with available API keys...\n`);
   console.log('-'.repeat(60));

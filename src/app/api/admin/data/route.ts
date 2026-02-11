@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllModelsWithHealth } from '@/lib/db/queries';
 import { getBudgetStatus } from '@/lib/llm/budget';
-import { TOGETHER_PROVIDERS } from '@/lib/llm/providers/together';
+import { OPENROUTER_PROVIDERS } from '@/lib/llm/providers/openrouter';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 import { requireAdminAuth } from '@/lib/utils/admin-auth';
 import { sanitizeError } from '@/lib/utils/error-sanitizer';
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get provider config for tier info (simplified for JSON)
-    const providerConfig = TOGETHER_PROVIDERS.map(p => ({
+    const providerConfig = OPENROUTER_PROVIDERS.map(p => ({
       id: p.id,
       tier: p.tier,
     }));

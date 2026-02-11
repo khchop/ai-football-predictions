@@ -1,0 +1,11 @@
+{
+  "modelId": "kimi-k2.5-syn",
+  "provider": "synthetic",
+  "success": false,
+  "error": "No valid JSON found in response (preview:  The user wants a prediction for a specific match: Everton vs Crystal Palace in the Premier League.\n...)",
+  "rawResponse": "",
+  "category": "empty-response",
+  "durationMs": 13039,
+  "timestamp": "2026-02-08T11:58:17.714Z",
+  "scenarioId": "standard"
+}

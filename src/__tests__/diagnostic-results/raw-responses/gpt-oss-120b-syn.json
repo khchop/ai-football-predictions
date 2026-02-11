@@ -1,0 +1,13 @@
+{
+  "modelId": "gpt-oss-120b-syn",
+  "provider": "synthetic",
+  "success": true,
+  "prediction": {
+    "homeScore": 1,
+    "awayScore": 1
+  },
+  "rawResponse": "{\"homeScore\":1,\"awayScore\":1}",
+  "durationMs": 4159,
+  "timestamp": "2026-02-08T11:58:15.512Z",
+  "scenarioId": "standard"
+}

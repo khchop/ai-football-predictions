@@ -1,0 +1,254 @@
+================================================================================
+=== Rename Synthetic Model IDs: Phase 63 (CONS-03) ===
+================================================================================
+
+Renaming 10 Synthetic-exclusive model IDs (dropping -syn suffix)
+
+{"level":"info","time":"2026-02-09T12:16:56.726Z","service":"bettingsoccer","module":"db","module":"database-pool","msg":"Pool health monitoring started - checking every 30s"}
+
+--- Pre-Validation ---
+
+Safety check: Checking if target IDs already exist...
+⚠ Found 6 target model IDs that already exist (likely stubs from sync-models):
+  - deepseek-v3.2
+  - gpt-oss-120b
+  - glm-4.7
+  - glm-4.6
+  - qwen3-235b-thinking
+  - qwen3-coder-480b
+
+These stub rows will be deleted before renaming -syn models.
+This is safe because the -syn models contain the real data.
+
+Counting rows per old model_id...
+
+qwen3-235b-thinking-syn -> qwen3-235b-thinking:
+  models: 1 rows
+  predictions: 1 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 15 rows
+
+deepseek-v3-0324-syn -> deepseek-v3-0324:
+  models: 1 rows
+  predictions: 8 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 22 rows
+
+deepseek-v3.1-terminus-syn -> deepseek-v3.1-terminus:
+  models: 1 rows
+  predictions: 232 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 246 rows
+
+deepseek-v3.2-syn -> deepseek-v3.2:
+  models: 1 rows
+  predictions: 0 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 14 rows
+
+minimax-m2-syn -> minimax-m2:
+  models: 1 rows
+  predictions: 210 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 224 rows
+
+minimax-m2.1-syn -> minimax-m2.1:
+  models: 1 rows
+  predictions: 200 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 214 rows
+
+glm-4.6-syn -> glm-4.6:
+  models: 1 rows
+  predictions: 7 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 21 rows
+
+glm-4.7-syn -> glm-4.7:
+  models: 1 rows
+  predictions: 0 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 14 rows
+
+qwen3-coder-480b-syn -> qwen3-coder-480b:
+  models: 1 rows
+  predictions: 26 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 40 rows
+
+gpt-oss-120b-syn -> gpt-oss-120b:
+  models: 1 rows
+  predictions: 92 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 106 rows
+
+✓ Pre-validation complete: 916 total rows will be renamed across all tables
+
+--- Executing Rename Migration ---
+Beginning transaction...
+
+Step 0: Deleting stub target model rows (if they exist)...
+  ✓ Deleted 6 stub model rows
+
+Step 1: Creating new model rows (copy from old)...
+  ✓ qwen3-235b-thinking-syn -> qwen3-235b-thinking: created
+  ✓ deepseek-v3-0324-syn -> deepseek-v3-0324: created
+  ✓ deepseek-v3.1-terminus-syn -> deepseek-v3.1-terminus: created
+  ✓ deepseek-v3.2-syn -> deepseek-v3.2: created
+  ✓ minimax-m2-syn -> minimax-m2: created
+  ✓ minimax-m2.1-syn -> minimax-m2.1: created
+  ✓ glm-4.6-syn -> glm-4.6: created
+  ✓ glm-4.7-syn -> glm-4.7: created
+  ✓ qwen3-coder-480b-syn -> qwen3-coder-480b: created
+  ✓ gpt-oss-120b-syn -> gpt-oss-120b: created
+
+Step 2: Renaming in predictions table...
+  ✓ qwen3-235b-thinking-syn -> qwen3-235b-thinking: 1 rows
+  ✓ deepseek-v3-0324-syn -> deepseek-v3-0324: 8 rows
+  ✓ deepseek-v3.1-terminus-syn -> deepseek-v3.1-terminus: 232 rows
+  ✓ deepseek-v3.2-syn -> deepseek-v3.2: 0 rows
+  ✓ minimax-m2-syn -> minimax-m2: 210 rows
+  ✓ minimax-m2.1-syn -> minimax-m2.1: 200 rows
+  ✓ glm-4.6-syn -> glm-4.6: 7 rows
+  ✓ glm-4.7-syn -> glm-4.7: 0 rows
+  ✓ qwen3-coder-480b-syn -> qwen3-coder-480b: 26 rows
+  ✓ gpt-oss-120b-syn -> gpt-oss-120b: 92 rows
+
+Step 3: Renaming in llm_model_stats table...
+  ✓ qwen3-235b-thinking-syn -> qwen3-235b-thinking: 13 rows
+  ✓ deepseek-v3-0324-syn -> deepseek-v3-0324: 13 rows
+  ✓ deepseek-v3.1-terminus-syn -> deepseek-v3.1-terminus: 13 rows
+  ✓ deepseek-v3.2-syn -> deepseek-v3.2: 13 rows
+  ✓ minimax-m2-syn -> minimax-m2: 13 rows
+  ✓ minimax-m2.1-syn -> minimax-m2.1: 13 rows
+  ✓ glm-4.6-syn -> glm-4.6: 13 rows
+  ✓ glm-4.7-syn -> glm-4.7: 13 rows
+  ✓ qwen3-coder-480b-syn -> qwen3-coder-480b: 13 rows
+  ✓ gpt-oss-120b-syn -> gpt-oss-120b: 13 rows
+
+Step 4: Renaming in bets table...
+  ✓ qwen3-235b-thinking-syn -> qwen3-235b-thinking: 0 rows
+  ✓ deepseek-v3-0324-syn -> deepseek-v3-0324: 0 rows
+  ✓ deepseek-v3.1-terminus-syn -> deepseek-v3.1-terminus: 0 rows
+  ✓ deepseek-v3.2-syn -> deepseek-v3.2: 0 rows
+  ✓ minimax-m2-syn -> minimax-m2: 0 rows
+  ✓ minimax-m2.1-syn -> minimax-m2.1: 0 rows
+  ✓ glm-4.6-syn -> glm-4.6: 0 rows
+  ✓ glm-4.7-syn -> glm-4.7: 0 rows
+  ✓ qwen3-coder-480b-syn -> qwen3-coder-480b: 0 rows
+  ✓ gpt-oss-120b-syn -> gpt-oss-120b: 0 rows
+
+Step 5: Renaming in model_balances table...
+  ✓ qwen3-235b-thinking-syn -> qwen3-235b-thinking: 0 rows
+  ✓ deepseek-v3-0324-syn -> deepseek-v3-0324: 0 rows
+  ✓ deepseek-v3.1-terminus-syn -> deepseek-v3.1-terminus: 0 rows
+  ✓ deepseek-v3.2-syn -> deepseek-v3.2: 0 rows
+  ✓ minimax-m2-syn -> minimax-m2: 0 rows
+  ✓ minimax-m2.1-syn -> minimax-m2.1: 0 rows
+  ✓ glm-4.6-syn -> glm-4.6: 0 rows
+  ✓ glm-4.7-syn -> glm-4.7: 0 rows
+  ✓ qwen3-coder-480b-syn -> qwen3-coder-480b: 0 rows
+  ✓ gpt-oss-120b-syn -> gpt-oss-120b: 0 rows
+
+Step 6: Renaming in model_usage table...
+  ✓ qwen3-235b-thinking-syn -> qwen3-235b-thinking: 0 rows
+  ✓ deepseek-v3-0324-syn -> deepseek-v3-0324: 0 rows
+  ✓ deepseek-v3.1-terminus-syn -> deepseek-v3.1-terminus: 0 rows
+  ✓ deepseek-v3.2-syn -> deepseek-v3.2: 0 rows
+  ✓ minimax-m2-syn -> minimax-m2: 0 rows
+  ✓ minimax-m2.1-syn -> minimax-m2.1: 0 rows
+  ✓ glm-4.6-syn -> glm-4.6: 0 rows
+  ✓ glm-4.7-syn -> glm-4.7: 0 rows
+  ✓ qwen3-coder-480b-syn -> qwen3-coder-480b: 0 rows
+  ✓ gpt-oss-120b-syn -> gpt-oss-120b: 0 rows
+
+Step 7: Deleting old model rows...
+  ✓ Deleted old row: qwen3-235b-thinking-syn (1 rows)
+  ✓ Deleted old row: deepseek-v3-0324-syn (1 rows)
+  ✓ Deleted old row: deepseek-v3.1-terminus-syn (1 rows)
+  ✓ Deleted old row: deepseek-v3.2-syn (1 rows)
+  ✓ Deleted old row: minimax-m2-syn (1 rows)
+  ✓ Deleted old row: minimax-m2.1-syn (1 rows)
+  ✓ Deleted old row: glm-4.6-syn (1 rows)
+  ✓ Deleted old row: glm-4.7-syn (1 rows)
+  ✓ Deleted old row: qwen3-coder-480b-syn (1 rows)
+  ✓ Deleted old row: gpt-oss-120b-syn (1 rows)
+
+✓ All rename operations completed
+
+--- Post-Validation ---
+
+Check 1: Verifying no old model_ids remain...
+✓ PASS: No old model_ids remain
+
+Check 2: Verifying row counts match pre-migration...
+  ✓ models.qwen3-235b-thinking: 1 rows (matches pre-migration)
+  ✓ predictions.qwen3-235b-thinking: 1 rows (matches pre-migration)
+  ✓ llm_model_stats.qwen3-235b-thinking: 13 rows (matches pre-migration)
+  ✓ models.deepseek-v3-0324: 1 rows (matches pre-migration)
+  ✓ predictions.deepseek-v3-0324: 8 rows (matches pre-migration)
+  ✓ llm_model_stats.deepseek-v3-0324: 13 rows (matches pre-migration)
+  ✓ models.deepseek-v3.1-terminus: 1 rows (matches pre-migration)
+  ✓ predictions.deepseek-v3.1-terminus: 232 rows (matches pre-migration)
+  ✓ llm_model_stats.deepseek-v3.1-terminus: 13 rows (matches pre-migration)
+  ✓ models.deepseek-v3.2: 1 rows (matches pre-migration)
+  ✓ llm_model_stats.deepseek-v3.2: 13 rows (matches pre-migration)
+  ✓ models.minimax-m2: 1 rows (matches pre-migration)
+  ✓ predictions.minimax-m2: 210 rows (matches pre-migration)
+  ✓ llm_model_stats.minimax-m2: 13 rows (matches pre-migration)
+  ✓ models.minimax-m2.1: 1 rows (matches pre-migration)
+  ✓ predictions.minimax-m2.1: 200 rows (matches pre-migration)
+  ✓ llm_model_stats.minimax-m2.1: 13 rows (matches pre-migration)
+  ✓ models.glm-4.6: 1 rows (matches pre-migration)
+  ✓ predictions.glm-4.6: 7 rows (matches pre-migration)
+  ✓ llm_model_stats.glm-4.6: 13 rows (matches pre-migration)
+  ✓ models.glm-4.7: 1 rows (matches pre-migration)
+  ✓ llm_model_stats.glm-4.7: 13 rows (matches pre-migration)
+  ✓ models.qwen3-coder-480b: 1 rows (matches pre-migration)
+  ✓ predictions.qwen3-coder-480b: 26 rows (matches pre-migration)
+  ✓ llm_model_stats.qwen3-coder-480b: 13 rows (matches pre-migration)
+  ✓ models.gpt-oss-120b: 1 rows (matches pre-migration)
+  ✓ predictions.gpt-oss-120b: 92 rows (matches pre-migration)
+  ✓ llm_model_stats.gpt-oss-120b: 13 rows (matches pre-migration)
+✓ PASS: All row counts match pre-migration
+
+Check 3: Verifying no orphaned FKs...
+✓ PASS: No orphaned FK references
+
+Check 4: Verifying no -syn suffixes remain...
+✗ FAIL: Model IDs with -syn suffix still exist:
+  - models: 3
+
+✗ Some post-validation checks FAILED
+
+✗ Post-validation FAILED - rolling back transaction

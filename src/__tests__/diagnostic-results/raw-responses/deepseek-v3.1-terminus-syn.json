@@ -1,0 +1,13 @@
+{
+  "modelId": "deepseek-v3.1-terminus-syn",
+  "provider": "synthetic",
+  "success": true,
+  "prediction": {
+    "homeScore": 1,
+    "awayScore": 1
+  },
+  "rawResponse": "{\"homeScore\":1,\"awayScore\":1}",
+  "durationMs": 1581,
+  "timestamp": "2026-02-08T11:58:00.925Z",
+  "scenarioId": "standard"
+}

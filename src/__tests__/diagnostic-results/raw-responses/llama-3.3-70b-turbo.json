@@ -1,0 +1,13 @@
+{
+  "modelId": "llama-3.3-70b-turbo",
+  "provider": "together",
+  "success": true,
+  "prediction": {
+    "homeScore": 1,
+    "awayScore": 1
+  },
+  "rawResponse": "{\"homeScore\":1,\"awayScore\":1}",
+  "durationMs": 638,
+  "timestamp": "2026-02-08T11:57:52.358Z",
+  "scenarioId": "standard"
+}

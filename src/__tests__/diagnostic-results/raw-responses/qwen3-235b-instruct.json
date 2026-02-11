@@ -1,0 +1,13 @@
+{
+  "modelId": "qwen3-235b-instruct",
+  "provider": "together",
+  "success": true,
+  "prediction": {
+    "homeScore": 1,
+    "awayScore": 1
+  },
+  "rawResponse": "{\"homeScore\":1,\"awayScore\":1}",
+  "durationMs": 748,
+  "timestamp": "2026-02-08T11:57:50.890Z",
+  "scenarioId": "standard"
+}

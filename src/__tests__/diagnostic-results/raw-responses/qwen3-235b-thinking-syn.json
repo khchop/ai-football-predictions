@@ -1,0 +1,11 @@
+{
+  "modelId": "qwen3-235b-thinking-syn",
+  "provider": "synthetic",
+  "success": false,
+  "error": "No valid JSON found in response (preview: Okay, let's tackle this prediction. So, the match is Everton vs Crystal Palace in the Premier League...)",
+  "rawResponse": "",
+  "category": "empty-response",
+  "durationMs": 15433,
+  "timestamp": "2026-02-08T11:58:13.118Z",
+  "scenarioId": "standard"
+}

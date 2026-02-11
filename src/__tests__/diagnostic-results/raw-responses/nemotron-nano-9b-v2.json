@@ -1,0 +1,11 @@
+{
+  "modelId": "nemotron-nano-9b-v2",
+  "provider": "together",
+  "success": false,
+  "error": "No valid JSON found in response (preview: {\n  \"match_id\": \"diag-standard\",\n  \"home_score\": 1,\n  \"away_score\": 1\n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n...)",
+  "rawResponse": "",
+  "category": "empty-response",
+  "durationMs": 7794,
+  "timestamp": "2026-02-08T11:58:04.355Z",
+  "scenarioId": "standard"
+}

@@ -1,0 +1,633 @@
+PR,URL,Title,Content type,Is rendered page,HTTP status code,Organic traffic,Is indexable page,Meta description,H1,H2,No. of content words,No. of internal outlinks,No. of external outlinks,Page text,Extracted text (raw <body>) (length),Text hash,First found at
+40,https://kroam.xyz/blog,AI Football Analysis Blog | Kroam,text/html; charset=utf-8,false,200,0,true,"AI-generated match reports, league roundups, and model performance analysis. Deep insights into football predictions from 42 AI models.",Football Insights,"Eredivisie Week 21 AI Model Audit
+Ligue 1 Week 20 AI Model Audit: Top Performers and Surprises
+UEFA Europa League AI Model Audit - Week 8
+La Liga Week 22 AI Model Audit: Top Performers and Surprises
+Bundesliga Week 20 AI Model Audit
+Premier League Week 24 AI Model Audit
+Turkish Super Lig Week 20 AI Predictions Audit
+UEFA Champions League AI Model Audit - Week 8
+Serie A Week 23 AI Model Audit",652,40,0,<truncated>,3969,17476013532665504064,
+40,https://kroam.xyz/leaderboard,AI Model Leaderboard | Kroam,text/html; charset=utf-8,false,200,0,true,"Compare 42 AI model accuracy across 17 football competitions. See which models predict best in Champions League, Premier League, and more.",Leaderboard,"Kicktipp Scoring System
+Understanding Model Rankings",1582,49,0,<truncated>,7860,2264426233210647090,
+39,https://kroam.xyz/leagues/euro,UEFA Euro AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for UEFA Euro from 42 models. Track accuracy, compare predictions, and see which AI performs best.",UEFA Euro Predictions2024-2025,Frequently Asked Questions,360,22,0,<truncated>,2309,15390419040079669838,
+39,https://kroam.xyz/leagues/uecl,UEFA Conference League AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for UEFA Conference League from 42 models. Track accuracy, compare predictions, and see which AI performs best.",UEFA Conference League Predictions2025-2026,Frequently Asked Questions,373,22,0,<truncated>,2474,17534409681709799367,
+39,https://kroam.xyz/leagues/wc-qual-europe,World Cup Qualifiers - Europe AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for World Cup Qualifiers - Europe from 42 models. Track accuracy, compare predictions, and see which AI performs best.",World Cup Qualifiers - Europe Predictions2025-2026,Frequently Asked Questions,399,22,0,<truncated>,2565,1914428856406331639,
+39,https://kroam.xyz/methodology,Prediction Methodology | Kroam,text/html; charset=utf-8,false,200,0,true,Understand how we measure AI prediction accuracy. Our methodology uses tendency points to calculate the percentage of correct match outcome predictions.,How We Calculate Accuracy,"Tendency Accuracy Formula
+What Counts as Correct?
+Example Calculations
+Why Tendency Accuracy Matters
+Learn More",521,22,0,<truncated>,3469,18103301661711109853,
+39,https://kroam.xyz/leagues/ligue1,Ligue 1 AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for Ligue 1 from 42 models. Track accuracy, compare predictions, and see which AI performs best.",Ligue 1 Predictions2025-2026,Frequently Asked Questions,842,49,0,<truncated>,4264,3491683392840992855,
+39,https://kroam.xyz/leagues/eredivisie,Eredivisie AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for Eredivisie from 42 models. Track accuracy, compare predictions, and see which AI performs best.",Eredivisie Predictions2025-2026,Frequently Asked Questions,832,45,0,<truncated>,4534,1595449650481668198,
+39,https://kroam.xyz/leagues/world-cup,FIFA World Cup AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for FIFA World Cup from 42 models. Track accuracy, compare predictions, and see which AI performs best.",FIFA World Cup Predictions2026-2027,Frequently Asked Questions,373,22,0,<truncated>,2370,17108406810079008954,
+39,https://kroam.xyz/leagues/epl,Premier League AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for Premier League from 42 models. Track accuracy, compare predictions, and see which AI performs best.",Premier League Predictions2025-2026,Frequently Asked Questions,892,53,0,<truncated>,4823,15512417254905485881,
+39,https://kroam.xyz/leagues/copa-america,Copa America AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for Copa America from 42 models. Track accuracy, compare predictions, and see which AI performs best.",Copa America Predictions2024-2025,Frequently Asked Questions,360,22,0,<truncated>,2344,16109667513030237518,
+39,https://kroam.xyz/leagues/afcon,Africa Cup of Nations AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for Africa Cup of Nations from 42 models. Track accuracy, compare predictions, and see which AI performs best.",Africa Cup of Nations Predictions2025-2026,Frequently Asked Questions,386,22,0,<truncated>,2461,18057171149690997615,
+39,https://kroam.xyz/leagues/seriea,Serie A AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for Serie A from 42 models. Track accuracy, compare predictions, and see which AI performs best.",Serie A Predictions2025-2026,Frequently Asked Questions,824,48,0,<truncated>,4174,15539472410433031960,
+39,https://kroam.xyz/leagues/nations-league,UEFA Nations League AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for UEFA Nations League from 42 models. Track accuracy, compare predictions, and see which AI performs best.",UEFA Nations League Predictions2025-2026,Frequently Asked Questions,373,22,0,<truncated>,2435,15649542577287728022,
+39,https://kroam.xyz/leagues/ucl,UEFA Champions League AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for UEFA Champions League from 42 models. Track accuracy, compare predictions, and see which AI performs best.",UEFA Champions League Predictions2025-2026,Frequently Asked Questions,815,45,0,<truncated>,4368,3211465230039795838,
+39,https://kroam.xyz/leagues/laliga,La Liga AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for La Liga from 42 models. Track accuracy, compare predictions, and see which AI performs best.",La Liga Predictions2025-2026,Frequently Asked Questions,858,50,0,<truncated>,4393,15754038181172308251,
+39,https://kroam.xyz/leagues/superlig,Turkish Super Lig AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for Turkish Super Lig from 42 models. Track accuracy, compare predictions, and see which AI performs best.",Turkish Super Lig Predictions2025-2026,Frequently Asked Questions,839,47,0,<truncated>,4546,18342909715280417574,
+39,https://kroam.xyz/,AI Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"Watch 42 AI models compete to predict football scores across Champions League, Premier League, and 15 more leagues.",AI Football Predictions,"Upcoming Matches
+Recent Results",497,37,0,<truncated>,2752,1442178898434111639,
+39,https://kroam.xyz/matches,Football Match Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Browse upcoming and recent football matches with AI predictions from 42 models. Track live scores and pre-match analysis across 17 competitions.,Matches,,146,21,0,<truncated>,920,16722416830255960454,
+39,https://kroam.xyz/leagues/wc-qual-southamerica,World Cup Qualifiers - South America AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for World Cup Qualifiers - South America from 42 models. Track accuracy, compare predictions, and see which AI performs best.",World Cup Qualifiers - South America Predictions2025-2026,Frequently Asked Questions,412,22,0,<truncated>,2656,15934521325703918445,
+39,https://kroam.xyz/leagues/uel,UEFA Europa League AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for UEFA Europa League from 42 models. Track accuracy, compare predictions, and see which AI performs best.",UEFA Europa League Predictions2025-2026,Frequently Asked Questions,821,45,0,<truncated>,4197,1555250898289608185,
+39,https://kroam.xyz/leagues/bundesliga,Bundesliga AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"AI predictions for Bundesliga from 42 models. Track accuracy, compare predictions, and see which AI performs best.",Bundesliga Predictions2025-2026,Frequently Asked Questions,891,47,0,<truncated>,4876,4457760983193779207,
+35,https://kroam.xyz/models/llama-3.2-3b-turbo,Llama 3.2 3B Turbo (Meta) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Llama 3.2 3B Turbo (Meta) football predictions with 50% accuracy. Compare performance against 42 AI models across 17 leagues.,Llama 3.2 3B Turbo (Meta) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",601,38,0,<truncated>,2856,16236823853533401418,
+34,https://kroam.xyz/models/llama-3.3-70b-turbo,Llama 3.3 70B Turbo (Meta) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Llama 3.3 70B Turbo (Meta) football predictions with 41% accuracy. Compare performance against 42 AI models across 17 leagues.,Llama 3.3 70B Turbo (Meta) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",601,38,0,<truncated>,2866,4337346157635333740,
+34,https://kroam.xyz/models/qwen2.5-7b-turbo,Qwen 2.5 7B Turbo (Alibaba) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Qwen 2.5 7B Turbo (Alibaba) football predictions with 50% accuracy. Compare performance against 42 AI models across 17 leagues.,Qwen 2.5 7B Turbo (Alibaba) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",601,38,0,<truncated>,2858,17157397890907183871,
+34,https://kroam.xyz/models/cogito-70b,Cogito v2 70B (Deep Cogito) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Cogito v2 70B (Deep Cogito) football predictions with 46% accuracy. Compare performance against 42 AI models across 17 leagues.,Cogito v2 70B (Deep Cogito) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",601,38,0,<truncated>,2862,17813801156308294412,
+34,https://kroam.xyz/models/llama-3-8b-lite,Llama 3 8B Lite (Meta) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Llama 3 8B Lite (Meta) football predictions with 51% accuracy. Compare performance against 42 AI models across 17 leagues.,Llama 3 8B Lite (Meta) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",601,38,0,<truncated>,2858,17260119154578291038,
+32,https://kroam.xyz/models/llama-3.1-8b-turbo,Llama 3.1 8B Turbo (Meta) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Llama 3.1 8B Turbo (Meta) football predictions with 50% accuracy. Compare performance against 42 AI models across 17 leagues.,Llama 3.1 8B Turbo (Meta) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",602,38,0,<truncated>,2869,960850760162150641,
+32,https://kroam.xyz/models/gemma-3n-e4b,Gemma 3n E4B (Google) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Gemma 3n E4B (Google) football predictions with 45% accuracy. Compare performance against 42 AI models across 17 leagues.,Gemma 3n E4B (Google) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",599,38,0,<truncated>,2856,891232615979974326,
+31,https://kroam.xyz/models/qwen3-next-80b-instruct,Qwen3 Next 80B (Alibaba) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Qwen3 Next 80B (Alibaba) football predictions with 34% accuracy. Compare performance against 42 AI models across 17 leagues.,Qwen3 Next 80B (Alibaba) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",599,38,0,<truncated>,2870,17164398853019317146,
+31,https://kroam.xyz/models/ministral-3-14b,Ministral 3 14B (Mistral) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Ministral 3 14B (Mistral) football predictions with 40% accuracy. Compare performance against 42 AI models across 17 leagues.,Ministral 3 14B (Mistral) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",599,38,0,<truncated>,2874,875277064756850953,
+31,https://kroam.xyz/models/llama-4-maverick,Llama 4 Maverick (Meta) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Llama 4 Maverick (Meta) football predictions with 48% accuracy. Compare performance against 42 AI models across 17 leagues.,Llama 4 Maverick (Meta) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",599,38,0,<truncated>,2864,15804931822478780990,
+31,https://kroam.xyz/models/marin-8b-instruct,Marin 8B Instruct (Marin Community) Football Predictions,text/html; charset=utf-8,false,200,0,true,Marin 8B Instruct (Marin Community) football predictions with 43% accuracy. Compare performance against 42 AI models across 17 leagues.,Marin 8B Instruct (Marin Community) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",600,38,0,<truncated>,2892,1247604753733646562,
+31,https://kroam.xyz/models/mistral-7b-v0.3,Mistral 7B v0.3 (Mistral) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Mistral 7B v0.3 (Mistral) football predictions with 43% accuracy. Compare performance against 42 AI models across 17 leagues.,Mistral 7B v0.3 (Mistral) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",599,38,0,<truncated>,2873,394505296193393153,
+31,https://kroam.xyz/models/cogito-109b-moe,Cogito v2 109B MoE (Deep Cogito) Football Predictions,text/html; charset=utf-8,false,200,0,true,Cogito v2 109B MoE (Deep Cogito) football predictions with 44% accuracy. Compare performance against 42 AI models across 17 leagues.,Cogito v2 109B MoE (Deep Cogito) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",603,38,0,<truncated>,2888,18415668082523218996,
+31,https://kroam.xyz/models/cogito-405b,Cogito v2 405B (Deep Cogito) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Cogito v2 405B (Deep Cogito) football predictions with 42% accuracy. Compare performance against 42 AI models across 17 leagues.,Cogito v2 405B (Deep Cogito) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",602,38,0,<truncated>,2878,3550476759379286315,
+31,https://kroam.xyz/models/llama-4-scout,Llama 4 Scout (Meta) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Llama 4 Scout (Meta) football predictions with 48% accuracy. Compare performance against 42 AI models across 17 leagues.,Llama 4 Scout (Meta) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",599,38,0,<truncated>,2857,17249941287746891706,
+31,https://kroam.xyz/models/mistral-7b-v0.2,Mistral 7B v0.2 (Mistral) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Mistral 7B v0.2 (Mistral) football predictions with 43% accuracy. Compare performance against 42 AI models across 17 leagues.,Mistral 7B v0.2 (Mistral) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",599,38,0,<truncated>,2872,15110242562172956863,
+31,https://kroam.xyz/models/cogito-671b,Cogito v2.1 671B (Deep Cogito) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Cogito v2.1 671B (Deep Cogito) football predictions with 35% accuracy. Compare performance against 42 AI models across 17 leagues.,Cogito v2.1 671B (Deep Cogito) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",602,38,0,<truncated>,2913,146706298941081592,
+31,https://kroam.xyz/models/rnj-1-instruct,Rnj-1 Instruct (Essential AI) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Rnj-1 Instruct (Essential AI) football predictions with 45% accuracy. Compare performance against 42 AI models across 17 leagues.,Rnj-1 Instruct (Essential AI) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",599,38,0,<truncated>,2883,723333240823769521,
+31,https://kroam.xyz/models/llama-3.1-405b-turbo,Llama 3.1 405B Turbo (Meta) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Llama 3.1 405B Turbo (Meta) football predictions with 47% accuracy. Compare performance against 42 AI models across 17 leagues.,Llama 3.1 405B Turbo (Meta) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",602,38,0,<truncated>,2873,17072723132331149978,
+31,https://kroam.xyz/models/mistral-small-3-24b,Mistral Small 3 24B (Mistral) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Mistral Small 3 24B (Mistral) football predictions with 34% accuracy. Compare performance against 42 AI models across 17 leagues.,Mistral Small 3 24B (Mistral) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",602,38,0,<truncated>,2882,13996054109701483744,
+31,https://kroam.xyz/models/deepseek-v3.1,DeepSeek V3.1 Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,DeepSeek V3.1 football predictions with 39% accuracy. Compare performance against 42 AI models across 17 leagues.,DeepSeek V3.1 Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",593,38,0,<truncated>,2832,623083953858243054,
+30,https://kroam.xyz/models/qwen2.5-72b-turbo,Qwen 2.5 72B Turbo (Alibaba) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Qwen 2.5 72B Turbo (Alibaba) football predictions with 50% accuracy. Compare performance against 42 AI models across 17 leagues.,Qwen 2.5 72B Turbo (Alibaba) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",602,38,0,<truncated>,2872,396404323869889634,
+30,https://kroam.xyz/models/deepseek-r1,DeepSeek R1 (Reasoning) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,DeepSeek R1 (Reasoning) football predictions with 42% accuracy. Compare performance against 42 AI models across 17 leagues.,DeepSeek R1 (Reasoning) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",596,38,0,<truncated>,2862,14470550036877208669,
+30,https://kroam.xyz/models/kimi-k2-instruct,Kimi K2 Instruct (Moonshot) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Kimi K2 Instruct (Moonshot) football predictions with 37% accuracy. Compare performance against 42 AI models across 17 leagues.,Kimi K2 Instruct (Moonshot) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",600,38,0,<truncated>,2885,2803188937373087856,
+30,https://kroam.xyz/models/nemotron-nano-9b-v2,Nemotron Nano 9B v2 (NVIDIA) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Nemotron Nano 9B v2 (NVIDIA) football predictions with 45% accuracy. Compare performance against 42 AI models across 17 leagues.,Nemotron Nano 9B v2 (NVIDIA) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",606,38,0,<truncated>,2917,17133838690026947757,
+29,https://kroam.xyz/models/kimi-k2-0905,Kimi K2 0905 (Moonshot) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Kimi K2 0905 (Moonshot) football predictions with 38% accuracy. Compare performance against 42 AI models across 17 leagues.,Kimi K2 0905 (Moonshot) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",604,38,0,<truncated>,2894,17501793305910480617,
+25,https://kroam.xyz/models/qwen3-235b-instruct,Qwen3 235B Instruct (Alibaba) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Qwen3 235B Instruct (Alibaba) football predictions with 40% accuracy. Compare performance against 42 AI models across 17 leagues.,Qwen3 235B Instruct (Alibaba) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",598,38,0,<truncated>,2849,3003866730481416085,
+24,https://kroam.xyz/models/gpt-oss-20b,GPT-OSS 20B (OpenAI) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,GPT-OSS 20B (OpenAI) football predictions with 44% accuracy. Compare performance against 42 AI models across 17 leagues.,GPT-OSS 20B (OpenAI) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",598,38,0,<truncated>,2857,15887474330582327644,
+23,https://kroam.xyz/models,AI Model Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"Compare 42 AI models predicting football matches. See accuracy rankings, performance trends, and which models predict best.",AI Model Football Predictions,,497,50,0,<truncated>,2965,15762610901161451650,
+22,https://kroam.xyz/leagues/eredivisie/fc-volendam-vs-go-ahead-eagles-2026-02-01,FC Volendam 1-1 GO Ahead Eagles | Kroam,text/html; charset=utf-8,false,200,0,true,FC Volendam 1-1 GO Ahead Eagles match analysis. AI predictions from 42 models with accuracy tracking.,FC Volendam vs GO Ahead Eagles Prediction,"Predictions
+Frequently Asked Questions",727,47,0,<truncated>,3820,2080900501655363714,
+22,https://kroam.xyz/leagues/laliga/athletic-club-vs-real-sociedad-2026-02-01,Athletic 1-1 Sociedad | Kroam,text/html; charset=utf-8,false,200,0,true,Athletic Club 1-1 Real Sociedad match analysis. AI predictions from 42 models with accuracy tracking.,Athletic Club vs Real Sociedad Prediction,"Predictions
+Frequently Asked Questions",735,48,0,<truncated>,3883,13981599124817746952,
+22,https://kroam.xyz/leagues/superlig/kocaelispor-vs-fenerbahe-2026-02-02,Kocaelispor 0-2 Fenerbahçe | Kroam,text/html; charset=utf-8,false,200,0,true,"Kocaelispor 0-2 Fenerbahçe match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perform",Kocaelispor vs Fenerbahçe Prediction,"Predictions
+Frequently Asked Questions",723,48,0,<truncated>,3895,17724069243133825659,
+22,https://kroam.xyz/leagues/ligue1/strasbourg-vs-paris-saint-germain-2026-02-01,Strasbourg 1-2 Paris Saint Germain | Kroam,text/html; charset=utf-8,false,200,0,true,Strasbourg 1-2 Paris Saint Germain match analysis. AI predictions from 42 models with accuracy tracking.,Strasbourg vs Paris Saint Germain Prediction,"Predictions
+Frequently Asked Questions",737,48,0,<truncated>,3927,324605739229664359,
+22,https://kroam.xyz/leagues/seriea/udinese-vs-as-roma-2026-02-02,Udinese 1-0 AS Roma | Kroam,text/html; charset=utf-8,false,200,0,true,"Udinese 1-0 AS Roma match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Udinese vs AS Roma Prediction,"Predictions
+Frequently Asked Questions",727,48,0,<truncated>,3777,910828139256046251,
+22,https://kroam.xyz/leagues/seriea/cremonese-vs-inter-2026-02-01,Cremonese 0-2 Inter | Kroam,text/html; charset=utf-8,false,200,0,true,"Cremonese 0-2 Inter match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Cremonese vs Inter Prediction,"Predictions
+Frequently Asked Questions",600,48,0,<truncated>,3433,4255799506692723333,
+22,https://kroam.xyz/leagues/laliga/getafe-vs-celta-vigo-2026-02-01,Getafe 0-0 Celta Vigo | Kroam,text/html; charset=utf-8,false,200,0,true,"Getafe 0-0 Celta Vigo match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Getafe vs Celta Vigo Prediction,"Predictions
+Frequently Asked Questions",727,48,0,<truncated>,3793,14390095936429080304,
+22,https://kroam.xyz/leagues/laliga/mallorca-vs-sevilla-2026-02-02,Mallorca 4-1 Sevilla | Kroam,text/html; charset=utf-8,false,200,0,true,"Mallorca 4-1 Sevilla match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance o",Mallorca vs Sevilla Prediction,"Predictions
+Frequently Asked Questions",717,48,0,<truncated>,3787,3189853837545010830,
+22,https://kroam.xyz/leagues/epl/sunderland-vs-burnley-2026-02-02,Sunderland 3-0 Burnley | Kroam,text/html; charset=utf-8,false,200,0,true,"Sunderland 3-0 Burnley match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Sunderland vs Burnley Prediction,"Predictions
+Frequently Asked Questions",723,48,0,<truncated>,3876,2784080966727674482,
+22,https://kroam.xyz/leagues/seriea/parma-vs-juventus-2026-02-01,Parma 1-4 Juventus | Kroam,text/html; charset=utf-8,false,200,0,true,"Parma 1-4 Juventus match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Parma vs Juventus Prediction,"Predictions
+Frequently Asked Questions",737,49,0,<truncated>,3864,14507062809683000652,
+21,https://kroam.xyz/blog/eredivisie-regular-season-21-roundup,Eredivisie AI Model Performance Week 21,text/html; charset=utf-8,false,200,0,true,"Review of AI model predictions for Eredivisie Week 21 matches, including top performing models and match-by-match accuracy analysis. Models achieved 30.49%...",Eredivisie Week 21 AI Model Audit,"Top 10 Models
+Match-by-Match Audit
+Biggest Consensus Misses
+Methodology
+Frequently Asked Questions
+You might also like",757,25,0,<truncated>,4670,14415570647016648008,
+21,https://kroam.xyz/leagues,Football League AI Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,"Explore AI predictions across 17 football competitions including Champions League, Premier League, La Liga, and more.",Football League Predictions,"European Club Competitions
+Domestic Leagues
+International",266,22,0,<truncated>,1577,15509694008115207772,
+21,https://kroam.xyz/blog/ligue-1-regular-season-20-roundup,Ligue 1 AI Model Accuracy Week 20,text/html; charset=utf-8,false,200,0,true,"Audit of AI model predictions for Ligue 1 Week 20 matches, featuring top performers and biggest upsets. Analysis includes average points per match and...",Ligue 1 Week 20 AI Model Audit: Top Performers and Surprises,"Top 10 Models
+Match-by-Match Audit
+Biggest Consensus Misses
+Methodology
+Frequently Asked Questions
+You might also like",777,25,0,<truncated>,4662,16862626610012549554,
+21,https://kroam.xyz/blog/europa-league-league-stage-8-roundup,UEFA Europa League Week 8 AI Model Accuracy,text/html; charset=utf-8,false,200,0,true,"AI model predictions for UEFA Europa League Week 8: 44.84% correct tendency rate. Top models: Llama 3.2 3B Turbo, Llama 3.3 70B Turbo, Gemma 3n E4B. Biggest...",UEFA Europa League AI Model Audit - Week 8,"Top 10 Models
+Match-by-Match Audit
+Biggest Consensus Misses
+Methodology
+Frequently Asked Questions
+You might also like
+On this page",947,25,0,<truncated>,5645,3412849239935906791,
+20,https://kroam.xyz/leagues/epl/bournemouth-vs-liverpool-2026-01-24,Bournemouth 3-2 Liverpool | Kroam,text/html; charset=utf-8,false,200,0,true,"Bournemouth 3-2 Liverpool match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performa",Bournemouth vs Liverpool Prediction,"Predictions
+Frequently Asked Questions",681,46,0,<truncated>,3675,790575382726651082,
+20,https://kroam.xyz/leagues/superlig/antalyaspor-vs-genclerbirligi-2026-01-25,Antalyaspor 2-1 Genclerbirligi | Kroam,text/html; charset=utf-8,false,200,0,true,Antalyaspor 2-1 Genclerbirligi match analysis. AI predictions from 42 models with accuracy tracking.,Antalyaspor vs Genclerbirligi Prediction,"Predictions
+Frequently Asked Questions",741,49,0,<truncated>,4024,342438564639414834,
+20,https://kroam.xyz/leagues/uel/fc-porto-vs-rangers-2026-01-29,FC Porto 3-1 Rangers | Kroam,text/html; charset=utf-8,false,200,0,true,"FC Porto 3-1 Rangers match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance o",FC Porto vs Rangers Prediction,"Predictions
+Frequently Asked Questions",695,46,0,<truncated>,3637,16199763198979179848,
+20,https://kroam.xyz/leagues/eredivisie/fortuna-sittard-vs-sparta-rotterdam-2026-02-07,Fortuna Sittard vs Sparta Rotterdam Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Fortuna Sittard vs Sparta Rotterdam. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 8:00 PM.",Fortuna Sittard vs Sparta Rotterdam Prediction,"Predictions
+Frequently Asked Questions",225,22,0,<truncated>,1452,17769275674303408904,
+20,https://kroam.xyz/about,About Kroam | Kroam,text/html; charset=utf-8,false,200,0,true,Learn how Kroam compares 42 AI models predicting football matches. Understand the Kicktipp scoring system and how model rankings are calculated.,42 AI Models Compete to Predict Football,"42 Open-Source Models
+Ready to see the predictions?",505,22,0,<truncated>,3107,16269589803629394192,
+20,https://kroam.xyz/leagues/ligue1/metz-vs-lyon-2026-01-25,Metz 2-5 Lyon | Kroam,text/html; charset=utf-8,false,200,0,true,"Metz 2-5 Lyon match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on Kroam",Metz vs Lyon Prediction,"Predictions
+Frequently Asked Questions",705,47,0,<truncated>,3648,1068232400232637550,
+20,https://kroam.xyz/leagues/epl/west-ham-vs-sunderland-2026-01-24,West Ham 3-1 Sunderland | Kroam,text/html; charset=utf-8,false,200,0,true,"West Ham 3-1 Sunderland match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performanc",West Ham vs Sunderland Prediction,"Predictions
+Frequently Asked Questions",675,45,0,<truncated>,3584,4043350142460190308,
+20,https://kroam.xyz/leagues/ligue1/lens-vs-rennes-2026-02-07,Lens vs Rennes Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Lens vs Rennes. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 4:00 PM.",Lens vs Rennes Prediction,"Predictions
+Frequently Asked Questions",211,22,0,<truncated>,1274,3601183646641246813,
+20,https://kroam.xyz/leagues/ucl/liverpool-vs-qarabag-2026-01-28,Liverpool 6-0 Qarabag | Kroam,text/html; charset=utf-8,false,200,0,true,"Liverpool 6-0 Qarabag match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Liverpool vs Qarabag Prediction,"Predictions
+Frequently Asked Questions",705,47,0,<truncated>,3756,17159561667991038280,
+20,https://kroam.xyz/leagues/epl/nottingham-forest-vs-crystal-palace-2026-02-01,Nott'm Forest 1-1 Crystal Palace | Kroam,text/html; charset=utf-8,false,200,0,true,Nottingham Forest 1-1 Crystal Palace match analysis. AI predictions from 42 models with accuracy tracking.,Nottingham Forest vs Crystal Palace Prediction,"Predictions
+Frequently Asked Questions",723,47,0,<truncated>,3882,15021781411263824741,
+20,https://kroam.xyz/leagues/seriea/como-vs-torino-2026-01-24,Como 6-0 Torino | Kroam,text/html; charset=utf-8,false,200,0,true,"Como 6-0 Torino match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on Kro",Como vs Torino Prediction,"Predictions
+Frequently Asked Questions",697,47,0,<truncated>,3642,1035826825963661492,
+20,https://kroam.xyz/leagues/epl/manchester-united-vs-tottenham-2026-02-07,Man Utd vs Tottenham Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Manchester United vs Tottenham. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 12:30 PM.",Manchester United vs Tottenham Prediction,"Predictions
+Frequently Asked Questions",219,22,0,<truncated>,1404,3379012474964370491,
+20,https://kroam.xyz/leagues/ucl/monaco-vs-juventus-2026-01-28,Monaco 0-0 Juventus | Kroam,text/html; charset=utf-8,false,200,0,true,"Monaco 0-0 Juventus match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Monaco vs Juventus Prediction,"Predictions
+Frequently Asked Questions",701,47,0,<truncated>,3724,15298825017974365810,
+20,https://kroam.xyz/leagues/epl/arsenal-vs-manchester-united-2026-01-25,Arsenal 2-3 Man Utd | Kroam,text/html; charset=utf-8,false,200,0,true,"Arsenal 2-3 Manchester United match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perf",Arsenal vs Manchester United Prediction,"Predictions
+Frequently Asked Questions",675,45,0,<truncated>,3620,2326619741314188811,
+20,https://kroam.xyz/leagues/eredivisie/nac-breda-vs-excelsior-2026-02-06,NAC Breda vs Excelsior Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for NAC Breda vs Excelsior. See which models forecast the winner before kickoff on Friday, February 6, 2026 at 7:00 PM.",NAC Breda vs Excelsior Prediction,"Predictions
+Frequently Asked Questions",217,22,0,<truncated>,1344,15214534720973419113,
+20,https://kroam.xyz/leagues/seriea/inter-vs-pisa-2026-01-23,Inter 6-2 Pisa | Kroam,text/html; charset=utf-8,false,200,0,true,"Inter 6-2 Pisa match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on Kroa",Inter vs Pisa Prediction,"Predictions
+Frequently Asked Questions",715,48,0,<truncated>,3683,14953074571993400020,
+20,https://kroam.xyz/leagues/epl/brentford-vs-nottingham-forest-2026-01-25,Brentford 0-2 Nott'm Forest | Kroam,text/html; charset=utf-8,false,200,0,true,Brentford 0-2 Nottingham Forest match analysis. AI predictions from 42 models with accuracy tracking.,Brentford vs Nottingham Forest Prediction,"Predictions
+Frequently Asked Questions",743,49,0,<truncated>,4002,15210949129879367886,
+20,https://kroam.xyz/leagues/seriea/fiorentina-vs-cagliari-2026-01-24,Fiorentina 1-2 Cagliari | Kroam,text/html; charset=utf-8,false,200,0,true,"Fiorentina 1-2 Cagliari match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performanc",Fiorentina vs Cagliari Prediction,"Predictions
+Frequently Asked Questions",715,48,0,<truncated>,3801,4016957617957703802,
+20,https://kroam.xyz/leagues/ligue1/metz-vs-lille-2026-02-06,Metz vs Lille Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Metz vs Lille. See which models forecast the winner before kickoff on Friday, February 6, 2026 at 7:45 PM.",Metz vs Lille Prediction,"Predictions
+Frequently Asked Questions",211,22,0,<truncated>,1266,15547931185652549684,
+20,https://kroam.xyz/leagues/bundesliga/werder-bremen-vs-1899-hoffenheim-2026-01-27,Werder Bremen 0-2 1899 Hoffenheim | Kroam,text/html; charset=utf-8,false,200,0,true,Werder Bremen 0-2 1899 Hoffenheim match analysis. AI predictions from 42 models with accuracy tracking.,Werder Bremen vs 1899 Hoffenheim Prediction,"Predictions
+Frequently Asked Questions",697,46,0,<truncated>,3743,1512174411144310701,
+20,https://kroam.xyz/leagues/uel/fc-midtjylland-vs-dinamo-zagreb-2026-01-29,FC Midtjylland 2-0 Dinamo Zagreb | Kroam,text/html; charset=utf-8,false,200,0,true,FC Midtjylland 2-0 Dinamo Zagreb match analysis. AI predictions from 42 models with accuracy tracking.,FC Midtjylland vs Dinamo Zagreb Prediction,"Predictions
+Frequently Asked Questions",727,47,0,<truncated>,3862,834594580284425721,
+20,https://kroam.xyz/leagues/eredivisie/nec-nijmegen-vs-heracles-2026-02-07,NEC Nijmegen vs Heracles Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for NEC Nijmegen vs Heracles. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 3:30 PM.",NEC Nijmegen vs Heracles Prediction,"Predictions
+Frequently Asked Questions",215,22,0,<truncated>,1355,1331586422117380071,
+20,https://kroam.xyz/leagues/seriea/juventus-vs-napoli-2026-01-25,Juventus 3-0 Napoli | Kroam,text/html; charset=utf-8,false,200,0,true,"Juventus 3-0 Napoli match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Juventus vs Napoli Prediction,"Predictions
+Frequently Asked Questions",701,47,0,<truncated>,3692,16124129339630869333,
+20,https://kroam.xyz/models/gpt-oss-120b-syn,GPT-OSS 120B (Synthetic) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,GPT-OSS 120B (Synthetic) football predictions with 0% accuracy. Compare performance against 42 AI models across 17 leagues.,GPT-OSS 120B (Synthetic) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",282,28,0,<truncated>,1652,2910937645613355552,
+20,https://kroam.xyz/leagues/epl/everton-vs-leeds-2026-01-26,Everton 1-1 Leeds | Kroam,text/html; charset=utf-8,false,200,0,true,"Everton 1-1 Leeds match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on K",Everton vs Leeds Prediction,"Predictions
+Frequently Asked Questions",719,48,0,<truncated>,3783,17542398246130105111,
+20,https://kroam.xyz/leagues/uel/genk-vs-malmo-ff-2026-01-29,Genk 2-1 Malmo FF | Kroam,text/html; charset=utf-8,false,200,0,true,"Genk 2-1 Malmo FF match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on K",Genk vs Malmo FF Prediction,"Predictions
+Frequently Asked Questions",715,47,0,<truncated>,3712,1760225821550371121,
+20,https://kroam.xyz/leagues/laliga/real-madrid-vs-rayo-vallecano-2026-02-01,Real Madrid 2-1 Rayo Vallecano | Kroam,text/html; charset=utf-8,false,200,0,true,Real Madrid 2-1 Rayo Vallecano match analysis. AI predictions from 42 models with accuracy tracking.,Real Madrid vs Rayo Vallecano Prediction,"Predictions
+Frequently Asked Questions",755,49,0,<truncated>,3970,14848101740185585725,
+20,https://kroam.xyz/leagues/seriea/napoli-vs-fiorentina-2026-01-31,Napoli 2-1 Fiorentina | Kroam,text/html; charset=utf-8,false,200,0,true,"Napoli 2-1 Fiorentina match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Napoli vs Fiorentina Prediction,"Predictions
+Frequently Asked Questions",737,49,0,<truncated>,3894,17668591262828742675,
+20,https://kroam.xyz/leagues/epl/leeds-vs-arsenal-2026-01-31,Leeds 0-4 Arsenal | Kroam,text/html; charset=utf-8,false,200,0,true,"Leeds 0-4 Arsenal match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on K",Leeds vs Arsenal Prediction,"Predictions
+Frequently Asked Questions",737,49,0,<truncated>,3882,16118870655377233109,
+20,https://kroam.xyz/leagues/laliga/real-sociedad-vs-celta-vigo-2026-01-25,Sociedad 3-1 Celta Vigo | Kroam,text/html; charset=utf-8,false,200,0,true,"Real Sociedad 3-1 Celta Vigo match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfo",Real Sociedad vs Celta Vigo Prediction,"Predictions
+Frequently Asked Questions",738,48,0,<truncated>,3864,15321289274585097052,
+20,https://kroam.xyz/leagues/bundesliga/vfl-wolfsburg-vs-borussia-dortmund-2026-02-07,VfL Wolfsburg vs Dortmund Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for VfL Wolfsburg vs Borussia Dortmund. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 2:30 PM.",VfL Wolfsburg vs Borussia Dortmund Prediction,"Predictions
+Frequently Asked Questions",223,22,0,<truncated>,1428,3730197349462262350,
+20,https://kroam.xyz/leagues/epl/liverpool-vs-newcastle-2026-01-31,Liverpool 4-1 Newcastle | Kroam,text/html; charset=utf-8,false,200,0,true,"Liverpool 4-1 Newcastle match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performanc",Liverpool vs Newcastle Prediction,"Predictions
+Frequently Asked Questions",699,47,0,<truncated>,3746,219028832331560844,
+20,https://kroam.xyz/leagues/uel/fc-basel-1893-vs-plzen-2026-01-29,FC Basel 1893 0-1 Plzen | Kroam,text/html; charset=utf-8,false,200,0,true,"FC Basel 1893 0-1 Plzen match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performanc",FC Basel 1893 vs Plzen Prediction,"Predictions
+Frequently Asked Questions",725,47,0,<truncated>,3768,2385126806627817518,
+20,https://kroam.xyz/leagues/bundesliga/fc-st-pauli-vs-rb-leipzig-2026-01-27,FC St. Pauli 1-1 Leipzig | Kroam,text/html; charset=utf-8,false,200,0,true,"FC St. Pauli 1-1 RB Leipzig match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfor",FC St. Pauli vs RB Leipzig Prediction,"Predictions
+Frequently Asked Questions",760,49,0,<truncated>,3945,16370264853427813835,
+20,https://kroam.xyz/leagues/eredivisie/groningen-vs-fortuna-sittard-2026-01-25,Groningen 1-2 Fortuna Sittard | Kroam,text/html; charset=utf-8,false,200,0,true,"Groningen 1-2 Fortuna Sittard match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perf",Groningen vs Fortuna Sittard Prediction,"Predictions
+Frequently Asked Questions",725,48,0,<truncated>,3887,2006111377974884529,
+20,https://kroam.xyz/leagues/laliga/barcelona-vs-oviedo-2026-01-25,Barcelona 3-0 Oviedo | Kroam,text/html; charset=utf-8,false,200,0,true,"Barcelona 3-0 Oviedo match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance o",Barcelona vs Oviedo Prediction,"Predictions
+Frequently Asked Questions",735,49,0,<truncated>,3866,2006562003875774535,
+20,https://kroam.xyz/leagues/ucl/club-brugge-kv-vs-marseille-2026-01-28,Club Brugge KV 3-0 Marseille | Kroam,text/html; charset=utf-8,false,200,0,true,"Club Brugge KV 3-0 Marseille match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfo",Club Brugge KV vs Marseille Prediction,"Predictions
+Frequently Asked Questions",725,47,0,<truncated>,3834,16708727825033083500,
+20,https://kroam.xyz/leagues/eredivisie/az-alkmaar-vs-nec-nijmegen-2026-01-31,AZ Alkmaar 1-3 NEC Nijmegen | Kroam,text/html; charset=utf-8,false,200,0,true,"AZ Alkmaar 1-3 NEC Nijmegen match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfor",AZ Alkmaar vs NEC Nijmegen Prediction,"Predictions
+Frequently Asked Questions",749,49,0,<truncated>,3950,17259322071430405314,
+20,https://kroam.xyz/leagues/superlig/rizespor-vs-alanyaspor-2026-01-25,Rizespor 1-1 Alanyaspor | Kroam,text/html; charset=utf-8,false,200,0,true,"Rizespor 1-1 Alanyaspor match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performanc",Rizespor vs Alanyaspor Prediction,"Predictions
+Frequently Asked Questions",703,47,0,<truncated>,3754,16887972985806499410,
+20,https://kroam.xyz/leagues/bundesliga/fc-st-pauli-vs-vfb-stuttgart-2026-02-07,FC St. Pauli vs VfB Stuttgart Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for FC St. Pauli vs VfB Stuttgart. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 2:30 PM.",FC St. Pauli vs VfB Stuttgart Prediction,"Predictions
+Frequently Asked Questions",231,22,0,<truncated>,1399,2744471074672923465,
+20,https://kroam.xyz/leagues/eredivisie/excelsior-vs-ajax-2026-02-01,Excelsior 2-2 Ajax | Kroam,text/html; charset=utf-8,false,200,0,true,"Excelsior 2-2 Ajax match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Excelsior vs Ajax Prediction,"Predictions
+Frequently Asked Questions",733,49,0,<truncated>,3876,64253915628969732,
+20,https://kroam.xyz/leagues/turkish-super-lig/genclerbirligi-vs-gaziehir-gaziantep-2026-02-01,Genclerbirligi 2-1 Gazişehir Gaziantep | Kroam,text/html; charset=utf-8,false,200,0,true,Genclerbirligi 2-1 Gazişehir Gaziantep match analysis. AI predictions from 42 models with accuracy tracking.,Genclerbirligi vs Gazişehir Gaziantep Prediction,"Predictions
+Frequently Asked Questions",731,49,0,<truncated>,4009,2146866227956142371,https://kroam.xyz/leagues/superlig
+20,https://kroam.xyz/leagues/superlig/galatasaray-vs-kayserispor-2026-02-01,Galatasaray 4-0 Kayserispor | Kroam,text/html; charset=utf-8,false,200,0,true,"Galatasaray 4-0 Kayserispor match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfor",Galatasaray vs Kayserispor Prediction,"Predictions
+Frequently Asked Questions",743,49,0,<truncated>,4008,16709239700756592816,
+20,https://kroam.xyz/leagues/epl/fulham-vs-everton-2026-02-07,Fulham vs Everton Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Fulham vs Everton. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 3:00 PM.",Fulham vs Everton Prediction,"Predictions
+Frequently Asked Questions",211,22,0,<truncated>,1311,17573740565733906399,
+20,https://kroam.xyz/leagues/bundesliga/bayer-leverkusen-vs-werder-bremen-2026-01-24,Leverkusen 1-0 Werder Bremen | Kroam,text/html; charset=utf-8,false,200,0,true,Bayer Leverkusen 1-0 Werder Bremen match analysis. AI predictions from 42 models with accuracy tracking.,Bayer Leverkusen vs Werder Bremen Prediction,"Predictions
+Frequently Asked Questions",714,47,0,<truncated>,3852,2013743405786321452,
+20,https://kroam.xyz/leagues/eredivisie/pec-zwolle-vs-fc-volendam-2026-02-07,PEC Zwolle vs FC Volendam Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for PEC Zwolle vs FC Volendam. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 5:45 PM.",PEC Zwolle vs FC Volendam Prediction,"Predictions
+Frequently Asked Questions",225,22,0,<truncated>,1366,683446016582862229,
+20,https://kroam.xyz/leagues/ucl/athletic-club-vs-sporting-cp-2026-01-28,Athletic 2-3 Sporting CP | Kroam,text/html; charset=utf-8,false,200,0,true,"Athletic Club 2-3 Sporting CP match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perf",Athletic Club vs Sporting CP Prediction,"Predictions
+Frequently Asked Questions",742,48,0,<truncated>,3920,13866275084867285712,
+20,https://kroam.xyz/leagues/epl/wolves-vs-bournemouth-2026-01-31,Wolves 0-2 Bournemouth | Kroam,text/html; charset=utf-8,false,200,0,true,"Wolves 0-2 Bournemouth match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Wolves vs Bournemouth Prediction,"Predictions
+Frequently Asked Questions",719,48,0,<truncated>,3833,17994532435902665659,
+20,https://kroam.xyz/leagues/turkish-super-lig/kocaelispor-vs-fenerbahe-2026-02-02,Kocaelispor 0-2 Fenerbahçe | Kroam,text/html; charset=utf-8,false,200,0,true,"Kocaelispor 0-2 Fenerbahçe match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perform",Kocaelispor vs Fenerbahçe Prediction,"Predictions
+Frequently Asked Questions",721,49,0,<truncated>,3885,16386640364554005584,https://kroam.xyz/leagues/superlig
+20,https://kroam.xyz/leagues/bundesliga/hamburger-sv-vs-bayern-mnchen-2026-01-31,Hamburger SV 2-2 Bayern München | Kroam,text/html; charset=utf-8,false,200,0,true,Hamburger SV 2-2 Bayern München match analysis. AI predictions from 42 models with accuracy tracking.,Hamburger SV vs Bayern München Prediction,"Predictions
+Frequently Asked Questions",733,48,0,<truncated>,3903,3966538796469441113,
+20,https://kroam.xyz/leagues/epl/tottenham-vs-manchester-city-2026-02-01,Tottenham 2-2 Man City | Kroam,text/html; charset=utf-8,false,200,0,true,"Tottenham 2-2 Manchester City match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perf",Tottenham vs Manchester City Prediction,"Predictions
+Frequently Asked Questions",729,48,0,<truncated>,3910,17802972856038949102,
+20,https://kroam.xyz/leagues/epl/newcastle-vs-brentford-2026-02-07,Newcastle vs Brentford Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Newcastle vs Brentford. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 5:30 PM.",Newcastle vs Brentford Prediction,"Predictions
+Frequently Asked Questions",212,22,0,<truncated>,1352,15642792420712222946,
+20,https://kroam.xyz/leagues/laliga/celta-vigo-vs-osasuna-2026-02-06,Celta Vigo vs Osasuna Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Celta Vigo vs Osasuna. See which models forecast the winner before kickoff on Friday, February 6, 2026 at 8:00 PM.",Celta Vigo vs Osasuna Prediction,"Predictions
+Frequently Asked Questions",219,22,0,<truncated>,1332,3444767691346140577,
+20,https://kroam.xyz/leagues/laliga/rayo-vallecano-vs-oviedo-2026-02-07,Rayo Vallecano vs Oviedo Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Rayo Vallecano vs Oviedo. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 1:00 PM.",Rayo Vallecano vs Oviedo Prediction,"Predictions
+Frequently Asked Questions",222,22,0,<truncated>,1359,16185301710512160973,
+20,https://kroam.xyz/leagues/uel/fcsb-vs-fenerbahe-2026-01-29,FCSB 1-1 Fenerbahçe | Kroam,text/html; charset=utf-8,false,200,0,true,"FCSB 1-1 Fenerbahçe match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",FCSB vs Fenerbahçe Prediction,"Predictions
+Frequently Asked Questions",741,49,0,<truncated>,3936,849855710591388848,
+20,https://kroam.xyz/leagues/uel/ludogorets-vs-nice-2026-01-29,Ludogorets 1-0 Nice | Kroam,text/html; charset=utf-8,false,200,0,true,"Ludogorets 1-0 Nice match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Ludogorets vs Nice Prediction,"Predictions
+Frequently Asked Questions",687,46,0,<truncated>,3637,3800150041445392381,
+20,https://kroam.xyz/leagues/bundesliga/rb-leipzig-vs-fsv-mainz-05-2026-01-31,Leipzig 1-2 FSV Mainz 05 | Kroam,text/html; charset=utf-8,false,200,0,true,"RB Leipzig 1-2 FSV Mainz 05 match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfor",RB Leipzig vs FSV Mainz 05 Prediction,"Predictions
+Frequently Asked Questions",746,48,0,<truncated>,3878,14055530688534835383,
+20,https://kroam.xyz/leagues/ucl/eintracht-frankfurt-vs-tottenham-2026-01-28,Frankfurt 0-2 Tottenham | Kroam,text/html; charset=utf-8,false,200,0,true,Eintracht Frankfurt 0-2 Tottenham match analysis. AI predictions from 42 models with accuracy tracking.,Eintracht Frankfurt vs Tottenham Prediction,"Predictions
+Frequently Asked Questions",712,47,0,<truncated>,3864,4397115271925285926,
+20,https://kroam.xyz/leagues/laliga/alaves-vs-real-betis-2026-01-25,Alaves 2-1 Real Betis | Kroam,text/html; charset=utf-8,false,200,0,true,"Alaves 2-1 Real Betis match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Alaves vs Real Betis Prediction,"Predictions
+Frequently Asked Questions",747,49,0,<truncated>,3894,4281103103817920247,
+20,https://kroam.xyz/leagues/seriea/verona-vs-udinese-2026-01-26,Verona 1-3 Udinese | Kroam,text/html; charset=utf-8,false,200,0,true,"Verona 1-3 Udinese match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Verona vs Udinese Prediction,"Predictions
+Frequently Asked Questions",663,45,0,<truncated>,3484,335587000163213294,
+20,https://kroam.xyz/models/deepseek-v3.2-syn,DeepSeek V3.2 (Synthetic) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,DeepSeek V3.2 (Synthetic) football predictions with 0% accuracy. Compare performance against 42 AI models across 17 leagues.,DeepSeek V3.2 (Synthetic) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",282,28,0,<truncated>,1655,426999524005785236,
+20,https://kroam.xyz/leagues/seriea/lazio-vs-genoa-2026-01-30,Lazio 3-2 Genoa | Kroam,text/html; charset=utf-8,false,200,0,true,"Lazio 3-2 Genoa match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on Kro",Lazio vs Genoa Prediction,"Predictions
+Frequently Asked Questions",719,48,0,<truncated>,3735,16771304126233600072,
+20,https://kroam.xyz/leagues/ligue1/nice-vs-stade-brestois-29-2026-02-01,Nice 2-2 Stade Brestois 29 | Kroam,text/html; charset=utf-8,false,200,0,true,"Nice 2-2 Stade Brestois 29 match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perform",Nice vs Stade Brestois 29 Prediction,"Predictions
+Frequently Asked Questions",723,47,0,<truncated>,3758,1248303425549672070,
+20,https://kroam.xyz/leagues/bundesliga/1899-hoffenheim-vs-union-berlin-2026-01-31,1899 Hoffenheim 3-1 Union Berlin | Kroam,text/html; charset=utf-8,false,200,0,true,1899 Hoffenheim 3-1 Union Berlin match analysis. AI predictions from 42 models with accuracy tracking.,1899 Hoffenheim vs Union Berlin Prediction,"Predictions
+Frequently Asked Questions",713,47,0,<truncated>,3814,1645531742957551954,
+20,https://kroam.xyz/blog/la-liga-regular-season-22-roundup,La Liga AI Model Performance Audit - Week 22,text/html; charset=utf-8,false,200,0,true,"Review of AI model predictions for La Liga Week 22 matches, featuring top performers, match-by-match analysis, and biggest upsets. Analysis includes average...",La Liga Week 22 AI Model Audit: Top Performers and Surprises,"Top 10 Models
+Match-by-Match Audit
+Biggest Consensus Misses
+Methodology
+Frequently Asked Questions
+You might also like
+On this page",834,25,0,<truncated>,5063,2336153065944389362,
+20,https://kroam.xyz/leagues/seriea/cagliari-vs-verona-2026-01-31,Cagliari 4-0 Verona | Kroam,text/html; charset=utf-8,false,200,0,true,"Cagliari 4-0 Verona match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Cagliari vs Verona Prediction,"Predictions
+Frequently Asked Questions",699,47,0,<truncated>,3678,1663646464196784400,
+20,https://kroam.xyz/leagues/ligue1/monaco-vs-rennes-2026-01-31,Monaco 4-0 Rennes | Kroam,text/html; charset=utf-8,false,200,0,true,"Monaco 4-0 Rennes match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on K",Monaco vs Rennes Prediction,"Predictions
+Frequently Asked Questions",719,48,0,<truncated>,3755,17164586491200876200,
+20,https://kroam.xyz/leagues/eredivisie/psv-eindhoven-vs-nac-breda-2026-01-24,PSV Eindhoven 2-2 NAC Breda | Kroam,text/html; charset=utf-8,false,200,0,true,"PSV Eindhoven 2-2 NAC Breda match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfor",PSV Eindhoven vs NAC Breda Prediction,"Predictions
+Frequently Asked Questions",721,47,0,<truncated>,3800,15221414091031718223,
+20,https://kroam.xyz/leagues/superlig/baakehir-vs-rizespor-2026-01-31,Başakşehir 2-2 Rizespor | Kroam,text/html; charset=utf-8,false,200,0,true,"Başakşehir 2-2 Rizespor match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performanc",Başakşehir vs Rizespor Prediction,"Predictions
+Frequently Asked Questions",721,48,0,<truncated>,3873,4423809032891451791,
+20,https://kroam.xyz/leagues/seriea/sassuolo-vs-cremonese-2026-01-25,Sassuolo 1-0 Cremonese | Kroam,text/html; charset=utf-8,false,200,0,true,"Sassuolo 1-0 Cremonese match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Sassuolo vs Cremonese Prediction,"Predictions
+Frequently Asked Questions",735,49,0,<truncated>,3886,4530714707331932697,
+20,https://kroam.xyz/leagues/laliga/espanyol-vs-alaves-2026-01-30,Espanyol 1-2 Alaves | Kroam,text/html; charset=utf-8,false,200,0,true,"Espanyol 1-2 Alaves match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Espanyol vs Alaves Prediction,"Predictions
+Frequently Asked Questions",719,48,0,<truncated>,3777,393610343130421423,
+20,https://kroam.xyz/leagues/ucl/napoli-vs-chelsea-2026-01-28,Napoli 2-3 Chelsea | Kroam,text/html; charset=utf-8,false,200,0,true,"Napoli 2-3 Chelsea match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Napoli vs Chelsea Prediction,"Predictions
+Frequently Asked Questions",681,46,0,<truncated>,3617,1658925479996041750,
+20,https://kroam.xyz/leagues/epl/manchester-united-vs-fulham-2026-02-01,Man Utd 3-2 Fulham | Kroam,text/html; charset=utf-8,false,200,0,true,"Manchester United 3-2 Fulham match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfo",Manchester United vs Fulham Prediction,"Predictions
+Frequently Asked Questions",691,46,0,<truncated>,3699,16665661729720538190,
+20,https://kroam.xyz/leagues/superlig/gaziehir-gaziantep-vs-konyaspor-2026-01-25,Gazişehir Gaziantep 1-1 Konyaspor | Kroam,text/html; charset=utf-8,false,200,0,true,Gazişehir Gaziantep 1-1 Konyaspor match analysis. AI predictions from 42 models with accuracy tracking.,Gazişehir Gaziantep vs Konyaspor Prediction,"Predictions
+Frequently Asked Questions",717,47,0,<truncated>,3878,3481579909639176614,
+20,https://kroam.xyz/leagues/laliga/villarreal-vs-real-madrid-2026-01-24,Villarreal 0-2 Real Madrid | Kroam,text/html; charset=utf-8,false,200,0,true,"Villarreal 0-2 Real Madrid match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perform",Villarreal vs Real Madrid Prediction,"Predictions
+Frequently Asked Questions",763,50,0,<truncated>,4025,15867130526891299056,
+20,https://kroam.xyz/leagues/ucl/borussia-dortmund-vs-inter-2026-01-28,Dortmund 0-2 Inter | Kroam,text/html; charset=utf-8,false,200,0,true,"Borussia Dortmund 0-2 Inter match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfor",Borussia Dortmund vs Inter Prediction,"Predictions
+Frequently Asked Questions",748,49,0,<truncated>,3983,15748123677684055057,
+20,https://kroam.xyz/leagues/laliga/levante-vs-atletico-madrid-2026-01-31,Levante 0-0 Atletico | Kroam,text/html; charset=utf-8,false,200,0,true,"Levante 0-0 Atletico Madrid match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfor",Levante vs Atletico Madrid Prediction,"Predictions
+Frequently Asked Questions",728,48,0,<truncated>,3848,18210230990421400377,
+20,https://kroam.xyz/leagues/eredivisie/nec-nijmegen-vs-pec-zwolle-2026-01-24,NEC Nijmegen 2-1 PEC Zwolle | Kroam,text/html; charset=utf-8,false,200,0,true,"NEC Nijmegen 2-1 PEC Zwolle match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfor",NEC Nijmegen vs PEC Zwolle Prediction,"Predictions
+Frequently Asked Questions",731,48,0,<truncated>,3851,1211275586840491773,
+20,https://kroam.xyz/leagues/uel/lille-vs-sc-freiburg-2026-01-29,Lille 1-0 SC Freiburg | Kroam,text/html; charset=utf-8,false,200,0,true,"Lille 1-0 SC Freiburg match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Lille vs SC Freiburg Prediction,"Predictions
+Frequently Asked Questions",733,48,0,<truncated>,3839,4305427517871374300,
+20,https://kroam.xyz/leagues/bundesliga/1-fc-heidenheim-vs-rb-leipzig-2026-01-24,1. FC Heidenheim 0-3 Leipzig | Kroam,text/html; charset=utf-8,false,200,0,true,1. FC Heidenheim 0-3 RB Leipzig match analysis. AI predictions from 42 models with accuracy tracking.,1. FC Heidenheim vs RB Leipzig Prediction,"Predictions
+Frequently Asked Questions",720,47,0,<truncated>,3805,15499306333495051237,
+20,https://kroam.xyz/leagues/ucl/bayer-leverkusen-vs-villarreal-2026-01-28,Leverkusen 3-0 Villarreal | Kroam,text/html; charset=utf-8,false,200,0,true,Bayer Leverkusen 3-0 Villarreal match analysis. AI predictions from 42 models with accuracy tracking.,Bayer Leverkusen vs Villarreal Prediction,"Predictions
+Frequently Asked Questions",712,47,0,<truncated>,3848,16100540050619072862,
+20,https://kroam.xyz/leagues/ligue1/auxerre-vs-paris-saint-germain-2026-01-23,Auxerre 0-1 Paris Saint Germain | Kroam,text/html; charset=utf-8,false,200,0,true,Auxerre 0-1 Paris Saint Germain match analysis. AI predictions from 42 models with accuracy tracking.,Auxerre vs Paris Saint Germain Prediction,"Predictions
+Frequently Asked Questions",481,34,0,<truncated>,2613,15725350707062213916,
+20,https://kroam.xyz/leagues/bundesliga/borussia-mnchengladbach-vs-vfb-stuttgart-2026-01-25,M'gladbach 0-3 VfB Stuttgart | Kroam,text/html; charset=utf-8,false,200,0,true,Borussia Mönchengladbach 0-3 VfB Stuttgart match analysis. AI predictions from 42 models with accuracy tracking.,Borussia Mönchengladbach vs VfB Stuttgart Prediction,"Predictions
+Frequently Asked Questions",716,47,0,<truncated>,3921,14867131401722295525,
+20,https://kroam.xyz/leagues/seriea/lecce-vs-lazio-2026-01-24,Lecce 0-0 Lazio | Kroam,text/html; charset=utf-8,false,200,0,true,"Lecce 0-0 Lazio match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on Kro",Lecce vs Lazio Prediction,"Predictions
+Frequently Asked Questions",721,48,0,<truncated>,3757,2218551065734538900,
+20,https://kroam.xyz/leagues/eredivisie/telstar-vs-az-alkmaar-2026-01-25,Telstar 0-1 AZ Alkmaar | Kroam,text/html; charset=utf-8,false,200,0,true,"Telstar 0-1 AZ Alkmaar match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Telstar vs AZ Alkmaar Prediction,"Predictions
+Frequently Asked Questions",707,47,0,<truncated>,3726,3597876538940512903,
+20,https://kroam.xyz/leagues/ucl/paris-saint-germain-vs-newcastle-2026-01-28,Paris Saint Germain 1-1 Newcastle | Kroam,text/html; charset=utf-8,false,200,0,true,Paris Saint Germain 1-1 Newcastle match analysis. AI predictions from 42 models with accuracy tracking.,Paris Saint Germain vs Newcastle Prediction,"Predictions
+Frequently Asked Questions",687,45,0,<truncated>,3686,22333297072441710,
+20,https://kroam.xyz/leagues/bundesliga/fc-augsburg-vs-fc-st-pauli-2026-01-31,FC Augsburg 2-1 FC St. Pauli | Kroam,text/html; charset=utf-8,false,200,0,true,"FC Augsburg 2-1 FC St. Pauli match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfo",FC Augsburg vs FC St. Pauli Prediction,"Predictions
+Frequently Asked Questions",707,46,0,<truncated>,3693,16143776029352015430,
+20,https://kroam.xyz/leagues/eredivisie/sparta-rotterdam-vs-groningen-2026-01-31,Sparta Rotterdam 2-0 Groningen | Kroam,text/html; charset=utf-8,false,200,0,true,Sparta Rotterdam 2-0 Groningen match analysis. AI predictions from 42 models with accuracy tracking.,Sparta Rotterdam vs Groningen Prediction,"Predictions
+Frequently Asked Questions",725,48,0,<truncated>,3897,2084553098451205964,
+20,https://kroam.xyz/leagues/bundesliga/sc-freiburg-vs-1-fc-kln-2026-01-25,SC Freiburg 2-1 1. FC Köln | Kroam,text/html; charset=utf-8,false,200,0,true,"SC Freiburg 2-1 1. FC Köln match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perform",SC Freiburg vs 1. FC Köln Prediction,"Predictions
+Frequently Asked Questions",745,48,0,<truncated>,3879,1797164497019621724,
+20,https://kroam.xyz/leagues/epl/leeds-vs-nottingham-forest-2026-02-06,Leeds vs Nott'm Forest Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Leeds vs Nottingham Forest. See which models forecast the winner before kickoff on Friday, February 6, 2026 at 8:00 PM.",Leeds vs Nottingham Forest Prediction,"Predictions
+Frequently Asked Questions",219,22,0,<truncated>,1376,15600572904311746401,
+20,https://kroam.xyz/leagues/eredivisie/ajax-vs-fc-volendam-2026-01-24,Ajax 2-0 FC Volendam | Kroam,text/html; charset=utf-8,false,200,0,true,"Ajax 2-0 FC Volendam match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance o",Ajax vs FC Volendam Prediction,"Predictions
+Frequently Asked Questions",741,49,0,<truncated>,3878,16408548852511956967,
+20,https://kroam.xyz/leagues/ligue1/nantes-vs-nice-2026-01-25,Nantes 1-4 Nice | Kroam,text/html; charset=utf-8,false,200,0,true,"Nantes 1-4 Nice match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on Kro",Nantes vs Nice Prediction,"Predictions
+Frequently Asked Questions",719,48,0,<truncated>,3743,17491140376522254037,
+20,https://kroam.xyz/leagues/ligue1/lorient-vs-nantes-2026-01-31,Lorient 2-1 Nantes | Kroam,text/html; charset=utf-8,false,200,0,true,"Lorient 2-1 Nantes match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Lorient vs Nantes Prediction,"Predictions
+Frequently Asked Questions",719,48,0,<truncated>,3765,15981489390376188977,
+20,https://kroam.xyz/leagues/laliga/oviedo-vs-girona-2026-01-31,Oviedo 1-0 Girona | Kroam,text/html; charset=utf-8,false,200,0,true,"Oviedo 1-0 Girona match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on K",Oviedo vs Girona Prediction,"Predictions
+Frequently Asked Questions",719,48,0,<truncated>,3755,1697262741038041752,
+20,https://kroam.xyz/leagues/bundesliga/borussia-dortmund-vs-1-fc-heidenheim-2026-02-01,Dortmund 3-2 1. FC Heidenheim | Kroam,text/html; charset=utf-8,false,200,0,true,Borussia Dortmund 3-2 1. FC Heidenheim match analysis. AI predictions from 42 models with accuracy tracking.,Borussia Dortmund vs 1. FC Heidenheim Prediction,"Predictions
+Frequently Asked Questions",726,47,0,<truncated>,3873,3228818152907995545,
+20,https://kroam.xyz/leagues/eredivisie/utrecht-vs-sparta-rotterdam-2026-01-25,Utrecht 0-1 Sparta Rotterdam | Kroam,text/html; charset=utf-8,false,200,0,true,"Utrecht 0-1 Sparta Rotterdam match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfo",Utrecht vs Sparta Rotterdam Prediction,"Predictions
+Frequently Asked Questions",725,48,0,<truncated>,3877,464393434555861988,
+20,https://kroam.xyz/leagues/turkish-super-lig/fatih-karagmrk-vs-antalyaspor-2026-02-07,Fatih Karagümrük vs Antalyaspor Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Fatih Karagümrük vs Antalyaspor. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 11:30 AM.",Fatih Karagümrük vs Antalyaspor Prediction,"Predictions
+Frequently Asked Questions",221,23,0,<truncated>,1450,16571103231320365256,https://kroam.xyz/leagues/superlig
+20,https://kroam.xyz/leagues/seriea/pisa-vs-sassuolo-2026-01-31,Pisa 1-3 Sassuolo | Kroam,text/html; charset=utf-8,false,200,0,true,"Pisa 1-3 Sassuolo match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on K",Pisa vs Sassuolo Prediction,"Predictions
+Frequently Asked Questions",715,48,0,<truncated>,3745,16345464777904239725,
+20,https://kroam.xyz/leagues/ligue1/marseille-vs-lens-2026-01-24,Marseille 3-1 Lens | Kroam,text/html; charset=utf-8,false,200,0,true,"Marseille 3-1 Lens match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Marseille vs Lens Prediction,"Predictions
+Frequently Asked Questions",717,48,0,<truncated>,3763,14835059235000657500,
+20,https://kroam.xyz/leagues/uel/fk-crvena-zvezda-vs-celta-vigo-2026-01-29,FK Crvena Zvezda 1-1 Celta Vigo | Kroam,text/html; charset=utf-8,false,200,0,true,FK Crvena Zvezda 1-1 Celta Vigo match analysis. AI predictions from 42 models with accuracy tracking.,FK Crvena Zvezda vs Celta Vigo Prediction,"Predictions
+Frequently Asked Questions",769,49,0,<truncated>,4020,17414954521406054483,
+20,https://kroam.xyz/leagues/bundesliga/eintracht-frankfurt-vs-1899-hoffenheim-2026-01-24,Frankfurt 1-3 1899 Hoffenheim | Kroam,text/html; charset=utf-8,false,200,0,true,Eintracht Frankfurt 1-3 1899 Hoffenheim match analysis. AI predictions from 42 models with accuracy tracking.,Eintracht Frankfurt vs 1899 Hoffenheim Prediction,"Predictions
+Frequently Asked Questions",676,45,0,<truncated>,3692,17028269317495600044,
+20,https://kroam.xyz/leagues/laliga/elche-vs-barcelona-2026-01-31,Elche 1-3 Barcelona | Kroam,text/html; charset=utf-8,false,200,0,true,"Elche 1-3 Barcelona match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Elche vs Barcelona Prediction,"Predictions
+Frequently Asked Questions",735,49,0,<truncated>,3856,1374924525357874728,
+20,https://kroam.xyz/leagues/bundesliga/union-berlin-vs-borussia-dortmund-2026-01-24,Union Berlin 0-3 Dortmund | Kroam,text/html; charset=utf-8,false,200,0,true,Union Berlin 0-3 Borussia Dortmund match analysis. AI predictions from 42 models with accuracy tracking.,Union Berlin vs Borussia Dortmund Prediction,"Predictions
+Frequently Asked Questions",680,45,0,<truncated>,3655,16900991766511349834,
+20,https://kroam.xyz/models/glm-4.5-air,GLM 4.5 Air (Zhipu) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,GLM 4.5 Air (Zhipu) football predictions with 100% accuracy. Compare performance against 42 AI models across 17 leagues.,GLM 4.5 Air (Zhipu) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",324,29,0,<truncated>,1789,18042692159068782282,https://kroam.xyz/leagues/seriea/inter-vs-pisa-2026-01-23
+20,https://kroam.xyz/models/minimax-m2.1-syn,MiniMax M2.1 (Synthetic) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,MiniMax M2.1 (Synthetic) football predictions with 0% accuracy. Compare performance against 42 AI models across 17 leagues.,MiniMax M2.1 (Synthetic) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",282,28,0,<truncated>,1652,16012994554739287995,
+20,https://kroam.xyz/leagues/uel/aston-villa-vs-red-bull-salzburg-2026-01-29,Aston Villa 3-2 Red Bull Salzburg | Kroam,text/html; charset=utf-8,false,200,0,true,Aston Villa 3-2 Red Bull Salzburg match analysis. AI predictions from 42 models with accuracy tracking.,Aston Villa vs Red Bull Salzburg Prediction,"Predictions
+Frequently Asked Questions",753,48,0,<truncated>,3953,9587219522855575,
+20,https://kroam.xyz/leagues/superlig/genclerbirligi-vs-gaziehir-gaziantep-2026-02-01,Genclerbirligi 2-1 Gazişehir Gaziantep | Kroam,text/html; charset=utf-8,false,200,0,true,Genclerbirligi 2-1 Gazişehir Gaziantep match analysis. AI predictions from 42 models with accuracy tracking.,Genclerbirligi vs Gazişehir Gaziantep Prediction,"Predictions
+Frequently Asked Questions",733,48,0,<truncated>,4019,14615705078979133210,
+20,https://kroam.xyz/leagues/uel/celtic-vs-utrecht-2026-01-29,Celtic 4-2 Utrecht | Kroam,text/html; charset=utf-8,false,200,0,true,"Celtic 4-2 Utrecht match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Celtic vs Utrecht Prediction,"Predictions
+Frequently Asked Questions",685,46,0,<truncated>,3621,15310530565185242749,
+20,https://kroam.xyz/leagues/laliga/sevilla-vs-girona-2026-02-07,Sevilla vs Girona Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Sevilla vs Girona. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 5:30 PM.",Sevilla vs Girona Prediction,"Predictions
+Frequently Asked Questions",213,22,0,<truncated>,1308,14578632113738227734,
+20,https://kroam.xyz/leagues/uel/panathinaikos-vs-as-roma-2026-01-29,Panathinaikos 1-1 AS Roma | Kroam,text/html; charset=utf-8,false,200,0,true,"Panathinaikos 1-1 AS Roma match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performa",Panathinaikos vs AS Roma Prediction,"Predictions
+Frequently Asked Questions",677,45,0,<truncated>,3608,15989063241771360618,
+20,https://kroam.xyz/leagues/epl/burnley-vs-tottenham-2026-01-24,Burnley 2-2 Tottenham | Kroam,text/html; charset=utf-8,false,200,0,true,"Burnley 2-2 Tottenham match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Burnley vs Tottenham Prediction,"Predictions
+Frequently Asked Questions",695,47,0,<truncated>,3712,3760214230025057031,
+20,https://kroam.xyz/leagues/seriea/as-roma-vs-ac-milan-2026-01-25,AS Roma 1-1 Milan | Kroam,text/html; charset=utf-8,false,200,0,true,"AS Roma 1-1 AC Milan match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance o",AS Roma vs AC Milan Prediction,"Predictions
+Frequently Asked Questions",700,46,0,<truncated>,3598,4286492113125483095,
+20,https://kroam.xyz/leagues/seriea/bologna-vs-ac-milan-2026-02-03,Bologna 0-3 Milan | Kroam,text/html; charset=utf-8,false,200,0,true,"Bologna 0-3 AC Milan match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance o",Bologna vs AC Milan Prediction,"Predictions
+Frequently Asked Questions",221,22,0,<truncated>,1301,17178550569642586456,
+20,https://kroam.xyz/leagues/bundesliga/eintracht-frankfurt-vs-bayer-leverkusen-2026-01-31,Frankfurt 1-3 Leverkusen | Kroam,text/html; charset=utf-8,false,200,0,true,Eintracht Frankfurt 1-3 Bayer Leverkusen match analysis. AI predictions from 42 models with accuracy tracking.,Eintracht Frankfurt vs Bayer Leverkusen Prediction,"Predictions
+Frequently Asked Questions",731,48,0,<truncated>,3983,15280451078042201408,
+20,https://kroam.xyz/leagues/superlig/alanyaspor-vs-eypspor-2026-01-31,Alanyaspor 1-3 Eyüpspor | Kroam,text/html; charset=utf-8,false,200,0,true,"Alanyaspor 1-3 Eyüpspor match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performanc",Alanyaspor vs Eyüpspor Prediction,"Predictions
+Frequently Asked Questions",705,47,0,<truncated>,3782,16250725260810947972,
+20,https://kroam.xyz/leagues/ligue1/lyon-vs-lille-2026-02-01,Lyon 1-0 Lille | Kroam,text/html; charset=utf-8,false,200,0,true,"Lyon 1-0 Lille match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on Kroa",Lyon vs Lille Prediction,"Predictions
+Frequently Asked Questions",701,47,0,<truncated>,3630,16053582474532919228,
+20,https://kroam.xyz/leagues/epl/burnley-vs-west-ham-2026-02-07,Burnley vs West Ham Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Burnley vs West Ham. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 3:00 PM.",Burnley vs West Ham Prediction,"Predictions
+Frequently Asked Questions",219,22,0,<truncated>,1322,2270391709966718164,
+20,https://kroam.xyz/leagues/ligue1/stade-brestois-29-vs-lorient-2026-02-07,Stade Brestois 29 vs Lorient Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Stade Brestois 29 vs Lorient. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 6:00 PM.",Stade Brestois 29 vs Lorient Prediction,"Predictions
+Frequently Asked Questions",228,22,0,<truncated>,1385,2169558379980635758,
+20,https://kroam.xyz/leagues/seriea/torino-vs-lecce-2026-02-01,Torino 1-0 Lecce | Kroam,text/html; charset=utf-8,false,200,0,true,"Torino 1-0 Lecce match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on Kr",Torino vs Lecce Prediction,"Predictions
+Frequently Asked Questions",701,47,0,<truncated>,3650,17967446630573514857,
+20,https://kroam.xyz/models/glm-4.7-syn,GLM 4.7 (Synthetic) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,GLM 4.7 (Synthetic) football predictions with 0% accuracy. Compare performance against 42 AI models across 17 leagues.,GLM 4.7 (Synthetic) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",282,28,0,<truncated>,1637,16883771462986615299,
+20,https://kroam.xyz/models/qwen3-235b-thinking-syn,Qwen3 235B Thinking (Synthetic) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Qwen3 235B Thinking (Synthetic) football predictions with 0% accuracy. Compare performance against 42 AI models across 17 leagues.,Qwen3 235B Thinking (Synthetic) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",285,28,0,<truncated>,1673,2528777699757755116,
+20,https://kroam.xyz/leagues/ligue1/lens-vs-le-havre-2026-01-30,Lens 1-0 Le Havre | Kroam,text/html; charset=utf-8,false,200,0,true,"Lens 1-0 Le Havre match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on K",Lens vs Le Havre Prediction,"Predictions
+Frequently Asked Questions",745,49,0,<truncated>,3836,17855498233394905214,
+20,https://kroam.xyz/leagues/uel/nottingham-forest-vs-ferencvarosi-tc-2026-01-29,Nott'm Forest 4-0 Ferencvarosi TC | Kroam,text/html; charset=utf-8,false,200,0,true,Nottingham Forest 4-0 Ferencvarosi TC match analysis. AI predictions from 42 models with accuracy tracking.,Nottingham Forest vs Ferencvarosi TC Prediction,"Predictions
+Frequently Asked Questions",743,48,0,<truncated>,3995,1698221200450378721,
+20,https://kroam.xyz/models/deepseek-v3-0324-syn,DeepSeek V3 0324 (Synthetic) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,DeepSeek V3 0324 (Synthetic) football predictions with 0% accuracy. Compare performance against 42 AI models across 17 leagues.,DeepSeek V3 0324 (Synthetic) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",285,28,0,<truncated>,1664,4211331282367457030,
+20,https://kroam.xyz/leagues/laliga/real-sociedad-vs-elche-2026-02-07,Sociedad vs Elche Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Real Sociedad vs Elche. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 8:00 PM.",Real Sociedad vs Elche Prediction,"Predictions
+Frequently Asked Questions",218,22,0,<truncated>,1322,2881267018961286667,
+20,https://kroam.xyz/leagues/ucl/union-st-gilloise-vs-atalanta-2026-01-28,Union St. Gilloise 1-0 Atalanta | Kroam,text/html; charset=utf-8,false,200,0,true,Union St. Gilloise 1-0 Atalanta match analysis. AI predictions from 42 models with accuracy tracking.,Union St. Gilloise vs Atalanta Prediction,"Predictions
+Frequently Asked Questions",739,48,0,<truncated>,3931,3637754563216019775,
+20,https://kroam.xyz/leagues/laliga/real-betis-vs-valencia-2026-02-01,Real Betis 2-1 Valencia | Kroam,text/html; charset=utf-8,false,200,0,true,"Real Betis 2-1 Valencia match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performanc",Real Betis vs Valencia Prediction,"Predictions
+Frequently Asked Questions",693,46,0,<truncated>,3643,1609075739304514927,
+20,https://kroam.xyz/models/llama-3-70b-reference,Llama 3 70B Reference (Meta) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Llama 3 70B Reference (Meta) football predictions with 0% accuracy. Compare performance against 42 AI models across 17 leagues.,Llama 3 70B Reference (Meta) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",288,28,0,<truncated>,1663,17943606491140717570,
+20,https://kroam.xyz/leagues/turkish-super-lig/samsunspor-vs-trabzonspor-2026-02-07,Samsunspor vs Trabzonspor Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Samsunspor vs Trabzonspor. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 5:00 PM.",Samsunspor vs Trabzonspor Prediction,"Predictions
+Frequently Asked Questions",214,23,0,<truncated>,1384,17294391016045650734,https://kroam.xyz/leagues/superlig
+20,https://kroam.xyz/leagues/epl/wolves-vs-chelsea-2026-02-07,Wolves vs Chelsea Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Wolves vs Chelsea. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 3:00 PM.",Wolves vs Chelsea Prediction,"Predictions
+Frequently Asked Questions",211,22,0,<truncated>,1313,15937746781537937703,
+20,https://kroam.xyz/leagues/eredivisie/nac-breda-vs-twente-2026-01-30,NAC Breda 2-2 Twente | Kroam,text/html; charset=utf-8,false,200,0,true,"NAC Breda 2-2 Twente match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance o",NAC Breda vs Twente Prediction,"Predictions
+Frequently Asked Questions",743,49,0,<truncated>,3896,15614084393824342048,
+20,https://kroam.xyz/leagues/eredivisie/pec-zwolle-vs-telstar-2026-01-31,PEC Zwolle 4-1 Telstar | Kroam,text/html; charset=utf-8,false,200,0,true,"PEC Zwolle 4-1 Telstar match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",PEC Zwolle vs Telstar Prediction,"Predictions
+Frequently Asked Questions",687,46,0,<truncated>,3645,14076634033404180853,
+20,https://kroam.xyz/leagues/bundesliga/fsv-mainz-05-vs-fc-augsburg-2026-02-07,FSV Mainz 05 vs FC Augsburg Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for FSV Mainz 05 vs FC Augsburg. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 2:30 PM.",FSV Mainz 05 vs FC Augsburg Prediction,"Predictions
+Frequently Asked Questions",232,22,0,<truncated>,1375,14376653981790841232,
+20,https://kroam.xyz/leagues/epl/newcastle-vs-aston-villa-2026-01-25,Newcastle 0-2 Aston Villa | Kroam,text/html; charset=utf-8,false,200,0,true,"Newcastle 0-2 Aston Villa match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performa",Newcastle vs Aston Villa Prediction,"Predictions
+Frequently Asked Questions",763,50,0,<truncated>,4043,3530103387599854983,
+20,https://kroam.xyz/leagues/bundesliga/fsv-mainz-05-vs-vfl-wolfsburg-2026-01-24,FSV Mainz 05 3-1 VfL Wolfsburg | Kroam,text/html; charset=utf-8,false,200,0,true,FSV Mainz 05 3-1 VfL Wolfsburg match analysis. AI predictions from 42 models with accuracy tracking.,FSV Mainz 05 vs VfL Wolfsburg Prediction,"Predictions
+Frequently Asked Questions",705,46,0,<truncated>,3699,1309743632642153089,
+20,https://kroam.xyz/leagues/bundesliga/bayern-mnchen-vs-fc-augsburg-2026-01-24,Bayern München 1-2 FC Augsburg | Kroam,text/html; charset=utf-8,false,200,0,true,Bayern München 1-2 FC Augsburg match analysis. AI predictions from 42 models with accuracy tracking.,Bayern München vs FC Augsburg Prediction,"Predictions
+Frequently Asked Questions",697,46,0,<truncated>,3733,14659802288877468834,
+20,https://kroam.xyz/leagues/ligue1/paris-fc-vs-angers-2026-01-25,Paris FC 0-0 Angers | Kroam,text/html; charset=utf-8,false,200,0,true,"Paris FC 0-0 Angers match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Paris FC vs Angers Prediction,"Predictions
+Frequently Asked Questions",727,48,0,<truncated>,3777,3030696137035692126,
+20,https://kroam.xyz/leagues/ligue1/paris-fc-vs-marseille-2026-01-31,Paris FC 2-2 Marseille | Kroam,text/html; charset=utf-8,false,200,0,true,"Paris FC 2-2 Marseille match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Paris FC vs Marseille Prediction,"Predictions
+Frequently Asked Questions",713,47,0,<truncated>,3718,18001529886255331004,
+20,https://kroam.xyz/models/glm-4.6-syn,GLM 4.6 (Synthetic) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,GLM 4.6 (Synthetic) football predictions with 0% accuracy. Compare performance against 42 AI models across 17 leagues.,GLM 4.6 (Synthetic) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",282,28,0,<truncated>,1637,15640209254045515559,
+20,https://kroam.xyz/leagues/bundesliga/union-berlin-vs-eintracht-frankfurt-2026-02-06,Union Berlin vs Frankfurt Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Union Berlin vs Eintracht Frankfurt. See which models forecast the winner before kickoff on Friday, February 6, 2026 at 7:30 PM.",Union Berlin vs Eintracht Frankfurt Prediction,"Predictions
+Frequently Asked Questions",226,22,0,<truncated>,1450,2503440699842731669,
+20,https://kroam.xyz/leagues/eredivisie/twente-vs-heerenveen-2026-02-07,Twente vs Heerenveen Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Twente vs Heerenveen. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 7:00 PM.",Twente vs Heerenveen Prediction,"Predictions
+Frequently Asked Questions",209,22,0,<truncated>,1325,3044211494283973283,
+20,https://kroam.xyz/leagues/ligue1/toulouse-vs-auxerre-2026-02-01,Toulouse 0-0 Auxerre | Kroam,text/html; charset=utf-8,false,200,0,true,"Toulouse 0-0 Auxerre match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance o",Toulouse vs Auxerre Prediction,"Predictions
+Frequently Asked Questions",719,48,0,<truncated>,3783,2643198018782843849,
+20,https://kroam.xyz/leagues/ucl/barcelona-vs-fc-copenhagen-2026-01-28,Barcelona 4-1 FC Copenhagen | Kroam,text/html; charset=utf-8,false,200,0,true,"Barcelona 4-1 FC Copenhagen match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfor",Barcelona vs FC Copenhagen Prediction,"Predictions
+Frequently Asked Questions",733,48,0,<truncated>,3919,18157621298343714673,
+20,https://kroam.xyz/leagues/uel/lyon-vs-paok-2026-01-29,Lyon 4-2 PAOK | Kroam,text/html; charset=utf-8,false,200,0,true,"Lyon 4-2 PAOK match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on Kroam",Lyon vs PAOK Prediction,"Predictions
+Frequently Asked Questions",687,46,0,<truncated>,3575,16882468538463626522,
+20,https://kroam.xyz/leagues/superlig/antalyaspor-vs-trabzonspor-2026-01-30,Antalyaspor 1-1 Trabzonspor | Kroam,text/html; charset=utf-8,false,200,0,true,"Antalyaspor 1-1 Trabzonspor match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfor",Antalyaspor vs Trabzonspor Prediction,"Predictions
+Frequently Asked Questions",705,47,0,<truncated>,3818,2844906621063578418,
+20,https://kroam.xyz/models/deepseek-v3.1-terminus-syn,DeepSeek V3.1 Terminus (Synthetic) Football Predictions,text/html; charset=utf-8,false,200,0,true,DeepSeek V3.1 Terminus (Synthetic) football predictions with 0% accuracy. Compare performance against 42 AI models across 17 leagues.,DeepSeek V3.1 Terminus (Synthetic) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",283,28,0,<truncated>,1674,16949227773425368075,
+20,https://kroam.xyz/leagues/superlig/fatih-karagmrk-vs-antalyaspor-2026-02-07,Fatih Karagümrük vs Antalyaspor Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Fatih Karagümrük vs Antalyaspor. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 11:30 AM.",Fatih Karagümrük vs Antalyaspor Prediction,"Predictions
+Frequently Asked Questions",223,22,0,<truncated>,1460,17415098044000381422,
+20,https://kroam.xyz/blog/serie-a-regular-season-23-roundup,Serie A AI Model Accuracy Week 23,text/html; charset=utf-8,false,200,0,true,"Review of AI model performance in Serie A Week 23 matches, highlighting top models, accuracy rates, and biggest upsets. Analysis includes match-by-match...",Serie A Week 23 AI Model Audit,"Top 10 Models
+Match-by-Match Audit
+Biggest Consensus Misses
+Methodology
+Frequently Asked Questions
+You might also like
+On this page",884,25,0,<truncated>,5144,1925286222771835904,
+20,https://kroam.xyz/leagues/superlig/samsunspor-vs-trabzonspor-2026-02-07,Samsunspor vs Trabzonspor Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Samsunspor vs Trabzonspor. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 5:00 PM.",Samsunspor vs Trabzonspor Prediction,"Predictions
+Frequently Asked Questions",216,22,0,<truncated>,1394,4611469900849046244,
+20,https://kroam.xyz/leagues/turkish-super-lig/galatasaray-vs-kayserispor-2026-02-01,Galatasaray 4-0 Kayserispor | Kroam,text/html; charset=utf-8,false,200,0,true,"Galatasaray 4-0 Kayserispor match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfor",Galatasaray vs Kayserispor Prediction,"Predictions
+Frequently Asked Questions",741,50,0,<truncated>,3998,4289983716469626894,https://kroam.xyz/leagues/superlig
+20,https://kroam.xyz/leagues/epl/arsenal-vs-sunderland-2026-02-07,Arsenal vs Sunderland Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Arsenal vs Sunderland. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 3:00 PM.",Arsenal vs Sunderland Prediction,"Predictions
+Frequently Asked Questions",211,22,0,<truncated>,1345,14859873318201852989,
+20,https://kroam.xyz/leagues/eredivisie/twente-vs-excelsior-2026-01-24,Twente 0-0 Excelsior | Kroam,text/html; charset=utf-8,false,200,0,true,"Twente 0-0 Excelsior match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance o",Twente vs Excelsior Prediction,"Predictions
+Frequently Asked Questions",715,48,0,<truncated>,3797,1121370038631260911,
+20,https://kroam.xyz/leagues/ligue1/rennes-vs-lorient-2026-01-24,Rennes 0-2 Lorient | Kroam,text/html; charset=utf-8,false,200,0,true,"Rennes 0-2 Lorient match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Rennes vs Lorient Prediction,"Predictions
+Frequently Asked Questions",697,47,0,<truncated>,3662,17224700055501145572,
+20,https://kroam.xyz/leagues/epl/fulham-vs-brighton-2026-01-24,Fulham 2-1 Brighton | Kroam,text/html; charset=utf-8,false,200,0,true,"Fulham 2-1 Brighton match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Fulham vs Brighton Prediction,"Predictions
+Frequently Asked Questions",665,45,0,<truncated>,3538,1300185152815722272,
+20,https://kroam.xyz/leagues/seriea/fiorentina-vs-torino-2026-02-07,Fiorentina vs Torino Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Fiorentina vs Torino. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 7:45 PM.",Fiorentina vs Torino Prediction,"Predictions
+Frequently Asked Questions",212,22,0,<truncated>,1322,4559238948231003797,
+20,https://kroam.xyz/leagues/laliga/osasuna-vs-villarreal-2026-01-31,Osasuna 2-2 Villarreal | Kroam,text/html; charset=utf-8,false,200,0,true,"Osasuna 2-2 Villarreal match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Osasuna vs Villarreal Prediction,"Predictions
+Frequently Asked Questions",701,47,0,<truncated>,3718,3021252145299965158,
+20,https://kroam.xyz/leagues/bundesliga/werder-bremen-vs-borussia-mnchengladbach-2026-01-31,Werder Bremen 1-1 M'gladbach | Kroam,text/html; charset=utf-8,false,200,0,true,Werder Bremen 1-1 Borussia Mönchengladbach match analysis. AI predictions from 42 models with accuracy tracking.,Werder Bremen vs Borussia Mönchengladbach Prediction,"Predictions
+Frequently Asked Questions",734,48,0,<truncated>,4012,2275652128990199902,
+20,https://kroam.xyz/leagues/bundesliga/1-fc-heidenheim-vs-hamburger-sv-2026-02-07,1. FC Heidenheim vs Hamburger SV Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for 1. FC Heidenheim vs Hamburger SV. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 2:30 PM.",1. FC Heidenheim vs Hamburger SV Prediction,"Predictions
+Frequently Asked Questions",231,22,0,<truncated>,1416,2154891798647319762,
+20,https://kroam.xyz/leagues/superlig/kasmpaa-vs-samsunspor-2026-01-30,Kasımpaşa 0-1 Samsunspor | Kroam,text/html; charset=utf-8,false,200,0,true,"Kasımpaşa 0-1 Samsunspor match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performan",Kasımpaşa vs Samsunspor Prediction,"Predictions
+Frequently Asked Questions",721,48,0,<truncated>,3887,16418316876397658414,
+20,https://kroam.xyz/leagues/ligue1/le-havre-vs-monaco-2026-01-24,Le Havre 0-0 Monaco | Kroam,text/html; charset=utf-8,false,200,0,true,"Le Havre 0-0 Monaco match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Le Havre vs Monaco Prediction,"Predictions
+Frequently Asked Questions",689,46,0,<truncated>,3577,4421022910993274861,
+20,https://kroam.xyz/leagues/ucl/benfica-vs-real-madrid-2026-01-28,Benfica 4-2 Real Madrid | Kroam,text/html; charset=utf-8,false,200,0,true,"Benfica 4-2 Real Madrid match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performanc",Benfica vs Real Madrid Prediction,"Predictions
+Frequently Asked Questions",715,47,0,<truncated>,3784,17210212943644769189,
+20,https://kroam.xyz/blog/bundesliga-regular-season-20-roundup,AI Model Performance in Bundesliga Week 20,text/html; charset=utf-8,false,200,0,true,"Analysis of AI model predictions for Bundesliga Week 20 matches, including top performing models and match-by-match accuracy statistics. Review of biggest...",Bundesliga Week 20 AI Model Audit,"Top 10 Models
+Match-by-Match Audit
+Biggest Consensus Misses
+Methodology
+Frequently Asked Questions
+You might also like",781,25,0,<truncated>,4801,16115286024253363488,
+20,https://kroam.xyz/models/qwen3-coder-480b-syn,Qwen3 Coder 480B (Synthetic) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Qwen3 Coder 480B (Synthetic) football predictions with 0% accuracy. Compare performance against 42 AI models across 17 leagues.,Qwen3 Coder 480B (Synthetic) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",285,28,0,<truncated>,1664,13946650537060543574,
+20,https://kroam.xyz/leagues/ucl/pafos-vs-slavia-praha-2026-01-28,Pafos 4-1 Slavia Praha | Kroam,text/html; charset=utf-8,false,200,0,true,"Pafos 4-1 Slavia Praha match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Pafos vs Slavia Praha Prediction,"Predictions
+Frequently Asked Questions",733,48,0,<truncated>,3861,15286265271723145706,
+20,https://kroam.xyz/leagues/ligue1/angers-vs-metz-2026-02-01,Angers 1-0 Metz | Kroam,text/html; charset=utf-8,false,200,0,true,"Angers 1-0 Metz match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on Kro",Angers vs Metz Prediction,"Predictions
+Frequently Asked Questions",699,47,0,<truncated>,3638,1327921649206582983,
+20,https://kroam.xyz/leagues/eredivisie/heracles-vs-fortuna-sittard-2026-02-01,Heracles 2-1 Fortuna Sittard | Kroam,text/html; charset=utf-8,false,200,0,true,"Heracles 2-1 Fortuna Sittard match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfo",Heracles vs Fortuna Sittard Prediction,"Predictions
+Frequently Asked Questions",743,49,0,<truncated>,3978,17029126233218051670,
+20,https://kroam.xyz/leagues/seriea/genoa-vs-napoli-2026-02-07,Genoa vs Napoli Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Genoa vs Napoli. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 5:00 PM.",Genoa vs Napoli Prediction,"Predictions
+Frequently Asked Questions",212,22,0,<truncated>,1281,3313107728626757446,
+20,https://kroam.xyz/leagues/laliga/valencia-vs-espanyol-2026-01-24,Valencia 3-2 Espanyol | Kroam,text/html; charset=utf-8,false,200,0,true,"Valencia 3-2 Espanyol match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Valencia vs Espanyol Prediction,"Predictions
+Frequently Asked Questions",699,47,0,<truncated>,3692,1125728844952752684,
+20,https://kroam.xyz/leagues/ucl/manchester-city-vs-galatasaray-2026-01-28,Man City 2-0 Galatasaray | Kroam,text/html; charset=utf-8,false,200,0,true,Manchester City 2-0 Galatasaray match analysis. AI predictions from 42 models with accuracy tracking.,Manchester City vs Galatasaray Prediction,"Predictions
+Frequently Asked Questions",713,47,0,<truncated>,3847,3647847364424749970,
+20,https://kroam.xyz/leagues/superlig/beikta-vs-konyaspor-2026-01-31,Beşiktaş 2-1 Konyaspor | Kroam,text/html; charset=utf-8,false,200,0,true,"Beşiktaş 2-1 Konyaspor match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Beşiktaş vs Konyaspor Prediction,"Predictions
+Frequently Asked Questions",723,48,0,<truncated>,3865,17881624455181707747,
+20,https://kroam.xyz/leagues/epl/chelsea-vs-west-ham-2026-01-31,Chelsea 3-2 West Ham | Kroam,text/html; charset=utf-8,false,200,0,true,"Chelsea 3-2 West Ham match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance o",Chelsea vs West Ham Prediction,"Predictions
+Frequently Asked Questions",709,47,0,<truncated>,3712,1289150313242744161,
+20,https://kroam.xyz/models/deepseek-r1-0528-syn,DeepSeek R1 0528 (Synthetic) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,DeepSeek R1 0528 (Synthetic) football predictions with 0% accuracy. Compare performance against 42 AI models across 17 leagues.,DeepSeek R1 0528 (Synthetic) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",285,28,0,<truncated>,1664,17930428058567069806,
+20,https://kroam.xyz/leagues/laliga/sevilla-vs-athletic-club-2026-01-24,Sevilla 2-1 Athletic | Kroam,text/html; charset=utf-8,false,200,0,true,"Sevilla 2-1 Athletic Club match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performa",Sevilla vs Athletic Club Prediction,"Predictions
+Frequently Asked Questions",724,48,0,<truncated>,3814,2165908628480994559,
+20,https://kroam.xyz/leagues/laliga/levante-vs-elche-2026-01-23,Levante 3-2 Elche | Kroam,text/html; charset=utf-8,false,200,0,true,"Levante 3-2 Elche match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on K",Levante vs Elche Prediction,"Predictions
+Frequently Asked Questions",719,48,0,<truncated>,3749,3346505471513390640,
+20,https://kroam.xyz/leagues/eredivisie/feyenoord-vs-heracles-2026-01-25,Feyenoord 4-2 Heracles | Kroam,text/html; charset=utf-8,false,200,0,true,"Feyenoord 4-2 Heracles match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Feyenoord vs Heracles Prediction,"Predictions
+Frequently Asked Questions",695,47,0,<truncated>,3720,14998386339649074261,
+20,https://kroam.xyz/leagues/bundesliga/sc-freiburg-vs-werder-bremen-2026-02-07,SC Freiburg vs Werder Bremen Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for SC Freiburg vs Werder Bremen. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 2:30 PM.",SC Freiburg vs Werder Bremen Prediction,"Predictions
+Frequently Asked Questions",224,22,0,<truncated>,1392,16919698199808934847,
+20,https://kroam.xyz/leagues/ligue1/lille-vs-strasbourg-2026-01-25,Lille 1-4 Strasbourg | Kroam,text/html; charset=utf-8,false,200,0,true,"Lille 1-4 Strasbourg match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance o",Lille vs Strasbourg Prediction,"Predictions
+Frequently Asked Questions",717,48,0,<truncated>,3783,3243914891178678763,
+20,https://kroam.xyz/leagues/eredivisie/psv-eindhoven-vs-feyenoord-2026-02-01,PSV Eindhoven 3-0 Feyenoord | Kroam,text/html; charset=utf-8,false,200,0,true,"PSV Eindhoven 3-0 Feyenoord match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfor",PSV Eindhoven vs Feyenoord Prediction,"Predictions
+Frequently Asked Questions",741,49,0,<truncated>,3952,4488280878929426708,
+20,https://kroam.xyz/leagues/seriea/verona-vs-pisa-2026-02-06,Verona vs Pisa Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Verona vs Pisa. See which models forecast the winner before kickoff on Friday, February 6, 2026 at 7:45 PM.",Verona vs Pisa Prediction,"Predictions
+Frequently Asked Questions",212,22,0,<truncated>,1280,17961147358346043604,
+20,https://kroam.xyz/leagues/seriea/como-vs-atalanta-2026-02-01,Como 0-0 Atalanta | Kroam,text/html; charset=utf-8,false,200,0,true,"Como 0-0 Atalanta match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on K",Como vs Atalanta Prediction,"Predictions
+Frequently Asked Questions",737,49,0,<truncated>,3854,17189175603930144446,
+20,https://kroam.xyz/models/minimax-m2-syn,MiniMax M2 (Synthetic) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,MiniMax M2 (Synthetic) football predictions with 0% accuracy. Compare performance against 42 AI models across 17 leagues.,MiniMax M2 (Synthetic) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",282,28,0,<truncated>,1646,151814187014220249,
+20,https://kroam.xyz/leagues/seriea/atalanta-vs-parma-2026-01-25,Atalanta 4-0 Parma | Kroam,text/html; charset=utf-8,false,200,0,true,"Atalanta 4-0 Parma match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on",Atalanta vs Parma Prediction,"Predictions
+Frequently Asked Questions",681,46,0,<truncated>,3581,15354201428288080905,
+20,https://kroam.xyz/leagues/epl/crystal-palace-vs-chelsea-2026-01-25,Crystal Palace 1-3 Chelsea | Kroam,text/html; charset=utf-8,false,200,0,true,"Crystal Palace 1-3 Chelsea match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perform",Crystal Palace vs Chelsea Prediction,"Predictions
+Frequently Asked Questions",745,49,0,<truncated>,3962,17573208107806974219,
+20,https://kroam.xyz/leagues/bundesliga/borussia-mnchengladbach-vs-bayer-leverkusen-2026-02-07,M'gladbach vs Leverkusen Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Borussia Mönchengladbach vs Bayer Leverkusen. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at...",Borussia Mönchengladbach vs Bayer Leverkusen Prediction,"Predictions
+Frequently Asked Questions",221,22,0,<truncated>,1501,402942360707915959,
+20,https://kroam.xyz/leagues/epl/manchester-city-vs-wolves-2026-01-24,Man City 2-0 Wolves | Kroam,text/html; charset=utf-8,false,200,0,true,"Manchester City 2-0 Wolves match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perform",Manchester City vs Wolves Prediction,"Predictions
+Frequently Asked Questions",705,47,0,<truncated>,3755,1561462168351935729,
+20,https://kroam.xyz/leagues/epl/bournemouth-vs-aston-villa-2026-02-07,Bournemouth vs Aston Villa Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Bournemouth vs Aston Villa. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 3:00 PM.",Bournemouth vs Aston Villa Prediction,"Predictions
+Frequently Asked Questions",219,22,0,<truncated>,1385,14399027902406970987,
+20,https://kroam.xyz/leagues/ucl/arsenal-vs-kairat-almaty-2026-01-28,Arsenal 3-2 Kairat Almaty | Kroam,text/html; charset=utf-8,false,200,0,true,"Arsenal 3-2 Kairat Almaty match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performa",Arsenal vs Kairat Almaty Prediction,"Predictions
+Frequently Asked Questions",677,45,0,<truncated>,3612,17403909708202471656,
+20,https://kroam.xyz/leagues/superlig/eypspor-vs-beikta-2026-01-26,Eyüpspor 2-2 Beşiktaş | Kroam,text/html; charset=utf-8,false,200,0,true,"Eyüpspor 2-2 Beşiktaş match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Eyüpspor vs Beşiktaş Prediction,"Predictions
+Frequently Asked Questions",705,47,0,<truncated>,3776,17967168573950117103,
+20,https://kroam.xyz/leagues/bundesliga/vfb-stuttgart-vs-sc-freiburg-2026-02-01,VfB Stuttgart 1-0 SC Freiburg | Kroam,text/html; charset=utf-8,false,200,0,true,"VfB Stuttgart 1-0 SC Freiburg match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perf",VfB Stuttgart vs SC Freiburg Prediction,"Predictions
+Frequently Asked Questions",769,50,0,<truncated>,4067,695380618448619384,
+20,https://kroam.xyz/blog/premier-league-regular-season-24-roundup,Premier League AI Model Predictions Week 24,text/html; charset=utf-8,false,200,0,true,"Analysis of AI model performance in Premier League Week 24, including top models, match-by-match accuracy, and biggest upsets. Models achieved 46.73% correct...",Premier League Week 24 AI Model Audit,"Top 10 Models
+Match-by-Match Audit
+Biggest Consensus Misses
+Methodology
+Frequently Asked Questions
+You might also like",767,25,0,<truncated>,4700,15981366535922708103,
+20,https://kroam.xyz/models/kimi-k2-thinking-syn,Kimi K2 Thinking (Synthetic) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Kimi K2 Thinking (Synthetic) football predictions with 0% accuracy. Compare performance against 42 AI models across 17 leagues.,Kimi K2 Thinking (Synthetic) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",285,28,0,<truncated>,1664,17685917964227862405,
+20,https://kroam.xyz/leagues/laliga/barcelona-vs-mallorca-2026-02-07,Barcelona vs Mallorca Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Barcelona vs Mallorca. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 3:15 PM.",Barcelona vs Mallorca Prediction,"Predictions
+Frequently Asked Questions",211,22,0,<truncated>,1316,16790070920992684522,
+20,https://kroam.xyz/leagues/laliga/girona-vs-getafe-2026-01-26,Girona 1-1 Getafe | Kroam,text/html; charset=utf-8,false,200,0,true,"Girona 1-1 Getafe match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on K",Girona vs Getafe Prediction,"Predictions
+Frequently Asked Questions",719,48,0,<truncated>,3767,17618109546071626045,
+20,https://kroam.xyz/leagues/laliga/atletico-madrid-vs-mallorca-2026-01-25,Atletico 3-0 Mallorca | Kroam,text/html; charset=utf-8,false,200,0,true,"Atletico Madrid 3-0 Mallorca match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfo",Atletico Madrid vs Mallorca Prediction,"Predictions
+Frequently Asked Questions",746,49,0,<truncated>,3957,15820663748493201734,
+20,https://kroam.xyz/leagues/laliga/rayo-vallecano-vs-osasuna-2026-01-24,Rayo Vallecano 1-3 Osasuna | Kroam,text/html; charset=utf-8,false,200,0,true,"Rayo Vallecano 1-3 Osasuna match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perform",Rayo Vallecano vs Osasuna Prediction,"Predictions
+Frequently Asked Questions",705,47,0,<truncated>,3734,17235297531854008945,
+20,https://kroam.xyz/leagues/epl/brighton-vs-everton-2026-01-31,Brighton 1-1 Everton | Kroam,text/html; charset=utf-8,false,200,0,true,"Brighton 1-1 Everton match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance o",Brighton vs Everton Prediction,"Predictions
+Frequently Asked Questions",719,48,0,<truncated>,3829,17784701434202633140,
+20,https://kroam.xyz/leagues/bundesliga/fc-st-pauli-vs-hamburger-sv-2026-01-23,FC St. Pauli 0-0 Hamburger SV | Kroam,text/html; charset=utf-8,false,200,0,true,"FC St. Pauli 0-0 Hamburger SV match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perf",FC St. Pauli vs Hamburger SV Prediction,"Predictions
+Frequently Asked Questions",471,33,0,<truncated>,2518,15192831726452984044,
+20,https://kroam.xyz/leagues/ligue1/stade-brestois-29-vs-toulouse-2026-01-25,Stade Brestois 29 0-2 Toulouse | Kroam,text/html; charset=utf-8,false,200,0,true,Stade Brestois 29 0-2 Toulouse match analysis. AI predictions from 42 models with accuracy tracking.,Stade Brestois 29 vs Toulouse Prediction,"Predictions
+Frequently Asked Questions",739,48,0,<truncated>,3885,1209711218041632544,
+20,https://kroam.xyz/leagues/bundesliga/1-fc-kln-vs-vfl-wolfsburg-2026-01-30,1. FC Köln 1-0 VfL Wolfsburg | Kroam,text/html; charset=utf-8,false,200,0,true,"1. FC Köln 1-0 VfL Wolfsburg match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfo",1. FC Köln vs VfL Wolfsburg Prediction,"Predictions
+Frequently Asked Questions",727,47,0,<truncated>,3804,2161038544467197973,
+20,https://kroam.xyz/leagues/epl/aston-villa-vs-brentford-2026-02-01,Aston Villa 0-1 Brentford | Kroam,text/html; charset=utf-8,false,200,0,true,"Aston Villa 0-1 Brentford match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performa",Aston Villa vs Brentford Prediction,"Predictions
+Frequently Asked Questions",709,47,0,<truncated>,3762,32151998857103911,
+20,https://kroam.xyz/leagues/ucl/psv-eindhoven-vs-bayern-mnchen-2026-01-28,PSV Eindhoven 1-2 Bayern München | Kroam,text/html; charset=utf-8,false,200,0,true,PSV Eindhoven 1-2 Bayern München match analysis. AI predictions from 42 models with accuracy tracking.,PSV Eindhoven vs Bayern München Prediction,"Predictions
+Frequently Asked Questions",705,46,0,<truncated>,3783,14268834348698231337,
+20,https://kroam.xyz/leagues/uel/maccabi-tel-aviv-vs-bologna-2026-01-29,Maccabi Tel Aviv 0-3 Bologna | Kroam,text/html; charset=utf-8,false,200,0,true,"Maccabi Tel Aviv 0-3 Bologna match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfo",Maccabi Tel Aviv vs Bologna Prediction,"Predictions
+Frequently Asked Questions",761,49,0,<truncated>,4008,17924468111166433185,
+20,https://kroam.xyz/leagues/uel/go-ahead-eagles-vs-sc-braga-2026-01-29,GO Ahead Eagles 0-0 SC Braga | Kroam,text/html; charset=utf-8,false,200,0,true,"GO Ahead Eagles 0-0 SC Braga match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfo",GO Ahead Eagles vs SC Braga Prediction,"Predictions
+Frequently Asked Questions",733,47,0,<truncated>,3808,17362405958688118689,
+20,https://kroam.xyz/leagues/seriea/genoa-vs-bologna-2026-01-25,Genoa 3-2 Bologna | Kroam,text/html; charset=utf-8,false,200,0,true,"Genoa 3-2 Bologna match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance on K",Genoa vs Bologna Prediction,"Predictions
+Frequently Asked Questions",737,49,0,<truncated>,3854,233327237118245301,
+20,https://kroam.xyz/models/kimi-k2.5-syn,Kimi K2.5 (Synthetic) Football Predictions | Kroam,text/html; charset=utf-8,false,200,0,true,Kimi K2.5 (Synthetic) football predictions with 0% accuracy. Compare performance against 42 AI models across 17 leagues.,Kimi K2.5 (Synthetic) Football Predictions,"Performance Trend
+Performance Breakdown
+Performance by League",282,28,0,<truncated>,1643,2448398831169315080,
+20,https://kroam.xyz/leagues/uel/sturm-graz-vs-brann-2026-01-29,Sturm Graz 1-0 Brann | Kroam,text/html; charset=utf-8,false,200,0,true,"Sturm Graz 1-0 Brann match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance o",Sturm Graz vs Brann Prediction,"Predictions
+Frequently Asked Questions",715,47,0,<truncated>,3742,16689838231515386027,
+20,https://kroam.xyz/leagues/uel/real-betis-vs-feyenoord-2026-01-29,Real Betis 2-1 Feyenoord | Kroam,text/html; charset=utf-8,false,200,0,true,"Real Betis 2-1 Feyenoord match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performan",Real Betis vs Feyenoord Prediction,"Predictions
+Frequently Asked Questions",657,44,0,<truncated>,3489,15704081476912167790,
+20,https://kroam.xyz/leagues/ligue1/nantes-vs-lyon-2026-02-07,Nantes vs Lyon Prediction | Kroam,text/html; charset=utf-8,false,200,0,true,"Get AI predictions for Nantes vs Lyon. See which models forecast the winner before kickoff on Saturday, February 7, 2026 at 8:05 PM.",Nantes vs Lyon Prediction,"Predictions
+Frequently Asked Questions",213,22,0,<truncated>,1273,14036249692476764945,
+20,https://kroam.xyz/leagues/eredivisie/heerenveen-vs-utrecht-2026-02-01,Heerenveen 1-1 Utrecht | Kroam,text/html; charset=utf-8,false,200,0,true,"Heerenveen 1-1 Utrecht match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Heerenveen vs Utrecht Prediction,"Predictions
+Frequently Asked Questions",729,49,0,<truncated>,3896,15553892755955708246,
+20,https://kroam.xyz/leagues/superlig/fatih-karagmrk-vs-galatasaray-2026-01-24,Fatih Karagümrük 1-3 Galatasaray | Kroam,text/html; charset=utf-8,false,200,0,true,Fatih Karagümrük 1-3 Galatasaray match analysis. AI predictions from 42 models with accuracy tracking.,Fatih Karagümrük vs Galatasaray Prediction,"Predictions
+Frequently Asked Questions",695,46,0,<truncated>,3767,16070101993504209690,
+20,https://kroam.xyz/leagues/ucl/atletico-madrid-vs-bodoglimt-2026-01-28,Atletico 1-2 Bodo/Glimt | Kroam,text/html; charset=utf-8,false,200,0,true,Atletico Madrid 1-2 Bodo/Glimt match analysis. AI predictions from 42 models with accuracy tracking.,Atletico Madrid vs Bodo/Glimt Prediction,"Predictions
+Frequently Asked Questions",714,47,0,<truncated>,3847,3264591424882892656,
+20,https://kroam.xyz/leagues/ucl/ajax-vs-olympiakos-piraeus-2026-01-28,Ajax 1-2 Olympiakos Piraeus | Kroam,text/html; charset=utf-8,false,200,0,true,"Ajax 1-2 Olympiakos Piraeus match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfor",Ajax vs Olympiakos Piraeus Prediction,"Predictions
+Frequently Asked Questions",731,48,0,<truncated>,3901,17341532172869778279,
+20,https://kroam.xyz/leagues/superlig/gztepe-vs-fatih-karagmrk-2026-01-31,Göztepe 2-1 Fatih Karagümrük | Kroam,text/html; charset=utf-8,false,200,0,true,"Göztepe 2-1 Fatih Karagümrük match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model perfo",Göztepe vs Fatih Karagümrük Prediction,"Predictions
+Frequently Asked Questions",749,49,0,<truncated>,4020,17293116039045904847,
+20,https://kroam.xyz/leagues/superlig/fenerbahe-vs-gztepe-2026-01-25,Fenerbahçe 1-1 Göztepe | Kroam,text/html; charset=utf-8,false,200,0,true,"Fenerbahçe 1-1 Göztepe match analysis. AI predictions from 42 models with accuracy tracking. Compare forecasts, track accuracy, and explore AI model performance",Fenerbahçe vs Göztepe Prediction,"Predictions
+Frequently Asked Questions",741,49,0,<truncated>,3964,309904658039070519,
+20,https://kroam.xyz/leagues/uel/vfb-stuttgart-vs-bsc-young-boys-2026-01-29,VfB Stuttgart 3-2 BSC Young Boys | Kroam,text/html; charset=utf-8,false,200,0,true,VfB Stuttgart 3-2 BSC Young Boys match analysis. AI predictions from 42 models with accuracy tracking.,VfB Stuttgart vs BSC Young Boys Prediction,"Predictions
+Frequently Asked Questions",769,49,0,<truncated>,4030,3254657883825163945,
+0,https://kroam.xyz/leagues/ligue-1/strasbourg-vs-paris-saint-germain-2026-02-01,,,false,301,0,false,,,,0,0,0,,,,https://kroam.xyz/leagues/ligue1
+0,https://kroam.xyz/leagues/ligue-1/metz-vs-lille-2026-02-06,,,false,301,0,false,,,,0,0,0,,,,https://kroam.xyz/leagues/ligue1
+0,https://kroam.xyz/leagues/serie-a/verona-vs-pisa-2026-02-06,,,false,301,0,false,,,,0,0,0,,,,https://kroam.xyz/leagues/seriea
+0,https://kroam.xyz/leagues/la-liga/celta-vigo-vs-osasuna-2026-02-06,,,false,301,0,false,,,,0,0,0,,,,https://kroam.xyz/leagues/laliga
+0,https://kroam.xyz/leagues/serie-a/bologna-vs-ac-milan-2026-02-03,,,false,301,0,false,,,,0,0,0,,,,https://kroam.xyz/leagues/seriea
+0,https://kroam.xyz/leagues/serie-a/udinese-vs-as-roma-2026-02-02,,,false,301,0,false,,,,0,0,0,,,,https://kroam.xyz/leagues/seriea

@@ -1,0 +1,13 @@
+{
+  "modelId": "mistral-7b-v0.2",
+  "provider": "together",
+  "success": true,
+  "prediction": {
+    "homeScore": 2,
+    "awayScore": 2
+  },
+  "rawResponse": "{\"homeScore\":2,\"awayScore\":2}",
+  "durationMs": 1232,
+  "timestamp": "2026-02-08T11:57:57.120Z",
+  "scenarioId": "standard"
+}

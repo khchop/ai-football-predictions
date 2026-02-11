@@ -1,0 +1,13 @@
+{
+  "modelId": "gpt-oss-20b",
+  "provider": "together",
+  "success": true,
+  "prediction": {
+    "homeScore": 1,
+    "awayScore": 1
+  },
+  "rawResponse": "{\"homeScore\":1,\"awayScore\":1}",
+  "durationMs": 4957,
+  "timestamp": "2026-02-08T11:57:57.565Z",
+  "scenarioId": "standard"
+}

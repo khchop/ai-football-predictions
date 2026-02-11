@@ -1,0 +1,108 @@
+=== Phase 62: Model Consolidation Migration ===
+Mode: EXECUTE
+Verbose: ON
+
+Consolidating 3 Synthetic model IDs:
+  deepseek-r1-0528-syn → deepseek-r1
+  kimi-k2-thinking-syn → kimi-k2-thinking
+  kimi-k2.5-syn → kimi-k2.5
+{"level":"info","time":"2026-02-09T12:12:49.750Z","service":"bettingsoccer","module":"db","module":"database-pool","msg":"Pool health monitoring started - checking every 30s"}
+
+✓ Transaction started
+✓ FK constraints deferred
+
+--- Pre-Validation ---
+predictions: 6829 total, 244 affected, 2 conflicts
+llm_model_stats: 455 total, 39 affected, 2 conflicts
+bets: 0 total, 0 affected, 0 conflicts
+model_balances: 0 total, 0 affected, 0 conflicts
+model_usage: 0 total, 0 affected, 0 conflicts
+
+--- Ensuring Base Model Rows Exist ---
+  ✓ Base model already exists: deepseek-r1
+  ✓ Created base model row: kimi-k2-thinking
+  ✓ Created base model row: kimi-k2.5
+
+--- Deduplication Phase ---
+
+--- Deduplication: predictions ---
+Processing deepseek-r1-0528-syn → deepseek-r1...
+  deepseek-r1-0528-syn → deepseek-r1: 12 conflicts resolved
+Processing kimi-k2-thinking-syn → kimi-k2-thinking...
+  kimi-k2-thinking-syn → kimi-k2-thinking: 0 conflicts resolved
+Processing kimi-k2.5-syn → kimi-k2.5...
+  kimi-k2.5-syn → kimi-k2.5: 0 conflicts resolved
+Deleted 12 older duplicates
+
+--- Deduplication: llm_model_stats ---
+Processing deepseek-r1-0528-syn → deepseek-r1...
+  deepseek-r1-0528-syn → deepseek-r1: 13 merged
+Processing kimi-k2-thinking-syn → kimi-k2-thinking...
+  kimi-k2-thinking-syn → kimi-k2-thinking: 0 merged
+Processing kimi-k2.5-syn → kimi-k2.5...
+  kimi-k2.5-syn → kimi-k2.5: 0 merged
+Merged 13 stat records
+
+--- Deduplication: bets ---
+Processing deepseek-r1-0528-syn → deepseek-r1...
+  deepseek-r1-0528-syn → deepseek-r1: 0 conflicts resolved
+Processing kimi-k2-thinking-syn → kimi-k2-thinking...
+  kimi-k2-thinking-syn → kimi-k2-thinking: 0 conflicts resolved
+Processing kimi-k2.5-syn → kimi-k2.5...
+  kimi-k2.5-syn → kimi-k2.5: 0 conflicts resolved
+Deleted 0 older duplicates
+
+--- Deduplication: model_balances ---
+Processing deepseek-r1-0528-syn → deepseek-r1...
+  deepseek-r1-0528-syn → deepseek-r1: 0 merged
+Processing kimi-k2-thinking-syn → kimi-k2-thinking...
+  kimi-k2-thinking-syn → kimi-k2-thinking: 0 merged
+Processing kimi-k2.5-syn → kimi-k2.5...
+  kimi-k2.5-syn → kimi-k2.5: 0 merged
+Merged 0 balance records
+
+--- Deduplication: model_usage ---
+Processing deepseek-r1-0528-syn → deepseek-r1...
+  deepseek-r1-0528-syn → deepseek-r1: 0 merged
+Processing kimi-k2-thinking-syn → kimi-k2-thinking...
+  kimi-k2-thinking-syn → kimi-k2-thinking: 0 merged
+Processing kimi-k2.5-syn → kimi-k2.5...
+  kimi-k2.5-syn → kimi-k2.5: 0 merged
+Merged 0 usage records
+
+--- Model ID Update ---
+deepseek-r1-0528-syn → deepseek-r1:
+  predictions: 8 rows
+  llm_model_stats: 0 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+kimi-k2-thinking-syn → kimi-k2-thinking:
+  predictions: 232 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+kimi-k2.5-syn → kimi-k2.5:
+  predictions: 0 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+
+--- Post-Validation ---
+predictions: 6817 rows (delta: 12, expected: 2)
+llm_model_stats: 442 rows
+bets: 0 rows
+model_balances: 0 rows
+model_usage: 0 rows
+
+--- Validation Summary ---
+✅ PASS: No unique constraint violations
+✅ No orphaned FKs
+
+✅ Migration committed successfully
+
+=== Migration Complete ===
+All model IDs consolidated successfully.
+Next: Run Phase 63 to update models table.

@@ -1,0 +1,11 @@
+{
+  "modelId": "glm-4.7-syn",
+  "provider": "synthetic",
+  "success": false,
+  "error": "API error: {\"error\":\"response_format.type = json_schema and json_object are currently not supported for GLM 4.7 due to a structured output bug in SGLang. A fix is being worked on.\"}",
+  "rawResponse": "",
+  "category": "api-error",
+  "durationMs": 480,
+  "timestamp": "2026-02-08T11:58:10.193Z",
+  "scenarioId": "standard"
+}

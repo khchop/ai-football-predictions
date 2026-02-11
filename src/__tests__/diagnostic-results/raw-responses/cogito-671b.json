@@ -1,0 +1,13 @@
+{
+  "modelId": "cogito-671b",
+  "provider": "together",
+  "success": true,
+  "prediction": {
+    "homeScore": 1,
+    "awayScore": 1
+  },
+  "rawResponse": "{\"homeScore\":1,\"awayScore\":1}",
+  "durationMs": 1004,
+  "timestamp": "2026-02-08T11:57:55.239Z",
+  "scenarioId": "standard"
+}

@@ -16,7 +16,7 @@ import allModelsFixtures from './all-models.json';
  */
 export interface GoldenFixture {
   modelId: string;
-  provider: 'together' | 'openrouter';
+  provider: 'openrouter';
   success: boolean;
   parsed?: {
     match_id: string;
@@ -58,7 +58,7 @@ export function getFailedFixtures(): GoldenFixture[] {
  * Get fixtures by provider type
  */
 export function getFixturesByProvider(
-  provider: 'together' | 'openrouter'
+  provider: 'openrouter'
 ): GoldenFixture[] {
   return allModelsFixtures.filter((f) => f.provider === provider) as GoldenFixture[];
 }
@@ -85,19 +85,16 @@ export function getFixtureStats(): {
   total: number;
   successful: number;
   failed: number;
-  togetherCount: number;
   openrouterCount: number;
   successRate: number;
 } {
   const successful = getSuccessfulFixtures();
-  const together = getFixturesByProvider('together');
   const openrouter = getFixturesByProvider('openrouter');
 
   return {
     total: allModelsFixtures.length,
     successful: successful.length,
     failed: allModelsFixtures.length - successful.length,
-    togetherCount: together.length,
     openrouterCount: openrouter.length,
     successRate:
       allModelsFixtures.length > 0

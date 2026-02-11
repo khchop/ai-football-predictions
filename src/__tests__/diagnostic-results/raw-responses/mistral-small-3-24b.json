@@ -1,0 +1,13 @@
+{
+  "modelId": "mistral-small-3-24b",
+  "provider": "together",
+  "success": true,
+  "prediction": {
+    "homeScore": 1,
+    "awayScore": 1
+  },
+  "rawResponse": "{\"homeScore\":1,\"awayScore\":1}",
+  "durationMs": 757,
+  "timestamp": "2026-02-08T11:57:56.000Z",
+  "scenarioId": "standard"
+}

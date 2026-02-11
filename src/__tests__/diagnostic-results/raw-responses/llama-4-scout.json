@@ -1,0 +1,11 @@
+{
+  "modelId": "llama-4-scout",
+  "provider": "together",
+  "success": false,
+  "error": "API error: {\n  \"id\": \"oWYc9Lb-2kFHot-9caaf3ac7a5fe51d\",\n  \"error\": {\n    \"message\": \"Unable to access non-serverless model meta-llama/Llama-4-Scout-17B-16E-Instruct. Please visit https://api.together.ai/models/meta-llama/Llama-4-Scout-17B-16E-Instruct to create and start a new dedicated endpoint for the model.\",\n    \"type\": \"invalid_request_error\",\n    \"param\": null,\n    \"code\": \"model_not_available\"\n  }\n}",
+  "rawResponse": "",
+  "category": "api-error",
+  "durationMs": 322,
+  "timestamp": "2026-02-08T11:57:51.719Z",
+  "scenarioId": "standard"
+}

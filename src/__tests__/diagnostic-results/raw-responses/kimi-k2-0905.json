@@ -1,0 +1,13 @@
+{
+  "modelId": "kimi-k2-0905",
+  "provider": "together",
+  "success": true,
+  "prediction": {
+    "homeScore": 1,
+    "awayScore": 1
+  },
+  "rawResponse": "{\"homeScore\":1,\"awayScore\":1}",
+  "durationMs": 1246,
+  "timestamp": "2026-02-08T11:57:51.387Z",
+  "scenarioId": "standard"
+}

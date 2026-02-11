@@ -1,0 +1,11 @@
+{
+  "modelId": "gemma-3n-e4b",
+  "provider": "together",
+  "success": false,
+  "error": "No valid predictions parsed",
+  "rawResponse": "",
+  "category": "empty-response",
+  "durationMs": 556,
+  "timestamp": "2026-02-08T11:57:57.119Z",
+  "scenarioId": "standard"
+}

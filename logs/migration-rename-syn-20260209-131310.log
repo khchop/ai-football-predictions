@@ -1,0 +1,163 @@
+================================================================================
+=== Rename Synthetic Model IDs: Phase 63 (CONS-03) ===
+================================================================================
+
+Renaming 10 Synthetic-exclusive model IDs (dropping -syn suffix)
+
+{"level":"info","time":"2026-02-09T12:13:11.040Z","service":"bettingsoccer","module":"db","module":"database-pool","msg":"Pool health monitoring started - checking every 30s"}
+
+--- Pre-Validation ---
+
+Safety check: Checking if target IDs already exist...
+⚠ Found 6 target model IDs that already exist (likely stubs from sync-models):
+  - deepseek-v3.2
+  - gpt-oss-120b
+  - glm-4.7
+  - glm-4.6
+  - qwen3-235b-thinking
+  - qwen3-coder-480b
+
+These stub rows will be deleted before renaming -syn models.
+This is safe because the -syn models contain the real data.
+
+Counting rows per old model_id...
+
+qwen3-235b-thinking-syn -> qwen3-235b-thinking:
+  models: 1 rows
+  predictions: 1 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 15 rows
+
+deepseek-v3-0324-syn -> deepseek-v3-0324:
+  models: 1 rows
+  predictions: 8 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 22 rows
+
+deepseek-v3.1-terminus-syn -> deepseek-v3.1-terminus:
+  models: 1 rows
+  predictions: 232 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 246 rows
+
+deepseek-v3.2-syn -> deepseek-v3.2:
+  models: 1 rows
+  predictions: 0 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 14 rows
+
+minimax-m2-syn -> minimax-m2:
+  models: 1 rows
+  predictions: 210 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 224 rows
+
+minimax-m2.1-syn -> minimax-m2.1:
+  models: 1 rows
+  predictions: 200 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 214 rows
+
+glm-4.6-syn -> glm-4.6:
+  models: 1 rows
+  predictions: 7 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 21 rows
+
+glm-4.7-syn -> glm-4.7:
+  models: 1 rows
+  predictions: 0 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 14 rows
+
+qwen3-coder-480b-syn -> qwen3-coder-480b:
+  models: 1 rows
+  predictions: 26 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 40 rows
+
+gpt-oss-120b-syn -> gpt-oss-120b:
+  models: 1 rows
+  predictions: 92 rows
+  llm_model_stats: 13 rows
+  bets: 0 rows
+  model_balances: 0 rows
+  model_usage: 0 rows
+  TOTAL: 106 rows
+
+✓ Pre-validation complete: 916 total rows will be renamed across all tables
+
+--- Executing Rename Migration ---
+Beginning transaction with deferred constraints...
+
+Step 0: Deleting stub target model rows (if they exist)...
+  ✓ Deleted 6 stub model rows
+
+Step 1: Renaming in models table (FK constraint source)...
+
+✗ Rename migration failed - rolling back transaction
+Fatal error during rename migration: DrizzleQueryError: Failed query: 
+        UPDATE models
+        SET id = $1
+        WHERE id = $2
+      
+params: qwen3-235b-thinking,qwen3-235b-thinking-syn
+    at NodePgPreparedQuery.queryWithCache (/Users/pieterbos/Documents/bettingsoccer/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async executeRename (/Users/pieterbos/Documents/bettingsoccer/scripts/rename-syn-models.ts:230:22)
+    at async main (/Users/pieterbos/Documents/bettingsoccer/scripts/rename-syn-models.ts:579:25) {
+  query: '\n        UPDATE models\n        SET id = $1\n        WHERE id = $2\n      ',
+  params: [ 'qwen3-235b-thinking', 'qwen3-235b-thinking-syn' ],
+  cause: error: update or delete on table "models" violates foreign key constraint "llm_model_stats_model_id_fkey" on table "llm_model_stats"
+      at /Users/pieterbos/Documents/bettingsoccer/node_modules/pg-pool/index.js:45:11
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async <anonymous> (/Users/pieterbos/Documents/bettingsoccer/node_modules/src/node-postgres/session.ts:149:14)
+      at async NodePgPreparedQuery.queryWithCache (/Users/pieterbos/Documents/bettingsoccer/node_modules/src/pg-core/session.ts:71:12)
+      at async executeRename (/Users/pieterbos/Documents/bettingsoccer/scripts/rename-syn-models.ts:230:22)
+      at async main (/Users/pieterbos/Documents/bettingsoccer/scripts/rename-syn-models.ts:579:25) {
+    length: 336,
+    severity: 'ERROR',
+    code: '23503',
+    detail: 'Key (id)=(qwen3-235b-thinking-syn) is still referenced from table "llm_model_stats".',
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: 'public',
+    table: 'llm_model_stats',
+    column: undefined,
+    dataType: undefined,
+    constraint: 'llm_model_stats_model_id_fkey',
+    file: 'ri_triggers.c',
+    line: '2612',
+    routine: 'ri_ReportViolation'
+  }
+}

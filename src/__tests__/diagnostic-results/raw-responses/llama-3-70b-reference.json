@@ -1,0 +1,11 @@
+{
+  "modelId": "llama-3-70b-reference",
+  "provider": "together",
+  "success": false,
+  "error": "API error: {\n  \"id\": \"oWYc9br-62bZhn-9caaf3b27bdfe51d\",\n  \"error\": {\n    \"message\": \"Unable to access non-serverless model meta-llama/Llama-3-70b-chat-hf. Please visit https://api.together.ai/models/meta-llama/Llama-3-70b-chat-hf to create and start a new dedicated endpoint for the model.\",\n    \"type\": \"invalid_request_error\",\n    \"param\": null,\n    \"code\": \"model_not_available\"\n  }\n}",
+  "rawResponse": "",
+  "category": "api-error",
+  "durationMs": 247,
+  "timestamp": "2026-02-08T11:57:52.606Z",
+  "scenarioId": "standard"
+}

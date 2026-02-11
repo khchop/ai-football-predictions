@@ -1,0 +1,6 @@
+PR,URL,Title,Content type,Is rendered page,HTTP status code,Organic traffic,Redirect URL,Redirect URL code,Redirect chain URLs,Redirect chain URLs codes,Is redirect loop,No. of all inlinks,No. of redirect inlinks,First found at
+0,https://www.kroam.xyz/,,,false,302,0,https://kroam.xyz/,200,https://kroam.xyz/,200,false,1,1,
+0,http://kroam.xyz/,,,false,302,0,https://kroam.xyz/,200,https://kroam.xyz/,200,false,0,0,
+0,http://www.kroam.xyz/,,,false,302,0,https://www.kroam.xyz/,302,"https://www.kroam.xyz/
+https://kroam.xyz/","302
+200",false,0,0,

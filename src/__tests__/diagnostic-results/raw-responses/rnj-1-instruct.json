@@ -1,0 +1,13 @@
+{
+  "modelId": "rnj-1-instruct",
+  "provider": "together",
+  "success": true,
+  "prediction": {
+    "homeScore": 2,
+    "awayScore": 1
+  },
+  "rawResponse": "{\"homeScore\":2,\"awayScore\":1}",
+  "durationMs": 404,
+  "timestamp": "2026-02-08T11:57:57.526Z",
+  "scenarioId": "standard"
+}

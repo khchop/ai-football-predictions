@@ -1,0 +1,13 @@
+{
+  "modelId": "llama-3-8b-lite",
+  "provider": "together",
+  "success": true,
+  "prediction": {
+    "homeScore": 1,
+    "awayScore": 1
+  },
+  "rawResponse": "{\"homeScore\":1,\"awayScore\":1}",
+  "durationMs": 1229,
+  "timestamp": "2026-02-08T11:57:53.531Z",
+  "scenarioId": "standard"
+}

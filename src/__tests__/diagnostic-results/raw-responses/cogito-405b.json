@@ -1,0 +1,11 @@
+{
+  "modelId": "cogito-405b",
+  "provider": "together",
+  "success": false,
+  "error": "API error: {\n  \"id\": \"oWYcA5c-zqrih-9caaf3bc9975c760\",\n  \"error\": {\n    \"message\": \"Unable to access non-serverless model deepcogito/cogito-v2-preview-llama-405B. Please visit https://api.together.ai/models/deepcogito/cogito-v2-preview-llama-405B to create and start a new dedicated endpoint for the model.\",\n    \"type\": \"invalid_request_error\",\n    \"param\": null,\n    \"code\": \"model_not_available\"\n  }\n}",
+  "rawResponse": "",
+  "category": "api-error",
+  "durationMs": 256,
+  "timestamp": "2026-02-08T11:57:54.234Z",
+  "scenarioId": "standard"
+}

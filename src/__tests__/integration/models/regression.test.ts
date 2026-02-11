@@ -26,7 +26,6 @@ describe('REGR-01: Golden Fixture Regression Tests', () => {
     console.log(`Total fixtures: ${fixtureStats.total}`);
     console.log(`Successful: ${fixtureStats.successful} (${fixtureStats.successRate}%)`);
     console.log(`Failed: ${fixtureStats.failed}`);
-    console.log(`Together AI: ${fixtureStats.togetherCount}`);
     console.log(`OpenRouter: ${fixtureStats.openrouterCount}`);
     console.log('');
 
@@ -42,12 +41,12 @@ describe('REGR-01: Golden Fixture Regression Tests', () => {
   // ============================================================================
 
   describe('Model Count Validation', () => {
-    test('total fixture count matches expected (23 Together models)', () => {
-      expect(fixtureStats.total).toBe(23);
+    test('total fixture count matches expected (38 OpenRouter models)', () => {
+      expect(fixtureStats.total).toBe(38);
     });
 
-    test('Together AI model count is 23', () => {
-      expect(fixtureStats.togetherCount).toBe(23);
+    test('OpenRouter model count is 38', () => {
+      expect(fixtureStats.openrouterCount).toBe(38);
     });
   });
 
@@ -55,15 +54,15 @@ describe('REGR-01: Golden Fixture Regression Tests', () => {
   // Fixture-Based Structural Tests (Together AI Models)
   // ============================================================================
 
-  describe('Together AI Models - Structural Validation', () => {
-    const togetherFixtures = getFixturesByProvider('together').filter((f) => f.success);
+  describe('OpenRouter Models - Structural Validation', () => {
+    const openrouterFixtures = getFixturesByProvider('openrouter').filter((f) => f.success);
 
-    if (togetherFixtures.length === 0) {
-      test.skip('no successful Together AI fixtures available', () => {});
+    if (openrouterFixtures.length === 0) {
+      test.skip('no successful OpenRouter fixtures available', () => {});
       return;
     }
 
-    describe.each(togetherFixtures)('$modelId', (fixture: GoldenFixture) => {
+    describe.each(openrouterFixtures)('$modelId', (fixture: GoldenFixture) => {
       test('parsed data passes PredictionOutputSchema', () => {
         expect(fixture.parsed).toBeDefined();
 
@@ -288,10 +287,7 @@ Manchester United vs Liverpool
       console.log(`Failed fixtures: ${stats.failed}`);
       console.log(`Success rate: ${stats.successRate}%`);
       console.log(
-        `Together AI: ${getFixturesByProvider('together').filter((f) => f.success).length}/${stats.togetherCount}`
-      );
-      console.log(
-        `Synthetic: ${getFixturesByProvider('synthetic').filter((f) => f.success).length}/${stats.syntheticCount}`
+        `OpenRouter: ${getFixturesByProvider('openrouter').filter((f) => f.success).length}/${stats.openrouterCount}`
       );
       console.log('');
 

@@ -1,0 +1,13 @@
+{
+  "modelId": "kimi-k2-thinking-syn",
+  "provider": "synthetic",
+  "success": true,
+  "prediction": {
+    "homeScore": 1,
+    "awayScore": 2
+  },
+  "rawResponse": "{\"homeScore\":1,\"awayScore\":2}",
+  "durationMs": 1776,
+  "timestamp": "2026-02-08T11:57:59.342Z",
+  "scenarioId": "standard"
+}

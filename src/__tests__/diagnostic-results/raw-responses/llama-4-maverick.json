@@ -1,0 +1,13 @@
+{
+  "modelId": "llama-4-maverick",
+  "provider": "together",
+  "success": true,
+  "prediction": {
+    "homeScore": 1,
+    "awayScore": 1
+  },
+  "rawResponse": "{\"homeScore\":1,\"awayScore\":1}",
+  "durationMs": 818,
+  "timestamp": "2026-02-08T11:57:52.209Z",
+  "scenarioId": "standard"
+}

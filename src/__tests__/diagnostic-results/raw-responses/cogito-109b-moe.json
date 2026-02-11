@@ -1,0 +1,11 @@
+{
+  "modelId": "cogito-109b-moe",
+  "provider": "together",
+  "success": false,
+  "error": "API error: {\n  \"id\": \"oWYcA1T-62bZhn-9caaf3bafc02c760\",\n  \"error\": {\n    \"message\": \"Unable to access non-serverless model deepcogito/cogito-v2-preview-llama-109B-MoE. Please visit https://api.together.ai/models/deepcogito/cogito-v2-preview-llama-109B-MoE to create and start a new dedicated endpoint for the model.\",\n    \"type\": \"invalid_request_error\",\n    \"param\": null,\n    \"code\": \"model_not_available\"\n  }\n}",
+  "rawResponse": "",
+  "category": "api-error",
+  "durationMs": 258,
+  "timestamp": "2026-02-08T11:57:53.977Z",
+  "scenarioId": "standard"
+}

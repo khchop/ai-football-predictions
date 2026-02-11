@@ -1,7 +1,7 @@
 /**
  * All Models JSON Validation Integration Tests (JSON-04)
  *
- * Tests that all 23 Together AI LLM models return valid JSON
+ * Tests that all 38 OpenRouter LLM models return valid JSON
  * structure for predictions. Validates structure, not exact values.
  *
  * Usage: npm run test -- --run src/__tests__/integration/models/all-models.test.ts
@@ -18,20 +18,18 @@ import {
 } from '@/__tests__/fixtures/test-data';
 
 // API key detection for conditional test execution
-const hasTogetherKey = !!process.env.TOGETHER_API_KEY;
-const shouldSkip = !hasTogetherKey;
-
-// No previously disabled models tracked for Together AI only
+const hasOpenRouterKey = !!process.env.OPENROUTER_API_KEY;
+const shouldSkip = !hasOpenRouterKey;
 
 describe.skipIf(shouldSkip)('JSON-04: All Models JSON Validation', () => {
   beforeAll(() => {
     console.log(`\nTesting ${ALL_PROVIDERS.length} models`);
-    console.log(`Together API: ${hasTogetherKey ? 'available' : 'missing'}`);
+    console.log(`OpenRouter API: ${hasOpenRouterKey ? 'available' : 'missing'}`);
     console.log('');
   });
 
-  // Group: Together AI Models
-  describe.skipIf(!hasTogetherKey)('Together AI Models', () => {
+  // Group: OpenRouter Models
+  describe.skipIf(!hasOpenRouterKey)('OpenRouter Models', () => {
     describe.each(ALL_PROVIDERS)('$id', (provider) => {
       const isReasoning = REASONING_MODEL_IDS.has(provider.id);
       const timeout = isReasoning ? REASONING_MODEL_TIMEOUT : STANDARD_MODEL_TIMEOUT;

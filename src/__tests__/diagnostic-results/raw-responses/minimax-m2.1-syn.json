@@ -1,0 +1,13 @@
+{
+  "modelId": "minimax-m2.1-syn",
+  "provider": "synthetic",
+  "success": true,
+  "prediction": {
+    "homeScore": 1,
+    "awayScore": 1
+  },
+  "rawResponse": "{\"homeScore\":1,\"awayScore\":1}",
+  "durationMs": 4482,
+  "timestamp": "2026-02-08T11:58:08.849Z",
+  "scenarioId": "standard"
+}

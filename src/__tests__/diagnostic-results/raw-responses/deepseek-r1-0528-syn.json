@@ -1,0 +1,11 @@
+{
+  "modelId": "deepseek-r1-0528-syn",
+  "provider": "synthetic",
+  "success": false,
+  "error": "No valid predictions parsed",
+  "rawResponse": "",
+  "category": "empty-response",
+  "durationMs": 1533,
+  "timestamp": "2026-02-08T11:57:59.061Z",
+  "scenarioId": "standard"
+}

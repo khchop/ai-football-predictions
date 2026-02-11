@@ -1,0 +1,11 @@
+{
+  "modelId": "llama-3.1-405b-turbo",
+  "provider": "together",
+  "success": false,
+  "error": "API error: {\n  \"id\": \"oWYc9Xx-3pDw3Z-9caaf3b18fbbc760\",\n  \"error\": {\n    \"message\": \"Unable to access non-serverless model meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo. Please visit https://api.together.ai/models/meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo to create and start a new dedicated endpoint for the model.\",\n    \"type\": \"invalid_request_error\",\n    \"param\": null,\n    \"code\": \"model_not_available\"\n  }\n}",
+  "rawResponse": "",
+  "category": "api-error",
+  "durationMs": 91,
+  "timestamp": "2026-02-08T11:57:52.301Z",
+  "scenarioId": "standard"
+}

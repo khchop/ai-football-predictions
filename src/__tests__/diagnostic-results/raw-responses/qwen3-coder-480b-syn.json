@@ -1,0 +1,13 @@
+{
+  "modelId": "qwen3-coder-480b-syn",
+  "provider": "synthetic",
+  "success": true,
+  "prediction": {
+    "homeScore": 1,
+    "awayScore": 2
+  },
+  "rawResponse": "{\"homeScore\":1,\"awayScore\":2}",
+  "durationMs": 1155,
+  "timestamp": "2026-02-08T11:58:11.352Z",
+  "scenarioId": "standard"
+}

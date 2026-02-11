@@ -21,15 +21,11 @@ export const TEST_MODE = process.env.TEST_MODE || 'real';
  * Returns true if no API keys are configured
  */
 export function shouldSkipRealAPI(): boolean {
-  const hasTogetherKey = !!process.env.TOGETHER_API_KEY;
-  const hasOpenRouterKey = !!process.env.OPENROUTER_API_KEY;
-
-  return !hasTogetherKey && !hasOpenRouterKey;
+  return !process.env.OPENROUTER_API_KEY;
 }
 
 // Log test configuration at startup
 console.log('\n[Test Setup]');
 console.log(`  Mode: ${TEST_MODE}`);
-console.log(`  Together API: ${process.env.TOGETHER_API_KEY ? 'configured' : 'not configured'}`);
 console.log(`  OpenRouter API: ${process.env.OPENROUTER_API_KEY ? 'configured' : 'not configured'}`);
 console.log('');

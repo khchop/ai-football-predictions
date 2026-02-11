@@ -1,0 +1,13 @@
+{
+  "modelId": "ministral-3-14b",
+  "provider": "together",
+  "success": true,
+  "prediction": {
+    "homeScore": 0,
+    "awayScore": 0
+  },
+  "rawResponse": "{\"homeScore\":0,\"awayScore\":0}",
+  "durationMs": 1590,
+  "timestamp": "2026-02-08T11:57:56.559Z",
+  "scenarioId": "standard"
+}

@@ -1,0 +1,13 @@
+{
+  "modelId": "deepseek-v3-0324-syn",
+  "provider": "synthetic",
+  "success": true,
+  "prediction": {
+    "homeScore": 1,
+    "awayScore": 1
+  },
+  "rawResponse": "{\"homeScore\":1,\"awayScore\":1}",
+  "durationMs": 1811,
+  "timestamp": "2026-02-08T11:58:00.873Z",
+  "scenarioId": "standard"
+}

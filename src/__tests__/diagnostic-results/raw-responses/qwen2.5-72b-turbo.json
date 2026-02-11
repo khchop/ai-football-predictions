@@ -1,0 +1,11 @@
+{
+  "modelId": "qwen2.5-72b-turbo",
+  "provider": "together",
+  "success": false,
+  "error": "API error: {\n  \"id\": \"oWYc9Zd-6Ng1vN-9caaf3ac6ad1e532\",\n  \"error\": {\n    \"message\": \"Unable to access non-serverless model Qwen/Qwen2.5-72B-Instruct-Turbo. Please visit https://api.together.ai/models/Qwen/Qwen2.5-72B-Instruct-Turbo to create and start a new dedicated endpoint for the model.\",\n    \"type\": \"invalid_request_error\",\n    \"param\": null,\n    \"code\": \"model_not_available\"\n  }\n}",
+  "rawResponse": "",
+  "category": "api-error",
+  "durationMs": 410,
+  "timestamp": "2026-02-08T11:57:51.799Z",
+  "scenarioId": "standard"
+}

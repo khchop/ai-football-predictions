@@ -1,0 +1,11 @@
+{
+  "modelId": "deepseek-v3.2-syn",
+  "provider": "synthetic",
+  "success": false,
+  "error": "No valid JSON found in response (preview: {\"match_id\": \"uuid1\", \"home_score\": X, \"away_score\": Y}...)",
+  "rawResponse": "",
+  "category": "empty-response",
+  "durationMs": 8837,
+  "timestamp": "2026-02-08T11:58:09.712Z",
+  "scenarioId": "standard"
+}
