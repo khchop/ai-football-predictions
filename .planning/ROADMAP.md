@@ -295,10 +295,11 @@ Plans:
 4. Database indexes exist on homeTeam and awayTeam columns for query performance
 5. Cache invalidation targets specific teams on match completion without thundering herd
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 67-01: TBD
+- [ ] 67-01-PLAN.md -- Team name mapping file (teams.ts) with DB-audited entries + B-tree indexes on homeTeam/awayTeam columns
+- [ ] 67-02-PLAN.md -- Team stats batch queries (CASE WHEN aggregation) + targeted team cache invalidation
 
 #### Phase 68: Routes, SEO & Basic Pages
 
@@ -452,7 +453,7 @@ Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> 63 -> 64 -> 65 -> 66 ->
 | 64. Model Re-Activation | v2.9 | 0/TBD | Not started | - |
 | 65. Cost Tracking & Budget Control | v2.9 | 0/TBD | Not started | - |
 | 66. Provider Health Monitoring | v2.9 | 0/TBD | Not started | - |
-| 67. Foundation & Data Layer | v3.0 | 0/TBD | Not started | - |
+| 67. Foundation & Data Layer | v3.0 | 0/2 | Not started | - |
 | 68. Routes, SEO & Basic Pages | v3.0 | 0/TBD | Not started | - |
 | 69. UI Components & Match Display | v3.0 | 0/TBD | Not started | - |
 | 70. Navigation & Cross-Linking | v3.0 | 0/TBD | Not started | - |
