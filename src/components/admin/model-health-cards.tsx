@@ -100,7 +100,7 @@ function StatusIcon({ status }: { status: 'healthy' | 'warning' | 'critical' }) 
 function ProviderBadge({ provider }: { provider: string }) {
   const colors: Record<string, string> = {
     together: 'bg-blue-500/20 text-blue-400',
-    synthetic: 'bg-purple-500/20 text-purple-400',
+    openrouter: 'bg-purple-500/20 text-purple-400',
   };
   return (
     <span

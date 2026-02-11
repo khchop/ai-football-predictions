@@ -222,7 +222,7 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
       ? (this.promptConfig?.maxTokensBatch ?? 800)
       : (this.promptConfig?.maxTokensSingle ?? 150);
 
-    // JSON mode: some models don't support response_format (e.g., GLM on SGLang, Synthetic models)
+    // JSON mode: some models don't support response_format (e.g., GLM on SGLang, models with non-standard JSON support)
     const supportsJsonMode = this.promptConfig?.supportsJsonMode !== false;
 
     try {

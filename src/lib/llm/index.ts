@@ -1,20 +1,17 @@
 import { LLMProvider } from '@/types';
 import { loggers } from '@/lib/logger/modules';
 import { TOGETHER_PROVIDERS } from './providers/together';
-import { SYNTHETIC_PROVIDERS } from './providers/synthetic';
 import { OPENROUTER_PROVIDERS } from './providers/openrouter';
 import { getAutoDisabledModelIds } from '@/lib/db/queries';
 import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
 import { getDb, models } from '@/lib/db';
 import { eq, sql } from 'drizzle-orm';
 
-// All non-conditional providers - Together AI + Synthetic.new
+// Together AI core providers
 // OpenRouter providers are conditional (only in getActiveProviders when API key set)
-// Together: 23 active models, Synthetic: 11 models = 34 total
-// 7 Together models removed (non-serverless): 4 migrated to OpenRouter-primary, 3 deactivated
+// Together: 23 active models = 23 total
 export const ALL_PROVIDERS: LLMProvider[] = [
   ...TOGETHER_PROVIDERS,
-  ...SYNTHETIC_PROVIDERS,
 ];
 
 // ============================================================================
@@ -51,7 +48,7 @@ export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
   'deepseek-v3.1': ['deepseek-v3.1', 'deepseek-v3.1-or'],
   'kimi-k2-0905': ['kimi-k2-0905', 'kimi-k2-0905-or'],
   'kimi-k2-instruct': ['kimi-k2-instruct', 'kimi-k2-instruct-or'],
-  'kimi-k2.5': ['kimi-k2.5', 'kimi-k2.5-syn', 'kimi-k2.5-or'],
+  'kimi-k2.5': ['kimi-k2.5', 'kimi-k2.5-or'],
   'gpt-oss-20b': ['gpt-oss-20b', 'gpt-oss-20b-or'],
   'mistral-small-3-24b': ['mistral-small-3-24b', 'mistral-small-3-24b-or'],
   'mistral-7b-v0.2': ['mistral-7b-v0.2', 'mistral-7b-v0.2-or'],
@@ -65,17 +62,17 @@ export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
   'llama-3-70b-reference': ['llama-3-70b-or'],
   'qwen2.5-72b': ['qwen2.5-72b-or'],
 
-  // --- Synthetic -> OpenRouter ---
-  'deepseek-v3.2': ['deepseek-v3.2', 'deepseek-v3.2-or'],
-  'minimax-m2': ['minimax-m2', 'minimax-m2-or'],
-  'minimax-m2.1': ['minimax-m2.1', 'minimax-m2.1-or'],
-  'glm-4.6': ['glm-4.6', 'glm-4.6-or'],
-  'glm-4.7': ['glm-4.7', 'glm-4.7-or'],
-  'qwen3-coder-480b': ['qwen3-coder-480b', 'qwen3-coder-480b-or'],
-  'qwen3-235b-thinking': ['qwen3-235b-thinking', 'qwen3-235b-thinking-or'],
-  'deepseek-v3-0324': ['deepseek-v3-0324', 'deepseek-v3-0324-or'],
-  'deepseek-v3.1-terminus': ['deepseek-v3.1-terminus', 'deepseek-v3.1-terminus-or'],
-  'gpt-oss-120b': ['gpt-oss-120b', 'gpt-oss-120b-or'],
+  // --- OpenRouter-primary (migrated from Synthetic) ---
+  'deepseek-v3.2': ['deepseek-v3.2-or'],
+  'minimax-m2': ['minimax-m2-or'],
+  'minimax-m2.1': ['minimax-m2.1-or'],
+  'glm-4.6': ['glm-4.6-or'],
+  'glm-4.7': ['glm-4.7-or'],
+  'qwen3-coder-480b': ['qwen3-coder-480b-or'],
+  'qwen3-235b-thinking': ['qwen3-235b-thinking-or'],
+  'deepseek-v3-0324': ['deepseek-v3-0324-or'],
+  'deepseek-v3.1-terminus': ['deepseek-v3.1-terminus-or'],
+  'gpt-oss-120b': ['gpt-oss-120b-or'],
 };
 
 /**
@@ -195,13 +192,6 @@ export async function getActiveProviders(): Promise<LLMProvider[]> {
     );
   }
 
-  // Add Synthetic providers if API key configured
-  if (process.env.SYNTHETIC_API_KEY) {
-    activeProviders.push(
-      ...SYNTHETIC_PROVIDERS.filter(p => !disabledIds.has(p.id))
-    );
-  }
-
   // Add OpenRouter providers if API key configured
   // Exclude fallback-only providers (those appearing as non-primary in routes)
   if (process.env.OPENROUTER_API_KEY) {
@@ -228,7 +218,7 @@ export async function getActiveProviders(): Promise<LLMProvider[]> {
 
 // Get provider by ID
 export function getProviderById(id: string): LLMProvider | undefined {
-  // Check core providers first (Together + Synthetic)
+  // Check core providers first (Together)
   const core = ALL_PROVIDERS.find(p => p.id === id);
   if (core) return core;
   // Check OpenRouter providers (conditional, but needed for routing)
@@ -253,12 +243,11 @@ export function getProviderStats(): {
   budget: number;
   premium: number;
   together: number;
-  synthetic: number;
   openrouter: number;
 } {
   // Combine all provider arrays for tier counting
-  // TogetherProvider, SyntheticProvider, and OpenRouterProvider all have tier property
-  const allProviders = [...TOGETHER_PROVIDERS, ...SYNTHETIC_PROVIDERS, ...OPENROUTER_PROVIDERS];
+  // TogetherProvider and OpenRouterProvider all have tier property
+  const allProviders = [...TOGETHER_PROVIDERS, ...OPENROUTER_PROVIDERS];
   return {
     total: allProviders.length,
     free: allProviders.filter(p => p.tier === 'free').length,
@@ -266,7 +255,6 @@ export function getProviderStats(): {
     budget: allProviders.filter(p => p.tier === 'budget').length,
     premium: allProviders.filter(p => p.tier === 'premium').length,
     together: TOGETHER_PROVIDERS.length,
-    synthetic: SYNTHETIC_PROVIDERS.length,
     openrouter: OPENROUTER_PROVIDERS.length,
   };
 }
@@ -297,14 +285,10 @@ export async function getActiveModelCount(): Promise<number> {
 
 // Export providers
 export { TOGETHER_PROVIDERS };
-export { SYNTHETIC_PROVIDERS };
 export { OPENROUTER_PROVIDERS };
 
 // Re-export Together AI provider class for type checking
 export { TogetherProvider, type ModelTier, type ModelPricing } from './providers/together';
-
-// Re-export Synthetic provider class
-export { SyntheticProvider } from './providers/synthetic';
 
 // Re-export OpenRouter provider class
 export { OpenRouterProvider } from './providers/openrouter';

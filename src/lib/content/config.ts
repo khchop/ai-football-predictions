@@ -1,8 +1,8 @@
 /**
  * Content Generation Configuration
  *
- * Uses Kimi K2 Thinking via Synthetic API for high-quality reasoning-based content.
- * Pricing: $2.00/M input, $6.00/M output
+ * Uses Kimi K2.5 via Together API for high-quality reasoning-based content.
+ * Pricing: $1.00/M input, $3.00/M output
  *
  * Estimated monthly volume:
  * - Match previews: ~280/month (65/week avg)
@@ -10,19 +10,19 @@
  * - Model reports: ~4/month (weekly instead of monthly)
  * Total: ~316 articles/month
  *
- * Cost estimate: ~$5/month (higher due to reasoning model premium, but better quality)
+ * Cost estimate: ~$2.50/month
  */
 
 export const CONTENT_CONFIG = {
-  // Synthetic API configuration (Kimi K2 Thinking)
-  provider: 'synthetic',
-  model: 'hf:moonshotai/Kimi-K2-Thinking',
-  apiUrl: 'https://api.synthetic.new/openai/v1/chat/completions',
+  // Together API configuration (Kimi K2.5)
+  provider: 'together',
+  model: 'Moonshot/Kimi-k2.5',
+  apiUrl: 'https://api.together.xyz/v1/chat/completions',
 
   // Token limits and pricing (for cost tracking)
   pricing: {
-    inputCostPerMillion: 2.00,  // USD
-    outputCostPerMillion: 6.00, // USD
+    inputCostPerMillion: 1.00,  // USD
+    outputCostPerMillion: 3.00, // USD
   },
   
   // Generation parameters (tuned for content quality)

@@ -388,7 +388,7 @@ export const Gemma3nE4B_OR = new OpenRouterProvider(
 );
 
 // ============================================================================
-// SYNTHETIC MODELS → OPENROUTER FALLBACKS (6)
+// FORMER SYNTHETIC MODELS (now OpenRouter primary) - BATCH 1 (6)
 // ============================================================================
 
 // 27. DeepSeek V3.2 (needs JSON_STRICT + EXTRACT_JSON like primary)
@@ -404,6 +404,9 @@ export const DeepSeekV32_OR = new OpenRouterProvider(
     promptVariant: PromptVariant.JSON_STRICT,
     responseHandler: ResponseHandler.EXTRACT_JSON,
     timeoutMs: 45000,
+    supportsJsonMode: false,
+    maxTokensSingle: 1000,
+    maxTokensBatch: 1500,
   }
 );
 
@@ -416,7 +419,9 @@ export const MiniMaxM2_OR = new OpenRouterProvider(
   'budget',
   { promptPer1M: 0.30, completionPer1M: 0.60 },
   false,
-  {}
+  {
+    supportsJsonMode: false,
+  }
 );
 
 // 29. MiniMax M2.1
@@ -428,7 +433,10 @@ export const MiniMaxM21_OR = new OpenRouterProvider(
   'budget',
   { promptPer1M: 0.35, completionPer1M: 0.70 },
   false,
-  {}
+  {
+    supportsJsonMode: false,
+    responseHandler: ResponseHandler.EXTRACT_JSON,
+  }
 );
 
 // 30. GLM 4.6 (needs ENGLISH_ENFORCED like primary)
@@ -442,8 +450,11 @@ export const GLM46_OR = new OpenRouterProvider(
   false,
   {
     promptVariant: PromptVariant.ENGLISH_ENFORCED,
-    responseHandler: ResponseHandler.DEFAULT,
+    responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
     timeoutMs: 60000,
+    supportsJsonMode: false,
+    maxTokensSingle: 1000,
+    maxTokensBatch: 1500,
   }
 );
 
@@ -460,6 +471,9 @@ export const GLM47_OR = new OpenRouterProvider(
     promptVariant: PromptVariant.ENGLISH_ENFORCED,
     responseHandler: ResponseHandler.EXTRACT_JSON,
     timeoutMs: 60000,
+    supportsJsonMode: false,
+    maxTokensSingle: 1000,
+    maxTokensBatch: 1500,
   }
 );
 
@@ -476,7 +490,7 @@ export const Qwen3Coder480B_OR = new OpenRouterProvider(
 );
 
 // ============================================================================
-// SYNTHETIC MODELS → OPENROUTER FALLBACKS - BATCH 2 (4)
+// FORMER SYNTHETIC MODELS (now OpenRouter primary) - BATCH 2 (4)
 // Added: 2026-02-10 (Quick-37)
 // ============================================================================
 
@@ -493,6 +507,9 @@ export const Qwen3_235BThinking_OR = new OpenRouterProvider(
     promptVariant: PromptVariant.THINKING_STRIPPED,
     responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
     timeoutMs: 120000,
+    supportsJsonMode: false,
+    maxTokensSingle: 2000,
+    maxTokensBatch: 3000,
   }
 );
 
@@ -533,6 +550,9 @@ export const GPTOSS120B_OR = new OpenRouterProvider(
     promptVariant: PromptVariant.JSON_STRICT,
     responseHandler: ResponseHandler.EXTRACT_JSON,
     timeoutMs: 45000,
+    supportsJsonMode: false,
+    maxTokensSingle: 1000,
+    maxTokensBatch: 1500,
   }
 );
 
