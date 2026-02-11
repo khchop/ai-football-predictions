@@ -182,6 +182,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HLTH-02 | Phase 66 | Pending |
 | HLTH-03 | Phase 66 | Pending |
 | HLTH-04 | Phase 66 | Pending |
+| PAGE-03 | Phase 67 | Pending |
+| PAGE-01 | Phase 68 | Pending |
+| PAGE-02 | Phase 68 | Pending |
+| PAGE-04 | Phase 68 | Pending |
+| SEO-01 | Phase 68 | Pending |
+| SEO-02 | Phase 68 | Pending |
+| SEO-03 | Phase 68 | Pending |
+| STAT-01 | Phase 69 | Pending |
+| STAT-02 | Phase 69 | Pending |
+| STAT-03 | Phase 69 | Pending |
+| STAT-04 | Phase 69 | Pending |
+| MTCH-01 | Phase 69 | Pending |
+| MTCH-02 | Phase 69 | Pending |
+| MTCH-03 | Phase 69 | Pending |
+| NAV-01 | Phase 70 | Pending |
+| NAV-02 | Phase 70 | Pending |
+| SEO-04 | Phase 71 | Pending |
+| SEO-05 | Phase 71 | Pending |
 
 **Coverage (v2.9):**
 - v2.9 requirements: 30 total
@@ -190,9 +208,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 **Coverage (v3.0):**
 - v3.0 requirements: 18 total
-- Mapped to phases: 0 (pending roadmap creation)
-- Unmapped: 18
+- Mapped to phases: 18
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-08*
-*Last updated: 2026-02-11 after v3.0 requirements definition*
+*Last updated: 2026-02-11 after v3.0 roadmap creation*

@@ -16,6 +16,7 @@
 - ✅ **v2.7 Pipeline Reliability & Retroactive Backfill** - Phases 49-52 (shipped 2026-02-07)
 - ✅ **v2.8 Model Coverage** - Phases 53-58 (shipped 2026-02-08)
 - 🚧 **v2.9 Provider Unification & Maximum Coverage** - Phases 59-66 (in progress)
+- 📋 **v3.0 Club/Team Pages** - Phases 67-71 (planned)
 
 ## Phases
 
@@ -200,7 +201,7 @@ Plans:
 
 **Depends on:** Phase 62
 
-**Requirements:** CONS-04, CONS-06, CONS-07
+**Requirements:** CONS-03, CONS-04, CONS-06, CONS-07
 
 **Success Criteria** (what must be TRUE):
 1. Foreign keys updated across all referencing tables (predictions, llm_model_stats, bets, model_balances)
@@ -275,10 +276,113 @@ Plans:
 Plans:
 - [ ] 66-01: TBD
 
+### v3.0 Club/Team Pages (Planned)
+
+**Milestone Goal:** Add dedicated team pages for every club across all 17 leagues with per-club model leaderboards, upcoming/recent match predictions, AI-generated club analysis, and full SEO optimization.
+
+#### Phase 67: Foundation & Data Layer
+
+**Goal:** Team name normalization, query infrastructure, and caching strategy established
+
+**Depends on:** Phase 66 (v2.9 complete)
+
+**Requirements:** PAGE-03
+
+**Success Criteria** (what must be TRUE):
+1. Team mapping file resolves URL slugs to canonical database team names for all 200+ teams
+2. Team mapping handles aliases correctly (e.g., "Man City" vs "Manchester City")
+3. Team stats query aggregates W/D/L record, goals scored/conceded using batch operations (max 3-4 DB queries per page)
+4. Database indexes exist on homeTeam and awayTeam columns for query performance
+5. Cache invalidation targets specific teams on match completion without thundering herd
+
+**Plans:** TBD
+
+Plans:
+- [ ] 67-01: TBD
+
+#### Phase 68: Routes, SEO & Basic Pages
+
+**Goal:** Team pages are accessible, indexable, and properly structured for search engines
+
+**Depends on:** Phase 67
+
+**Requirements:** PAGE-01, PAGE-02, PAGE-04, SEO-01, SEO-02, SEO-03
+
+**Success Criteria** (what must be TRUE):
+1. User can navigate to any team page via /teams/[slug] URL
+2. User can browse all clubs on /teams index page with league grouping
+3. Team pages include Schema.org SportsTeam structured data with breadcrumbs
+4. Team pages have proper meta tags, canonical URLs, and OG images
+5. Only teams with 5+ finished matches appear in sitemap to avoid thin content penalties
+
+**Plans:** TBD
+
+Plans:
+- [ ] 68-01: TBD
+
+#### Phase 69: UI Components & Match Display
+
+**Goal:** Team pages display comprehensive stats, leaderboards, and match history
+
+**Depends on:** Phase 68
+
+**Requirements:** STAT-01, STAT-02, STAT-03, STAT-04, MTCH-01, MTCH-02, MTCH-03
+
+**Success Criteria** (what must be TRUE):
+1. User can see per-club model leaderboard showing which AI models predict best for specific club
+2. User can filter club leaderboard by time period (all-time, season, monthly, weekly)
+3. User can view club statistics including W/D/L record, goals scored/conceded, and averages
+4. User can see upcoming match predictions with model prediction distribution
+5. User can see recent match results with scores and visual form indicator (W/D/L timeline)
+
+**Plans:** TBD
+
+Plans:
+- [ ] 69-01: TBD
+
+#### Phase 70: Navigation & Cross-Linking
+
+**Goal:** Team pages are discoverable from league and match pages with proper internal linking
+
+**Depends on:** Phase 69
+
+**Requirements:** NAV-01, NAV-02
+
+**Success Criteria** (what must be TRUE):
+1. User can click team names on league pages to navigate to team pages
+2. User can click team badges/names on match detail pages to navigate to team pages
+3. Breadcrumbs reflect proper hierarchy (Home > Teams > Club Name)
+4. Team pages include internal links to related content (league page, recent matches)
+
+**Plans:** TBD
+
+Plans:
+- [ ] 70-01: TBD
+
+#### Phase 71: AI Content & FAQ Generation
+
+**Goal:** Team pages include unique AI-generated insights and dynamic FAQs
+
+**Depends on:** Phase 70
+
+**Requirements:** SEO-04, SEO-05
+
+**Success Criteria** (what must be TRUE):
+1. Team pages display AI-generated club analysis highlighting form patterns and model prediction trends
+2. Team pages include 5-7 club-specific FAQ questions with FAQPage schema markup
+3. AI content generation uses rate-limited queue to prevent Together AI API limits
+4. FAQ content is dynamically enriched with actual team stats and recent match data
+5. Generated content is cached in database with 24h refresh cycle
+
+**Plans:** TBD
+
+Plans:
+- [ ] 71-01: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> 63 -> 64 -> 65 -> 66
+Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> 63 -> 64 -> 65 -> 66 -> 67 -> 68 -> 69 -> 70 -> 71
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -348,6 +452,11 @@ Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> 63 -> 64 -> 65 -> 66
 | 64. Model Re-Activation | v2.9 | 0/TBD | Not started | - |
 | 65. Cost Tracking & Budget Control | v2.9 | 0/TBD | Not started | - |
 | 66. Provider Health Monitoring | v2.9 | 0/TBD | Not started | - |
+| 67. Foundation & Data Layer | v3.0 | 0/TBD | Not started | - |
+| 68. Routes, SEO & Basic Pages | v3.0 | 0/TBD | Not started | - |
+| 69. UI Components & Match Display | v3.0 | 0/TBD | Not started | - |
+| 70. Navigation & Cross-Linking | v3.0 | 0/TBD | Not started | - |
+| 71. AI Content & FAQ Generation | v3.0 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-08 after phase 63 planning*
+*Last updated: 2026-02-11 after v3.0 roadmap creation*
