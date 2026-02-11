@@ -1,5 +1,7 @@
 import { desc, eq, and, or, sql, asc } from 'drizzle-orm';
 import { getDb, matches, competitions } from '@/lib/db';
+import { getLeaderboardWithTrends } from './stats';
+import type { LeaderboardEntryWithTrend } from './stats';
 
 export interface TeamStats {
   totalMatches: number;
@@ -286,4 +288,42 @@ export async function getTeamFormGuide(
   // Reverse to get chronological order (oldest → most recent)
   // So form reads left-to-right as earliest → latest
   return formResults.reverse();
+}
+
+export type TeamLeaderboardPeriod = 'all' | 'season' | 'monthly' | 'weekly';
+
+/**
+ * Get team-scoped model leaderboard with time period filtering
+ * Wraps getLeaderboardWithTrends with clubId filter
+ */
+export async function getTeamModelLeaderboard(
+  teamName: string,
+  options?: {
+    timePeriod?: TeamLeaderboardPeriod;
+    limit?: number;
+  }
+): Promise<LeaderboardEntryWithTrend[]> {
+  const timePeriod = options?.timePeriod ?? 'all';
+
+  // Map 'season' to dateFrom (current season start ~August)
+  // For 'weekly' and 'monthly', use the existing timePeriod support in getLeaderboardWithTrends
+  let mappedTimePeriod: 'all' | 'weekly' | 'monthly' = 'all';
+  let dateFrom: string | undefined;
+
+  if (timePeriod === 'weekly') {
+    mappedTimePeriod = 'weekly';
+  } else if (timePeriod === 'monthly') {
+    mappedTimePeriod = 'monthly';
+  } else if (timePeriod === 'season') {
+    // Current season start: August 1 of current or previous year
+    const now = new Date();
+    const seasonYear = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+    dateFrom = `${seasonYear}-08-01`;
+  }
+
+  return getLeaderboardWithTrends(options?.limit ?? 42, 'avgPoints', {
+    clubId: teamName,
+    timePeriod: mappedTimePeriod,
+    dateFrom,
+  });
 }
