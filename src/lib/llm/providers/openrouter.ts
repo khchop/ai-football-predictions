@@ -1,7 +1,15 @@
 import { OpenAICompatibleProvider } from './base';
-import { ModelPricing, ModelTier } from './together';
 import { PromptConfig, PromptVariant } from '../prompt-variants';
 import { ResponseHandler } from '../response-handlers';
+
+// Cost per 1M tokens (in USD)
+export interface ModelPricing {
+  promptPer1M: number;
+  completionPer1M: number;
+}
+
+// Tier determines budget priority
+export type ModelTier = 'free' | 'ultra-budget' | 'budget' | 'premium';
 
 // Generic OpenRouter provider that can be configured for any model
 export class OpenRouterProvider extends OpenAICompatibleProvider {
@@ -87,7 +95,10 @@ export const Qwen3_235B_OR = new OpenRouterProvider(
   'budget',
   { promptPer1M: 0.12, completionPer1M: 0.18 },
   false,
-  {}
+  {
+    maxTokensSingle: 500,
+    maxTokensBatch: 1000,
+  }
 );
 
 // 3. Llama 4 Scout
@@ -276,7 +287,10 @@ export const DeepSeekV31_OR = new OpenRouterProvider(
   'budget',
   { promptPer1M: 0.15, completionPer1M: 0.75 },
   false,
-  {}
+  {
+    maxTokensSingle: 500,
+    maxTokensBatch: 1000,
+  }
 );
 
 // 18. Kimi K2 0905
@@ -312,7 +326,11 @@ export const KimiK25_OR = new OpenRouterProvider(
   'budget',
   { promptPer1M: 0.45, completionPer1M: 2.25 },
   false,
-  {}
+  {
+    supportsJsonMode: false,
+    maxTokensSingle: 2000,
+    maxTokensBatch: 3000,
+  }
 );
 
 // 21. GPT-OSS 20B
@@ -324,7 +342,11 @@ export const GPTOSS20B_OR = new OpenRouterProvider(
   'ultra-budget',
   { promptPer1M: 0.03, completionPer1M: 0.14 },
   false,
-  {}
+  {
+    supportsJsonMode: false,
+    maxTokensSingle: 300,
+    maxTokensBatch: 1000,
+  }
 );
 
 // 22. Mistral Small 3 24B
@@ -598,52 +620,71 @@ export const DeepSeekR1_0528_OR = new OpenRouterProvider(
 );
 
 // ============================================================================
-// ALL OPENROUTER PROVIDERS (38)
+// ALL OPENROUTER PROVIDERS (38 models)
+// OpenRouter is now the sole LLM provider for all predictions and content generation
+// Organized by model family for clarity
 // ============================================================================
 
 export const OPENROUTER_PROVIDERS: OpenRouterProvider[] = [
-  // Existing (3)
-  DeepSeekR1_OR,
-  Qwen3_235B_OR,
-  Llama4Scout_OR,
-  // Together AI fallbacks - Batch 1 (13)
-  Llama4Maverick_OR,
-  Llama33_70B_OR,
-  Llama31_8B_OR,
-  Llama31_405B_OR,
-  Llama32_3B_OR,
-  Llama3_8B_OR,
-  Llama3_70B_OR,
-  Qwen3Next80B_OR,
-  Qwen25_7B_OR,
-  Qwen25_72B_OR,
-  Cogito671B_OR,
-  Ministral3_14B_OR,
-  RNJ1Instruct_OR,
-  // Together AI fallbacks - Batch 2 (10)
-  DeepSeekV31_OR,
-  KimiK2_0905_OR,
-  KimiK2Instruct_OR,
-  KimiK25_OR,
-  GPTOSS20B_OR,
-  MistralSmall3_24B_OR,
-  Mistral7Bv02_OR,
-  Mistral7Bv03_OR,
-  NemotronNano9Bv2_OR,
-  Gemma3nE4B_OR,
-  // Synthetic fallbacks - Batch 1 (6)
-  DeepSeekV32_OR,
-  MiniMaxM2_OR,
-  MiniMaxM21_OR,
-  GLM46_OR,
-  GLM47_OR,
-  Qwen3Coder480B_OR,
-  // Synthetic fallbacks - Batch 2 (4)
-  Qwen3_235BThinking_OR,
-  DeepSeekV3_0324_OR,
-  DeepSeekV31Terminus_OR,
-  GPTOSS120B_OR,
-  // OpenRouter-only primaries (2)
-  GLM47Flash_OR,
-  DeepSeekR1_0528_OR,
+  // DeepSeek (8 models)
+  DeepSeekR1_OR,              // Reasoning model (premium)
+  DeepSeekV31_OR,             // V3.1 primary
+  DeepSeekV32_OR,             // V3.2
+  DeepSeekV3_0324_OR,         // V3 0324 snapshot
+  DeepSeekV31Terminus_OR,     // V3.1 Terminus variant
+  DeepSeekR1_0528_OR,         // R1 0528 snapshot
+
+  // Moonshot Kimi (3 models)
+  KimiK2_0905_OR,             // K2 0905 snapshot
+  KimiK2Instruct_OR,          // K2 Instruct
+  KimiK25_OR,                 // K2.5 (reasoning model)
+
+  // Qwen (7 models)
+  Qwen3_235B_OR,              // 235B primary
+  Qwen3_235BThinking_OR,      // 235B Thinking variant
+  Qwen3Next80B_OR,            // Next 80B
+  Qwen3Coder480B_OR,          // Coder 480B (premium)
+  Qwen25_7B_OR,               // 2.5 7B
+  Qwen25_72B_OR,              // 2.5 72B
+
+  // Meta Llama (8 models)
+  Llama4Maverick_OR,          // Llama 4 Maverick
+  Llama4Scout_OR,             // Llama 4 Scout
+  Llama33_70B_OR,             // Llama 3.3 70B
+  Llama31_8B_OR,              // Llama 3.1 8B (free tier)
+  Llama31_405B_OR,            // Llama 3.1 405B
+  Llama32_3B_OR,              // Llama 3.2 3B (free tier)
+  Llama3_8B_OR,               // Llama 3 8B (free tier)
+  Llama3_70B_OR,              // Llama 3 70B
+
+  // OpenAI OSS (2 models)
+  GPTOSS20B_OR,               // GPT-OSS 20B
+  GPTOSS120B_OR,              // GPT-OSS 120B
+
+  // Deep Cogito (1 model)
+  Cogito671B_OR,              // Cogito 671B
+
+  // Mistral (4 models)
+  Ministral3_14B_OR,          // Ministral 3 14B
+  MistralSmall3_24B_OR,       // Mistral Small 3 24B
+  Mistral7Bv02_OR,            // Mistral 7B v0.2
+  Mistral7Bv03_OR,            // Mistral 7B v0.3
+
+  // NVIDIA (1 model)
+  NemotronNano9Bv2_OR,        // Nemotron Nano 9B v2
+
+  // Google (1 model)
+  Gemma3nE4B_OR,              // Gemma 3n E4B (free tier)
+
+  // Z-AI GLM (3 models)
+  GLM46_OR,                   // GLM 4.6
+  GLM47_OR,                   // GLM 4.7
+  GLM47Flash_OR,              // GLM 4.7 Flash
+
+  // MiniMax (2 models)
+  MiniMaxM2_OR,               // MiniMax M2
+  MiniMaxM21_OR,              // MiniMax M2.1
+
+  // Essential AI (1 model)
+  RNJ1Instruct_OR,            // RNJ-1 Instruct
 ];

@@ -10,7 +10,7 @@ import { sql } from 'drizzle-orm';
 import { getDb, matchPreviews, blogPosts, matchContent, matchRoundups } from '@/lib/db';
 import { loggers } from '@/lib/logger/modules';
 import type { NewMatchPreview, NewBlogPost, NewMatchRoundup } from '@/lib/db/schema';
-import { generateWithTogetherAI } from './together-client';
+import { generateWithOpenRouter } from './together-client';
 import {
   buildMatchPreviewPrompt,
   buildLeagueRoundupPrompt,
@@ -113,7 +113,7 @@ export async function generateMatchPreview(matchData: {
     predictionConsensus,
   });
 
-  const result = await generateWithTogetherAI<MatchPreviewResponse>(systemPrompt, userPrompt);
+  const result = await generateWithOpenRouter<MatchPreviewResponse>(systemPrompt, userPrompt);
 
   // Sanitize all text fields before save
   const introduction = sanitizeContent(result.content.introduction);
@@ -249,9 +249,9 @@ export async function generateLeagueRoundup(roundupData: {
     standingsTop5: roundupData.standings?.slice(0, 5),
   });
 
-  let result: Awaited<ReturnType<typeof generateWithTogetherAI<ArticleResponse>>>;
+  let result: Awaited<ReturnType<typeof generateWithOpenRouter<ArticleResponse>>>;
   try {
-    result = await generateWithTogetherAI<ArticleResponse>(systemPrompt, userPrompt);
+    result = await generateWithOpenRouter<ArticleResponse>(systemPrompt, userPrompt);
   } catch (error: any) {
     throw new RetryableContentError(
       `League roundup generation failed: ${error.message}`,
@@ -358,9 +358,9 @@ export async function generateModelReport(reportData: {
     overallStats: reportData.overallStats,
   });
 
-  let result: Awaited<ReturnType<typeof generateWithTogetherAI<ArticleResponse>>>;
+  let result: Awaited<ReturnType<typeof generateWithOpenRouter<ArticleResponse>>>;
   try {
-    result = await generateWithTogetherAI<ArticleResponse>(systemPrompt, userPrompt);
+    result = await generateWithOpenRouter<ArticleResponse>(systemPrompt, userPrompt);
   } catch (error: any) {
     throw new RetryableContentError(
       `Model report generation failed: ${error.message}`,
@@ -668,7 +668,7 @@ export async function generatePostMatchRoundup(matchId: string): Promise<string>
   const systemPrompt = 'You are an AI prediction analyst. You write about how AI models performed in predicting football match outcomes. You never discuss match events, tactics, or player performances — only model predictions, accuracy, and scoring.';
 
   // 10. Generate with LLM (temperature 0.3-0.5 for factual content)
-  const result = await generateWithTogetherAI<PostMatchRoundupResponse>(
+  const result = await generateWithOpenRouter<PostMatchRoundupResponse>(
     systemPrompt,
     userPrompt,
     0.4, // Temperature 0.3-0.5 for factual content
@@ -732,7 +732,7 @@ ${angleInstruction}
 IMPORTANT: Write this roundup from a completely different angle than typical match reports. Avoid phrases and structures used in standard football journalism.`;
 
     // Regenerate with LLM
-    const regenResult = await generateWithTogetherAI<PostMatchRoundupResponse>(
+    const regenResult = await generateWithOpenRouter<PostMatchRoundupResponse>(
       systemPrompt,
       regenerationUserPrompt,
       0.5, // Slightly higher temperature for variation

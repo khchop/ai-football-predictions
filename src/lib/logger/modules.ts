@@ -48,7 +48,7 @@ export const loggers = {
   // Content & LLM
   content: createLogger('content'),
   llm: createLogger('llm'),
-  togetherClient: createLogger('together-client'),
+  openrouterClient: createLogger('openrouter-client'),
   
   // App
   instrumentation: createLogger('instrumentation'),

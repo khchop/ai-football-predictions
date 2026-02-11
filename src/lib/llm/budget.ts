@@ -2,7 +2,7 @@ import { getDb } from '@/lib/db';
 import { modelUsage } from '@/lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
-import { TogetherProvider, ModelTier } from './providers/together';
+import { OpenRouterProvider, ModelTier } from './providers/openrouter';
 
 // Get today's date in YYYY-MM-DD format
 function getTodayDate(): string {
@@ -45,9 +45,9 @@ export async function canAffordPrediction(estimatedCost: number): Promise<boolea
 
 // Check if a provider should be skipped based on tier and budget
 export async function shouldSkipProvider(
-  provider: TogetherProvider | { tier?: ModelTier; estimateCost?: (i: number, o: number) => number }
+  provider: OpenRouterProvider | { tier?: ModelTier; estimateCost?: (i: number, o: number) => number }
 ): Promise<{ skip: boolean; reason?: string }> {
-  // Non-Together AI providers (if any) are considered free tier
+  // Non-OpenRouter providers (if any) are considered free tier
   if (!('tier' in provider) || !provider.tier) {
     return { skip: false };
   }

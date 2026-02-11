@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getDb, matchContent, matches, matchAnalysis, bets, models, predictions } from '@/lib/db';
 import { getOverallStats } from '@/lib/db/queries';
 import { loggers } from '@/lib/logger/modules';
-import { generateTextWithTogetherAI, generateWithTogetherAI } from './together-client';
+import { generateTextWithOpenRouter, generateWithOpenRouter } from './together-client';
 import { CONTENT_CONFIG, estimateContentCost } from './config';
 import { eq, desc } from 'drizzle-orm';
 import { format } from 'date-fns';
@@ -162,7 +162,7 @@ Write flowing prose without headers.`;
      const systemPrompt = 'You are a professional football analyst writing a pre-match market summary for betting enthusiasts.';
 
      // Generate content (returns raw text, no JSON parsing)
-     const result = await generateTextWithTogetherAI(
+     const result = await generateTextWithOpenRouter(
        systemPrompt,
        prompt,
        0.7,
@@ -364,7 +364,7 @@ Write flowing prose without headers.`;
        'You are a data analyst summarizing AI football model predictions for betting insights.';
 
      // Generate content (returns raw text, no JSON parsing)
-     const result = await generateTextWithTogetherAI(
+     const result = await generateTextWithOpenRouter(
        systemPrompt,
        prompt,
        0.7,
@@ -585,7 +585,7 @@ Write flowing prose without headers.`;
        'You are a sports analyst writing match reports and AI model performance summaries.';
 
      // Generate content (returns raw text, no JSON parsing)
-     const result = await generateTextWithTogetherAI(
+     const result = await generateTextWithOpenRouter(
        systemPrompt,
        prompt,
        0.7,
@@ -855,7 +855,7 @@ Example format:
     console.log('[generateFAQContent] Calling Together AI...');
 
     // Generate structured FAQ content
-    const result = await generateWithTogetherAI<FAQItem[]>(
+    const result = await generateWithOpenRouter<FAQItem[]>(
       systemPrompt,
       prompt,
       0.7,

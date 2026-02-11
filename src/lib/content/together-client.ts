@@ -1,37 +1,37 @@
 /**
- * Content Generation Client (DeepSeek V3.1 via Together API)
+ * Content Generation Client (DeepSeek V3.1 via OpenRouter)
  *
  * Uses DeepSeek V3.1 for high-quality content generation with JSON schema support.
- * Falls back to Llama 4 Maverick via Together API on failure.
+ * Falls back to Llama 4 Maverick via OpenRouter on failure.
  */
 
 import { fetchWithRetry } from '@/lib/utils/api-client';
 import { loggers } from '@/lib/logger/modules';
 import {
-  TOGETHER_CONTENT_RETRY,
-  TOGETHER_CONTENT_TIMEOUT_MS,
-  TOGETHER_CONTENT_FALLBACK_RETRY,
-  TOGETHER_CONTENT_FALLBACK_TIMEOUT_MS,
+  OPENROUTER_CONTENT_RETRY,
+  OPENROUTER_CONTENT_TIMEOUT_MS,
+  OPENROUTER_CONTENT_FALLBACK_RETRY,
+  OPENROUTER_CONTENT_FALLBACK_TIMEOUT_MS,
   SERVICE_NAMES,
   type ServiceName,
 } from '@/lib/utils/retry-config';
 import type { RetryConfig } from '@/lib/utils/api-client';
 
-interface TogetherMessage {
+interface OpenRouterMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
 
-interface TogetherRequest {
+interface OpenRouterRequest {
   model: string;
-  messages: TogetherMessage[];
+  messages: OpenRouterMessage[];
   temperature?: number;
   max_tokens?: number;
   top_p?: number;
   response_format?: { type: string };
 }
 
-interface TogetherResponse {
+interface OpenRouterResponse {
   id: string;
   model: string;
   choices: Array<{
@@ -69,19 +69,19 @@ interface TextGenerationResult {
 }
 
 // Configuration
-const MODEL = 'deepseek-ai/DeepSeek-V3.1';
-const API_URL = 'https://api.together.xyz/v1/chat/completions';
+const MODEL = 'deepseek/deepseek-chat-v3.1';
+const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const PRICING = {
-  inputCostPerMillion: 0.60,  // USD per 1M tokens
-  outputCostPerMillion: 1.70, // USD per 1M tokens
+  inputCostPerMillion: 0.15,  // USD per 1M tokens
+  outputCostPerMillion: 0.75, // USD per 1M tokens
 };
 
 // Fallback model config (when primary DeepSeek V3.1 fails)
-const FALLBACK_MODEL = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
-const FALLBACK_API_URL = 'https://api.together.xyz/v1/chat/completions';
+const FALLBACK_MODEL = 'meta-llama/llama-4-maverick-17b-128e-instruct';
+const FALLBACK_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const FALLBACK_PRICING = {
-  inputCostPerMillion: 0.27,
-  outputCostPerMillion: 0.85,
+  inputCostPerMillion: 0.10,
+  outputCostPerMillion: 0.25,
 };
 
 /**
@@ -118,15 +118,15 @@ async function callContentAPI(params: {
   apiUrl: string;
   apiKey: string;
   model: string;
-  messages: TogetherMessage[];
+  messages: OpenRouterMessage[];
   temperature: number;
   maxTokens: number;
   retryConfig: Partial<RetryConfig>;
   timeoutMs: number;
   serviceName: ServiceName;
   responseFormat?: { type: string };
-}): Promise<TogetherResponse> {
-  const request: TogetherRequest = {
+}): Promise<OpenRouterResponse> {
+  const request: OpenRouterRequest = {
     model: params.model,
     messages: params.messages,
     temperature: params.temperature,
@@ -142,6 +142,8 @@ async function callContentAPI(params: {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${params.apiKey}`,
+        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+        'X-Title': 'Football AI Predictions',
       },
       body: JSON.stringify(request),
     },
@@ -155,7 +157,7 @@ async function callContentAPI(params: {
     throw new Error(`API error (${response.status}): ${errorText}`);
   }
 
-  const data = await response.json() as TogetherResponse;
+  const data = await response.json() as OpenRouterResponse;
 
   if (!data.choices || data.choices.length === 0) {
     throw new Error('No response from API');
@@ -197,22 +199,22 @@ function cleanJSONString(jsonString: string): string {
 }
 
 /**
- * Generate content using DeepSeek V3.1 via Together API
- * Falls back to Llama 4 Maverick via Together API if primary fails
+ * Generate content using DeepSeek V3.1 via OpenRouter
+ * Falls back to Llama 4 Maverick via OpenRouter if primary fails
  */
-export async function generateWithTogetherAI<T = unknown>(
+export async function generateWithOpenRouter<T = unknown>(
   systemPrompt: string,
   userPrompt: string,
   temperature: number = 0.7,
   maxTokens: number = 3000
 ): Promise<GenerationResult<T>> {
-  const apiKey = process.env.TOGETHER_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
-    throw new Error('TOGETHER_API_KEY environment variable is not set');
+    throw new Error('OPENROUTER_API_KEY environment variable is not set');
   }
 
-  const messages: TogetherMessage[] = [
+  const messages: OpenRouterMessage[] = [
     { role: 'system', content: systemPrompt },
     { role: 'user', content: userPrompt },
   ];
@@ -229,9 +231,9 @@ export async function generateWithTogetherAI<T = unknown>(
       messages,
       temperature,
       maxTokens,
-      retryConfig: TOGETHER_CONTENT_RETRY,
-      timeoutMs: TOGETHER_CONTENT_TIMEOUT_MS,
-      serviceName: SERVICE_NAMES.TOGETHER_CONTENT,
+      retryConfig: OPENROUTER_CONTENT_RETRY,
+      timeoutMs: OPENROUTER_CONTENT_TIMEOUT_MS,
+      serviceName: SERVICE_NAMES.OPENROUTER_CONTENT,
       responseFormat: { type: 'json_object' },
     });
 
@@ -240,12 +242,12 @@ export async function generateWithTogetherAI<T = unknown>(
     const cost = calculateCost(usage.prompt_tokens, usage.completion_tokens, PRICING);
     const duration = Date.now() - startTime;
 
-    loggers.togetherClient.info({
+    loggers.openrouterClient.info({
       duration,
       inputTokens: usage.prompt_tokens,
       outputTokens: usage.completion_tokens,
       cost,
-    }, 'Content generated (DeepSeek V3.1)');
+    }, 'Content generated (DeepSeek V3.1 via OpenRouter)');
 
     // Parse JSON response
     let parsedContent: T;
@@ -284,7 +286,7 @@ export async function generateWithTogetherAI<T = unknown>(
       parsedContent = JSON.parse(jsonString) as T;
     } catch (parseError) {
       // If JSON parsing fails, log and throw with more context
-      loggers.togetherClient.error({
+      loggers.openrouterClient.error({
         content: content.substring(0, 500), // First 500 chars for debugging
         error: parseError instanceof Error ? parseError.message : 'Unknown parse error'
       }, 'Failed to parse response as JSON');
@@ -303,10 +305,10 @@ export async function generateWithTogetherAI<T = unknown>(
     };
   } catch (error) {
     primaryError = error instanceof Error ? error : new Error(String(error));
-    loggers.togetherClient.warn({ error: primaryError.message }, 'Primary content generation failed (DeepSeek V3.1), attempting fallback');
+    loggers.openrouterClient.warn({ error: primaryError.message }, 'Primary content generation failed (DeepSeek V3.1), attempting fallback');
   }
 
-  // Try fallback model (Llama 4 Maverick)
+  // Try fallback model (Llama 4 Maverick via OpenRouter)
   try {
     const data = await callContentAPI({
       apiUrl: FALLBACK_API_URL,
@@ -315,9 +317,9 @@ export async function generateWithTogetherAI<T = unknown>(
       messages,
       temperature,
       maxTokens,
-      retryConfig: TOGETHER_CONTENT_FALLBACK_RETRY,
-      timeoutMs: TOGETHER_CONTENT_FALLBACK_TIMEOUT_MS,
-      serviceName: SERVICE_NAMES.TOGETHER_CONTENT_FALLBACK,
+      retryConfig: OPENROUTER_CONTENT_FALLBACK_RETRY,
+      timeoutMs: OPENROUTER_CONTENT_FALLBACK_TIMEOUT_MS,
+      serviceName: SERVICE_NAMES.OPENROUTER_CONTENT_FALLBACK,
     });
 
     const content = data.choices[0].message.content;
@@ -325,12 +327,12 @@ export async function generateWithTogetherAI<T = unknown>(
     const cost = calculateCost(usage.prompt_tokens, usage.completion_tokens, FALLBACK_PRICING);
     const duration = Date.now() - startTime;
 
-    loggers.togetherClient.info({
+    loggers.openrouterClient.info({
       duration,
       inputTokens: usage.prompt_tokens,
       outputTokens: usage.completion_tokens,
       cost,
-    }, 'Content generated (Llama 4 Maverick FALLBACK)');
+    }, 'Content generated (Llama 4 Maverick FALLBACK via OpenRouter)');
 
     // Parse JSON response
     let parsedContent: T;
@@ -369,7 +371,7 @@ export async function generateWithTogetherAI<T = unknown>(
       parsedContent = JSON.parse(jsonString) as T;
     } catch (parseError) {
       // If JSON parsing fails, log and throw with more context
-      loggers.togetherClient.error({
+      loggers.openrouterClient.error({
         content: content.substring(0, 500), // First 500 chars for debugging
         error: parseError instanceof Error ? parseError.message : 'Unknown parse error'
       }, 'Failed to parse fallback response as JSON');
@@ -387,7 +389,7 @@ export async function generateWithTogetherAI<T = unknown>(
       cost,
     };
   } catch (fallbackError) {
-    loggers.togetherClient.error({
+    loggers.openrouterClient.error({
       primaryError: primaryError?.message,
       fallbackError: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
     }, 'Both primary and fallback content generation failed');
@@ -396,23 +398,23 @@ export async function generateWithTogetherAI<T = unknown>(
 }
 
 /**
- * Generate plain text content using DeepSeek V3.1 via Together API
+ * Generate plain text content using DeepSeek V3.1 via OpenRouter
  * Use this for prose content (match summaries, descriptions) that doesn't need JSON structure.
  * Avoids JSON parsing errors by returning raw text directly.
  */
-export async function generateTextWithTogetherAI(
+export async function generateTextWithOpenRouter(
   systemPrompt: string,
   userPrompt: string,
   temperature: number = 0.7,
   maxTokens: number = 1000
 ): Promise<TextGenerationResult> {
-  const apiKey = process.env.TOGETHER_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
-    throw new Error('TOGETHER_API_KEY environment variable is not set');
+    throw new Error('OPENROUTER_API_KEY environment variable is not set');
   }
 
-  const messages: TogetherMessage[] = [
+  const messages: OpenRouterMessage[] = [
     { role: 'system', content: systemPrompt },
     { role: 'user', content: userPrompt },
   ];
@@ -429,9 +431,9 @@ export async function generateTextWithTogetherAI(
       messages,
       temperature,
       maxTokens,
-      retryConfig: TOGETHER_CONTENT_RETRY,
-      timeoutMs: TOGETHER_CONTENT_TIMEOUT_MS,
-      serviceName: SERVICE_NAMES.TOGETHER_CONTENT,
+      retryConfig: OPENROUTER_CONTENT_RETRY,
+      timeoutMs: OPENROUTER_CONTENT_TIMEOUT_MS,
+      serviceName: SERVICE_NAMES.OPENROUTER_CONTENT,
     });
 
     const content = data.choices[0].message.content;
@@ -439,12 +441,12 @@ export async function generateTextWithTogetherAI(
     const cost = calculateCost(usage.prompt_tokens, usage.completion_tokens, PRICING);
     const duration = Date.now() - startTime;
 
-    loggers.togetherClient.info({
+    loggers.openrouterClient.info({
       duration,
       inputTokens: usage.prompt_tokens,
       outputTokens: usage.completion_tokens,
       cost,
-    }, 'Text content generated (DeepSeek V3.1)');
+    }, 'Text content generated (DeepSeek V3.1 via OpenRouter)');
 
     return {
       content,
@@ -457,10 +459,10 @@ export async function generateTextWithTogetherAI(
     };
   } catch (error) {
     primaryError = error instanceof Error ? error : new Error(String(error));
-    loggers.togetherClient.warn({ error: primaryError.message }, 'Primary text generation failed (DeepSeek V3.1), attempting fallback');
+    loggers.openrouterClient.warn({ error: primaryError.message }, 'Primary text generation failed (DeepSeek V3.1), attempting fallback');
   }
 
-  // Try fallback model (Llama 4 Maverick)
+  // Try fallback model (Llama 4 Maverick via OpenRouter)
   try {
     const data = await callContentAPI({
       apiUrl: FALLBACK_API_URL,
@@ -469,9 +471,9 @@ export async function generateTextWithTogetherAI(
       messages,
       temperature,
       maxTokens,
-      retryConfig: TOGETHER_CONTENT_FALLBACK_RETRY,
-      timeoutMs: TOGETHER_CONTENT_FALLBACK_TIMEOUT_MS,
-      serviceName: SERVICE_NAMES.TOGETHER_CONTENT_FALLBACK,
+      retryConfig: OPENROUTER_CONTENT_FALLBACK_RETRY,
+      timeoutMs: OPENROUTER_CONTENT_FALLBACK_TIMEOUT_MS,
+      serviceName: SERVICE_NAMES.OPENROUTER_CONTENT_FALLBACK,
     });
 
     const content = data.choices[0].message.content;
@@ -479,12 +481,12 @@ export async function generateTextWithTogetherAI(
     const cost = calculateCost(usage.prompt_tokens, usage.completion_tokens, FALLBACK_PRICING);
     const duration = Date.now() - startTime;
 
-    loggers.togetherClient.info({
+    loggers.openrouterClient.info({
       duration,
       inputTokens: usage.prompt_tokens,
       outputTokens: usage.completion_tokens,
       cost,
-    }, 'Text content generated (Llama 4 Maverick FALLBACK)');
+    }, 'Text content generated (Llama 4 Maverick FALLBACK via OpenRouter)');
 
     return {
       content,
@@ -496,7 +498,7 @@ export async function generateTextWithTogetherAI(
       cost,
     };
   } catch (fallbackError) {
-    loggers.togetherClient.error({
+    loggers.openrouterClient.error({
       primaryError: primaryError?.message,
       fallbackError: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
     }, 'Both primary and fallback text generation failed');

@@ -38,14 +38,9 @@ const ENV_VARS: EnvVar[] = [
     description: 'API-Football API key for match data',
   },
   {
-    name: 'TOGETHER_API_KEY',
-    required: true,
-    description: 'Together AI API key for predictions',
-  },
-  {
     name: 'OPENROUTER_API_KEY',
-    required: false,
-    description: 'OpenRouter API key for content generation (optional)',
+    required: true,
+    description: 'OpenRouter API key for predictions and content generation',
   },
   
   // Admin

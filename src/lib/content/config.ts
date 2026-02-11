@@ -1,8 +1,8 @@
 /**
  * Content Generation Configuration
  *
- * Uses Kimi K2.5 via Together API for high-quality reasoning-based content.
- * Pricing: $1.00/M input, $3.00/M output
+ * Uses DeepSeek V3.1 via OpenRouter API for high-quality content generation.
+ * Pricing: $0.15/M input, $0.75/M output
  *
  * Estimated monthly volume:
  * - Match previews: ~280/month (65/week avg)
@@ -10,19 +10,19 @@
  * - Model reports: ~4/month (weekly instead of monthly)
  * Total: ~316 articles/month
  *
- * Cost estimate: ~$2.50/month
+ * Cost estimate: ~$0.60/month (75% cheaper than Together Kimi K2.5)
  */
 
 export const CONTENT_CONFIG = {
-  // Together API configuration (Kimi K2.5)
-  provider: 'together',
-  model: 'Moonshot/Kimi-k2.5',
-  apiUrl: 'https://api.together.xyz/v1/chat/completions',
+  // OpenRouter API configuration (DeepSeek V3.1)
+  provider: 'openrouter',
+  model: 'deepseek/deepseek-chat-v3.1',
+  apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
 
   // Token limits and pricing (for cost tracking)
   pricing: {
-    inputCostPerMillion: 1.00,  // USD
-    outputCostPerMillion: 3.00, // USD
+    inputCostPerMillion: 0.15,  // USD
+    outputCostPerMillion: 0.75, // USD
   },
   
   // Generation parameters (tuned for content quality)

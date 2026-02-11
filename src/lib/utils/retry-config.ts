@@ -139,33 +139,33 @@ export const TOGETHER_PREDICTION_TIMEOUT_MS = 25000;       // Increased from 20s
 export const TOGETHER_PREDICTION_BATCH_TIMEOUT_MS = 35000; // Increased from 30s to 35s for batch
 
 // ============================================================================
-// TOGETHER AI - CONTENT (DeepSeek V3.1)
-// Rate limit: Together AI plan limits
-// Typical latency: 5-15s for long-form content (non-reasoning model)
+// OPENROUTER - CONTENT (DeepSeek V3.1)
+// Rate limit: OpenRouter plan limits
+// Typical latency: 5-15s for long-form content
 // Reliability: High (99.5%)
 // ============================================================================
-export const TOGETHER_CONTENT_RETRY: Partial<RetryConfig> = {
+export const OPENROUTER_CONTENT_RETRY: Partial<RetryConfig> = {
   maxRetries: 3,
   baseDelayMs: 2000,      // 2s base delay (longer responses)
   maxDelayMs: 30000,      // 30s max delay
   retryableStatusCodes: [408, 429, 500, 502, 503, 504],
 };
 
-export const TOGETHER_CONTENT_TIMEOUT_MS = 60000; // 60s timeout for DeepSeek V3.1 content generation
+export const OPENROUTER_CONTENT_TIMEOUT_MS = 60000; // 60s timeout for DeepSeek V3.1 content generation
 
 // ============================================================================
-// TOGETHER AI - CONTENT FALLBACK (Llama 4 Maverick)
+// OPENROUTER - CONTENT FALLBACK (Llama 4 Maverick)
 // Used when primary DeepSeek V3.1 fails after all retries
-// Typical latency: 5-15s (faster than reasoning model)
+// Typical latency: 5-15s
 // ============================================================================
-export const TOGETHER_CONTENT_FALLBACK_RETRY: Partial<RetryConfig> = {
+export const OPENROUTER_CONTENT_FALLBACK_RETRY: Partial<RetryConfig> = {
   maxRetries: 2,            // Fewer retries - this IS the fallback
   baseDelayMs: 1500,
   maxDelayMs: 15000,
   retryableStatusCodes: [408, 429, 500, 502, 503, 504],
 };
 
-export const TOGETHER_CONTENT_FALLBACK_TIMEOUT_MS = 60000; // 60s - Llama 4 is faster
+export const OPENROUTER_CONTENT_FALLBACK_TIMEOUT_MS = 60000; // 60s timeout
 
 // ============================================================================
 // SERVICE NAMES (for circuit breaker and logging)
@@ -173,8 +173,8 @@ export const TOGETHER_CONTENT_FALLBACK_TIMEOUT_MS = 60000; // 60s - Llama 4 is f
 export const SERVICE_NAMES = {
   API_FOOTBALL: 'api-football',
   TOGETHER_PREDICTIONS: 'together-predictions',
-  TOGETHER_CONTENT: 'together-content', // DeepSeek V3.1 via Together API
-  TOGETHER_CONTENT_FALLBACK: 'together-content-fallback',
+  OPENROUTER_CONTENT: 'openrouter-content', // DeepSeek V3.1 via OpenRouter API
+  OPENROUTER_CONTENT_FALLBACK: 'openrouter-content-fallback',
 } as const;
 
 export type ServiceName = typeof SERVICE_NAMES[keyof typeof SERVICE_NAMES];

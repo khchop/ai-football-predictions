@@ -1,18 +1,14 @@
 import { LLMProvider } from '@/types';
 import { loggers } from '@/lib/logger/modules';
-import { TOGETHER_PROVIDERS } from './providers/together';
 import { OPENROUTER_PROVIDERS } from './providers/openrouter';
 import { getAutoDisabledModelIds } from '@/lib/db/queries';
 import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
 import { getDb, models } from '@/lib/db';
 import { eq, sql } from 'drizzle-orm';
 
-// Together AI core providers
-// OpenRouter providers are conditional (only in getActiveProviders when API key set)
-// Together: 23 active models = 23 total
-export const ALL_PROVIDERS: LLMProvider[] = [
-  ...TOGETHER_PROVIDERS,
-];
+// OpenRouter providers (sole provider)
+// OpenRouter: 38 active models = 38 total
+export const ALL_PROVIDERS: LLMProvider[] = [...OPENROUTER_PROVIDERS];
 
 // ============================================================================
 // MODEL PROVIDER ROUTES
@@ -32,37 +28,33 @@ export const ALL_PROVIDERS: LLMProvider[] = [
 // ============================================================================
 
 export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
-  // --- Together -> OpenRouter ---
-  'deepseek-r1': ['deepseek-r1', 'deepseek-r1-or'],
-  'llama-4-maverick': ['llama-4-maverick', 'llama-4-maverick-or'],
-  'llama-3.3-70b-turbo': ['llama-3.3-70b-turbo', 'llama-3.3-70b-or'],
-  'llama-3.1-8b-turbo': ['llama-3.1-8b-turbo', 'llama-3.1-8b-or'],
-  'llama-3.2-3b-turbo': ['llama-3.2-3b-turbo', 'llama-3.2-3b-or'],
-  'llama-3-8b-lite': ['llama-3-8b-lite', 'llama-3-8b-or'],
-  'qwen3-235b': ['qwen3-235b-instruct', 'qwen3-235b-or'],
-  'qwen3-next-80b': ['qwen3-next-80b-instruct', 'qwen3-next-80b-or'],
-  'qwen2.5-7b': ['qwen2.5-7b-turbo', 'qwen2.5-7b-or'],
-  'cogito-671b': ['cogito-671b', 'cogito-671b-or'],
-  'ministral-3-14b': ['ministral-3-14b', 'ministral-3-14b-or'],
-  'rnj-1-instruct': ['rnj-1-instruct', 'rnj-1-instruct-or'],
-  'deepseek-v3.1': ['deepseek-v3.1', 'deepseek-v3.1-or'],
-  'kimi-k2-0905': ['kimi-k2-0905', 'kimi-k2-0905-or'],
-  'kimi-k2-instruct': ['kimi-k2-instruct', 'kimi-k2-instruct-or'],
-  'kimi-k2.5': ['kimi-k2.5', 'kimi-k2.5-or'],
-  'gpt-oss-20b': ['gpt-oss-20b', 'gpt-oss-20b-or'],
-  'mistral-small-3-24b': ['mistral-small-3-24b', 'mistral-small-3-24b-or'],
-  'mistral-7b-v0.2': ['mistral-7b-v0.2', 'mistral-7b-v0.2-or'],
-  'mistral-7b-v0.3': ['mistral-7b-v0.3', 'mistral-7b-v0.3-or'],
-  'nemotron-nano-9b-v2': ['nemotron-nano-9b-v2', 'nemotron-nano-9b-v2-or'],
-  'gemma-3n-e4b': ['gemma-3n-e4b', 'gemma-3n-e4b-or'],
-
-  // --- OpenRouter-primary (migrated from Together, no longer serverless) ---
+  // --- All OpenRouter-only (single provider per model) ---
+  'deepseek-r1': ['deepseek-r1-or'],
+  'llama-4-maverick': ['llama-4-maverick-or'],
+  'llama-3.3-70b-turbo': ['llama-3.3-70b-or'],
+  'llama-3.1-8b-turbo': ['llama-3.1-8b-or'],
+  'llama-3.2-3b-turbo': ['llama-3.2-3b-or'],
+  'llama-3-8b-lite': ['llama-3-8b-or'],
+  'qwen3-235b': ['qwen3-235b-or'],
+  'qwen3-next-80b': ['qwen3-next-80b-or'],
+  'qwen2.5-7b': ['qwen2.5-7b-or'],
+  'cogito-671b': ['cogito-671b-or'],
+  'ministral-3-14b': ['ministral-3-14b-or'],
+  'rnj-1-instruct': ['rnj-1-instruct-or'],
+  'deepseek-v3.1': ['deepseek-v3.1-or'],
+  'kimi-k2-0905': ['kimi-k2-0905-or'],
+  'kimi-k2-instruct': ['kimi-k2-instruct-or'],
+  'kimi-k2.5': ['kimi-k2.5-or'],
+  'gpt-oss-20b': ['gpt-oss-20b-or'],
+  'mistral-small-3-24b': ['mistral-small-3-24b-or'],
+  'mistral-7b-v0.2': ['mistral-7b-v0.2-or'],
+  'mistral-7b-v0.3': ['mistral-7b-v0.3-or'],
+  'nemotron-nano-9b-v2': ['nemotron-nano-9b-v2-or'],
+  'gemma-3n-e4b': ['gemma-3n-e4b-or'],
   'llama-4-scout': ['llama-4-scout-or'],
   'llama-3.1-405b-turbo': ['llama-3.1-405b-or'],
   'llama-3-70b-reference': ['llama-3-70b-or'],
   'qwen2.5-72b': ['qwen2.5-72b-or'],
-
-  // --- OpenRouter-primary (migrated from Synthetic) ---
   'deepseek-v3.2': ['deepseek-v3.2-or'],
   'minimax-m2': ['minimax-m2-or'],
   'minimax-m2.1': ['minimax-m2.1-or'],
@@ -73,6 +65,7 @@ export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
   'deepseek-v3-0324': ['deepseek-v3-0324-or'],
   'deepseek-v3.1-terminus': ['deepseek-v3.1-terminus-or'],
   'gpt-oss-120b': ['gpt-oss-120b-or'],
+  // Note: Marin 8B removed (not available on OpenRouter)
 };
 
 /**
@@ -185,24 +178,11 @@ export async function getActiveProviders(): Promise<LLMProvider[]> {
 
   const activeProviders: LLMProvider[] = [];
 
-  // Add Together providers if API key configured
-  if (process.env.TOGETHER_API_KEY) {
-    activeProviders.push(
-      ...TOGETHER_PROVIDERS.filter(p => !disabledIds.has(p.id))
-    );
-  }
-
   // Add OpenRouter providers if API key configured
-  // Exclude fallback-only providers (those appearing as non-primary in routes)
+  // All models are now primary (single provider architecture)
   if (process.env.OPENROUTER_API_KEY) {
-    const fallbackProviderIds = new Set<string>();
-    for (const route of Object.values(MODEL_PROVIDER_ROUTES)) {
-      for (let i = 1; i < route.length; i++) {
-        fallbackProviderIds.add(route[i]);
-      }
-    }
     activeProviders.push(
-      ...OPENROUTER_PROVIDERS.filter(p => !disabledIds.has(p.id) && !fallbackProviderIds.has(p.id))
+      ...OPENROUTER_PROVIDERS.filter(p => !disabledIds.has(p.id))
     );
   }
 
@@ -218,21 +198,18 @@ export async function getActiveProviders(): Promise<LLMProvider[]> {
 
 // Get provider by ID
 export function getProviderById(id: string): LLMProvider | undefined {
-  // Check core providers first (Together)
-  const core = ALL_PROVIDERS.find(p => p.id === id);
-  if (core) return core;
-  // Check OpenRouter providers (conditional, but needed for routing)
+  // Check OpenRouter providers (sole provider)
   return OPENROUTER_PROVIDERS.find(p => p.id === id);
 }
 
 // Get all free providers
 export function getFreeProviders(): LLMProvider[] {
-  return ALL_PROVIDERS.filter(p => !p.isPremium);
+  return OPENROUTER_PROVIDERS.filter(p => !p.isPremium);
 }
 
 // Get all premium providers
 export function getPremiumProviders(): LLMProvider[] {
-  return ALL_PROVIDERS.filter(p => p.isPremium);
+  return OPENROUTER_PROVIDERS.filter(p => p.isPremium);
 }
 
 // Get provider count by category
@@ -242,19 +219,16 @@ export function getProviderStats(): {
   ultraBudget: number;
   budget: number;
   premium: number;
-  together: number;
   openrouter: number;
 } {
-  // Combine all provider arrays for tier counting
-  // TogetherProvider and OpenRouterProvider all have tier property
-  const allProviders = [...TOGETHER_PROVIDERS, ...OPENROUTER_PROVIDERS];
+  // OpenRouter is now the sole provider
+  const allProviders = OPENROUTER_PROVIDERS;
   return {
     total: allProviders.length,
     free: allProviders.filter(p => p.tier === 'free').length,
     ultraBudget: allProviders.filter(p => p.tier === 'ultra-budget').length,
     budget: allProviders.filter(p => p.tier === 'budget').length,
     premium: allProviders.filter(p => p.tier === 'premium').length,
-    together: TOGETHER_PROVIDERS.length,
     openrouter: OPENROUTER_PROVIDERS.length,
   };
 }
@@ -284,14 +258,10 @@ export async function getActiveModelCount(): Promise<number> {
 }
 
 // Export providers
-export { TOGETHER_PROVIDERS };
 export { OPENROUTER_PROVIDERS };
 
-// Re-export Together AI provider class for type checking
-export { TogetherProvider, type ModelTier, type ModelPricing } from './providers/together';
-
-// Re-export OpenRouter provider class
-export { OpenRouterProvider } from './providers/openrouter';
+// Re-export OpenRouter provider class and types
+export { OpenRouterProvider, type ModelTier, type ModelPricing } from './providers/openrouter';
 
 // Re-export batch prediction types
 export { type BatchPredictionResult } from './providers/base';
