@@ -11,18 +11,18 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 ## Current Position
 
 Phase: 68 of 71 (Routes, SEO & Basic Pages)
-Plan: 1 of 2 in current phase
-Status: Plan 68-01 complete
-Last activity: 2026-02-11 - Completed 68-01-PLAN.md (Team SEO Infrastructure)
+Plan: 2 of 2 in current phase
+Status: Plan 68-02 complete
+Last activity: 2026-02-11 - Completed 68-02-PLAN.md (Team Page Routes)
 
-Progress: [█████████████████████████████████████░░░░] 96% (62 of 66 v2.9 phases complete, v3.0 Phase 67-68 progress: 3 of 4 plans done)
+Progress: [█████████████████████████████████████████░] 97% (62 of 66 v2.9 phases complete, v3.0 Phase 67-68 complete: 4 of 4 plans done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 167 plans (phases 1-63, 67-01, 67-02, 68-01) + 3 quick tasks (quick-37, quick-38, quick-39)
+- Total plans completed: 168 plans (phases 1-63, 67-01, 67-02, 68-01, 68-02) + 3 quick tasks (quick-37, quick-38, quick-39)
 - Milestones shipped: 13 (v1.0 through v2.8), v2.9 95% complete
-- v3.0 in progress: Phase 67 complete (2/2), Phase 68 in progress (1/2 plans done, 2026-02-11)
+- v3.0 in progress: Phase 67 complete (2/2), Phase 68 complete (2/2 plans done, 2026-02-11)
 
 **Recent Milestones:**
 - v2.9 Provider Unification: 8 phases (59-66), in progress (phases 59-62 complete)
@@ -46,6 +46,8 @@ Recent decisions affecting current work:
 - v3.0 Phase 68-01: Inline stats types in metadata helpers to avoid circular dependencies
 - v3.0 Phase 68-01: Team sitemap quality filtering (5+ matches minimum)
 - v3.0 Phase 68-01: Parallel Promise.all for team stats in sitemap generation
+- [Phase 68-02]: Use 300s ISR revalidation for team detail pages (balance freshness vs performance)
+- [Phase 68-02]: Exclude international competitions from teams index (national teams, not clubs)
 
 ### Pending Todos
 
@@ -54,10 +56,11 @@ Recent decisions affecting current work:
 - Investigate 3 fixable Together AI empty-response failures (kimi-k2-instruct, nemotron-nano-9b-v2, gemma-3n-e4b)
 
 **v3.0 todos:**
-- Phase 67: ✅ Complete (67-01 team mapping, 67-02 stats queries & cache) - Deploy migration before Phase 68
-- Phase 68-01: ✅ Complete (team SEO infrastructure: metadata, schema, OG images, sitemap)
-- Phase 68-02: Implement team page components (next up)
-- Phase 68: Decide canonical URL strategy for duplicate content (leaderboard vs team pages)
+- Phase 67: ✅ Complete (67-01 team mapping, 67-02 stats queries & cache)
+- Phase 68: ✅ Complete (68-01 team SEO infrastructure, 68-02 team page routes)
+- Phase 69-71: Next up (team enhancements, predictions, AI content)
+- Post-68 deployment: Deploy Phase 67 migration before deploying Phase 68 pages
+- Decide canonical URL strategy for duplicate content (leaderboard vs team pages)
 - Phase 71: Estimate AI content generation cost (200+ teams × LLM calls)
 
 ### Blockers/Concerns
@@ -74,10 +77,10 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Phase 68-01 complete (team SEO infrastructure)
-Resume file: .planning/phases/68-routes-seo-basic-pages/68-02-PLAN.md (next plan)
+Stopped at: Phase 68 complete (team SEO infrastructure + team page routes)
+Resume file: .planning/phases/69-team-enhancements/69-01-PLAN.md (next phase)
 
-**Next action:** Execute Phase 68-02 (Team Page Components) - requires 68-01 SEO helpers
+**Next action:** Begin Phase 69 (Team Enhancements) - logos, enhanced stats, filtering
 
 ---
-*Last updated: 2026-02-11 after completing 68-01*
+*Last updated: 2026-02-11 after completing 68-02*
