@@ -46,6 +46,8 @@ export const matches = pgTable('matches', {
   index('idx_matches_kickoff_time').on(table.kickoffTime),
   index('idx_matches_status_kickoff').on(table.status, table.kickoffTime),
   index('idx_matches_slug').on(table.slug),
+  index('idx_matches_home_team').on(table.homeTeam),
+  index('idx_matches_away_team').on(table.awayTeam),
 ]);
 
 // LLM models we test
