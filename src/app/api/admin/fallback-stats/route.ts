@@ -4,7 +4,7 @@ import { sql } from 'drizzle-orm';
 import { requireAdminAuth } from '@/lib/utils/admin-auth';
 import { checkRateLimit, getRateLimitKey, createRateLimitHeaders, RATE_LIMIT_PRESETS } from '@/lib/utils/rate-limiter';
 import { sanitizeError } from '@/lib/utils/error-sanitizer';
-import { MODEL_PROVIDER_ROUTES, getProviderById, TogetherProvider, SyntheticProvider, OpenRouterProvider } from '@/lib/llm';
+import { MODEL_PROVIDER_ROUTES, getProviderById, TogetherProvider, OpenRouterProvider } from '@/lib/llm';
 
 interface FallbackStat {
   modelId: string;
@@ -48,8 +48,8 @@ function estimateCostForPredictions(providerId: string, count: number): number {
   const provider = getProviderById(providerId);
   if (!provider) return 0;
 
-  // Type guard: Only TogetherProvider, SyntheticProvider, and OpenRouterProvider have pricing
-  if (!(provider instanceof TogetherProvider) && !(provider instanceof SyntheticProvider) && !(provider instanceof OpenRouterProvider)) {
+  // Type guard: Only TogetherProvider and OpenRouterProvider have pricing
+  if (!(provider instanceof TogetherProvider) && !(provider instanceof OpenRouterProvider)) {
     return 0;
   }
 

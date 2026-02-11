@@ -471,7 +471,7 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
       };
     } catch (originalError) {
       // Get fallback provider for this model
-      // Dynamic import to break circular dependency: index.ts -> synthetic.ts -> base.ts -> index.ts
+      // Dynamic import to break circular dependency: index.ts -> base.ts -> index.ts
       const { getFallbackProvider } = await import('../index');
       const fallbackProvider = getFallbackProvider(this.id);
 

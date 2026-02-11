@@ -27,7 +27,6 @@
     "test:regression": "vitest run src/__tests__/integration/models/regression.test.ts",
     "test:regression:live": "vitest run src/__tests__/integration/models/all-models.test.ts",
     "validate:models": "npx tsx scripts/validate-all-models.ts",
-    "validate:synthetic": "npx tsx scripts/validate-synthetic-models.ts",
     "validate:model-ids": "npx tsx scripts/validate-model-ids.ts",
     "diagnose": "npx tsx scripts/diagnostic/run-diagnostics.ts",
     "analyze:timeouts": "npx tsx scripts/diagnostic/analyze-timeouts.ts",

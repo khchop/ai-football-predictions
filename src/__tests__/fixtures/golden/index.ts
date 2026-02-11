@@ -16,7 +16,7 @@ import allModelsFixtures from './all-models.json';
  */
 export interface GoldenFixture {
   modelId: string;
-  provider: 'together' | 'synthetic';
+  provider: 'together' | 'openrouter';
   success: boolean;
   parsed?: {
     match_id: string;
@@ -33,7 +33,7 @@ export interface GoldenFixture {
  */
 export const GoldenFixtures: Record<string, GoldenFixture> = allModelsFixtures.reduce(
   (acc, fixture) => {
-    acc[fixture.modelId] = fixture;
+    acc[fixture.modelId] = fixture as GoldenFixture;
     return acc;
   },
   {} as Record<string, GoldenFixture>
@@ -44,23 +44,23 @@ export const GoldenFixtures: Record<string, GoldenFixture> = allModelsFixtures.r
  * Use this for structural validation tests
  */
 export function getSuccessfulFixtures(): GoldenFixture[] {
-  return allModelsFixtures.filter((f) => f.success);
+  return allModelsFixtures.filter((f) => f.success) as GoldenFixture[];
 }
 
 /**
  * Get only failed fixtures (for debugging or failure analysis)
  */
 export function getFailedFixtures(): GoldenFixture[] {
-  return allModelsFixtures.filter((f) => !f.success);
+  return allModelsFixtures.filter((f) => !f.success) as GoldenFixture[];
 }
 
 /**
  * Get fixtures by provider type
  */
 export function getFixturesByProvider(
-  provider: 'together' | 'synthetic'
+  provider: 'together' | 'openrouter'
 ): GoldenFixture[] {
-  return allModelsFixtures.filter((f) => f.provider === provider);
+  return allModelsFixtures.filter((f) => f.provider === provider) as GoldenFixture[];
 }
 
 /**
@@ -86,19 +86,19 @@ export function getFixtureStats(): {
   successful: number;
   failed: number;
   togetherCount: number;
-  syntheticCount: number;
+  openrouterCount: number;
   successRate: number;
 } {
   const successful = getSuccessfulFixtures();
   const together = getFixturesByProvider('together');
-  const synthetic = getFixturesByProvider('synthetic');
+  const openrouter = getFixturesByProvider('openrouter');
 
   return {
     total: allModelsFixtures.length,
     successful: successful.length,
     failed: allModelsFixtures.length - successful.length,
     togetherCount: together.length,
-    syntheticCount: synthetic.length,
+    openrouterCount: openrouter.length,
     successRate:
       allModelsFixtures.length > 0
         ? Math.round((successful.length / allModelsFixtures.length) * 100)

@@ -2,15 +2,13 @@
  * Validate Model IDs Script
  *
  * Checks for duplicate model IDs across all provider arrays:
- * - TOGETHER_PROVIDERS (29 models)
- * - SYNTHETIC_PROVIDERS (13 models)
- * - OPENROUTER_PROVIDERS (N models)
+ * - TOGETHER_PROVIDERS (23 models)
+ * - OPENROUTER_PROVIDERS (38 models)
  *
  * Usage: npm run validate:model-ids
  */
 
 import { TOGETHER_PROVIDERS } from '../src/lib/llm/providers/together';
-import { SYNTHETIC_PROVIDERS } from '../src/lib/llm/providers/synthetic';
 import { OPENROUTER_PROVIDERS } from '../src/lib/llm/providers/openrouter';
 
 function main() {
@@ -18,12 +16,10 @@ function main() {
 
   const allProviders = [
     ...TOGETHER_PROVIDERS.map(p => ({ id: p.id, provider: 'together' as const, model: p.model })),
-    ...SYNTHETIC_PROVIDERS.map(p => ({ id: p.id, provider: 'synthetic' as const, model: p.model })),
     ...OPENROUTER_PROVIDERS.map(p => ({ id: p.id, provider: 'openrouter' as const, model: p.model })),
   ];
 
   console.log(`Together:   ${TOGETHER_PROVIDERS.length} models`);
-  console.log(`Synthetic:  ${SYNTHETIC_PROVIDERS.length} models`);
   console.log(`OpenRouter: ${OPENROUTER_PROVIDERS.length} models`);
   console.log(`Total:      ${allProviders.length} models\n`);
 

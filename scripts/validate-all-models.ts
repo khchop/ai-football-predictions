@@ -1,10 +1,9 @@
 /**
  * Validate All Models Script
  *
- * Tests all 42 LLM models (29 Together + 13 Synthetic) with sample predictions to verify:
+ * Tests all 23 Together AI LLM models with sample predictions to verify:
  * - JSON parsing works correctly
  * - All models return valid prediction structure
- * - Previously disabled models (Phase 40-41 rehabilitated) achieve >90% success rate
  *
  * Usage: npm run validate:models
  */
@@ -16,7 +15,7 @@ import path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 import pLimit from 'p-limit';
-import { ALL_PROVIDERS, TOGETHER_PROVIDERS, SYNTHETIC_PROVIDERS } from '../src/lib/llm';
+import { ALL_PROVIDERS, TOGETHER_PROVIDERS } from '../src/lib/llm';
 import { PredictionOutputSchema } from '../src/__tests__/schemas/prediction';
 import type { LLMProvider } from '../src/types';
 
@@ -154,7 +153,7 @@ async function validateModel(provider: LLMProvider): Promise<ValidationResult> {
 
 async function main() {
   console.log('\n=== All Models Validation ===\n');
-  console.log(`Testing ${ALL_PROVIDERS.length} models (${TOGETHER_PROVIDERS.length} Together + ${SYNTHETIC_PROVIDERS.length} Synthetic)\n`);
+  console.log(`Testing ${ALL_PROVIDERS.length} models (${TOGETHER_PROVIDERS.length} Together)\n`);
 
   // Check API keys
   const hasTogetherKey = !!process.env.TOGETHER_API_KEY;

@@ -27,7 +27,7 @@ describe('REGR-01: Golden Fixture Regression Tests', () => {
     console.log(`Successful: ${fixtureStats.successful} (${fixtureStats.successRate}%)`);
     console.log(`Failed: ${fixtureStats.failed}`);
     console.log(`Together AI: ${fixtureStats.togetherCount}`);
-    console.log(`Synthetic: ${fixtureStats.syntheticCount}`);
+    console.log(`OpenRouter: ${fixtureStats.openrouterCount}`);
     console.log('');
 
     if (fixtureStats.successful === 0) {
@@ -42,16 +42,12 @@ describe('REGR-01: Golden Fixture Regression Tests', () => {
   // ============================================================================
 
   describe('Model Count Validation', () => {
-    test('total fixture count matches expected (42 models)', () => {
-      expect(fixtureStats.total).toBe(42);
+    test('total fixture count matches expected (23 Together models)', () => {
+      expect(fixtureStats.total).toBe(23);
     });
 
-    test('Together AI model count is 29', () => {
-      expect(fixtureStats.togetherCount).toBe(29);
-    });
-
-    test('Synthetic model count is 13', () => {
-      expect(fixtureStats.syntheticCount).toBe(13);
+    test('Together AI model count is 23', () => {
+      expect(fixtureStats.togetherCount).toBe(23);
     });
   });
 
@@ -114,20 +110,20 @@ describe('REGR-01: Golden Fixture Regression Tests', () => {
   });
 
   // ============================================================================
-  // Fixture-Based Structural Tests (Synthetic Models)
+  // Fixture-Based Structural Tests (OpenRouter Models)
   // ============================================================================
 
-  describe('Synthetic Models - Structural Validation', () => {
-    const syntheticFixtures = getFixturesByProvider('synthetic').filter(
+  describe('OpenRouter Models - Structural Validation', () => {
+    const openrouterFixtures = getFixturesByProvider('openrouter').filter(
       (f) => f.success
     );
 
-    if (syntheticFixtures.length === 0) {
-      test.skip('no successful Synthetic fixtures available', () => {});
+    if (openrouterFixtures.length === 0) {
+      test.skip('no successful OpenRouter fixtures available', () => {});
       return;
     }
 
-    describe.each(syntheticFixtures)('$modelId', (fixture: GoldenFixture) => {
+    describe.each(openrouterFixtures)('$modelId', (fixture: GoldenFixture) => {
       test('parsed data passes PredictionOutputSchema', () => {
         expect(fixture.parsed).toBeDefined();
 
