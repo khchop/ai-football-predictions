@@ -297,14 +297,15 @@ Plans:
 **Success Criteria** (what must be TRUE):
 1. Team pages display AI-generated club analysis highlighting form patterns and model prediction trends
 2. Team pages include 5-7 club-specific FAQ questions with FAQPage schema markup
-3. AI content generation uses rate-limited queue to prevent Together AI API limits
+3. AI content generation uses rate-limited queue to prevent OpenRouter API limits
 4. FAQ content is dynamically enriched with actual team stats and recent match data
 5. Generated content is cached in database with 24h refresh cycle
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 71-01: TBD
+- [ ] 71-01-PLAN.md -- Database schema (teamContent table), content queries, and AI generation functions (analysis + FAQs)
+- [ ] 71-02-PLAN.md -- BullMQ queue/worker with rate limiting, weekly cron schedule, and team page UI integration with FAQPage schema
 
 ## Progress
 
@@ -380,7 +381,7 @@ Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> (63-66 superseded) -> 6
 | 68. Routes, SEO & Basic Pages | v3.0 | 2/2 | Complete | 2026-02-11 |
 | 69. UI Components & Match Display | v3.0 | 2/2 | Complete | 2026-02-11 |
 | 70. Navigation & Cross-Linking | v3.0 | 2/2 | Complete | 2026-02-11 |
-| 71. AI Content & FAQ Generation | v3.0 | 0/TBD | Not started | - |
+| 71. AI Content & FAQ Generation | v3.0 | 0/2 | Not started | - |
 
 ---
 *Last updated: 2026-02-11 — v2.9 complete (phases 63-66 superseded by quick-040/041), v3.0 phases 67-70 complete*
