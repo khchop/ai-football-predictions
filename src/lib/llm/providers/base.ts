@@ -13,7 +13,7 @@ import { loggers } from '@/lib/logger/modules';
 
 const logger = loggers.llm;
 import { fetchWithRetry, APIError, RateLimitError } from '@/lib/utils/api-client';
-import { TOGETHER_PREDICTION_RETRY, TOGETHER_PREDICTION_TIMEOUT_MS, TOGETHER_PREDICTION_BATCH_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
+import { OPENROUTER_PREDICTION_RETRY, OPENROUTER_PREDICTION_TIMEOUT_MS, OPENROUTER_PREDICTION_BATCH_TIMEOUT_MS, SERVICE_NAMES } from '@/lib/utils/retry-config';
 import { PromptVariant, PromptConfig, getEnhancedSystemPrompt } from '../prompt-variants';
 import { ResponseHandler, RESPONSE_HANDLERS } from '../response-handlers';
 
@@ -248,9 +248,9 @@ export abstract class OpenAICompatibleProvider extends BaseLLMProvider {
              ...(supportsJsonMode ? { response_format: { type: 'json_object' } } : {}),
            }),
          },
-         TOGETHER_PREDICTION_RETRY,
+         OPENROUTER_PREDICTION_RETRY,
          timeout,
-         SERVICE_NAMES.TOGETHER_PREDICTIONS
+         SERVICE_NAMES.OPENROUTER_PREDICTIONS
        );
 
       if (!response.ok) {

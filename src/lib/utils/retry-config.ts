@@ -122,21 +122,21 @@ export const API_FOOTBALL_RETRY: Partial<RetryConfig> = {
 export const API_FOOTBALL_TIMEOUT_MS = 30000; // 30s timeout
 
 // ============================================================================
-// TOGETHER AI - PREDICTIONS (35 Models)
+// OPENROUTER - PREDICTIONS (All Models via OpenRouter)
 // Rate limit: Varies by plan
 // Typical latency: 2-5s for inference
 // Reliability: High (99.5%)
 // Updated: Increased retries and delays for better reliability with transient errors
 // ============================================================================
-export const TOGETHER_PREDICTION_RETRY: Partial<RetryConfig> = {
+export const OPENROUTER_PREDICTION_RETRY: Partial<RetryConfig> = {
   maxRetries: 5,          // Increased from 3 to 5 for better reliability
   baseDelayMs: 2000,      // Increased from 1.5s to 2s base delay (give models more time)
   maxDelayMs: 20000,      // Increased from 15s to 20s max delay
   retryableStatusCodes: [408, 429, 500, 502, 503, 504],
 };
 
-export const TOGETHER_PREDICTION_TIMEOUT_MS = 25000;       // Increased from 20s to 25s for single prediction
-export const TOGETHER_PREDICTION_BATCH_TIMEOUT_MS = 35000; // Increased from 30s to 35s for batch
+export const OPENROUTER_PREDICTION_TIMEOUT_MS = 25000;       // 25s for single prediction
+export const OPENROUTER_PREDICTION_BATCH_TIMEOUT_MS = 35000; // 35s for batch
 
 // ============================================================================
 // OPENROUTER - CONTENT (DeepSeek V3.1)
@@ -172,7 +172,7 @@ export const OPENROUTER_CONTENT_FALLBACK_TIMEOUT_MS = 60000; // 60s timeout
 // ============================================================================
 export const SERVICE_NAMES = {
   API_FOOTBALL: 'api-football',
-  TOGETHER_PREDICTIONS: 'together-predictions',
+  OPENROUTER_PREDICTIONS: 'openrouter-predictions',
   OPENROUTER_CONTENT: 'openrouter-content', // DeepSeek V3.1 via OpenRouter API
   OPENROUTER_CONTENT_FALLBACK: 'openrouter-content-fallback',
 } as const;

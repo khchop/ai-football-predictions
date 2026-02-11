@@ -45,13 +45,9 @@ const SERVICE_CONFIGS: Partial<Record<ServiceName, Partial<CircuitBreakerConfig>
     failureThreshold: 5,
     resetTimeoutMs: 30000,     // API-Football recovers quickly
   },
-  'together-predictions': {
+  'openrouter-predictions': {
     failureThreshold: 5,
     resetTimeoutMs: 60000,     // LLM services may need more time
-  },
-  'together-content': {
-    failureThreshold: 5,
-    resetTimeoutMs: 60000,     // Content generation same as predictions
   },
 };
 
@@ -410,7 +406,7 @@ export function resetCircuit(service: ServiceName): void {
  * Falls back to database if Redis unavailable
  */
 export async function initializeCircuitsFromRedis(): Promise<void> {
-  const services: ServiceName[] = ['api-football', 'together-predictions', 'together-content'];
+  const services: ServiceName[] = ['api-football', 'openrouter-predictions', 'openrouter-content'];
 
   for (const service of services) {
     try {
