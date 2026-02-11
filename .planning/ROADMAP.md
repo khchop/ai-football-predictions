@@ -316,10 +316,11 @@ Plans:
 4. Team pages have proper meta tags, canonical URLs, and OG images
 5. Only teams with 5+ finished matches appear in sitemap to avoid thin content penalties
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 68-01: TBD
+- [ ] 68-01-PLAN.md -- SEO infrastructure: metadata helpers, SportsTeam schema, breadcrumbs, OG image route, teams sitemap with quality filter
+- [ ] 68-02-PLAN.md -- Team pages: /teams/[slug] detail page with full SEO, /teams index page with league grouping
 
 #### Phase 69: UI Components & Match Display
 
@@ -454,7 +455,7 @@ Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> 63 -> 64 -> 65 -> 66 ->
 | 65. Cost Tracking & Budget Control | v2.9 | 0/TBD | Not started | - |
 | 66. Provider Health Monitoring | v2.9 | 0/TBD | Not started | - |
 | 67. Foundation & Data Layer | v3.0 | 2/2 | Complete | 2026-02-11 |
-| 68. Routes, SEO & Basic Pages | v3.0 | 0/TBD | Not started | - |
+| 68. Routes, SEO & Basic Pages | v3.0 | 0/2 | Not started | - |
 | 69. UI Components & Match Display | v3.0 | 0/TBD | Not started | - |
 | 70. Navigation & Cross-Linking | v3.0 | 0/TBD | Not started | - |
 | 71. AI Content & FAQ Generation | v3.0 | 0/TBD | Not started | - |
