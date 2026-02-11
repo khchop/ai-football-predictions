@@ -64,16 +64,62 @@ Requirements for v2.9 Provider Unification & Maximum Coverage. Each maps to road
 - [ ] **HLTH-03**: Provider health cards added to admin dashboard alongside model health cards
 - [ ] **HLTH-04**: Regression alert when provider-wide success rate drops below threshold
 
+## v3.0 Requirements
+
+Requirements for v3.0 Club/Team Pages. Each maps to roadmap phases.
+
+### Team Pages
+
+- [ ] **PAGE-01**: User can view a dedicated team page at `/teams/[slug]` for any club across all 17 leagues
+- [ ] **PAGE-02**: User can browse all clubs on the `/teams` index page with logos and league grouping
+- [ ] **PAGE-03**: Team slugs correctly resolve to stored team names including aliases (e.g., `/teams/man-city` → "Manchester City")
+- [ ] **PAGE-04**: User sees breadcrumb navigation on team pages (Home > Teams > Club Name)
+
+### Leaderboard & Stats
+
+- [ ] **STAT-01**: User can see which AI models predict best for a specific club via per-club leaderboard
+- [ ] **STAT-02**: User can filter club leaderboard by time period (all-time, season, monthly, weekly)
+- [ ] **STAT-03**: User can see club statistics (W/D/L record, goals scored/conceded, averages)
+- [ ] **STAT-04**: User can view model accuracy trends over time for a specific club
+
+### Match Display
+
+- [ ] **MTCH-01**: User can see upcoming match predictions for a club with model prediction distribution
+- [ ] **MTCH-02**: User can see recent match results with scores and prediction accuracy for a club
+- [ ] **MTCH-03**: User can see a visual form indicator (W/D/L timeline) for the club's last matches
+
+### Navigation
+
+- [ ] **NAV-01**: User can click team names on league pages to navigate to team pages
+- [ ] **NAV-02**: User can click team names on match detail pages to navigate to team pages
+
+### SEO & Content
+
+- [ ] **SEO-01**: Team pages have Schema.org SportsTeam structured data markup (JSON-LD)
+- [ ] **SEO-02**: Team pages have proper meta tags, canonical URLs, and OG images
+- [ ] **SEO-03**: Team pages are included in sitemap with content quality filtering (5+ matches threshold)
+- [ ] **SEO-04**: Team pages include AI-generated club analysis content (form, model trends, prediction patterns)
+- [ ] **SEO-05**: Team pages include dynamically generated club-specific FAQs with FAQPage schema
+
 ## Future Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
 
-### Advanced Routing
+### Advanced Routing (v2.9)
 
 - **ADVR-01**: Weighted load balancing across providers based on health scores
 - **ADVR-02**: Dynamic priority adjustment based on rolling window metrics
 - **ADVR-03**: Latency-based routing (prefer fastest provider)
 - **ADVR-04**: Geographic routing for latency optimization
+
+### Advanced Team Features (v3.x)
+
+- **ADVT-01**: Head-to-head model comparison for a specific club
+- **ADVT-02**: Best/worst matchups analysis (model performance by opponent)
+- **ADVT-03**: Model recommendation for upcoming matches based on historical accuracy
+- **ADVT-04**: Interactive prediction accuracy heatmap
+- **ADVT-05**: Team comparison tool (compare AI prediction accuracy across clubs)
+- **ADVT-06**: Teams index page with filtering and search
 
 ## Out of Scope
 
@@ -86,6 +132,13 @@ Explicitly excluded. Documented to prevent scope creep.
 | New model additions (beyond re-activation) | Scope limited to unification, not expansion |
 | Provider-level rate limiting | OpenRouter handles its own rate limiting |
 | Staging environment for migration testing | Use production backup + transaction rollback instead |
+| Real-time live match updates | Not our differentiator, adds complexity and API cost |
+| Player-level statistics | Massive scope creep, not related to AI predictions core value |
+| User comments/predictions | Moderation burden, distracts from AI focus |
+| Betting odds integration | Regulatory/legal complexity, not our expertise |
+| Club news aggregation | Content licensing issues, maintenance burden |
+| Separate teams database table | Teams as text strings sufficient, avoid migration complexity |
+| Historical data beyond 2-3 seasons | Diminishing returns, models didn't exist before 2023 |
 
 ## Traceability
 
@@ -130,13 +183,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HLTH-03 | Phase 66 | Pending |
 | HLTH-04 | Phase 66 | Pending |
 
-**Coverage:**
+**Coverage (v2.9):**
 - v2.9 requirements: 30 total
 - Mapped to phases: 30
 - Unmapped: 0
 
-**Coverage validation:** 100% ✓
+**Coverage (v3.0):**
+- v3.0 requirements: 18 total
+- Mapped to phases: 0 (pending roadmap creation)
+- Unmapped: 18
 
 ---
 *Requirements defined: 2026-02-08*
-*Last updated: 2026-02-08 after v2.9 roadmap creation*
+*Last updated: 2026-02-11 after v3.0 requirements definition*
