@@ -357,10 +357,11 @@ Plans:
 3. Breadcrumbs reflect proper hierarchy (Home > Teams > Club Name)
 4. Team pages include internal links to related content (league page, recent matches)
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 70-01: TBD
+- [ ] 70-01-PLAN.md -- Clickable team links in league standings, team page league cross-link, opponent links in team match lists
+- [ ] 70-02-PLAN.md -- Clickable team links in match detail hero and match card components
 
 #### Phase 71: AI Content & FAQ Generation
 
