@@ -1,5 +1,5 @@
 import { desc, eq, and, or, sql, asc } from 'drizzle-orm';
-import { getDb, matches, competitions } from '@/lib/db';
+import { getDb, matches, competitions, predictions } from '@/lib/db';
 import { getLeaderboardWithTrends } from './stats';
 import type { LeaderboardEntryWithTrend } from './stats';
 
@@ -30,7 +30,7 @@ export interface TeamMatch {
   awayScore: number | null;
   homeTeamLogo: string | null;
   awayTeamLogo: string | null;
-  status: string;
+  status: string | null;
   kickoffTime: string;
   competitionId: string;
   slug: string | null;
@@ -325,5 +325,274 @@ export async function getTeamModelLeaderboard(
     clubId: teamName,
     timePeriod: mappedTimePeriod,
     dateFrom,
+  });
+}
+
+export interface UpcomingMatchWithPredictions {
+  matchId: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeTeamLogo: string | null;
+  awayTeamLogo: string | null;
+  kickoffTime: string;
+  competitionId: string;
+  slug: string | null;
+  isHome: boolean;
+  predictionCount: number;
+  homeWinPct: number;    // percentage of models predicting home win
+  drawPct: number;       // percentage predicting draw
+  awayWinPct: number;    // percentage predicting away win
+  avgPredictedHome: number;  // average predicted home score
+  avgPredictedAway: number;  // average predicted away score
+}
+
+/**
+ * Get upcoming matches with aggregated prediction distribution from all AI models
+ * Shows prediction consensus (home win %, draw %, away win %) and average predicted scores
+ */
+export async function getTeamUpcomingWithPredictions(
+  teamName: string,
+  limit: number = 5
+): Promise<UpcomingMatchWithPredictions[]> {
+  const db = getDb();
+
+  // Query scheduled matches for this team with LEFT JOIN on predictions
+  const results = await db
+    .select({
+      matchId: matches.id,
+      homeTeam: matches.homeTeam,
+      awayTeam: matches.awayTeam,
+      homeTeamLogo: matches.homeTeamLogo,
+      awayTeamLogo: matches.awayTeamLogo,
+      kickoffTime: matches.kickoffTime,
+      competitionId: matches.competitionId,
+      slug: matches.slug,
+      isHome: sql<boolean>`CASE WHEN ${matches.homeTeam} = ${teamName} THEN true ELSE false END`,
+      predictionCount: sql<number>`COUNT(${predictions.id})`,
+      homeWinCount: sql<number>`SUM(CASE WHEN ${predictions.predictedResult} = 'H' THEN 1 ELSE 0 END)`,
+      drawCount: sql<number>`SUM(CASE WHEN ${predictions.predictedResult} = 'D' THEN 1 ELSE 0 END)`,
+      awayWinCount: sql<number>`SUM(CASE WHEN ${predictions.predictedResult} = 'A' THEN 1 ELSE 0 END)`,
+      avgPredictedHome: sql<number>`COALESCE(AVG(${predictions.predictedHome}), 0)`,
+      avgPredictedAway: sql<number>`COALESCE(AVG(${predictions.predictedAway}), 0)`,
+    })
+    .from(matches)
+    .leftJoin(predictions, eq(predictions.matchId, matches.id))
+    .where(
+      and(
+        or(eq(matches.homeTeam, teamName), eq(matches.awayTeam, teamName)),
+        eq(matches.status, 'scheduled')
+      )
+    )
+    .groupBy(
+      matches.id,
+      matches.homeTeam,
+      matches.awayTeam,
+      matches.homeTeamLogo,
+      matches.awayTeamLogo,
+      matches.kickoffTime,
+      matches.competitionId,
+      matches.slug
+    )
+    .orderBy(asc(matches.kickoffTime))
+    .limit(limit);
+
+  // Calculate percentages in TypeScript (safe division)
+  return results.map(r => {
+    const predictionCount = Number(r.predictionCount);
+    const homeWinCount = Number(r.homeWinCount);
+    const drawCount = Number(r.drawCount);
+    const awayWinCount = Number(r.awayWinCount);
+
+    return {
+      matchId: r.matchId,
+      homeTeam: r.homeTeam,
+      awayTeam: r.awayTeam,
+      homeTeamLogo: r.homeTeamLogo,
+      awayTeamLogo: r.awayTeamLogo,
+      kickoffTime: r.kickoffTime,
+      competitionId: r.competitionId,
+      slug: r.slug,
+      isHome: r.isHome,
+      predictionCount,
+      homeWinPct: predictionCount > 0 ? Math.round((homeWinCount / predictionCount) * 100) : 0,
+      drawPct: predictionCount > 0 ? Math.round((drawCount / predictionCount) * 100) : 0,
+      awayWinPct: predictionCount > 0 ? Math.round((awayWinCount / predictionCount) * 100) : 0,
+      avgPredictedHome: Number(Number(r.avgPredictedHome).toFixed(1)),
+      avgPredictedAway: Number(Number(r.avgPredictedAway).toFixed(1)),
+    };
+  });
+}
+
+export interface RecentMatchWithAccuracy {
+  matchId: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeTeamLogo: string | null;
+  awayTeamLogo: string | null;
+  homeScore: number | null;
+  awayScore: number | null;
+  kickoffTime: string;
+  competitionId: string;
+  slug: string | null;
+  isHome: boolean;
+  result: 'W' | 'D' | 'L';  // from team's perspective
+  predictionCount: number;
+  correctPredictions: number;  // models that got tendency right
+  accuracyPct: number;        // correctPredictions / predictionCount * 100
+  exactScoreCount: number;    // models that got exact score
+}
+
+/**
+ * Get recent finished matches with per-match prediction accuracy
+ * Shows how many models correctly predicted the match tendency and exact score
+ */
+export async function getTeamRecentWithAccuracy(
+  teamName: string,
+  limit: number = 10
+): Promise<RecentMatchWithAccuracy[]> {
+  const db = getDb();
+
+  // Query finished matches with LEFT JOIN on scored predictions
+  const results = await db
+    .select({
+      matchId: matches.id,
+      homeTeam: matches.homeTeam,
+      awayTeam: matches.awayTeam,
+      homeTeamLogo: matches.homeTeamLogo,
+      awayTeamLogo: matches.awayTeamLogo,
+      homeScore: matches.homeScore,
+      awayScore: matches.awayScore,
+      kickoffTime: matches.kickoffTime,
+      competitionId: matches.competitionId,
+      slug: matches.slug,
+      isHome: sql<boolean>`CASE WHEN ${matches.homeTeam} = ${teamName} THEN true ELSE false END`,
+      predictionCount: sql<number>`COUNT(${predictions.id})`,
+      correctPredictions: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)`,
+      exactScoreCount: sql<number>`SUM(CASE WHEN ${predictions.exactScoreBonus} = 3 THEN 1 ELSE 0 END)`,
+    })
+    .from(matches)
+    .leftJoin(
+      predictions,
+      and(
+        eq(predictions.matchId, matches.id),
+        eq(predictions.status, 'scored')
+      )
+    )
+    .where(
+      and(
+        or(eq(matches.homeTeam, teamName), eq(matches.awayTeam, teamName)),
+        eq(matches.status, 'finished')
+      )
+    )
+    .groupBy(
+      matches.id,
+      matches.homeTeam,
+      matches.awayTeam,
+      matches.homeTeamLogo,
+      matches.awayTeamLogo,
+      matches.homeScore,
+      matches.awayScore,
+      matches.kickoffTime,
+      matches.competitionId,
+      matches.slug
+    )
+    .orderBy(desc(matches.kickoffTime))
+    .limit(limit);
+
+  // Calculate result and accuracy percentage in TypeScript
+  return results.map(r => {
+    const isHome = r.isHome;
+    const homeScore = r.homeScore ?? 0;
+    const awayScore = r.awayScore ?? 0;
+    const predictionCount = Number(r.predictionCount);
+    const correctPredictions = Number(r.correctPredictions);
+    const exactScoreCount = Number(r.exactScoreCount);
+
+    // Determine result from team's perspective
+    let result: 'W' | 'D' | 'L';
+    if (homeScore === awayScore) {
+      result = 'D';
+    } else if (isHome) {
+      result = homeScore > awayScore ? 'W' : 'L';
+    } else {
+      result = awayScore > homeScore ? 'W' : 'L';
+    }
+
+    return {
+      matchId: r.matchId,
+      homeTeam: r.homeTeam,
+      awayTeam: r.awayTeam,
+      homeTeamLogo: r.homeTeamLogo,
+      awayTeamLogo: r.awayTeamLogo,
+      homeScore: r.homeScore,
+      awayScore: r.awayScore,
+      kickoffTime: r.kickoffTime,
+      competitionId: r.competitionId,
+      slug: r.slug,
+      isHome,
+      result,
+      predictionCount,
+      correctPredictions,
+      accuracyPct: predictionCount > 0 ? Math.round((correctPredictions / predictionCount) * 100) : 0,
+      exactScoreCount,
+    };
+  });
+}
+
+export interface AccuracyTrendPoint {
+  weekStart: string;  // ISO date of week start (Monday)
+  matchCount: number;
+  predictionCount: number;
+  correctPredictions: number;
+  accuracyPct: number;
+}
+
+/**
+ * Get weekly aggregated model accuracy for a team over time (for line chart)
+ * Returns last 20 weeks of data with accuracy percentage per week
+ */
+export async function getTeamAccuracyTrend(
+  teamName: string
+): Promise<AccuracyTrendPoint[]> {
+  const db = getDb();
+
+  // Query: group by week, count matches and predictions, sum correct tendencies
+  const results = await db
+    .select({
+      weekStart: sql<string>`DATE_TRUNC('week', ${matches.kickoffTime}::timestamp)::text`,
+      matchCount: sql<number>`COUNT(DISTINCT ${matches.id})`,
+      predictionCount: sql<number>`COUNT(${predictions.id})`,
+      correctPredictions: sql<number>`SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END)`,
+    })
+    .from(matches)
+    .innerJoin(
+      predictions,
+      and(
+        eq(predictions.matchId, matches.id),
+        eq(predictions.status, 'scored')
+      )
+    )
+    .where(
+      and(
+        or(eq(matches.homeTeam, teamName), eq(matches.awayTeam, teamName)),
+        eq(matches.status, 'finished')
+      )
+    )
+    .groupBy(sql`DATE_TRUNC('week', ${matches.kickoffTime}::timestamp)`)
+    .orderBy(sql`DATE_TRUNC('week', ${matches.kickoffTime}::timestamp) DESC`)
+    .limit(20);
+
+  // Calculate accuracy percentage and reverse to chronological order (oldest → newest)
+  return results.reverse().map(r => {
+    const predictionCount = Number(r.predictionCount);
+    const correctPredictions = Number(r.correctPredictions);
+
+    return {
+      weekStart: r.weekStart,
+      matchCount: Number(r.matchCount),
+      predictionCount,
+      correctPredictions,
+      accuracyPct: predictionCount > 0 ? Math.round((correctPredictions / predictionCount) * 100) : 0,
+    };
   });
 }
