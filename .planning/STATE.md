@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 
 ## Current Position
 
-Phase: 69 of 71 (UI Components & Match Display)
+Phase: 70 of 71 (Navigation & Cross-linking)
 Plan: 2 of 2 in current phase
-Status: Plan 69-02 complete
-Last activity: 2026-02-11 - Completed 69-02-PLAN.md (Match Prediction Display & Accuracy Trends)
+Status: Phase 70 complete
+Last activity: 2026-02-11 - Completed 70-02-PLAN.md (Team Links in Match Components)
 
-Progress: [█████████████████████████████████████████░] 98% (62 of 66 v2.9 phases complete, v3.0 Phase 67-69 complete: 6 of 6 plans done)
+Progress: [█████████████████████████████████████████░] 99% (62 of 66 v2.9 phases complete, v3.0 Phase 67-70 complete: 8 of 8 plans done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 170 plans (phases 1-63, 67-01, 67-02, 68-01, 68-02, 69-01, 69-02) + 3 quick tasks (quick-37, quick-38, quick-39)
+- Total plans completed: 172 plans (phases 1-63, 67-01, 67-02, 68-01, 68-02, 69-01, 69-02, 70-01, 70-02) + 3 quick tasks (quick-37, quick-38, quick-39)
 - Milestones shipped: 13 (v1.0 through v2.8), v2.9 95% complete
-- v3.0 in progress: Phase 67 complete (2/2), Phase 68 complete (2/2), Phase 69 complete (2/2, 2026-02-11)
+- v3.0 in progress: Phase 67 complete (2/2), Phase 68 complete (2/2), Phase 69 complete (2/2), Phase 70 complete (2/2, 2026-02-11)
 
 **Recent Milestones:**
 - v2.9 Provider Unification: 8 phases (59-66), in progress (phases 59-62 complete)
@@ -54,6 +54,9 @@ Recent decisions affecting current work:
 - [Phase 69-02]: Use horizontal stacked bar with green/yellow/blue segments for prediction distribution
 - [Phase 69-02]: Weekly accuracy aggregation (last 20 weeks) for trend chart balances data density with patterns
 - [Phase 69-02]: Accuracy color thresholds: green 70%+, yellow 40-70%, red <40% aligned with form indicators
+- [Phase 70-01]: Use overlay anchor pattern for league cards to avoid nested links
+- [Phase 70-02]: Match hero and match card team names link to /teams/[slug]
+- [Phase 70-02]: Removed ISR revalidate config (incompatible with Next.js 16 PPR), use Redis cache with tag invalidation
 
 ### Pending Todos
 
@@ -65,8 +68,9 @@ Recent decisions affecting current work:
 - Phase 67: ✅ Complete (67-01 team mapping, 67-02 stats queries & cache)
 - Phase 68: ✅ Complete (68-01 team SEO infrastructure, 68-02 team page routes)
 - Phase 69: ✅ Complete (69-01 team leaderboard & enhanced stats, 69-02 match display & accuracy charts)
-- Phase 70-71: Next up (predictions, AI content)
-- Post-69 deployment: Test team page match predictions and accuracy trends with real data
+- Phase 70: ✅ Complete (70-01 bidirectional nav links, 70-02 team links in match components)
+- Phase 71: Next up (AI content generation)
+- Post-deployment: Test team page internal linking graph in Search Console
 - Decide canonical URL strategy for duplicate content (leaderboard vs team pages)
 - Phase 71: Estimate AI content generation cost (200+ teams × LLM calls)
 
@@ -84,10 +88,10 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Phase 69 complete (match display & accuracy trends - all v3.0 club pages features done)
-Resume file: .planning/phases/70-team-predictions/70-01-PLAN.md (if exists, else Phase 71)
+Stopped at: Phase 70 complete (navigation & cross-linking - all internal links implemented)
+Resume file: .planning/phases/71-ai-content-generation/ (if exists)
 
-**Next action:** Begin Phase 70 (Team Predictions) or Phase 71 (AI Content Generation)
+**Next action:** Begin Phase 71 (AI Content Generation) or verify v3.0 completion
 
 ---
-*Last updated: 2026-02-11 after completing 69-02*
+*Last updated: 2026-02-11 after completing 70-02*
