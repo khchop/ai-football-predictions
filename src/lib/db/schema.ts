@@ -538,6 +538,33 @@ export const matchContent = pgTable('match_content', {
 export type MatchContent = typeof matchContent.$inferSelect;
 export type NewMatchContent = typeof matchContent.$inferInsert;
 
+// AI-generated team analysis and FAQ content for SEO/GEO
+export const teamContent = pgTable('team_content', {
+  id: text('id').primaryKey(), // UUID
+  teamName: text('team_name').notNull().unique(), // Canonical team name from teams.ts
+
+  // AI-generated analysis prose (200-250 words)
+  analysis: text('analysis'),
+  analysisGeneratedAt: text('analysis_generated_at'),
+
+  // AI-generated FAQ content (JSON array of {question, answer} pairs)
+  faqContent: text('faq_content'), // JSON string
+  faqGeneratedAt: text('faq_generated_at'),
+
+  // AI generation metadata
+  generatedBy: text('generated_by'), // Model name (e.g., 'deepseek/deepseek-chat-v3.1')
+  totalTokens: integer('total_tokens').default(0),
+  totalCost: text('total_cost').default('0'), // USD string for precision
+
+  createdAt: text('created_at').default(sql`now()`),
+  updatedAt: text('updated_at').default(sql`now()`),
+}, (table) => [
+  index('idx_team_content_team_name').on(table.teamName),
+]);
+
+export type TeamContent = typeof teamContent.$inferSelect;
+export type NewTeamContent = typeof teamContent.$inferInsert;
+
 // AI-generated post-match roundups with full narrative content
 export const matchRoundups = pgTable('match_roundups', {
   id: text('id').primaryKey(), // UUID
