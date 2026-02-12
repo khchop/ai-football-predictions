@@ -16,7 +16,7 @@
 - ✅ **v2.7 Pipeline Reliability & Retroactive Backfill** - Phases 49-52 (shipped 2026-02-07)
 - ✅ **v2.8 Model Coverage** - Phases 53-58 (shipped 2026-02-08)
 - ✅ **v2.9 Provider Unification & Maximum Coverage** - Phases 59-62 + quick-040/041 (shipped 2026-02-11)
-- 🚧 **v3.0 Club/Team Pages** - Phases 67-71 (in progress)
+- ✅ **v3.0 Club/Team Pages** - Phases 67-71 (shipped 2026-02-12)
 
 ## Phases
 
@@ -304,8 +304,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 71-01-PLAN.md -- Database schema (teamContent table), content queries, and AI generation functions (analysis + FAQs)
-- [ ] 71-02-PLAN.md -- BullMQ queue/worker with rate limiting, weekly cron schedule, and team page UI integration with FAQPage schema
+- [x] 71-01-PLAN.md -- Database schema (teamContent table), content queries, and AI generation functions (analysis + FAQs)
+- [x] 71-02-PLAN.md -- BullMQ queue/worker with rate limiting, weekly cron schedule, and team page UI integration with FAQPage schema
 
 ## Progress
 
@@ -381,7 +381,7 @@ Phases execute in numeric order: 59 -> 60 -> 61 -> 62 -> (63-66 superseded) -> 6
 | 68. Routes, SEO & Basic Pages | v3.0 | 2/2 | Complete | 2026-02-11 |
 | 69. UI Components & Match Display | v3.0 | 2/2 | Complete | 2026-02-11 |
 | 70. Navigation & Cross-Linking | v3.0 | 2/2 | Complete | 2026-02-11 |
-| 71. AI Content & FAQ Generation | v3.0 | 0/2 | Not started | - |
+| 71. AI Content & FAQ Generation | v3.0 | 2/2 | Complete | 2026-02-12 |
 
 ---
-*Last updated: 2026-02-11 — v2.9 complete (phases 63-66 superseded by quick-040/041), v3.0 phases 67-70 complete*
+*Last updated: 2026-02-12 — v3.0 complete (all phases 67-71 done)*
