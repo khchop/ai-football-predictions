@@ -259,7 +259,7 @@ export const MiniMaxM21_OR = new OpenRouterProvider(
   'minimax/minimax-m2.1',
   'MiniMax M2.1 (OpenRouter)',
   'budget',
-  { promptPer1M: 0.35, completionPer1M: 0.70 },
+  { promptPer1M: 0.27, completionPer1M: 0.95 },
   false,
   {
     supportsJsonMode: false,
@@ -322,6 +322,187 @@ export const GLM47Flash_OR = new OpenRouterProvider(
     maxTokensSingle: 1000,
     maxTokensBatch: 1500,
   }
+);
+
+// ============================================================================
+// NEW OPENROUTER PROVIDERS (Phase 72-01)
+// ============================================================================
+
+// 19. GLM-5 (premium, reasoning model - needs ENGLISH_ENFORCED + EXTRACT_JSON like GLM-4.7)
+export const GLM5_OR = new OpenRouterProvider(
+  'glm-5-or',
+  'openrouter',
+  'z-ai/glm-5',
+  'GLM-5 (OpenRouter)',
+  'premium',
+  { promptPer1M: 0.80, completionPer1M: 2.56 },
+  true,
+  {
+    promptVariant: PromptVariant.ENGLISH_ENFORCED,
+    responseHandler: ResponseHandler.EXTRACT_JSON,
+    timeoutMs: 120000,
+    supportsJsonMode: false,
+    maxTokensSingle: 1000,
+    maxTokensBatch: 1500,
+  }
+);
+
+// 20. DeepSeek V3.2 (budget - needs JSON_STRICT like V3.1)
+export const DeepSeekV32_OR = new OpenRouterProvider(
+  'deepseek-v3.2-or',
+  'openrouter',
+  'deepseek/deepseek-v3.2',
+  'DeepSeek V3.2 (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.25, completionPer1M: 0.38 },
+  false,
+  {
+    maxTokensSingle: 500,
+    maxTokensBatch: 1000,
+  }
+);
+
+// 21. DeepSeek R1-0528 (premium, reasoning - needs THINKING_STRIPPED + STRIP_THINKING_TAGS like R1)
+export const DeepSeekR10528_OR = new OpenRouterProvider(
+  'deepseek-r1-0528-or',
+  'openrouter',
+  'deepseek/deepseek-r1-0528',
+  'DeepSeek R1-0528 (OpenRouter)',
+  'premium',
+  { promptPer1M: 0.40, completionPer1M: 1.75 },
+  true,
+  {
+    promptVariant: PromptVariant.THINKING_STRIPPED,
+    responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
+    timeoutMs: 120000,
+  }
+);
+
+// 22. Devstral Small (budget, code-focused)
+export const DevstralSmall_OR = new OpenRouterProvider(
+  'devstral-small-or',
+  'openrouter',
+  'mistralai/devstral-small',
+  'Devstral Small (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.10, completionPer1M: 0.30 },
+  false,
+  {}
+);
+
+// 23. Qwen3 30B A3B (ultra-budget, MoE)
+export const Qwen3_30B_A3B_OR = new OpenRouterProvider(
+  'qwen3-30b-a3b-or',
+  'openrouter',
+  'qwen/qwen3-30b-a3b',
+  'Qwen3 30B A3B (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.06, completionPer1M: 0.22 },
+  false,
+  {}
+);
+
+// 24. GPT-OSS-20B (ultra-budget - needs JSON_STRICT + EXTRACT_JSON like GPT-OSS-120B)
+export const GPTOSS20B_OR = new OpenRouterProvider(
+  'gpt-oss-20b-or',
+  'openrouter',
+  'openai/gpt-oss-20b',
+  'GPT-OSS 20B (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.03, completionPer1M: 0.14 },
+  false,
+  {
+    promptVariant: PromptVariant.JSON_STRICT,
+    responseHandler: ResponseHandler.EXTRACT_JSON,
+    timeoutMs: 45000,
+    supportsJsonMode: false,
+    maxTokensSingle: 1000,
+    maxTokensBatch: 1500,
+  }
+);
+
+// 25. Step 3.5 Flash (budget, MoE)
+export const Step35Flash_OR = new OpenRouterProvider(
+  'step-3.5-flash-or',
+  'openrouter',
+  'stepfun/step-3.5-flash',
+  'Step 3.5 Flash (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.10, completionPer1M: 0.30 },
+  false,
+  {}
+);
+
+// 26. Mistral Small 3.2 24B (ultra-budget, replaces Mistral Small 3)
+export const MistralSmall32_24B_OR = new OpenRouterProvider(
+  'mistral-small-3.2-24b-or',
+  'openrouter',
+  'mistralai/mistral-small-3.2-24b-instruct',
+  'Mistral Small 3.2 24B (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.06, completionPer1M: 0.18 },
+  false,
+  {}
+);
+
+// 27. Gemma 3 27B (ultra-budget)
+export const Gemma3_27B_OR = new OpenRouterProvider(
+  'gemma-3-27b-or',
+  'openrouter',
+  'google/gemma-3-27b-it',
+  'Gemma 3 27B (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.04, completionPer1M: 0.15 },
+  false,
+  {}
+);
+
+// 28. Trinity Large Preview (free tier, MoE)
+export const TrinityLargePreview_OR = new OpenRouterProvider(
+  'trinity-large-preview-or',
+  'openrouter',
+  'arcee-ai/trinity-large-preview:free',
+  'Trinity Large Preview (OpenRouter)',
+  'free',
+  { promptPer1M: 0.00, completionPer1M: 0.00 },
+  false,
+  {}
+);
+
+// 29. Phi-4 (ultra-budget, 14B)
+export const Phi4_OR = new OpenRouterProvider(
+  'phi-4-or',
+  'openrouter',
+  'microsoft/phi-4',
+  'Phi-4 (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.06, completionPer1M: 0.14 },
+  false,
+  {}
+);
+
+// 30. Llama 4 Scout (ultra-budget, MoE)
+export const Llama4Scout_OR = new OpenRouterProvider(
+  'llama-4-scout-or',
+  'openrouter',
+  'meta-llama/llama-4-scout-17b-16e-instruct',
+  'Llama 4 Scout (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.08, completionPer1M: 0.30 },
+  false,
+  {}
+);
+
+// 31. Gemma 3 12B (ultra-budget)
+export const Gemma3_12B_OR = new OpenRouterProvider(
+  'gemma-3-12b-or',
+  'openrouter',
+  'google/gemma-3-12b-it',
+  'Gemma 3 12B (OpenRouter)',
+  'ultra-budget',
+  { promptPer1M: 0.03, completionPer1M: 0.10 },
+  false,
+  {}
 );
 
 // ============================================================================
