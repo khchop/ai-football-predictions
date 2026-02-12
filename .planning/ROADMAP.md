@@ -268,9 +268,9 @@ Phases execute in numeric order: 72 → 73 → 74
 | 69. UI Components & Match Display | v3.0 | 2/2 | Complete | 2026-02-11 |
 | 70. Navigation & Cross-Linking | v3.0 | 2/2 | Complete | 2026-02-11 |
 | 71. AI Content & FAQ Generation | v3.0 | 2/2 | Complete | 2026-02-12 |
-| 72. Model Configuration & Archive Schema | v3.1 | 0/2 | Planned | - |
+| 72. Model Configuration & Archive Schema | v3.1 | 2/2 | Complete | 2026-02-12 |
 | 73. Archive System Integration | v3.1 | 0/TBD | Not started | - |
 | 74. Discord Alert Service | v3.1 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-12 after v3.1 roadmap creation*
+*Last updated: 2026-02-12 after Phase 72 completion*
