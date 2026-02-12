@@ -25,7 +25,7 @@ export function buildRootOrganizationSchema() {
       '@type': 'ImageObject',
       url: 'https://kroam.xyz/logo.png',
     },
-    description: 'AI football prediction platform comparing 42 AI models on match predictions across 17 competitions',
+    description: 'AI football prediction platform comparing 21+ AI models on match predictions across 17 competitions',
   };
 }
 

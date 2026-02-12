@@ -129,7 +129,7 @@ export const API_FOOTBALL_TIMEOUT_MS = 30000; // 30s timeout
 // Updated: Increased retries and delays for better reliability with transient errors
 // ============================================================================
 export const OPENROUTER_PREDICTION_RETRY: Partial<RetryConfig> = {
-  maxRetries: 5,          // Increased from 3 to 5 for better reliability
+  maxRetries: 2,          // 2 retries to reduce spend on expensive models
   baseDelayMs: 2000,      // Increased from 1.5s to 2s base delay (give models more time)
   maxDelayMs: 20000,      // Increased from 15s to 20s max delay
   retryableStatusCodes: [408, 429, 500, 502, 503, 504],

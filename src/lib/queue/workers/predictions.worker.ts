@@ -84,11 +84,11 @@ export function createPredictionsWorker() {
       log.info({ matchId }, 'Starting prediction job');
 
       try {
-         // Check if predictions are complete (>= 42 = all models done)
+         // Check if predictions are complete (>= 21 = all models done)
          let existingModelIds: Set<string> | null = null;
          if (skipIfDone) {
            const existingPredictions = await getPredictionsForMatch(matchId);
-           if (existingPredictions.length >= 42) {
+           if (existingPredictions.length >= 21) {
              log.info({ matchId, count: existingPredictions.length }, `All predictions complete for match ${matchId}, skipping`);
              return { skipped: true, reason: 'predictions_complete', predictionCount: existingPredictions.length };
            }

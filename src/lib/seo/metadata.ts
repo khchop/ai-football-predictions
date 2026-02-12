@@ -156,7 +156,7 @@ export function createTitle(match: MatchSeoData): string {
 }
 
 export function createDescription(match: MatchSeoData, activeModels?: number): string {
-  const modelCount = activeModels ?? 42; // Updated model count
+  const modelCount = activeModels ?? 21; // Updated model count
 
   if (isMatchUpcoming(match.status)) {
     // Include predicted score when available
@@ -315,7 +315,7 @@ export function generateLeaderboardMetadata(
   competition?: string,
   activeModels?: number
 ): Metadata {
-  const modelCount = activeModels ?? 42; // Updated model count
+  const modelCount = activeModels ?? 21; // Updated model count
   const title = competition
     ? buildGenericTitle(`${competition} Leaderboard`)
     : buildGenericTitle('AI Model Leaderboard');
@@ -392,7 +392,7 @@ export interface Competition {
 }
 
 export function generateCompetitionMetadata(competition: Competition, activeModels?: number): Metadata {
-  const modelCount = activeModels ?? 42; // Updated model count
+  const modelCount = activeModels ?? 21; // Updated model count
   const title = buildLeagueTitle(competition.name);
   const description = buildLeagueDescription(competition.name, modelCount);
   const url = `${BASE_URL}/leagues/${competition.id}`;

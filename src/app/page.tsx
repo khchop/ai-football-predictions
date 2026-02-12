@@ -14,10 +14,10 @@ import { BASE_URL } from '@/lib/seo/constants';
 
 export const metadata: Metadata = {
   title: buildGenericTitle('AI Football Predictions'),
-  description: buildGenericDescription('Watch 42 AI models compete to predict football scores across Champions League, Premier League, and 15 more leagues.'),
+  description: buildGenericDescription('Watch 21+ AI models compete to predict football scores across Champions League, Premier League, and 15 more leagues.'),
   openGraph: {
     title: 'AI Football Predictions | Kroam',
-    description: 'Watch 42 AI models compete to predict football scores across Champions League, Premier League, and 15 more leagues.',
+    description: 'Watch 21+ AI models compete to predict football scores across Champions League, Premier League, and 15 more leagues.',
     url: BASE_URL,
     type: 'website',
     siteName: 'Kroam',
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'AI Football Predictions | Kroam',
-    description: 'Watch 42 AI models compete to predict football scores',
+    description: 'Watch 21+ AI models compete to predict football scores',
     images: [`${BASE_URL}/api/og/generic?title=${encodeURIComponent('AI Football Predictions')}`],
   },
   alternates: {

@@ -117,7 +117,7 @@ export function generateOrganizationSchema() {
     "@id": "https://kroam.xyz#organization",
     "name": "kroam.xyz",
     "url": "https://kroam.xyz",
-    "description": "AI football prediction platform comparing 42 AI models on match predictions",
+    "description": "AI football prediction platform comparing 21+ AI models on match predictions",
     "logo": "https://kroam.xyz/logo.png",
   };
 }

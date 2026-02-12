@@ -21,12 +21,12 @@ export const metadata: Metadata = {
     default: "AI Football Predictions | Kroam",
     template: "%s",
   },
-  description: "Compare 42 AI models predicting Champions League, Premier League & 15 more competitions. See which AI model performs best using the Kicktipp scoring system in real-time.",
+  description: "Compare 21+ AI models predicting Champions League, Premier League & 15 more competitions. See which AI model performs best using the Kicktipp scoring system in real-time.",
   keywords: ["AI", "football", "predictions", "machine learning", "Champions League", "Premier League", "AI betting", "football AI", "prediction accuracy", "open source AI", "Llama", "Qwen", "DeepSeek", "Mistral"],
   metadataBase: new URL('https://kroam.xyz'),
   openGraph: {
-    title: "AI Football Predictions - 42 AI Models Compete",
-    description: "Compare 42 AI models predicting football across 17 competitions. See which AI model performs best.",
+    title: "AI Football Predictions - 21+ AI Models Compete",
+    description: "Compare 21+ AI models predicting football across 17 competitions. See which AI model performs best.",
     url: 'https://kroam.xyz',
     siteName: 'Kroam',
     type: 'website',
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "AI Football Predictions - 42 Models Compete",
+    title: "AI Football Predictions - 21+ Models Compete",
     description: "See which AI is best at predicting football matches across 17 leagues",
   },
   robots: {
