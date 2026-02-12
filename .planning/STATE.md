@@ -6,16 +6,14 @@ See: .planning/PROJECT.md (updated 2026-02-12)
 
 **Core value:** The prediction pipeline must reliably generate scores from 21 LLMs ~30 minutes before kickoff and accurately calculate Kicktipp quota points when matches complete
 
-**Current focus:** Planning next milestone
+**Current focus:** v3.1 Model Lifecycle & Discord Alerts
 
 ## Current Position
 
-Phase: 71 of 71 (all milestones through v3.0 complete)
-Plan: N/A — between milestones
-Status: v3.0 Club/Team Pages SHIPPED
-Last activity: 2026-02-12 - Milestone v3.0 archived
-
-Progress: [████████████████████████████████████████████] 100% (v3.0 complete)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-12 — Milestone v3.1 started
 
 ## Performance Metrics
 
@@ -47,7 +45,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Blockers/Concerns
 
-No blockers — between milestones.
+No blockers — starting v3.1.
 
 ### Quick Tasks Completed
 
@@ -61,10 +59,10 @@ No blockers — between milestones.
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Milestone v3.0 archived and completed
-Resume file: N/A — start fresh with `/gsd:new-milestone`
+Stopped at: Starting milestone v3.1
+Resume file: N/A
 
-**Next action:** `/gsd:new-milestone` to plan next milestone
+**Next action:** Define requirements and create roadmap for v3.1
 
 ---
-*Last updated: 2026-02-12 after v3.0 milestone completion*
+*Last updated: 2026-02-12 after v3.1 milestone start*

@@ -73,7 +73,15 @@ See `.planning/MILESTONES.md` for full history of v1.0 through v2.6 validated re
 
 ### Active
 
-(No active requirements — planning next milestone)
+#### Current Milestone: v3.1 Model Lifecycle & Discord Alerts
+
+**Goal:** Replace current 18 models with 20 new/updated models, add archival system with leaderboard toggle, and build Discord webhook notifications for persistent model errors.
+
+**Target features:**
+- Add ~14 new OpenRouter models, archive ~14 old models
+- Model archive flag with "Show archived" toggle on leaderboard
+- Discord webhook integration for model error alerts
+- Cap active models at 20 with lifecycle management
 
 ### Out of Scope
 
@@ -143,4 +151,4 @@ Per-model health dashboard with regression alerts operational.
 v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, v2.7, v2.8, v2.9, v3.0 — see `.planning/MILESTONES.md` for full history.
 
 ---
-*Last updated: 2026-02-12 after v3.0 milestone*
+*Last updated: 2026-02-12 after v3.1 milestone start*
