@@ -4,7 +4,7 @@
 
 See: .planning/PROJECT.md (updated 2026-02-11)
 
-**Core value:** The prediction pipeline must reliably generate scores from 42 LLMs ~30 minutes before kickoff and accurately calculate Kicktipp quota points when matches complete
+**Core value:** The prediction pipeline must reliably generate scores from 21 LLMs ~30 minutes before kickoff and accurately calculate Kicktipp quota points when matches complete
 
 **Current focus:** v3.0 Club/Team Pages - Phase 71 AI Content & FAQ Generation
 
@@ -13,7 +13,7 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 Phase: 71 of 71 (AI Content & FAQ Generation)
 Plan: 0 of TBD in current phase
 Status: Phase 71 not yet planned
-Last activity: 2026-02-11 - Fixed match card navigation (quick-042)
+Last activity: 2026-02-12 - Reduced OpenRouter spend: 38→21 models, retries 5→2, cost tracking enabled (quick-043)
 
 Progress: [██████████████████████████████████████████░] 99% (v2.9 complete, v3.0 Phases 67-70 complete, Phase 71 remaining)
 
@@ -79,14 +79,15 @@ Recent decisions affecting current work:
 | 040 | Remove all Synthetic providers, use OpenRouter when possible | 2026-02-11 | e8bd822 | [040-remove-synthetic-providers-use-openroute](./quick/040-remove-synthetic-providers-use-openroute/) |
 | 041 | Remove Together AI provider, move all models to OpenRouter, deduplicate model entries | 2026-02-11 | 0dba995 | [041-remove-together-ai-provider-move-all-mod](./quick/041-remove-together-ai-provider-move-all-mod/) |
 | 042 | Fix match card click navigation - card body to match detail, team names to team pages | 2026-02-11 | 8a65d44 | [042-fix-match-boxes-linking-to-team-pages-in](./quick/42-fix-match-boxes-linking-to-team-pages-in/) |
+| 043 | Reduce OpenRouter spend: trim 38→21 models, retries 5→2, cap reasoning tokens, wire cost tracking | 2026-02-12 | fd6fcd1 | [43-reduce-openrouter-spend-trim-expensive-m](./quick/43-reduce-openrouter-spend-trim-expensive-m/) |
 
 ## Session Continuity
 
-Last session: 2026-02-11
-Stopped at: v2.9 cleaned up (phases 63-66 superseded), v3.0 phase 71 next
+Last session: 2026-02-12
+Stopped at: Quick-043 reduced OpenRouter spend (38→21 models), v3.0 phase 71 planned
 Resume file: .planning/phases/71-ai-content-generation/ (if exists)
 
 **Next action:** Begin Phase 71 (AI Content Generation) or verify v3.0 completion
 
 ---
-*Last updated: 2026-02-11 after quick-042 (match card navigation fix)*
+*Last updated: 2026-02-12 after quick-043 (OpenRouter spend reduction)*
