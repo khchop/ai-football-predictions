@@ -28,6 +28,8 @@ import { getStandingsForLeagues, getStandingFromMap } from '@/lib/football/stand
 import { getResult, calculateQuotas } from '@/lib/utils/scoring';
 import { generateBettingContent } from '@/lib/content/match-content';
 import { v4 as uuidv4 } from 'uuid';
+import { recordPredictionCost } from '@/lib/llm/budget';
+import { OpenRouterProvider } from '@/lib/llm/providers/openrouter';
 import { PredictionInsertSchema } from '@/lib/validation/prediction-schema';
 import { loggers } from '@/lib/logger/modules';
 import { getMatchWithRetry } from '@/lib/utils/retry-helpers';
@@ -329,9 +331,16 @@ export function createPredictionsWorker() {
              await updateMatchQuotas(matchId, quotas.home, quotas.draw, quotas.away);
              log.info({ matchId, quotas }, 'Quotas calculated and stored');
              
-             // NOW record model health for all successful models (only after batch insert succeeds)
+             // NOW record model health and cost tracking for all successful models (only after batch insert succeeds)
              for (const modelId of successfulModelIds) {
                await recordModelSuccess(modelId);
+
+               // Track cost per model
+               const modelProvider = filteredProviders.find(p => p.id === modelId);
+               if (modelProvider && modelProvider instanceof OpenRouterProvider) {
+                 const estimatedCost = modelProvider.estimateCost(500, 50);
+                 await recordPredictionCost(modelId, estimatedCost);
+               }
              }
              
              // Generate betting content (non-blocking)
