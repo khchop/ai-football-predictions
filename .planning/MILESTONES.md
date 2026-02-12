@@ -390,4 +390,60 @@
 
 ---
 
-*Last updated: 2026-02-05 after v2.5 milestone*
+## v2.9 Provider Unification & Maximum Coverage (Shipped: 2026-02-11)
+
+**Delivered:** Unified all 42 models under OpenRouter as single provider — built multi-provider routing with 3-tier fallback chains, provider attribution tracking, migration scripts with dedup/validation/dry-run, then simplified by removing Synthetic and Together AI providers entirely via quick-040/041.
+
+**Phases completed:** 59-62 + quick-040/041 (5 plans + 2 quick tasks)
+
+**Key accomplishments:**
+
+- OpenRouterProvider class with HTTP-Referer/X-Title headers and conditional registry inclusion
+- MODEL_PROVIDER_ROUTES replacing MODEL_FALLBACKS with per-model ordered provider priority lists
+- Provider attribution column on predictions table (provider_used field populated for 100% of predictions)
+- Migration script with dedup resolution, dry-run mode, pre/post validation checksums
+- Removed Synthetic and Together AI providers — all 42 models on OpenRouter as single provider
+- Reduced active model count from 42 to 21, capped reasoning tokens, cut retries 5→2 (quick-043)
+
+**Stats:**
+
+- Phases 59-62 (4 phases, 5 plans) + quick-040/041/042/043
+- 3 days from start to ship (2026-02-08 → 2026-02-11)
+
+**Git range:** `feat(59-01)` → `quick-043`
+
+**What's next:** v3.0 Club/Team Pages
+
+---
+
+## v3.0 Club/Team Pages (Shipped: 2026-02-12)
+
+**Delivered:** Added dedicated team pages for every club across all 17 leagues with per-club model leaderboards, match predictions, AI-generated analysis, and full SEO optimization including SportsTeam schema, FAQPage markup, and quality-filtered sitemap.
+
+**Phases completed:** 67-71 (10 plans total)
+
+**Key accomplishments:**
+
+- 164 teams mapped with slug resolution, alias support, and 100% DB coverage validation
+- Single-query team stats using 13 CASE WHEN statements (no N+1 patterns)
+- Full SEO stack — SportsTeam schema, meta tags, OG images, quality-filtered sitemap, FAQPage markup
+- 7 team page components — leaderboard, time filter, stats overview, form indicator, upcoming/recent matches, accuracy trend chart
+- Bidirectional navigation — team links on league pages, match pages, and between teams via overlay anchor pattern
+- AI content pipeline — rate-limited BullMQ worker with dual triggers (event-driven + weekly cron), anti-hallucination prompts
+
+**Stats:**
+
+- 210 files changed, +27,269 / -18,564 lines
+- 5 phases, 10 plans, 18 requirements
+- 68 commits
+- 2 days from start to ship (2026-02-11 → 2026-02-12)
+
+**Git range:** `542e3d5 (docs(67))` → `6062170 (docs(phase-71))`
+
+**Tech debt:** 6 non-blocking items (see v3.0-MILESTONE-AUDIT.md): no SQL migration for teamContent table, rate limit math margin, ISR removed for PPR compatibility, canonical URL strategy TBD, getAllTeamSlugs unused, human verification items pending.
+
+**What's next:** New milestone planning with `/gsd:new-milestone`
+
+---
+
+*Last updated: 2026-02-12 after v3.0 milestone*
