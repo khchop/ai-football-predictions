@@ -11,8 +11,10 @@ import {
   getTeamAccuracyTrend,
   type TeamLeaderboardPeriod
 } from '@/lib/db/queries/team-stats';
+import { getTeamContent } from '@/lib/db/queries/team-content';
 import { buildSportsTeamSchema } from '@/lib/seo/schema/team';
 import { buildBreadcrumbSchema } from '@/lib/seo/schema/breadcrumb';
+import { generateFAQPageSchema, type FAQItem } from '@/lib/seo/schemas';
 import { buildTeamTitle, buildTeamDescription } from '@/lib/seo/metadata';
 import { BASE_URL } from '@/lib/seo/constants';
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
@@ -121,14 +123,20 @@ export default async function TeamPage({ params, searchParams }: PageProps) {
     : 'all';
 
   // Parallel data fetch
-  const [stats, formGuide, leaderboard, upcomingMatches, recentWithAccuracy, accuracyTrend] = await Promise.all([
+  const [stats, formGuide, leaderboard, upcomingMatches, recentWithAccuracy, accuracyTrend, teamContentData] = await Promise.all([
     getTeamStats(team.id),
     getTeamFormGuide(team.id, 5),
     getTeamModelLeaderboard(team.id, { timePeriod }),
     getTeamUpcomingWithPredictions(team.id, 5),
     getTeamRecentWithAccuracy(team.id, 10),
     getTeamAccuracyTrend(team.id),
+    getTeamContent(team.id),
   ]);
+
+  // Parse FAQ content
+  const faqs: FAQItem[] | null = teamContentData?.faqContent
+    ? JSON.parse(teamContentData.faqContent)
+    : null;
 
   // Build schema.org structured data
   const teamSchema = buildSportsTeamSchema(team, stats);
@@ -138,10 +146,15 @@ export default async function TeamPage({ params, searchParams }: PageProps) {
     { name: team.id, url: `${BASE_URL}/teams/${team.slug}` },
   ]);
 
-  // Combined @graph
+  // Build @graph with optional FAQPage schema
+  const graphItems: any[] = [teamSchema, breadcrumbSchemaItems];
+  if (faqs && faqs.length > 0) {
+    graphItems.push(generateFAQPageSchema(faqs));
+  }
+
   const schema = {
     '@context': 'https://schema.org',
-    '@graph': [teamSchema, breadcrumbSchemaItems],
+    '@graph': graphItems,
   };
 
   // Build visual breadcrumbs
@@ -204,6 +217,20 @@ export default async function TeamPage({ params, searchParams }: PageProps) {
           <TeamAccuracyTrendChart data={accuracyTrend} />
         </section>
 
+        {/* AI Analysis section - only show when content exists */}
+        {teamContentData?.analysis && (
+          <section>
+            <h2 className="text-xl font-semibold mb-4">AI Club Analysis</h2>
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              {teamContentData.analysis.split('\n\n').map((paragraph, i) => (
+                <p key={i} className="text-muted-foreground leading-relaxed">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Upcoming Matches section */}
         <section>
           <h2 className="text-xl font-semibold mb-4">Upcoming Matches</h2>
@@ -215,6 +242,21 @@ export default async function TeamPage({ params, searchParams }: PageProps) {
           <h2 className="text-xl font-semibold mb-4">Recent Matches</h2>
           <TeamRecentMatches matches={recentWithAccuracy} teamName={team.id} />
         </section>
+
+        {/* FAQ section - only show when FAQ content exists */}
+        {faqs && faqs.length > 0 && (
+          <section>
+            <h2 className="text-xl font-semibold mb-4">Frequently Asked Questions</h2>
+            <div className="space-y-4">
+              {faqs.map((faq, i) => (
+                <div key={i} className="border rounded-lg p-4">
+                  <h3 className="font-medium mb-2">{faq.question}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{faq.answer}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </>
   );
