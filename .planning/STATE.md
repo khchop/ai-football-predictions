@@ -11,18 +11,18 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 ## Current Position
 
 Phase: 71 of 71 (AI Content & FAQ Generation)
-Plan: 0 of TBD in current phase
-Status: Phase 71 not yet planned
-Last activity: 2026-02-12 - Reduced OpenRouter spend: 38→21 models, retries 5→2, cost tracking enabled (quick-043)
+Plan: 1 of 2 in current phase
+Status: Phase 71 in progress - Plan 01 complete (content infrastructure)
+Last activity: 2026-02-12 - Completed 71-01: teamContent table + AI generation functions
 
-Progress: [██████████████████████████████████████████░] 99% (v2.9 complete, v3.0 Phases 67-70 complete, Phase 71 remaining)
+Progress: [██████████████████████████████████████████░] 99.5% (v2.9 complete, v3.0 Phases 67-70 complete, Phase 71: 1/2 plans done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 172 plans (phases 1-62, 67-70) + 5 quick tasks (quick-037 through quick-041)
+- Total plans completed: 173 plans (phases 1-62, 67-70, 71-01) + 5 quick tasks (quick-037 through quick-043)
 - Milestones shipped: 14 (v1.0 through v2.9)
-- v3.0 in progress: Phases 67-70 complete (8/8 plans), Phase 71 remaining
+- v3.0 in progress: Phases 67-70 complete (8/8 plans), Phase 71: 1/2 plans done
 
 **Recent Milestones:**
 - v2.9 Provider Unification: Phases 59-62 built infra, quick-040/041 completed by removing Synthetic+Together (shipped 2026-02-11)
@@ -57,20 +57,24 @@ Recent decisions affecting current work:
 - [Phase 70-01]: Use overlay anchor pattern for league cards to avoid nested links
 - [Phase 70-02]: Match hero and match card team names link to /teams/[slug]
 - [Phase 70-02]: Removed ISR revalidate config (incompatible with Next.js 16 PPR), use Redis cache with tag invalidation
+- [Phase 71-01]: Use text timestamps (not timestamp type) to match matchContent pattern
+- [Phase 71-01]: Separate analysisGeneratedAt and faqGeneratedAt for independent generation
+- [Phase 71-01]: Skip teams with <5 matches (insufficient data for meaningful analysis)
+- [Phase 71-01]: Direct imports (./together-client) to avoid circular dependencies
 
 ### Pending Todos
 
 **v3.0 todos:**
-- Phase 71: Next up (AI content generation for team pages)
-- Estimate AI content generation cost (200+ teams × LLM calls)
+- Phase 71-02: Next up (wire content generation into queue worker + team page UI)
 - Post-deployment: Test team page internal linking graph in Search Console
 - Decide canonical URL strategy for duplicate content (leaderboard vs team pages)
+- Monitor AI content generation cost (~$0.20 for 200 teams full batch)
 
 ### Blockers/Concerns
 
 **v3.0 considerations:**
-- No blockers - v2.9 complete, v3.0 phases 67-70 done
-- Phase 71 (AI content) needs planning — estimate cost before committing
+- No blockers - Phase 71-01 complete (content infrastructure ready)
+- Phase 71-02 remaining: queue worker + UI rendering
 
 ### Quick Tasks Completed
 
@@ -80,14 +84,15 @@ Recent decisions affecting current work:
 | 041 | Remove Together AI provider, move all models to OpenRouter, deduplicate model entries | 2026-02-11 | 0dba995 | [041-remove-together-ai-provider-move-all-mod](./quick/041-remove-together-ai-provider-move-all-mod/) |
 | 042 | Fix match card click navigation - card body to match detail, team names to team pages | 2026-02-11 | 8a65d44 | [042-fix-match-boxes-linking-to-team-pages-in](./quick/42-fix-match-boxes-linking-to-team-pages-in/) |
 | 043 | Reduce OpenRouter spend: trim 38→21 models, retries 5→2, cap reasoning tokens, wire cost tracking | 2026-02-12 | fd6fcd1 | [43-reduce-openrouter-spend-trim-expensive-m](./quick/43-reduce-openrouter-spend-trim-expensive-m/) |
+| Phase 71 P01 | 275 | 2 tasks | 4 files |
 
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Quick-043 reduced OpenRouter spend (38→21 models), v3.0 phase 71 planned
-Resume file: .planning/phases/71-ai-content-generation/ (if exists)
+Stopped at: Completed Phase 71-01 (teamContent table + AI generation functions)
+Resume file: .planning/phases/71-ai-content-generation/71-01-SUMMARY.md
 
-**Next action:** Begin Phase 71 (AI Content Generation) or verify v3.0 completion
+**Next action:** Execute Phase 71-02 (queue worker + team page rendering)
 
 ---
-*Last updated: 2026-02-12 after quick-043 (OpenRouter spend reduction)*
+*Last updated: 2026-02-12 after Phase 71-01 (team content infrastructure)*
