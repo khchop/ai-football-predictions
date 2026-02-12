@@ -77,8 +77,10 @@ export const models = pgTable('models', {
   lastSuccessAt: text('last_success_at'), // ISO timestamp of last successful prediction
   failureReason: text('failure_reason'), // Last error message/reason
   autoDisabled: boolean('auto_disabled').default(false), // Auto-disabled after 3+ consecutive failures
+  archived: boolean('archived').default(false), // Archived models retain history but excluded from active operations
 }, (table) => [
   index('idx_models_active').on(table.active),
+  index('idx_models_archived').on(table.archived),
 ]);
 
 // Daily usage tracking for budget control
