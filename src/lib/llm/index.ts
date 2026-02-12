@@ -7,7 +7,7 @@ import { getDb, models } from '@/lib/db';
 import { eq, sql } from 'drizzle-orm';
 
 // OpenRouter providers (sole provider)
-// OpenRouter: 21 active models = 21 total
+// OpenRouter: 20 active models = 20 total
 export const ALL_PROVIDERS: LLMProvider[] = [...OPENROUTER_PROVIDERS];
 
 // ============================================================================
@@ -21,32 +21,57 @@ export const ALL_PROVIDERS: LLMProvider[] = [...OPENROUTER_PROVIDERS];
 // Workers currently use per-provider model IDs and getFallbackProvider();
 // Phase 62-64 will transition workers to pass providerRoute by consolidated ID.
 //
-// Provider ID conventions:
-//   - Together AI: model-name (e.g., 'deepseek-r1')
-//   - Synthetic: model-name (e.g., 'qwen3-235b-thinking')
-//   - OpenRouter: model-name-or (e.g., 'deepseek-r1-or')
+// Provider ID convention: {model-slug}-or (e.g., 'deepseek-v3.2-or')
 // ============================================================================
 
 export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
-  // --- All OpenRouter-only (single provider per model) ---
-  'deepseek-r1': ['deepseek-r1-or'],
-  'llama-4-maverick': ['llama-4-maverick-or'],
-  'llama-3.1-8b-turbo': ['llama-3.1-8b-or'],
-  'llama-3.2-3b-turbo': ['llama-3.2-3b-or'],
-  'qwen3-235b': ['qwen3-235b-or'],
-  'qwen2.5-7b': ['qwen2.5-7b-or'],
-  'cogito-671b': ['cogito-671b-or'],
-  'ministral-3-14b': ['ministral-3-14b-or'],
-  'rnj-1-instruct': ['rnj-1-instruct-or'],
-  'deepseek-v3.1': ['deepseek-v3.1-or'],
+  // DeepSeek (2)
+  'deepseek-v3.2': ['deepseek-v3.2-or'],
+  'deepseek-r1-0528': ['deepseek-r1-0528-or'],
+
+  // Moonshot Kimi (1)
   'kimi-k2.5': ['kimi-k2.5-or'],
-  'mistral-small-3-24b': ['mistral-small-3-24b-or'],
-  'nemotron-nano-9b-v2': ['nemotron-nano-9b-v2-or'],
-  'gemma-3n-e4b': ['gemma-3n-e4b-or'],
-  'minimax-m2.1': ['minimax-m2.1-or'],
+
+  // Qwen (3)
+  'qwen3-235b': ['qwen3-235b-or'],
   'qwen3-235b-thinking': ['qwen3-235b-thinking-or'],
-  'gpt-oss-120b': ['gpt-oss-120b-or'],
-  // Note: Marin 8B removed (not available on OpenRouter)
+  'qwen3-30b-a3b': ['qwen3-30b-a3b-or'],
+
+  // Meta Llama (2)
+  'llama-4-maverick': ['llama-4-maverick-or'],
+  'llama-4-scout': ['llama-4-scout-or'],
+
+  // OpenAI OSS (1)
+  'gpt-oss-20b': ['gpt-oss-20b-or'],
+
+  // Deep Cogito (1)
+  'cogito-671b': ['cogito-671b-or'],
+
+  // Mistral (2)
+  'devstral-small': ['devstral-small-or'],
+  'mistral-small-3.2-24b': ['mistral-small-3.2-24b-or'],
+
+  // StepFun (1)
+  'step-3.5-flash': ['step-3.5-flash-or'],
+
+  // NVIDIA (1)
+  'nemotron-nano-9b-v2': ['nemotron-nano-9b-v2-or'],
+
+  // Google (2)
+  'gemma-3-27b': ['gemma-3-27b-or'],
+  'gemma-3-12b': ['gemma-3-12b-or'],
+
+  // Z-AI GLM (1)
+  'glm-5': ['glm-5-or'],
+
+  // MiniMax (1)
+  'minimax-m2.1': ['minimax-m2.1-or'],
+
+  // Arcee AI (1)
+  'trinity-large-preview': ['trinity-large-preview-or'],
+
+  // Microsoft (1)
+  'phi-4': ['phi-4-or'],
 };
 
 /**
