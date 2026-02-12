@@ -4,16 +4,18 @@
 
 See: .planning/PROJECT.md (updated 2026-02-12)
 
-**Core value:** The prediction pipeline must reliably generate scores from 21 LLMs ~30 minutes before kickoff and accurately calculate Kicktipp quota points when matches complete
+**Core value:** The prediction pipeline must reliably generate scores from 20 LLMs ~30 minutes before kickoff and accurately calculate Kicktipp quota points when matches complete.
 
-**Current focus:** v3.1 Model Lifecycle & Discord Alerts
+**Current focus:** Phase 72 - Model Configuration & Archive Schema
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-02-12 — Milestone v3.1 started
+Phase: 72 of 74 (Model Configuration & Archive Schema)
+Plan: Ready to plan
+Status: Ready to plan
+Last activity: 2026-02-12 - v3.1 roadmap created
+
+Progress: [████████████████████████████████████████████████░░] 96% (71/74 phases)
 
 ## Performance Metrics
 
@@ -26,43 +28,47 @@ Last activity: 2026-02-12 — Milestone v3.1 started
 - v2.9 Provider Unification: Phases 59-62 + quick-040/041/042/043 (shipped 2026-02-11)
 - v2.8 Model Coverage: 13 plans, 2 days (2026-02-07 → 2026-02-08)
 
+**Trend:** Stable delivery cadence with 1-2 day milestone completion for focused work.
+
 ## Accumulated Context
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
+Recent decisions from PROJECT.md affecting current work:
+
+- **Reduce to 21 models** (quick-043): Cut expensive/underperforming models, cap reasoning tokens, reduce retries - now targeting 20 models in v3.1
+- **Single OpenRouter provider** (v2.9): Eliminated provider complexity, all models on OpenRouter
+- **Per-model investigation** (v2.8): Different models fail for different reasons, need individual fixes
 
 ### Pending Todos
 
 **v3.0 post-deployment:**
-- Monitor team content queue worker in production (BullMQ dashboard)
+- Monitor team content queue worker in production
 - Verify weekly cron triggers on Sunday 06:00 UTC
 - Test event-driven regeneration after match settlement
 - Validate FAQPage schema in Google Rich Results Test
-- Test team page internal linking graph in Search Console
-- Decide canonical URL strategy for duplicate content (leaderboard vs team pages)
-- Monitor AI content generation cost (~$0.20 for 200 teams full batch)
+- Decide canonical URL strategy for duplicate content
 
 ### Blockers/Concerns
 
-No blockers — starting v3.1.
+None yet.
 
 ### Quick Tasks Completed
 
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 040 | Remove all Synthetic providers, use OpenRouter when possible | 2026-02-11 | e8bd822 | [040-remove-synthetic-providers-use-openroute](./quick/040-remove-synthetic-providers-use-openroute/) |
-| 041 | Remove Together AI provider, move all models to OpenRouter, deduplicate model entries | 2026-02-11 | 0dba995 | [041-remove-together-ai-provider-move-all-mod](./quick/041-remove-together-ai-provider-move-all-mod/) |
-| 042 | Fix match card click navigation - card body to match detail, team names to team pages | 2026-02-11 | 8a65d44 | [042-fix-match-boxes-linking-to-team-pages-in](./quick/42-fix-match-boxes-linking-to-team-pages-in/) |
-| 043 | Reduce OpenRouter spend: trim 38→21 models, retries 5→2, cap reasoning tokens, wire cost tracking | 2026-02-12 | fd6fcd1 | [43-reduce-openrouter-spend-trim-expensive-m](./quick/43-reduce-openrouter-spend-trim-expensive-m/) |
+| # | Description | Date | Commit |
+|---|-------------|------|--------|
+| 040 | Remove Synthetic providers | 2026-02-11 | e8bd822 |
+| 041 | Remove Together AI provider | 2026-02-11 | 0dba995 |
+| 042 | Fix match card navigation | 2026-02-11 | 8a65d44 |
+| 043 | Reduce OpenRouter spend 38→21 models | 2026-02-12 | fd6fcd1 |
 
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Starting milestone v3.1
-Resume file: N/A
+Stopped at: Created v3.1 roadmap with 3 phases (72-74)
+Resume file: None
 
-**Next action:** Define requirements and create roadmap for v3.1
+**Next step:** Run `/gsd:plan-phase 72` to create execution plan for Model Configuration & Archive Schema
 
 ---
-*Last updated: 2026-02-12 after v3.1 milestone start*
+*Last updated: 2026-02-12 after v3.1 roadmap creation*

@@ -17,6 +17,7 @@
 - ✅ **v2.8 Model Coverage** - Phases 53-58 (shipped 2026-02-08)
 - ✅ **v2.9 Provider Unification & Maximum Coverage** - Phases 59-62 + quick-040/041 (shipped 2026-02-11)
 - ✅ **v3.0 Club/Team Pages** - Phases 67-71 (shipped 2026-02-12)
+- 🚧 **v3.1 Model Lifecycle & Discord Alerts** - Phases 72-74 (in progress)
 
 ## Phases
 
@@ -125,7 +126,76 @@ See `.planning/MILESTONES.md` and `.planning/milestones/v3.0-ROADMAP.md` for ful
 
 </details>
 
+### 🚧 v3.1 Model Lifecycle & Discord Alerts (In Progress)
+
+**Milestone Goal:** Replace 18 models with 20 new/updated models, add archival system with leaderboard toggle, and build Discord webhook notifications for persistent model errors.
+
+#### Phase 72: Model Configuration & Archive Schema
+
+**Goal**: Configure 20 active OpenRouter models with correct IDs/pricing and add database archive infrastructure
+
+**Depends on**: Phase 71
+
+**Requirements**: MDL-01, MDL-02, MDL-03, MDL-04, MDL-05, ARCH-01
+
+**Success Criteria** (what must be TRUE):
+  1. System defines exactly 20 active models with correct OpenRouter model IDs, pricing, and prompt variants
+  2. New models (GLM-5, DeepSeek V3.2, DeepSeek R1-0528, MiniMax M2.1, Devstral 2, Qwen3 30B A3B, GPT-OSS-20B, Step 3.5 Flash, Mistral Small 3.2 24B, Gemma 3 27B, Nemotron 3 Nano 30B A3B, Trinity Large Preview, Phi-4, Llama 4 Scout, Gemma 3 12B) are defined with appropriate timeouts
+  3. GLM-4.7 route registration bug is fixed (model appears in MODEL_PROVIDER_ROUTES)
+  4. Models table has `archived` boolean column (default false) with migration applied
+  5. Model validation passes at module load time without errors
+
+**Plans**: TBD
+
+Plans:
+- [ ] 72-01: TBD
+
+#### Phase 73: Archive System Integration
+
+**Goal**: Archived models are excluded from pipeline and leaderboards with user-controlled toggle
+
+**Depends on**: Phase 72
+
+**Requirements**: ARCH-02, ARCH-03, ARCH-04, ARCH-05, ARCH-06, ARCH-07, ARCH-08
+
+**Success Criteria** (what must be TRUE):
+  1. Archived models are excluded from prediction pipeline (workers skip them)
+  2. Archived models are excluded from `getActiveModelCount()` dynamic count
+  3. Leaderboard shows "Show archived models" toggle switch (off by default)
+  4. When toggle is off, archived models do not appear in leaderboard rankings
+  5. When toggle is on, archived models appear with visual indicator (grayed out or badge)
+  6. Team page leaderboards respect the archived filter setting
+  7. Competition leaderboards respect the archived filter setting
+
+**Plans**: TBD
+
+Plans:
+- [ ] 73-01: TBD
+
+#### Phase 74: Discord Alert Service
+
+**Goal**: Discord webhook sends rich embeds for model auto-disable and regression events
+
+**Depends on**: Phase 72 (independent of Phase 73)
+
+**Requirements**: DISC-01, DISC-02, DISC-03, DISC-04, DISC-05
+
+**Success Criteria** (what must be TRUE):
+  1. Discord webhook URL is configurable via `DISCORD_WEBHOOK_URL` environment variable
+  2. Discord service sends rich embeds with model name, error details, timestamps when called
+  3. Alert fires when a model is auto-disabled (5+ consecutive model-specific failures)
+  4. Alert fires during daily regression check when a model drops more than 10% success rate
+  5. Alerts include actionable context: error type, failure count, last success time, suggested action
+
+**Plans**: TBD
+
+Plans:
+- [ ] 74-01: TBD
+
 ## Progress
+
+**Execution Order:**
+Phases execute in numeric order: 72 → 73 → 74
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -197,6 +267,9 @@ See `.planning/MILESTONES.md` and `.planning/milestones/v3.0-ROADMAP.md` for ful
 | 69. UI Components & Match Display | v3.0 | 2/2 | Complete | 2026-02-11 |
 | 70. Navigation & Cross-Linking | v3.0 | 2/2 | Complete | 2026-02-11 |
 | 71. AI Content & FAQ Generation | v3.0 | 2/2 | Complete | 2026-02-12 |
+| 72. Model Configuration & Archive Schema | v3.1 | 0/TBD | Not started | - |
+| 73. Archive System Integration | v3.1 | 0/TBD | Not started | - |
+| 74. Discord Alert Service | v3.1 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-12 after v3.0 milestone completion*
+*Last updated: 2026-02-12 after v3.1 roadmap creation*

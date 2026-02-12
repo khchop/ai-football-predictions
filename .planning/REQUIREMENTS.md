@@ -63,30 +63,30 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MDL-01 | — | Pending |
-| MDL-02 | — | Pending |
-| MDL-03 | — | Pending |
-| MDL-04 | — | Pending |
-| MDL-05 | — | Pending |
-| ARCH-01 | — | Pending |
-| ARCH-02 | — | Pending |
-| ARCH-03 | — | Pending |
-| ARCH-04 | — | Pending |
-| ARCH-05 | — | Pending |
-| ARCH-06 | — | Pending |
-| ARCH-07 | — | Pending |
-| ARCH-08 | — | Pending |
-| DISC-01 | — | Pending |
-| DISC-02 | — | Pending |
-| DISC-03 | — | Pending |
-| DISC-04 | — | Pending |
-| DISC-05 | — | Pending |
+| MDL-01 | Phase 72 | Pending |
+| MDL-02 | Phase 72 | Pending |
+| MDL-03 | Phase 72 | Pending |
+| MDL-04 | Phase 72 | Pending |
+| MDL-05 | Phase 72 | Pending |
+| ARCH-01 | Phase 72 | Pending |
+| ARCH-02 | Phase 73 | Pending |
+| ARCH-03 | Phase 73 | Pending |
+| ARCH-04 | Phase 73 | Pending |
+| ARCH-05 | Phase 73 | Pending |
+| ARCH-06 | Phase 73 | Pending |
+| ARCH-07 | Phase 73 | Pending |
+| ARCH-08 | Phase 73 | Pending |
+| DISC-01 | Phase 74 | Pending |
+| DISC-02 | Phase 74 | Pending |
+| DISC-03 | Phase 74 | Pending |
+| DISC-04 | Phase 74 | Pending |
+| DISC-05 | Phase 74 | Pending |
 
 **Coverage:**
 - v3.1 requirements: 18 total
-- Mapped to phases: 0
-- Unmapped: 18 ⚠️
+- Mapped to phases: 18 (100%)
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-12*
-*Last updated: 2026-02-12 after initial definition*
+*Last updated: 2026-02-12 after v3.1 roadmap creation*
