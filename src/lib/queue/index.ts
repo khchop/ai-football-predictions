@@ -184,6 +184,7 @@ export const QUEUE_NAMES = {
   STANDINGS: 'standings-queue',
   STATS: 'stats-queue',
   MODEL_STATS: 'model-stats-queue',
+  TEAM_CONTENT: 'team-content-queue',
 } as const;
 
 // Queue-specific timeout configurations
@@ -194,6 +195,7 @@ const QUEUE_TIMEOUTS = {
   [QUEUE_NAMES.SETTLEMENT]: 3 * 60 * 1000,   // 3 minutes - scoring many predictions
   [QUEUE_NAMES.STATS]: 2 * 60 * 1000,        // 2 minutes - stats calculation
   [QUEUE_NAMES.MODEL_STATS]: 3 * 60 * 1000,  // 3 minutes - daily model stats aggregation
+  [QUEUE_NAMES.TEAM_CONTENT]: 3 * 60 * 1000, // 3 minutes - LLM calls + DB writes
   default: 2 * 60 * 1000,                     // 2 minutes - default for fast operations
 } as const;
 
@@ -205,6 +207,7 @@ const WORKER_LOCK_DURATIONS = {
   [QUEUE_NAMES.SETTLEMENT]: 3 * 60 * 1000,   // 3 minutes
   [QUEUE_NAMES.STATS]: 2 * 60 * 1000,        // 2 minutes
   [QUEUE_NAMES.MODEL_STATS]: 3 * 60 * 1000,  // 3 minutes
+  [QUEUE_NAMES.TEAM_CONTENT]: 3 * 60 * 1000, // 3 minutes
   default: 30 * 1000,                        // 30 seconds - prevents stalled marking
 } as const;
 
@@ -366,6 +369,13 @@ export function getModelStatsQueue(): Queue {
 }
 export const modelStatsQueue = createLazyQueueProxy(getModelStatsQueue);
 
+let _teamContentQueue: Queue | null = null;
+export function getTeamContentQueue(): Queue {
+  if (!_teamContentQueue) _teamContentQueue = createQueue(QUEUE_NAMES.TEAM_CONTENT);
+  return _teamContentQueue;
+}
+export const teamContentQueue = createLazyQueueProxy(getTeamContentQueue);
+
 // Legacy queue (kept for backward compatibility)
 let _matchQueue: Queue | null = null;
 export function getMatchQueue(): Queue {
@@ -403,6 +413,8 @@ export function getQueue(queueName: string): Queue {
       return statsQueue;
     case QUEUE_NAMES.MODEL_STATS:
       return modelStatsQueue;
+    case QUEUE_NAMES.TEAM_CONTENT:
+      return teamContentQueue;
     default:
       throw new Error(`Unknown queue name: ${queueName}`);
   }
@@ -423,6 +435,7 @@ export function getAllQueues(): Queue[] {
     getStandingsQueue(),
     getStatsQueue(),
     getModelStatsQueue(),
+    getTeamContentQueue(),
   ];
 }
 

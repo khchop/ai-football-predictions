@@ -5,7 +5,7 @@
  * Call this once when the app starts (from instrumentation.ts).
  */
 
-import { fixturesQueue, backfillQueue, contentQueue, modelRecoveryQueue, standingsQueue, modelStatsQueue, JOB_TYPES } from './index';
+import { fixturesQueue, backfillQueue, contentQueue, modelRecoveryQueue, standingsQueue, modelStatsQueue, teamContentQueue, JOB_TYPES } from './index';
 import { loggers } from '@/lib/logger/modules';
 import { startPeriodicMetricsLogging } from '@/lib/logger/metrics';
 import { Queue } from 'bullmq';
@@ -349,6 +349,20 @@ export async function setupRepeatableJobs(): Promise<void> {
          tz: 'UTC',
        },
        jobId: 'model-stats-daily-aggregation',
+     }
+   );
+
+   // Team content refresh: Every Sunday at 06:00 UTC (before weekly traffic)
+   await registerRepeatableJob(
+     teamContentQueue,
+     'refresh_all_teams',
+     { type: 'refresh_all_teams' },
+     {
+       repeat: {
+         pattern: '0 6 * * 0', // Sunday 06:00 UTC
+         tz: 'UTC',
+       },
+       jobId: 'team-content-weekly-refresh',
      }
    );
 

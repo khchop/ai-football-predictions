@@ -151,6 +151,23 @@ export function createScoringWorker() {
             log.warn({ matchId, err }, 'Post-match content generation failed (non-blocking)');
           }
 
+          // Regenerate team content for both teams (non-blocking)
+          // Event-driven: ensures <24h refresh for active teams
+          try {
+            const { teamContentQueue } = await import('@/lib/queue/index');
+            const homeTeam = match.homeTeam;
+            const awayTeam = match.awayTeam;
+            if (homeTeam) {
+              await teamContentQueue.add('generate_team_content', { type: 'generate_team_content', data: { teamName: homeTeam } }, { delay: 60000 }); // 1 min delay for stats to settle
+            }
+            if (awayTeam) {
+              await teamContentQueue.add('generate_team_content', { type: 'generate_team_content', data: { teamName: awayTeam } }, { delay: 65000 }); // stagger
+            }
+            log.info({ matchId, homeTeam, awayTeam }, 'Team content regeneration queued after match settlement');
+          } catch (err) {
+            log.warn({ matchId, err }, 'Team content regeneration trigger failed (non-blocking)');
+          }
+
           // NOTE: Roundup generation moved to stats worker (calculate-stats.ts)
           // Roundups now trigger AFTER stats calculation to ensure complete model data
 
