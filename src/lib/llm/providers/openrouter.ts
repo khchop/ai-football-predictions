@@ -101,23 +101,7 @@ export const Qwen3_235B_OR = new OpenRouterProvider(
   }
 );
 
-// 3. Llama 4 Scout
-export const Llama4Scout_OR = new OpenRouterProvider(
-  'llama-4-scout-or',
-  'openrouter',
-  'meta-llama/llama-4-scout-17b-16e-instruct',
-  'Llama 4 Scout (OpenRouter)',
-  'ultra-budget',
-  { promptPer1M: 0.08, completionPer1M: 0.18 },
-  false,
-  {}
-);
-
-// ============================================================================
-// TOGETHER AI MODELS → OPENROUTER FALLBACKS (13)
-// ============================================================================
-
-// 4. Llama 4 Maverick
+// 3. Llama 4 Maverick
 export const Llama4Maverick_OR = new OpenRouterProvider(
   'llama-4-maverick-or',
   'openrouter',
@@ -129,19 +113,7 @@ export const Llama4Maverick_OR = new OpenRouterProvider(
   {}
 );
 
-// 5. Llama 3.3 70B
-export const Llama33_70B_OR = new OpenRouterProvider(
-  'llama-3.3-70b-or',
-  'openrouter',
-  'meta-llama/llama-3.3-70b-instruct',
-  'Llama 3.3 70B (OpenRouter)',
-  'ultra-budget',
-  { promptPer1M: 0.10, completionPer1M: 0.20 },
-  false,
-  {}
-);
-
-// 6. Llama 3.1 8B
+// 4. Llama 3.1 8B
 export const Llama31_8B_OR = new OpenRouterProvider(
   'llama-3.1-8b-or',
   'openrouter',
@@ -153,19 +125,7 @@ export const Llama31_8B_OR = new OpenRouterProvider(
   {}
 );
 
-// 7. Llama 3.1 405B
-export const Llama31_405B_OR = new OpenRouterProvider(
-  'llama-3.1-405b-or',
-  'openrouter',
-  'meta-llama/llama-3.1-405b-instruct',
-  'Llama 3.1 405B (OpenRouter)',
-  'budget',
-  { promptPer1M: 0.80, completionPer1M: 0.80 },
-  false,
-  {}
-);
-
-// 8. Llama 3.2 3B
+// 5. Llama 3.2 3B
 export const Llama32_3B_OR = new OpenRouterProvider(
   'llama-3.2-3b-or',
   'openrouter',
@@ -177,43 +137,7 @@ export const Llama32_3B_OR = new OpenRouterProvider(
   {}
 );
 
-// 9. Llama 3 8B
-export const Llama3_8B_OR = new OpenRouterProvider(
-  'llama-3-8b-or',
-  'openrouter',
-  'meta-llama/llama-3-8b-instruct',
-  'Llama 3 8B (OpenRouter)',
-  'free',
-  { promptPer1M: 0.00, completionPer1M: 0.00 },
-  false,
-  {}
-);
-
-// 10. Llama 3 70B
-export const Llama3_70B_OR = new OpenRouterProvider(
-  'llama-3-70b-or',
-  'openrouter',
-  'meta-llama/llama-3-70b-instruct',
-  'Llama 3 70B (OpenRouter)',
-  'ultra-budget',
-  { promptPer1M: 0.10, completionPer1M: 0.20 },
-  false,
-  {}
-);
-
-// 11. Qwen3 Next 80B
-export const Qwen3Next80B_OR = new OpenRouterProvider(
-  'qwen3-next-80b-or',
-  'openrouter',
-  'qwen/qwen3-next-80b-a3b-instruct-2509',
-  'Qwen3 Next 80B (OpenRouter)',
-  'ultra-budget',
-  { promptPer1M: 0.10, completionPer1M: 0.20 },
-  false,
-  {}
-);
-
-// 12. Qwen 2.5 7B
+// 6. Qwen 2.5 7B
 export const Qwen25_7B_OR = new OpenRouterProvider(
   'qwen2.5-7b-or',
   'openrouter',
@@ -225,19 +149,7 @@ export const Qwen25_7B_OR = new OpenRouterProvider(
   {}
 );
 
-// 13. Qwen 2.5 72B
-export const Qwen25_72B_OR = new OpenRouterProvider(
-  'qwen2.5-72b-or',
-  'openrouter',
-  'qwen/qwen-2.5-72b-instruct',
-  'Qwen 2.5 72B (OpenRouter)',
-  'budget',
-  { promptPer1M: 0.18, completionPer1M: 0.30 },
-  false,
-  {}
-);
-
-// 14. Cogito 671B
+// 7. Cogito 671B
 export const Cogito671B_OR = new OpenRouterProvider(
   'cogito-671b-or',
   'openrouter',
@@ -249,7 +161,7 @@ export const Cogito671B_OR = new OpenRouterProvider(
   {}
 );
 
-// 15. Ministral 3 14B
+// 8. Ministral 3 14B
 export const Ministral3_14B_OR = new OpenRouterProvider(
   'ministral-3-14b-or',
   'openrouter',
@@ -261,7 +173,7 @@ export const Ministral3_14B_OR = new OpenRouterProvider(
   {}
 );
 
-// 16. RNJ-1 Instruct
+// 9. RNJ-1 Instruct
 export const RNJ1Instruct_OR = new OpenRouterProvider(
   'rnj-1-instruct-or',
   'openrouter',
@@ -273,12 +185,7 @@ export const RNJ1Instruct_OR = new OpenRouterProvider(
   {}
 );
 
-// ============================================================================
-// TOGETHER AI MODELS → OPENROUTER FALLBACKS - BATCH 2 (10)
-// Added: 2026-02-10 (Quick-37 + Quick-38)
-// ============================================================================
-
-// 17. DeepSeek V3.1
+// 10. DeepSeek V3.1
 export const DeepSeekV31_OR = new OpenRouterProvider(
   'deepseek-v3.1-or',
   'openrouter',
@@ -293,31 +200,7 @@ export const DeepSeekV31_OR = new OpenRouterProvider(
   }
 );
 
-// 18. Kimi K2 0905
-export const KimiK2_0905_OR = new OpenRouterProvider(
-  'kimi-k2-0905-or',
-  'openrouter',
-  'moonshotai/kimi-k2-0905',
-  'Kimi K2 0905 (OpenRouter)',
-  'budget',
-  { promptPer1M: 0.39, completionPer1M: 1.90 },
-  false,
-  {}
-);
-
-// 19. Kimi K2 Instruct
-export const KimiK2Instruct_OR = new OpenRouterProvider(
-  'kimi-k2-instruct-or',
-  'openrouter',
-  'moonshotai/kimi-k2',
-  'Kimi K2 Instruct (OpenRouter)',
-  'budget',
-  { promptPer1M: 0.50, completionPer1M: 2.40 },
-  false,
-  {}
-);
-
-// 20. Kimi K2.5
+// 11. Kimi K2.5
 export const KimiK25_OR = new OpenRouterProvider(
   'kimi-k2.5-or',
   'openrouter',
@@ -328,28 +211,12 @@ export const KimiK25_OR = new OpenRouterProvider(
   false,
   {
     supportsJsonMode: false,
-    maxTokensSingle: 2000,
-    maxTokensBatch: 3000,
+    maxTokensSingle: 500,
+    maxTokensBatch: 800,
   }
 );
 
-// 21. GPT-OSS 20B
-export const GPTOSS20B_OR = new OpenRouterProvider(
-  'gpt-oss-20b-or',
-  'openrouter',
-  'openai/gpt-oss-20b',
-  'GPT-OSS 20B (OpenRouter)',
-  'ultra-budget',
-  { promptPer1M: 0.03, completionPer1M: 0.14 },
-  false,
-  {
-    supportsJsonMode: false,
-    maxTokensSingle: 300,
-    maxTokensBatch: 1000,
-  }
-);
-
-// 22. Mistral Small 3 24B
+// 12. Mistral Small 3 24B
 export const MistralSmall3_24B_OR = new OpenRouterProvider(
   'mistral-small-3-24b-or',
   'openrouter',
@@ -361,31 +228,7 @@ export const MistralSmall3_24B_OR = new OpenRouterProvider(
   {}
 );
 
-// 23. Mistral 7B v0.2
-export const Mistral7Bv02_OR = new OpenRouterProvider(
-  'mistral-7b-v0.2-or',
-  'openrouter',
-  'mistralai/mistral-7b-instruct-v0.2',
-  'Mistral 7B v0.2 (OpenRouter)',
-  'ultra-budget',
-  { promptPer1M: 0.20, completionPer1M: 0.20 },
-  false,
-  {}
-);
-
-// 24. Mistral 7B v0.3
-export const Mistral7Bv03_OR = new OpenRouterProvider(
-  'mistral-7b-v0.3-or',
-  'openrouter',
-  'mistralai/mistral-7b-instruct-v0.3',
-  'Mistral 7B v0.3 (OpenRouter)',
-  'ultra-budget',
-  { promptPer1M: 0.20, completionPer1M: 0.20 },
-  false,
-  {}
-);
-
-// 25. Nemotron Nano 9B v2
+// 13. Nemotron Nano 9B v2
 export const NemotronNano9Bv2_OR = new OpenRouterProvider(
   'nemotron-nano-9b-v2-or',
   'openrouter',
@@ -397,7 +240,7 @@ export const NemotronNano9Bv2_OR = new OpenRouterProvider(
   {}
 );
 
-// 26. Gemma 3n E4B
+// 14. Gemma 3n E4B
 export const Gemma3nE4B_OR = new OpenRouterProvider(
   'gemma-3n-e4b-or',
   'openrouter',
@@ -409,44 +252,7 @@ export const Gemma3nE4B_OR = new OpenRouterProvider(
   {}
 );
 
-// ============================================================================
-// FORMER SYNTHETIC MODELS (now OpenRouter primary) - BATCH 1 (6)
-// ============================================================================
-
-// 27. DeepSeek V3.2 (needs JSON_STRICT + EXTRACT_JSON like primary)
-export const DeepSeekV32_OR = new OpenRouterProvider(
-  'deepseek-v3.2-or',
-  'openrouter',
-  'deepseek/deepseek-v3.2',
-  'DeepSeek V3.2 (OpenRouter)',
-  'budget',
-  { promptPer1M: 0.30, completionPer1M: 0.88 },
-  false,
-  {
-    promptVariant: PromptVariant.JSON_STRICT,
-    responseHandler: ResponseHandler.EXTRACT_JSON,
-    timeoutMs: 45000,
-    supportsJsonMode: false,
-    maxTokensSingle: 1000,
-    maxTokensBatch: 1500,
-  }
-);
-
-// 28. MiniMax M2
-export const MiniMaxM2_OR = new OpenRouterProvider(
-  'minimax-m2-or',
-  'openrouter',
-  'minimax/minimax-m2',
-  'MiniMax M2 (OpenRouter)',
-  'budget',
-  { promptPer1M: 0.30, completionPer1M: 0.60 },
-  false,
-  {
-    supportsJsonMode: false,
-  }
-);
-
-// 29. MiniMax M2.1
+// 15. MiniMax M2.1
 export const MiniMaxM21_OR = new OpenRouterProvider(
   'minimax-m2.1-or',
   'openrouter',
@@ -461,62 +267,7 @@ export const MiniMaxM21_OR = new OpenRouterProvider(
   }
 );
 
-// 30. GLM 4.6 (needs ENGLISH_ENFORCED like primary)
-export const GLM46_OR = new OpenRouterProvider(
-  'glm-4.6-or',
-  'openrouter',
-  'z-ai/glm-4.6v',
-  'GLM 4.6 (OpenRouter)',
-  'budget',
-  { promptPer1M: 0.20, completionPer1M: 0.40 },
-  false,
-  {
-    promptVariant: PromptVariant.ENGLISH_ENFORCED,
-    responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
-    timeoutMs: 60000,
-    supportsJsonMode: false,
-    maxTokensSingle: 1000,
-    maxTokensBatch: 1500,
-  }
-);
-
-// 31. GLM 4.7 (needs ENGLISH_ENFORCED + EXTRACT_JSON like primary)
-export const GLM47_OR = new OpenRouterProvider(
-  'glm-4.7-or',
-  'openrouter',
-  'z-ai/glm-4.7',
-  'GLM 4.7 (OpenRouter)',
-  'budget',
-  { promptPer1M: 0.25, completionPer1M: 0.50 },
-  false,
-  {
-    promptVariant: PromptVariant.ENGLISH_ENFORCED,
-    responseHandler: ResponseHandler.EXTRACT_JSON,
-    timeoutMs: 60000,
-    supportsJsonMode: false,
-    maxTokensSingle: 1000,
-    maxTokensBatch: 1500,
-  }
-);
-
-// 32. Qwen3 Coder 480B
-export const Qwen3Coder480B_OR = new OpenRouterProvider(
-  'qwen3-coder-480b-or',
-  'openrouter',
-  'qwen/qwen3-coder-480b-a35b-07-25',
-  'Qwen3 Coder 480B (OpenRouter)',
-  'premium',
-  { promptPer1M: 1.50, completionPer1M: 3.00 },
-  true,
-  {}
-);
-
-// ============================================================================
-// FORMER SYNTHETIC MODELS (now OpenRouter primary) - BATCH 2 (4)
-// Added: 2026-02-10 (Quick-37)
-// ============================================================================
-
-// 33. Qwen3 235B Thinking (needs THINKING_STRIPPED + STRIP_THINKING_TAGS like primary)
+// 16. Qwen3 235B Thinking (needs THINKING_STRIPPED + STRIP_THINKING_TAGS like primary)
 export const Qwen3_235BThinking_OR = new OpenRouterProvider(
   'qwen3-235b-thinking-or',
   'openrouter',
@@ -530,36 +281,12 @@ export const Qwen3_235BThinking_OR = new OpenRouterProvider(
     responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
     timeoutMs: 120000,
     supportsJsonMode: false,
-    maxTokensSingle: 2000,
-    maxTokensBatch: 3000,
+    maxTokensSingle: 500,
+    maxTokensBatch: 800,
   }
 );
 
-// 34. DeepSeek V3 0324
-export const DeepSeekV3_0324_OR = new OpenRouterProvider(
-  'deepseek-v3-0324-or',
-  'openrouter',
-  'deepseek/deepseek-chat-v3-0324',
-  'DeepSeek V3 0324 (OpenRouter)',
-  'budget',
-  { promptPer1M: 0.19, completionPer1M: 0.87 },
-  false,
-  {}
-);
-
-// 35. DeepSeek V3.1 Terminus
-export const DeepSeekV31Terminus_OR = new OpenRouterProvider(
-  'deepseek-v3.1-terminus-or',
-  'openrouter',
-  'deepseek/deepseek-v3.1-terminus',
-  'DeepSeek V3.1 Terminus (OpenRouter)',
-  'budget',
-  { promptPer1M: 0.21, completionPer1M: 0.79 },
-  false,
-  {}
-);
-
-// 36. GPT-OSS 120B (needs JSON_STRICT + EXTRACT_JSON like primary)
+// 17. GPT-OSS 120B (needs JSON_STRICT + EXTRACT_JSON like primary)
 export const GPTOSS120B_OR = new OpenRouterProvider(
   'gpt-oss-120b-or',
   'openrouter',
@@ -578,13 +305,7 @@ export const GPTOSS120B_OR = new OpenRouterProvider(
   }
 );
 
-// ============================================================================
-// OPENROUTER-ONLY PRIMARY MODELS (2)
-// Models only available on OpenRouter, used as standalone primaries
-// Added: 2026-02-10 (Quick-38)
-// ============================================================================
-
-// 37. GLM 4.7 Flash (GLM models don't support json_object; needs ENGLISH_ENFORCED + EXTRACT_JSON)
+// 18. GLM 4.7 Flash (GLM models don't support json_object; needs ENGLISH_ENFORCED + EXTRACT_JSON)
 export const GLM47Flash_OR = new OpenRouterProvider(
   'glm-4.7-flash',
   'openrouter',
@@ -603,72 +324,39 @@ export const GLM47Flash_OR = new OpenRouterProvider(
   }
 );
 
-// 38. DeepSeek R1 0528 (needs THINKING_STRIPPED + STRIP_THINKING_TAGS like DeepSeek R1)
-export const DeepSeekR1_0528_OR = new OpenRouterProvider(
-  'deepseek-r1-0528',
-  'openrouter',
-  'deepseek/deepseek-r1-0528',
-  'DeepSeek R1 0528 (OpenRouter)',
-  'budget',
-  { promptPer1M: 0.40, completionPer1M: 1.75 },
-  false,
-  {
-    promptVariant: PromptVariant.THINKING_STRIPPED,
-    responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
-    timeoutMs: 120000,
-  }
-);
-
 // ============================================================================
-// ALL OPENROUTER PROVIDERS (38 models)
+// ALL OPENROUTER PROVIDERS (21 models)
 // OpenRouter is now the sole LLM provider for all predictions and content generation
 // Organized by model family for clarity
 // ============================================================================
 
 export const OPENROUTER_PROVIDERS: OpenRouterProvider[] = [
-  // DeepSeek (8 models)
+  // DeepSeek (2 models)
   DeepSeekR1_OR,              // Reasoning model (premium)
   DeepSeekV31_OR,             // V3.1 primary
-  DeepSeekV32_OR,             // V3.2
-  DeepSeekV3_0324_OR,         // V3 0324 snapshot
-  DeepSeekV31Terminus_OR,     // V3.1 Terminus variant
-  DeepSeekR1_0528_OR,         // R1 0528 snapshot
 
-  // Moonshot Kimi (3 models)
-  KimiK2_0905_OR,             // K2 0905 snapshot
-  KimiK2Instruct_OR,          // K2 Instruct
+  // Moonshot Kimi (1 model)
   KimiK25_OR,                 // K2.5 (reasoning model)
 
-  // Qwen (7 models)
+  // Qwen (3 models)
   Qwen3_235B_OR,              // 235B primary
   Qwen3_235BThinking_OR,      // 235B Thinking variant
-  Qwen3Next80B_OR,            // Next 80B
-  Qwen3Coder480B_OR,          // Coder 480B (premium)
   Qwen25_7B_OR,               // 2.5 7B
-  Qwen25_72B_OR,              // 2.5 72B
 
-  // Meta Llama (8 models)
+  // Meta Llama (3 models)
   Llama4Maverick_OR,          // Llama 4 Maverick
-  Llama4Scout_OR,             // Llama 4 Scout
-  Llama33_70B_OR,             // Llama 3.3 70B
   Llama31_8B_OR,              // Llama 3.1 8B (free tier)
-  Llama31_405B_OR,            // Llama 3.1 405B
   Llama32_3B_OR,              // Llama 3.2 3B (free tier)
-  Llama3_8B_OR,               // Llama 3 8B (free tier)
-  Llama3_70B_OR,              // Llama 3 70B
 
-  // OpenAI OSS (2 models)
-  GPTOSS20B_OR,               // GPT-OSS 20B
+  // OpenAI OSS (1 model)
   GPTOSS120B_OR,              // GPT-OSS 120B
 
   // Deep Cogito (1 model)
   Cogito671B_OR,              // Cogito 671B
 
-  // Mistral (4 models)
+  // Mistral (2 models)
   Ministral3_14B_OR,          // Ministral 3 14B
   MistralSmall3_24B_OR,       // Mistral Small 3 24B
-  Mistral7Bv02_OR,            // Mistral 7B v0.2
-  Mistral7Bv03_OR,            // Mistral 7B v0.3
 
   // NVIDIA (1 model)
   NemotronNano9Bv2_OR,        // Nemotron Nano 9B v2
@@ -676,13 +364,10 @@ export const OPENROUTER_PROVIDERS: OpenRouterProvider[] = [
   // Google (1 model)
   Gemma3nE4B_OR,              // Gemma 3n E4B (free tier)
 
-  // Z-AI GLM (3 models)
-  GLM46_OR,                   // GLM 4.6
-  GLM47_OR,                   // GLM 4.7
+  // Z-AI GLM (1 model)
   GLM47Flash_OR,              // GLM 4.7 Flash
 
-  // MiniMax (2 models)
-  MiniMaxM2_OR,               // MiniMax M2
+  // MiniMax (1 model)
   MiniMaxM21_OR,              // MiniMax M2.1
 
   // Essential AI (1 model)
