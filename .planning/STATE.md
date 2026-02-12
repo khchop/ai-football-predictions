@@ -11,18 +11,18 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 ## Current Position
 
 Phase: 71 of 71 (AI Content & FAQ Generation)
-Plan: 1 of 2 in current phase
-Status: Phase 71 in progress - Plan 01 complete (content infrastructure)
-Last activity: 2026-02-12 - Completed 71-01: teamContent table + AI generation functions
+Plan: 2 of 2 in current phase
+Status: Phase 71 COMPLETE - All v3.0 team page features implemented
+Last activity: 2026-02-12 - Completed 71-02: Team content queue worker + UI integration
 
-Progress: [██████████████████████████████████████████░] 99.5% (v2.9 complete, v3.0 Phases 67-70 complete, Phase 71: 1/2 plans done)
+Progress: [███████████████████████████████████████████] 100% (v2.9 complete, v3.0 Phases 67-71 COMPLETE - ready for deployment)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 173 plans (phases 1-62, 67-70, 71-01) + 5 quick tasks (quick-037 through quick-043)
+- Total plans completed: 174 plans (phases 1-62, 67-71 complete) + 5 quick tasks (quick-037 through quick-043)
 - Milestones shipped: 14 (v1.0 through v2.9)
-- v3.0 in progress: Phases 67-70 complete (8/8 plans), Phase 71: 1/2 plans done
+- v3.0 COMPLETE: Phases 67-71 (10/10 plans) - ready for deployment
 
 **Recent Milestones:**
 - v2.9 Provider Unification: Phases 59-62 built infra, quick-040/041 completed by removing Synthetic+Together (shipped 2026-02-11)
@@ -61,20 +61,28 @@ Recent decisions affecting current work:
 - [Phase 71-01]: Separate analysisGeneratedAt and faqGeneratedAt for independent generation
 - [Phase 71-01]: Skip teams with <5 matches (insufficient data for meaningful analysis)
 - [Phase 71-01]: Direct imports (./together-client) to avoid circular dependencies
+- [Phase 71-02]: Rate limit team content worker to 15 jobs/min (2 API calls per team = 30 req/min under OpenRouter limit)
+- [Phase 71-02]: Event-driven team content regeneration on match settlement (both teams within minutes)
+- [Phase 71-02]: Weekly cron (Sunday 06:00 UTC) as safety net for inactive teams
+- [Phase 71-02]: AI Analysis section between accuracy chart and upcoming matches (logical flow)
+- [Phase 71-02]: Independent analysis/FAQ generation (one can fail without blocking the other)
 
 ### Pending Todos
 
-**v3.0 todos:**
-- Phase 71-02: Next up (wire content generation into queue worker + team page UI)
-- Post-deployment: Test team page internal linking graph in Search Console
+**v3.0 post-deployment:**
+- Monitor team content queue worker in production (BullMQ dashboard)
+- Verify weekly cron triggers on Sunday 06:00 UTC
+- Test event-driven regeneration after match settlement
+- Validate FAQPage schema in Google Rich Results Test
+- Test team page internal linking graph in Search Console
 - Decide canonical URL strategy for duplicate content (leaderboard vs team pages)
 - Monitor AI content generation cost (~$0.20 for 200 teams full batch)
 
 ### Blockers/Concerns
 
-**v3.0 considerations:**
-- No blockers - Phase 71-01 complete (content infrastructure ready)
-- Phase 71-02 remaining: queue worker + UI rendering
+**v3.0 status:**
+- No blockers - Phase 71 COMPLETE (all team page features implemented)
+- v3.0 ready for production deployment
 
 ### Quick Tasks Completed
 
@@ -85,14 +93,15 @@ Recent decisions affecting current work:
 | 042 | Fix match card click navigation - card body to match detail, team names to team pages | 2026-02-11 | 8a65d44 | [042-fix-match-boxes-linking-to-team-pages-in](./quick/42-fix-match-boxes-linking-to-team-pages-in/) |
 | 043 | Reduce OpenRouter spend: trim 38→21 models, retries 5→2, cap reasoning tokens, wire cost tracking | 2026-02-12 | fd6fcd1 | [43-reduce-openrouter-spend-trim-expensive-m](./quick/43-reduce-openrouter-spend-trim-expensive-m/) |
 | Phase 71 P01 | 275 | 2 tasks | 4 files |
+| Phase 71 P02 | 278 | 2 tasks | 5 files |
 
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Completed Phase 71-01 (teamContent table + AI generation functions)
-Resume file: .planning/phases/71-ai-content-generation/71-01-SUMMARY.md
+Stopped at: Completed Phase 71-02 (team content queue worker + UI integration) - v3.0 COMPLETE
+Resume file: .planning/phases/71-ai-content-generation/71-02-SUMMARY.md
 
-**Next action:** Execute Phase 71-02 (queue worker + team page rendering)
+**Next action:** Deploy v3.0 to production and monitor team content generation
 
 ---
-*Last updated: 2026-02-12 after Phase 71-01 (team content infrastructure)*
+*Last updated: 2026-02-12 after Phase 71-02 (v3.0 complete - all team page features implemented)*
