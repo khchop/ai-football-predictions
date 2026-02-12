@@ -130,7 +130,7 @@ See `.planning/MILESTONES.md` and `.planning/milestones/v3.0-ROADMAP.md` for ful
 
 **Milestone Goal:** Replace 18 models with 20 new/updated models, add archival system with leaderboard toggle, and build Discord webhook notifications for persistent model errors.
 
-#### Phase 72: Model Configuration & Archive Schema
+#### Phase 72: Model Configuration & Archive Schema ✅
 
 **Goal**: Configure 20 active OpenRouter models with correct IDs/pricing and add database archive infrastructure
 
@@ -148,8 +148,8 @@ See `.planning/MILESTONES.md` and `.planning/milestones/v3.0-ROADMAP.md` for ful
 **Plans**: 2 plans
 
 Plans:
-- [ ] 72-01-PLAN.md -- Archive schema + new model provider definitions
-- [ ] 72-02-PLAN.md -- Finalize 20-model configuration (routes, arrays, validation)
+- [x] 72-01-PLAN.md -- Archive schema + new model provider definitions
+- [x] 72-02-PLAN.md -- Finalize 20-model configuration (routes, arrays, validation)
 
 #### Phase 73: Archive System Integration
 
@@ -168,10 +168,11 @@ Plans:
   6. Team page leaderboards respect the archived filter setting
   7. Competition leaderboards respect the archived filter setting
 
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 73-01: TBD
+- [ ] 73-01-PLAN.md -- Backend pipeline/query exclusion of archived models
+- [ ] 73-02-PLAN.md -- Frontend leaderboard toggle and archived visual indicators
 
 #### Phase 74: Discord Alert Service
 
@@ -269,8 +270,8 @@ Phases execute in numeric order: 72 → 73 → 74
 | 70. Navigation & Cross-Linking | v3.0 | 2/2 | Complete | 2026-02-11 |
 | 71. AI Content & FAQ Generation | v3.0 | 2/2 | Complete | 2026-02-12 |
 | 72. Model Configuration & Archive Schema | v3.1 | 2/2 | Complete | 2026-02-12 |
-| 73. Archive System Integration | v3.1 | 0/TBD | Not started | - |
+| 73. Archive System Integration | v3.1 | 0/2 | Not started | - |
 | 74. Discord Alert Service | v3.1 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-12 after Phase 72 completion*
+*Last updated: 2026-02-12 after Phase 73 planning*
