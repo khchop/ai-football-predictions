@@ -60,6 +60,7 @@ export interface LeaderboardEntry {
   exactScores: number;
   correctTendencies: number;
   accuracy: number;
+  archived: boolean;
 }
 
 export interface RecentFormEntry {
@@ -256,6 +257,7 @@ export interface LeaderboardFilters {
   dateFrom?: string;
   dateTo?: string;
   timePeriod?: 'all' | 'weekly' | 'monthly';
+  includeArchived?: boolean;
 }
 
 export interface LeaderboardEntryWithTrend extends LeaderboardEntry {
@@ -283,6 +285,11 @@ export async function getLeaderboard(
 
   // Build WHERE conditions for filters
   const whereConditions: any[] = [eq(models.active, true)];
+
+  // Exclude archived models by default
+  if (!filters?.includeArchived) {
+    whereConditions.push(eq(models.archived, false));
+  }
 
   if (filters?.competitionId) {
     whereConditions.push(eq(matches.competitionId, filters.competitionId));
@@ -330,6 +337,7 @@ export async function getLeaderboard(
     modelId: models.id,
     displayName: models.displayName,
     provider: models.provider,
+    archived: models.archived,
     totalPredictions: sql<number>`COUNT(${predictions.id})`,
     totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
     avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
@@ -363,6 +371,12 @@ export async function getLeaderboard(
       .limit(limit);
   } else {
     // When no filters, use leftJoin as before (overall leaderboard)
+    // Apply the same archived filter based on includeArchived flag
+    const unfilteredConditions = [eq(models.active, true)];
+    if (!filters?.includeArchived) {
+      unfilteredConditions.push(eq(models.archived, false));
+    }
+
     results = await db
       .select(selectFields)
       .from(models)
@@ -370,7 +384,7 @@ export async function getLeaderboard(
         eq(predictions.modelId, models.id),
         eq(predictions.status, 'scored')
       ))
-      .where(eq(models.active, true))
+      .where(and(...unfilteredConditions))
       .groupBy(models.id)
       .orderBy(orderByColumn)
       .limit(limit);
@@ -387,6 +401,7 @@ export async function getLeaderboard(
     exactScores: Number(r.exactScores),
     correctTendencies: Number(r.correctTendencies),
     accuracy: Number(r.accuracy),
+    archived: r.archived ?? false,
   }));
 }
 
@@ -433,6 +448,11 @@ export async function getLeaderboardWithTrends(
   const buildBaseConditions = () => {
     const conditions: any[] = [eq(models.active, true)];
 
+    // Exclude archived models by default
+    if (!filters?.includeArchived) {
+      conditions.push(eq(models.archived, false));
+    }
+
     if (filters?.competitionId) {
       conditions.push(eq(matches.competitionId, filters.competitionId));
     }
@@ -472,6 +492,7 @@ export async function getLeaderboardWithTrends(
     modelId: models.id,
     displayName: models.displayName,
     provider: models.provider,
+    archived: models.archived,
     totalPredictions: sql<number>`COUNT(${predictions.id})`,
     totalPoints: sql<number>`COALESCE(SUM(${predictions.totalPoints}), 0)`,
     avgPoints: sql<number>`COALESCE(ROUND(AVG(${predictions.totalPoints})::numeric, 2), 0)`,
@@ -573,6 +594,7 @@ export async function getLeaderboardWithTrends(
       exactScores: Number(r.exactScores),
       correctTendencies: Number(r.correctTendencies),
       accuracy: Number(r.accuracy),
+      archived: r.archived ?? false,
       trendDirection,
       rankChange,
       previousRank,
