@@ -665,19 +665,20 @@ export async function getActiveModels(): Promise<Model[]> {
 }
 
 // Deactivate models not in the provided list of IDs
+// Also marks deactivated models as archived so they appear in "Show Archived" leaderboard toggle
 export async function deactivateOldModels(activeModelIds: string[]) {
   const db = getDb();
-  
+
   // Fire-and-forget cache invalidation - don't fail DB operation if Redis is down
   try {
     await cacheDelete(cacheKeys.activeModels());
   } catch (error) {
     logQueryError('cacheDelete', error, { operation: 'deactivateOldModels', cacheKey: 'activeModels' });
   }
-  
+
   return db
     .update(models)
-    .set({ active: false })
+    .set({ active: false, archived: true })
     .where(not(inArray(models.id, activeModelIds)));
 }
 
