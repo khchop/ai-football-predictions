@@ -44,6 +44,7 @@ export const loggers = {
   cron: createLogger('cron'),
   circuitBreaker: createLogger('circuit-breaker'),
   rateLimiter: createLogger('rate-limiter'),
+  discord: createLogger('discord'),
   
   // Content & LLM
   content: createLogger('content'),

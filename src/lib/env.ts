@@ -71,6 +71,7 @@ export const env = {
   CRON_SECRET: process.env.CRON_SECRET,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   REDIS_URL: process.env.REDIS_URL,
+  DISCORD_WEBHOOK_URL: process.env.DISCORD_WEBHOOK_URL,
   
   // Helpers
   get isProduction() {
