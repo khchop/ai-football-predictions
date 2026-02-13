@@ -284,7 +284,10 @@ export async function getLeaderboard(
     : desc(sql`ROUND(100.0 * SUM(CASE WHEN ${predictions.tendencyPoints} > 0 THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN ${predictions.status} = 'scored' THEN 1 ELSE 0 END), 0)::numeric, 1)`);
 
   // Build WHERE conditions for filters
-  const whereConditions: any[] = [eq(models.active, true)];
+  const activeCondition = filters?.includeArchived
+    ? or(eq(models.active, true), eq(models.archived, true))!
+    : eq(models.active, true);
+  const whereConditions: any[] = [activeCondition];
 
   // Exclude archived models by default
   if (!filters?.includeArchived) {
@@ -446,7 +449,10 @@ export async function getLeaderboardWithTrends(
 
   // Build WHERE conditions for filters (excluding time)
   const buildBaseConditions = () => {
-    const conditions: any[] = [eq(models.active, true)];
+    const activeCondition = filters?.includeArchived
+      ? or(eq(models.active, true), eq(models.archived, true))!
+      : eq(models.active, true);
+    const conditions: any[] = [activeCondition];
 
     // Exclude archived models by default
     if (!filters?.includeArchived) {
