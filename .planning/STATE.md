@@ -13,14 +13,14 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 Phase: 74 of 74 (all complete)
 Plan: All plans complete
 Status: Milestone v3.1 shipped
-Last activity: 2026-02-13 - Completed quick task 045: Deep fix leaderboard Show Archived toggle
+Last activity: 2026-02-13 - Completed quick task 046: Fix model health success rate calculation
 
 Progress: [██████████████████████████████████████████████████] 100% (74/74 phases, 16 milestones)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 183 plans (phases 1-62, 67-74) + 9 quick tasks
+- Total plans completed: 183 plans (phases 1-62, 67-74) + 10 quick tasks
 - Milestones shipped: 16 (v1.0 through v3.1)
 
 **Recent Milestones:**
@@ -41,6 +41,7 @@ Recent decisions from PROJECT.md affecting future work:
 - **Fire-and-forget Discord alerts** (v3.1): Avoid pipeline latency from webhook calls
 - **Single OpenRouter provider** (v2.9): Eliminated provider complexity, all models on OpenRouter
 - **Reduce to 20 models** (v3.1): Cut expensive/underperforming models, cap reasoning tokens
+- **Zero error categories in model stats** (quick-046): Historical error attribution not possible from single failureReason; zero is more honest than fabricated data
 
 ### Pending Todos
 
@@ -61,11 +62,12 @@ None.
 |---|-------------|------|--------|-----------|
 | 044 | Fix Show Archived button on leaderboard to actually display archived models | 2026-02-13 | 8e261d3 | [044-fix-show-archived-button-on-leaderboard](./quick/044-fix-show-archived-button-on-leaderboard/) |
 | 045 | Deep fix: archive inactive models so Show Archived toggle works | 2026-02-13 | 3c71b7b | [045-deep-fix-leaderboard-show-archived](./quick/045-deep-fix-leaderboard-show-archived/) |
+| 046 | Fix model health success rate calculation with per-model attempt counting | 2026-02-13 | a8fbd71 | [046-fix-model-health-success-rate-calculatio](./quick/046-fix-model-health-success-rate-calculatio/) |
 
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed v3.1 milestone archival
+Stopped at: Completed quick task 046: Fix model health success rate calculation
 Resume file: None
 
 **Next step:** Start next milestone with `/gsd:new-milestone`
