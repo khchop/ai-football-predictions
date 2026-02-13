@@ -6,7 +6,7 @@ See: .planning/PROJECT.md (updated 2026-02-12)
 
 **Core value:** The prediction pipeline must reliably generate scores from 20 LLMs ~30 minutes before kickoff and accurately calculate Kicktipp quota points when matches complete.
 
-**Current focus:** Phase 74 - Discord Alert Service
+**Current focus:** v3.1 Model Lifecycle & Discord Alerts — COMPLETE
 
 ## Current Position
 
@@ -21,7 +21,7 @@ Progress: [███████████████████████
 
 **Velocity:**
 - Total plans completed: 178 plans (phases 1-62, 67-74) + 7 quick tasks
-- Milestones shipped: 15 (v1.0 through v3.0)
+- Milestones shipped: 16 (v1.0 through v3.1)
 
 **Recent Milestones:**
 - v3.0 Club/Team Pages: Phases 67-71 (10 plans), 2 days (2026-02-11 → 2026-02-12)

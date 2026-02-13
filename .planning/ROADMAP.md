@@ -17,7 +17,7 @@
 - ✅ **v2.8 Model Coverage** - Phases 53-58 (shipped 2026-02-08)
 - ✅ **v2.9 Provider Unification & Maximum Coverage** - Phases 59-62 + quick-040/041 (shipped 2026-02-11)
 - ✅ **v3.0 Club/Team Pages** - Phases 67-71 (shipped 2026-02-12)
-- 🚧 **v3.1 Model Lifecycle & Discord Alerts** - Phases 72-74 (in progress)
+- ✅ **v3.1 Model Lifecycle & Discord Alerts** - Phases 72-74 (shipped 2026-02-13)
 
 ## Phases
 
@@ -126,7 +126,7 @@ See `.planning/MILESTONES.md` and `.planning/milestones/v3.0-ROADMAP.md` for ful
 
 </details>
 
-### v3.1 Model Lifecycle & Discord Alerts (In Progress)
+### v3.1 Model Lifecycle & Discord Alerts ✅ (Shipped 2026-02-13)
 
 **Milestone Goal:** Replace 18 models with 20 new/updated models, add archival system with leaderboard toggle, and build Discord webhook notifications for persistent model errors.
 
@@ -174,7 +174,7 @@ Plans:
 - [x] 73-01-PLAN.md -- Backend pipeline/query exclusion of archived models
 - [x] 73-02-PLAN.md -- Frontend leaderboard toggle and archived visual indicators
 
-#### Phase 74: Discord Alert Service
+#### Phase 74: Discord Alert Service ✅
 
 **Goal**: Discord webhook sends rich embeds for model auto-disable and regression events
 
@@ -192,7 +192,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 74-01-PLAN.md -- Discord notification service with auto-disable and regression alert integration
+- [x] 74-01-PLAN.md -- Discord notification service with auto-disable and regression alert integration
 
 ## Progress
 
@@ -271,7 +271,7 @@ Phases execute in numeric order: 72 → 73 → 74
 | 71. AI Content & FAQ Generation | v3.0 | 2/2 | Complete | 2026-02-12 |
 | 72. Model Configuration & Archive Schema | v3.1 | 2/2 | Complete | 2026-02-12 |
 | 73. Archive System Integration | v3.1 | 2/2 | Complete | 2026-02-13 |
-| 74. Discord Alert Service | v3.1 | 0/1 | Not started | - |
+| 74. Discord Alert Service | v3.1 | 1/1 | Complete | 2026-02-13 |
 
 ---
-*Last updated: 2026-02-13 after Phase 74 planning*
+*Last updated: 2026-02-13 after Phase 74 execution*
