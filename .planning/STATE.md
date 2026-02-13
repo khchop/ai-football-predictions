@@ -11,9 +11,9 @@ See: .planning/PROJECT.md (updated 2026-02-12)
 ## Current Position
 
 Phase: 73 of 74 (Archive System Integration)
-Plan: Ready to plan
-Status: Ready to plan
-Last activity: 2026-02-12 - Phase 72 complete (20 models configured, archive schema added)
+Plan: 1 of 2 complete
+Status: In progress
+Last activity: 2026-02-13 - Plan 73-01 complete (pipeline and queries exclude archived models)
 
 Progress: [████████████████████████████████████████████████░░] 97% (72/74 phases)
 
@@ -40,6 +40,7 @@ Recent decisions from PROJECT.md affecting current work:
 - **Single OpenRouter provider** (v2.9): Eliminated provider complexity, all models on OpenRouter
 - **Per-model investigation** (v2.8): Different models fail for different reasons, need individual fixes
 - [Phase 72]: Kept Nemotron Nano 9B v2 as 20th model (substitute for unavailable Nemotron 30B)
+- [Phase 73-01]: Archived models excluded by default from pipeline, counts, and leaderboards with opt-in includeArchived flag
 
 ### Pending Todos
 
@@ -64,14 +65,15 @@ None yet.
 | 043 | Reduce OpenRouter spend 38→21 models | 2026-02-12 | fd6fcd1 |
 | Phase 72 P01 | 117 | 2 tasks | 3 files |
 | Phase 72 P02 | 343 | 2 tasks | 2 files |
+| Phase 73 P01 | 300 | 2 tasks | 3 files |
 
 ## Session Continuity
 
-Last session: 2026-02-12
-Stopped at: Phase 72 complete, verified, roadmap updated
+Last session: 2026-02-13
+Stopped at: Phase 73 Plan 01 complete - pipeline and queries exclude archived models
 Resume file: None
 
-**Next step:** Run `/gsd:plan-phase 73` to create execution plan for Archive System Integration
+**Next step:** Run `/gsd:execute-plan 73-02` to implement archive UI toggle
 
 ---
 *Last updated: 2026-02-12 after Phase 72 verification*
