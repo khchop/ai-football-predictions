@@ -375,7 +375,10 @@ export async function getLeaderboard(
   } else {
     // When no filters, use leftJoin as before (overall leaderboard)
     // Apply the same archived filter based on includeArchived flag
-    const unfilteredConditions = [eq(models.active, true)];
+    const unfilteredActiveCondition = filters?.includeArchived
+      ? or(eq(models.active, true), eq(models.archived, true))!
+      : eq(models.active, true);
+    const unfilteredConditions = [unfilteredActiveCondition];
     if (!filters?.includeArchived) {
       unfilteredConditions.push(eq(models.archived, false));
     }
