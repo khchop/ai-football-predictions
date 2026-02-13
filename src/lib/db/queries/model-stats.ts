@@ -153,8 +153,8 @@ function aggregateWindow(stats: Array<{
  * Aggregate per-model prediction counts for a given date (YYYY-MM-DD).
  *
  * For each active model, counts predictions created on that date as successes.
- * Failures = total matches predicted by ANY model that day minus this model's predictions.
- * Error categories come from the models table's failureReason (best-effort, stores latest error only).
+ * Failures = total matches predicted by ANY ACTIVE model that day minus this model's predictions.
+ * Error categories are zeroed (historical error attribution not possible from single failureReason).
  *
  * Idempotent: uses upsert on (date, modelId) unique constraint.
  */
@@ -165,8 +165,24 @@ export async function aggregateDailyStats(date: string): Promise<void> {
   const dayStart = new Date(`${date}T00:00:00.000Z`);
   const dayEnd = new Date(`${date}T23:59:59.999Z`);
 
-  // 1. Count distinct matches that received ANY prediction on this date
-  const [matchCountResult] = await db
+  // 1. Get all active models
+  const activeModels = await db
+    .select({
+      id: models.id,
+      failureReason: models.failureReason,
+    })
+    .from(models)
+    .where(eq(models.active, true));
+
+  if (activeModels.length === 0) {
+    // No active models; nothing to aggregate
+    return;
+  }
+
+  const activeModelIds = activeModels.map(m => m.id);
+
+  // 2. Count distinct matches predicted by ANY currently-active model on this date
+  const [activeMatchCountResult] = await db
     .select({
       totalMatches: countDistinct(predictions.matchId),
     })
@@ -175,21 +191,22 @@ export async function aggregateDailyStats(date: string): Promise<void> {
       and(
         gte(predictions.createdAt, dayStart),
         lt(predictions.createdAt, dayEnd),
+        sql`${predictions.modelId} IN (${sql.join(activeModelIds.map(id => sql`${id}`), sql`, `)})`,
       ),
     );
 
-  const totalMatchesPredicted = matchCountResult?.totalMatches ?? 0;
+  const totalActiveModelMatches = activeMatchCountResult?.totalMatches ?? 0;
 
-  if (totalMatchesPredicted === 0) {
-    // No predictions on this date; nothing to aggregate
+  if (totalActiveModelMatches === 0) {
+    // No predictions from active models on this date; nothing to aggregate
     return;
   }
 
-  // 2. Count per-model predictions for this date
+  // 3. Count per-model distinct match predictions for this date
   const perModelCounts = await db
     .select({
       modelId: predictions.modelId,
-      predictionCount: count(),
+      distinctMatches: countDistinct(predictions.matchId),
     })
     .from(predictions)
     .where(
@@ -200,39 +217,22 @@ export async function aggregateDailyStats(date: string): Promise<void> {
     )
     .groupBy(predictions.modelId);
 
-  // Build a map of modelId -> prediction count
+  // Build a map of modelId -> distinct match count
   const modelPredictionMap = new Map<string, number>();
   for (const row of perModelCounts) {
-    modelPredictionMap.set(row.modelId, Number(row.predictionCount));
+    modelPredictionMap.set(row.modelId, Number(row.distinctMatches));
   }
-
-  // 3. Get all active models (to account for models with 0 predictions)
-  const activeModels = await db
-    .select({
-      id: models.id,
-      failureReason: models.failureReason,
-    })
-    .from(models)
-    .where(eq(models.active, true));
 
   // 4. Upsert stats for each active model
   for (const model of activeModels) {
     const successCount = modelPredictionMap.get(model.id) ?? 0;
-    const failureCount = Math.max(0, totalMatchesPredicted - successCount);
+    const failureCount = Math.max(0, totalActiveModelMatches - successCount);
     const totalAttempts = successCount + failureCount;
     const successRate = totalAttempts > 0
       ? (successCount / totalAttempts) * 100
       : 0;
 
-    // Error category from current failureReason (best-effort)
-    const errorCats = failureCount > 0
-      ? categorizeFailureReason(model.failureReason)
-      : { timeout: 0, parse: 0, apiError: 0, language: 0, other: 0 };
-
-    // Scale error categories proportionally to failure count
-    // (failureReason is only the latest error, so spread evenly is best effort)
-    const errorMultiplier = failureCount > 0 ? failureCount : 0;
-
+    // Error categories: zeroed (cannot accurately attribute historical errors from single failureReason)
     await db
       .insert(llmModelStats)
       .values({
@@ -243,11 +243,11 @@ export async function aggregateDailyStats(date: string): Promise<void> {
         failureCount,
         totalAttempts,
         successRate,
-        timeoutErrors: errorCats.timeout * errorMultiplier,
-        parseErrors: errorCats.parse * errorMultiplier,
-        apiErrors: errorCats.apiError * errorMultiplier,
-        languageErrors: errorCats.language * errorMultiplier,
-        otherErrors: errorCats.other * errorMultiplier,
+        timeoutErrors: 0,
+        parseErrors: 0,
+        apiErrors: 0,
+        languageErrors: 0,
+        otherErrors: 0,
       })
       .onConflictDoUpdate({
         target: [llmModelStats.date, llmModelStats.modelId],
@@ -256,11 +256,11 @@ export async function aggregateDailyStats(date: string): Promise<void> {
           failureCount,
           totalAttempts,
           successRate,
-          timeoutErrors: errorCats.timeout * errorMultiplier,
-          parseErrors: errorCats.parse * errorMultiplier,
-          apiErrors: errorCats.apiError * errorMultiplier,
-          languageErrors: errorCats.language * errorMultiplier,
-          otherErrors: errorCats.other * errorMultiplier,
+          timeoutErrors: 0,
+          parseErrors: 0,
+          apiErrors: 0,
+          languageErrors: 0,
+          otherErrors: 0,
           updatedAt: sql`now()`,
         },
       });
