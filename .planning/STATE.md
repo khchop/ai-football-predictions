@@ -13,14 +13,14 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 Phase: 74 of 74 (all complete)
 Plan: All plans complete
 Status: Milestone v3.1 shipped
-Last activity: 2026-02-13 - v3.1 Model Lifecycle & Discord Alerts archived
+Last activity: 2026-02-13 - Completed quick task 044: Fix Show Archived button on leaderboard
 
 Progress: [██████████████████████████████████████████████████] 100% (74/74 phases, 16 milestones)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 183 plans (phases 1-62, 67-74) + 7 quick tasks
+- Total plans completed: 183 plans (phases 1-62, 67-74) + 8 quick tasks
 - Milestones shipped: 16 (v1.0 through v3.1)
 
 **Recent Milestones:**
@@ -54,6 +54,12 @@ Recent decisions from PROJECT.md affecting future work:
 ### Blockers/Concerns
 
 None.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 044 | Fix Show Archived button on leaderboard to actually display archived models | 2026-02-13 | 8e261d3 | [044-fix-show-archived-button-on-leaderboard](./quick/044-fix-show-archived-button-on-leaderboard/) |
 
 ## Session Continuity
 
