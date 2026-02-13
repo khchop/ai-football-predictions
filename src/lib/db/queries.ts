@@ -298,6 +298,7 @@ export async function getTopModelsByCompetition(competitionId: string, limit: nu
     .leftJoin(matches, eq(predictions.matchId, matches.id))
     .where(and(
       eq(models.active, true),
+      eq(models.archived, false),
       eq(matches.competitionId, competitionId)
     ))
     .groupBy(models.id)
@@ -995,13 +996,24 @@ export async function getAutoDisabledModelIds(): Promise<Set<string>> {
     .select({ id: models.id })
     .from(models)
     .where(eq(models.autoDisabled, true));
-  
+
+  return new Set(results.map(r => r.id));
+}
+
+// Get IDs of all archived models (for filtering in providers)
+export async function getArchivedModelIds(): Promise<Set<string>> {
+  const db = getDb();
+  const results = await db
+    .select({ id: models.id })
+    .from(models)
+    .where(eq(models.archived, true));
+
   return new Set(results.map(r => r.id));
 }
 
 // Check if a model should be skipped due to health issues
 export function shouldSkipModelDueToHealth(model: Model): boolean {
-  return model.autoDisabled === true;
+  return model.autoDisabled === true || model.archived === true;
 }
 
 // ============= BETTING SYSTEM =============
@@ -1458,20 +1470,20 @@ export async function getOverallStats() {
     async () => {
       const db = getDb();
       const result = await db.execute(sql`
-        SELECT 
+        SELECT
           (SELECT COUNT(*) FROM matches)::int as total_matches,
           (SELECT COUNT(*) FROM matches WHERE status = 'finished')::int as finished_matches,
           (SELECT COUNT(*) FROM predictions)::int as total_predictions,
-          (SELECT COUNT(*) FROM models WHERE active = true)::int as active_models
+          (SELECT COUNT(*) FROM models WHERE active = true AND archived = false)::int as active_models
       `);
-      
+
       const row = result.rows[0] as {
         total_matches: number;
         finished_matches: number;
         total_predictions: number;
         active_models: number;
       };
-      
+
       return {
         totalMatches: row?.total_matches || 0,
         finishedMatches: row?.finished_matches || 0,

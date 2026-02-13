@@ -1,10 +1,10 @@
 import { LLMProvider } from '@/types';
 import { loggers } from '@/lib/logger/modules';
 import { OPENROUTER_PROVIDERS } from './providers/openrouter';
-import { getAutoDisabledModelIds } from '@/lib/db/queries';
+import { getAutoDisabledModelIds, getArchivedModelIds } from '@/lib/db/queries';
 import { withCache, cacheKeys, CACHE_TTL } from '@/lib/cache/redis';
 import { getDb, models } from '@/lib/db';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and } from 'drizzle-orm';
 
 // OpenRouter providers (sole provider)
 // OpenRouter: 20 active models = 20 total
@@ -177,10 +177,11 @@ export function getRouteForModel(consolidatedModelId: string): string[] | undefi
   return MODEL_PROVIDER_ROUTES[consolidatedModelId];
 }
 
-// Get active providers (checks if API keys are configured and filters auto-disabled models)
+// Get active providers (checks if API keys are configured and filters auto-disabled and archived models)
 export async function getActiveProviders(): Promise<LLMProvider[]> {
-  // Filter out auto-disabled models
+  // Filter out auto-disabled and archived models
   const disabledIds = await getAutoDisabledModelIds();
+  const archivedIds = await getArchivedModelIds();
 
   const activeProviders: LLMProvider[] = [];
 
@@ -188,15 +189,16 @@ export async function getActiveProviders(): Promise<LLMProvider[]> {
   // All models are now primary (single provider architecture)
   if (process.env.OPENROUTER_API_KEY) {
     activeProviders.push(
-      ...OPENROUTER_PROVIDERS.filter(p => !disabledIds.has(p.id))
+      ...OPENROUTER_PROVIDERS.filter(p => !disabledIds.has(p.id) && !archivedIds.has(p.id))
     );
   }
 
-  if (disabledIds.size > 0) {
+  if (disabledIds.size > 0 || archivedIds.size > 0) {
     loggers.llm.info({
       disabledCount: disabledIds.size,
+      archivedCount: archivedIds.size,
       activeCount: activeProviders.length,
-    }, 'Filtered auto-disabled models');
+    }, 'Filtered auto-disabled and archived models');
   }
 
   return activeProviders;
@@ -243,7 +245,7 @@ export function getProviderStats(): {
  * Get active model count from database (cached)
  * This is the SINGLE SOURCE OF TRUTH for model count in UI/content
  *
- * Queries database `models.active = true`, not provider arrays.
+ * Queries database `models.active = true AND models.archived = false`, not provider arrays.
  * Provider arrays show configured models (42), this shows operationally active ones.
  *
  * @returns Number of active models from database
@@ -257,7 +259,7 @@ export async function getActiveModelCount(): Promise<number> {
       const result = await db
         .select({ count: sql<number>`COUNT(*)::int` })
         .from(models)
-        .where(eq(models.active, true));
+        .where(and(eq(models.active, true), eq(models.archived, false)));
       return result[0]?.count || 0;
     }
   );
