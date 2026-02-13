@@ -11,9 +11,9 @@ See: .planning/PROJECT.md (updated 2026-02-12)
 ## Current Position
 
 Phase: 73 of 74 (Archive System Integration)
-Plan: 1 of 2 complete
-Status: In progress
-Last activity: 2026-02-13 - Plan 73-01 complete (pipeline and queries exclude archived models)
+Plan: 2 of 2 complete
+Status: Complete
+Last activity: 2026-02-13 - Plan 73-02 complete (archive UI toggle and visual indicators)
 
 Progress: [████████████████████████████████████████████████░░] 97% (72/74 phases)
 
@@ -41,6 +41,8 @@ Recent decisions from PROJECT.md affecting current work:
 - **Per-model investigation** (v2.8): Different models fail for different reasons, need individual fixes
 - [Phase 72]: Kept Nemotron Nano 9B v2 as 20th model (substitute for unavailable Nemotron 30B)
 - [Phase 73-01]: Archived models excluded by default from pipeline, counts, and leaderboards with opt-in includeArchived flag
+- [Phase 73-02]: Archive toggle OFF by default for clean UX
+- [Phase 73-02]: Visual styling uses subtle badge + opacity instead of strikethrough
 
 ### Pending Todos
 
@@ -66,14 +68,15 @@ None yet.
 | Phase 72 P01 | 117 | 2 tasks | 3 files |
 | Phase 72 P02 | 343 | 2 tasks | 2 files |
 | Phase 73 P01 | 300 | 2 tasks | 3 files |
+| Phase 73 P02 | 269 | 2 tasks | 9 files |
 
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Phase 73 Plan 01 complete - pipeline and queries exclude archived models
+Stopped at: Completed 73-02-PLAN.md (archive UI toggle and visual indicators)
 Resume file: None
 
-**Next step:** Run `/gsd:execute-plan 73-02` to implement archive UI toggle
+**Next step:** Phase 73 complete - proceed to Phase 74 or next milestone
 
 ---
-*Last updated: 2026-02-12 after Phase 72 verification*
+*Last updated: 2026-02-13 after Phase 73 completion*
