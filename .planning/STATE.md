@@ -13,14 +13,14 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 Phase: 74 of 74 (all complete)
 Plan: All plans complete
 Status: Milestone v3.1 shipped
-Last activity: 2026-02-13 - Completed quick task 044: Fix Show Archived button on leaderboard
+Last activity: 2026-02-13 - Completed quick task 045: Deep fix leaderboard Show Archived toggle
 
 Progress: [██████████████████████████████████████████████████] 100% (74/74 phases, 16 milestones)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 183 plans (phases 1-62, 67-74) + 8 quick tasks
+- Total plans completed: 183 plans (phases 1-62, 67-74) + 9 quick tasks
 - Milestones shipped: 16 (v1.0 through v3.1)
 
 **Recent Milestones:**
@@ -60,6 +60,7 @@ None.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 044 | Fix Show Archived button on leaderboard to actually display archived models | 2026-02-13 | 8e261d3 | [044-fix-show-archived-button-on-leaderboard](./quick/044-fix-show-archived-button-on-leaderboard/) |
+| 045 | Deep fix: archive inactive models so Show Archived toggle works | 2026-02-13 | 3c71b7b | [045-deep-fix-leaderboard-show-archived](./quick/045-deep-fix-leaderboard-show-archived/) |
 
 ## Session Continuity
 
