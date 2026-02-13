@@ -447,3 +447,37 @@
 ---
 
 *Last updated: 2026-02-12 after v3.0 milestone*
+
+## v3.1 Model Lifecycle & Discord Alerts (Shipped: 2026-02-13)
+
+**Delivered:** Configured 20 active OpenRouter models (replaced 11 old with 14 new), added model archive system with leaderboard toggle, and built Discord webhook notifications for auto-disable and regression alerts.
+
+**Phases completed:** 72-74 (5 plans total)
+
+**Key accomplishments:**
+
+- Configured 20 active OpenRouter models with correct IDs, pricing, and prompt variants (11 removed, 14 added/updated)
+- Added `archived` boolean column to models schema with migration and DB index
+- Excluded archived models from prediction pipeline, dynamic counts, and leaderboard queries by default
+- Built "Show archived" toggle on all leaderboard pages with badge + opacity-60 visual indicator
+- Created Discord webhook notification service with rich embeds for auto-disable (5+ failures) and regression (>10% drop) events
+
+**Stats:**
+
+- 35 files changed, +3,224 / -274 lines
+- ~55,000 lines of TypeScript (total codebase)
+- 3 phases, 5 plans, 18 requirements
+- 2 days from start to ship (2026-02-12 → 2026-02-13)
+
+**Git range:** `178fe8b (docs(72))` → `64b6b69 (docs(phase-74))`
+
+**Decisions:**
+- Kept Nemotron Nano 9B v2 as 20th model (Nemotron 30B unavailable on OpenRouter)
+- Archived excluded by default with opt-in includeArchived flag
+- Fire-and-forget pattern for auto-disable alerts to avoid pipeline latency
+- Read DISCORD_WEBHOOK_URL directly from process.env for graceful degradation
+
+**What's next:** New milestone planning with `/gsd:new-milestone`
+
+---
+

@@ -2,31 +2,31 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-12)
+See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** The prediction pipeline must reliably generate scores from 20 LLMs ~30 minutes before kickoff and accurately calculate Kicktipp quota points when matches complete.
 
-**Current focus:** v3.1 Model Lifecycle & Discord Alerts — COMPLETE
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 74 of 74 (Discord Alert Service)
-Plan: 1 of 1 complete
-Status: Phase complete
-Last activity: 2026-02-13 - Phase 74 Plan 01 complete (Discord alert service for model health)
+Phase: 74 of 74 (all complete)
+Plan: All plans complete
+Status: Milestone v3.1 shipped
+Last activity: 2026-02-13 - v3.1 Model Lifecycle & Discord Alerts archived
 
-Progress: [██████████████████████████████████████████████████] 100% (74/74 phases)
+Progress: [██████████████████████████████████████████████████] 100% (74/74 phases, 16 milestones)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 178 plans (phases 1-62, 67-74) + 7 quick tasks
+- Total plans completed: 183 plans (phases 1-62, 67-74) + 7 quick tasks
 - Milestones shipped: 16 (v1.0 through v3.1)
 
 **Recent Milestones:**
+- v3.1 Model Lifecycle & Discord Alerts: Phases 72-74 (5 plans), 2 days (2026-02-12 → 2026-02-13)
 - v3.0 Club/Team Pages: Phases 67-71 (10 plans), 2 days (2026-02-11 → 2026-02-12)
 - v2.9 Provider Unification: Phases 59-62 + quick-040/041/042/043 (shipped 2026-02-11)
-- v2.8 Model Coverage: 13 plans, 2 days (2026-02-07 → 2026-02-08)
 
 **Trend:** Stable delivery cadence with 1-2 day milestone completion for focused work.
 
@@ -34,17 +34,13 @@ Progress: [███████████████████████
 
 ### Decisions
 
-Recent decisions from PROJECT.md affecting current work:
+Recent decisions from PROJECT.md affecting future work:
 
-- **Reduce to 21 models** (quick-043): Cut expensive/underperforming models, cap reasoning tokens, reduce retries - now targeting 20 models in v3.1
+- **Cap at 20 active models** (v3.1): Lifecycle management with archive system
+- **Archive excluded by default** (v3.1): Clean UX, opt-in includeArchived flag
+- **Fire-and-forget Discord alerts** (v3.1): Avoid pipeline latency from webhook calls
 - **Single OpenRouter provider** (v2.9): Eliminated provider complexity, all models on OpenRouter
-- **Per-model investigation** (v2.8): Different models fail for different reasons, need individual fixes
-- [Phase 72]: Kept Nemotron Nano 9B v2 as 20th model (substitute for unavailable Nemotron 30B)
-- [Phase 73-01]: Archived models excluded by default from pipeline, counts, and leaderboards with opt-in includeArchived flag
-- [Phase 73-02]: Archive toggle OFF by default for clean UX
-- [Phase 73-02]: Visual styling uses subtle badge + opacity instead of strikethrough
-- [Phase 74-01]: Fire-and-forget pattern for auto-disable alerts (no await) to avoid pipeline latency
-- [Phase 74-01]: Read DISCORD_WEBHOOK_URL directly from process.env (not via env.ts getter) for graceful degradation
+- **Reduce to 20 models** (v3.1): Cut expensive/underperforming models, cap reasoning tokens
 
 ### Pending Todos
 
@@ -57,29 +53,15 @@ Recent decisions from PROJECT.md affecting current work:
 
 ### Blockers/Concerns
 
-None yet.
-
-### Quick Tasks Completed
-
-| # | Description | Date | Commit |
-|---|-------------|------|--------|
-| 040 | Remove Synthetic providers | 2026-02-11 | e8bd822 |
-| 041 | Remove Together AI provider | 2026-02-11 | 0dba995 |
-| 042 | Fix match card navigation | 2026-02-11 | 8a65d44 |
-| 043 | Reduce OpenRouter spend 38→21 models | 2026-02-12 | fd6fcd1 |
-| Phase 72 P01 | 117 | 2 tasks | 3 files |
-| Phase 72 P02 | 343 | 2 tasks | 2 files |
-| Phase 73 P01 | 300 | 2 tasks | 3 files |
-| Phase 73 P02 | 269 | 2 tasks | 9 files |
-| Phase 74 P01 | 173 | 2 tasks | 6 files |
+None.
 
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed Phase 74 Plan 01: Discord Alert Service
+Stopped at: Completed v3.1 milestone archival
 Resume file: None
 
-**Next step:** All phases complete! Project roadmap fully executed. Monitor production deployment and model health alerts.
+**Next step:** Start next milestone with `/gsd:new-milestone`
 
 ---
-*Last updated: 2026-02-13 after Phase 74 Plan 01 completion*
+*Last updated: 2026-02-13 after v3.1 milestone completion*

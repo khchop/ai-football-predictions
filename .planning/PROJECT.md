@@ -2,11 +2,11 @@
 
 ## What This Is
 
-A production-ready platform where 21 active Open Source LLMs predict exact football match scores, with real-time leaderboards tracking model accuracy using Kicktipp quota scoring. Features dedicated club pages for 164 teams across 17 leagues with per-club model leaderboards, AI-generated analysis, and full SEO optimization. Includes per-model health monitoring, diagnostic infrastructure, and regression protection.
+A production-ready platform where 20 active Open Source LLMs predict exact football match scores, with real-time leaderboards tracking model accuracy using Kicktipp quota scoring. Features dedicated club pages for 164 teams across 17 leagues with per-club model leaderboards, AI-generated analysis, and full SEO optimization. Includes model lifecycle management with archival system, Discord webhook alerts for model health events, and per-model diagnostic infrastructure.
 
 ## The ONE Thing That Must Work
 
-The prediction pipeline must reliably generate scores from 21 LLMs ~30 minutes before kickoff and accurately calculate Kicktipp quota points when matches complete. This is the core value proposition — without accurate predictions and fair scoring, the platform has no purpose.
+The prediction pipeline must reliably generate scores from 20 LLMs ~30 minutes before kickoff and accurately calculate Kicktipp quota points when matches complete. This is the core value proposition — without accurate predictions and fair scoring, the platform has no purpose.
 
 ## Why This Exists
 
@@ -21,9 +21,30 @@ To create the most comprehensive open-source LLM benchmark for reasoning and pre
 
 ## Current State
 
-**Brownfield project with v3.0 shipped.** 21 active LLM models on OpenRouter (single provider) with provider attribution tracking. 288 requirements validated across 15 milestones (v1.0-v3.0). Dedicated team pages for 164 clubs with per-club model leaderboards, AI-generated content, and full SEO stack. Per-model health observability with admin dashboard and regression alerts.
+**Brownfield project with v3.1 shipped.** 20 active LLM models on OpenRouter (single provider) with model lifecycle management — archived models excluded from pipeline/counts, visible via leaderboard toggle. 306 requirements validated across 16 milestones (v1.0-v3.1). Discord webhook alerts for auto-disable and regression events. Dedicated team pages for 164 clubs with per-club model leaderboards, AI-generated content, and full SEO stack.
 
 ## Requirements
+
+### Validated (v3.1)
+
+- ✓ **MDL-01**: 20 active models with correct OpenRouter IDs/pricing — v3.1
+- ✓ **MDL-02**: 13 new models defined with prompt variants and timeouts — v3.1
+- ✓ **MDL-03**: 11 old models archived from active array — v3.1
+- ✓ **MDL-04**: GLM-4.7 route bug fixed (replaced by GLM-5) — v3.1
+- ✓ **MDL-05**: Model validation passes at load time — v3.1
+- ✓ **ARCH-01**: `archived` boolean column with migration — v3.1
+- ✓ **ARCH-02**: Pipeline excludes archived models — v3.1
+- ✓ **ARCH-03**: Dynamic count excludes archived — v3.1
+- ✓ **ARCH-04**: "Show archived" toggle visible on leaderboard — v3.1
+- ✓ **ARCH-05**: Toggle off hides archived models — v3.1
+- ✓ **ARCH-06**: Toggle on shows archived with badge indicator — v3.1
+- ✓ **ARCH-07**: Team leaderboards respect archive filter — v3.1
+- ✓ **ARCH-08**: Competition leaderboards respect archive filter — v3.1
+- ✓ **DISC-01**: DISCORD_WEBHOOK_URL configurable via env — v3.1
+- ✓ **DISC-02**: Rich embeds with model details — v3.1
+- ✓ **DISC-03**: Alert on auto-disable (5+ failures) — v3.1
+- ✓ **DISC-04**: Alert on regression (>10% drop) — v3.1
+- ✓ **DISC-05**: Actionable context in alerts — v3.1
 
 ### Validated (v3.0)
 
@@ -73,15 +94,7 @@ See `.planning/MILESTONES.md` for full history of v1.0 through v2.6 validated re
 
 ### Active
 
-#### Current Milestone: v3.1 Model Lifecycle & Discord Alerts
-
-**Goal:** Replace current 18 models with 20 new/updated models, add archival system with leaderboard toggle, and build Discord webhook notifications for persistent model errors.
-
-**Target features:**
-- Add ~14 new OpenRouter models, archive ~14 old models
-- Model archive flag with "Show archived" toggle on leaderboard
-- Discord webhook integration for model error alerts
-- Cap active models at 20 with lifecycle management
+(No active milestone — define next with `/gsd:new-milestone`)
 
 ### Out of Scope
 
@@ -93,23 +106,27 @@ See `.planning/MILESTONES.md` for full history of v1.0 through v2.6 validated re
 - Club news aggregation — content licensing issues
 - Separate teams database table — text strings sufficient, avoid migration complexity
 - Historical data beyond 2-3 seasons — diminishing returns
-- Head-to-head model comparison for clubs — deferred to v3.x
-- Best/worst matchup analysis — deferred to v3.x
-- Model recommendation for upcoming matches — deferred to v3.x
+- Admin UI toggle for archive status — deferred (LIFE-01), archive via code/DB for now
+- Daily Discord health digest — deferred (DSCE-01)
+- Head-to-head model comparison for clubs — deferred to future milestone
+- Best/worst matchup analysis — deferred to future milestone
+- Model recommendation for upcoming matches — deferred to future milestone
+- Slack/email integration — Discord only for now
 
 ## Context
 
-Shipped v3.0 with ~240,000 LOC TypeScript.
+Shipped v3.1 with ~55,000 LOC TypeScript.
 Tech stack: Next.js 16, React 19, PostgreSQL, Redis, BullMQ, OpenRouter (single provider), Vitest, Zod, Radix UI, next-themes, isomorphic-dompurify, html-to-text, he, pino, Recharts, Drizzle ORM, TanStack Table.
-All 288 requirements validated across v1.0 through v3.0 (15 milestones).
-21 active models on OpenRouter. Provider attribution tracking for transparency.
+All 306 requirements validated across v1.0 through v3.1 (16 milestones).
+20 active models on OpenRouter with model lifecycle management (archive column, pipeline exclusion, leaderboard toggle).
+Discord webhook alerts for auto-disable and regression events.
 164 teams mapped with slug resolution, alias support, and AI-generated content pipeline.
 Per-model health dashboard with regression alerts operational.
 
 ## Constraints
 
 **Technical:**
-- All 21 models served via OpenRouter (single provider)
+- All 20 models served via OpenRouter (single provider)
 - PostgreSQL + Redis infrastructure already deployed
 - Next.js 16 + React 19 + TypeScript stack (no framework changes)
 - API-Football data source (contracted)
@@ -145,10 +162,14 @@ Per-model health dashboard with regression alerts operational.
 | Rate-limited BullMQ worker | 15 jobs/min to stay under OpenRouter API limits | ✓ v3.0 — Phase 71 |
 | Anti-hallucination prompts | Stats-only context prevents LLM from fabricating player/manager names | ✓ v3.0 — Phase 71 |
 | Reduce to 21 models | Cut expensive/underperforming models, cap reasoning tokens, reduce retries | ✓ quick-043 |
+| Cap at 20 active models | Lifecycle management with archive system | ✓ v3.1 — Phase 72 |
+| Archive excluded by default | Clean UX, consistent with auto-disable pattern | ✓ v3.1 — Phase 73 |
+| Fire-and-forget Discord alerts | Avoid pipeline latency from webhook calls | ✓ v3.1 — Phase 74 |
+| Read webhook URL from process.env | Graceful degradation without throws when unconfigured | ✓ v3.1 — Phase 74 |
 
 ## Completed Milestones
 
-v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, v2.7, v2.8, v2.9, v3.0 — see `.planning/MILESTONES.md` for full history.
+v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, v2.7, v2.8, v2.9, v3.0, v3.1 — see `.planning/MILESTONES.md` for full history.
 
 ---
-*Last updated: 2026-02-12 after v3.1 milestone start*
+*Last updated: 2026-02-13 after v3.1 milestone*
