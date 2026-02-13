@@ -34,6 +34,7 @@ interface LeaderboardContentProps {
 async function LeaderboardContent({ competitionId, searchParams }: LeaderboardContentProps) {
   // Parse filter parameters
   const season = typeof searchParams.season === 'string' ? parseInt(searchParams.season, 10) : undefined;
+  const showArchived = searchParams.showArchived === 'true';
 
   // Verify competition exists
   const competition = await getCompetition(competitionId);
@@ -54,6 +55,7 @@ async function LeaderboardContent({ competitionId, searchParams }: LeaderboardCo
   const filters: LeaderboardQueryFilters = {
     competitionId,
     season,
+    includeArchived: showArchived,
   };
 
   const leaderboard = await getLeaderboard(50, 'avgPoints', filters);
@@ -80,6 +82,7 @@ async function LeaderboardContent({ competitionId, searchParams }: LeaderboardCo
     averagePoints: entry.avgPoints,
     exactScores: entry.exactScores,
     correctTendencies: entry.correctTendencies,
+    archived: entry.archived ?? false,
   }));
 
   return (

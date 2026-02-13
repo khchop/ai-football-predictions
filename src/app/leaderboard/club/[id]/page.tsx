@@ -36,6 +36,7 @@ async function LeaderboardContent({ clubId, searchParams }: LeaderboardContentPr
   // Parse filter parameters
   const season = typeof searchParams.season === 'string' ? parseInt(searchParams.season, 10) : undefined;
   const isHome = typeof searchParams.isHome === 'string' ? searchParams.isHome === 'true' : undefined;
+  const showArchived = searchParams.showArchived === 'true';
 
   // Verify club has matches
   const clubExists = await getClubExists(clubId);
@@ -57,6 +58,7 @@ async function LeaderboardContent({ clubId, searchParams }: LeaderboardContentPr
     clubId,
     isHome,
     season,
+    includeArchived: showArchived,
   };
 
   const leaderboard = await getLeaderboard(50, 'avgPoints', filters);
@@ -83,6 +85,7 @@ async function LeaderboardContent({ clubId, searchParams }: LeaderboardContentPr
     averagePoints: entry.avgPoints,
     exactScores: entry.exactScores,
     correctTendencies: entry.correctTendencies,
+    archived: entry.archived ?? false,
   }));
 
   return (

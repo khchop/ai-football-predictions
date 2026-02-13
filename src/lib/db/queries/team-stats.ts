@@ -301,6 +301,7 @@ export async function getTeamModelLeaderboard(
   options?: {
     timePeriod?: TeamLeaderboardPeriod;
     limit?: number;
+    includeArchived?: boolean;
   }
 ): Promise<LeaderboardEntryWithTrend[]> {
   const timePeriod = options?.timePeriod ?? 'all';
@@ -325,6 +326,7 @@ export async function getTeamModelLeaderboard(
     clubId: teamName,
     timePeriod: mappedTimePeriod,
     dateFrom,
+    includeArchived: options?.includeArchived,
   });
 }
 

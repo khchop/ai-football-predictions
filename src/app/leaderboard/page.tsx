@@ -72,12 +72,14 @@ async function LeaderboardContent({ searchParams }: { searchParams: { [key: stri
   const timePeriod = typeof searchParams.timePeriod === 'string'
     ? searchParams.timePeriod as 'all' | 'weekly' | 'monthly'
     : 'all';
+  const showArchived = searchParams.showArchived === 'true';
 
   // Query database directly instead of HTTP fetch (avoids self-referential timeout)
   const leaderboard = await getLeaderboardWithTrends(50, 'avgPoints', {
     competitionId,
     season,
     timePeriod,
+    includeArchived: showArchived,
   });
 
   // Calculate stats for FAQ generation
@@ -125,6 +127,7 @@ async function LeaderboardContent({ searchParams }: { searchParams: { [key: stri
     correctTendencies: entry.correctTendencies,
     trendDirection: entry.trendDirection,
     rankChange: entry.rankChange,
+    archived: entry.archived ?? false,
   })).filter((entry) => entry.totalPredictions >= minPredictions);
 
   return (

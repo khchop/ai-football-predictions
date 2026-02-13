@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 // Competition options - matches COMPETITIONS in src/lib/football/competitions.ts
 const COMPETITION_OPTIONS = [
@@ -94,11 +95,12 @@ export function LeaderboardFilters({ className, disabledFilters = [] }: Leaderbo
   const currentClub = searchParams.get('club') || 'all';
   const currentSeason = searchParams.get('season') || 'all';
   const currentModel = searchParams.get('model') || 'all';
+  const currentShowArchived = searchParams.get('showArchived') || '';
 
   const updateParams = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
 
-    if (value === 'all' || value === '0') {
+    if (value === 'all' || value === '0' || value === '') {
       params.delete(key);
     } else {
       params.set(key, value);
@@ -244,6 +246,27 @@ export function LeaderboardFilters({ className, disabledFilters = [] }: Leaderbo
           </SelectContent>
         </Select>
       </div>
+
+      {/* Archive Toggle */}
+      <label className="flex items-center gap-2 cursor-pointer">
+        <span className="text-sm text-muted-foreground">Show archived</span>
+        <button
+          role="switch"
+          aria-checked={currentShowArchived === 'true'}
+          onClick={() => updateParams('showArchived', currentShowArchived === 'true' ? '' : 'true')}
+          className={cn(
+            "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+            currentShowArchived === 'true' ? "bg-primary" : "bg-muted"
+          )}
+        >
+          <span
+            className={cn(
+              "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+              currentShowArchived === 'true' ? "translate-x-4" : "translate-x-0.5"
+            )}
+          />
+        </button>
+      </label>
     </div>
   );
 }

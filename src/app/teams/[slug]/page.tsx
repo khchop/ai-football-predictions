@@ -121,12 +121,13 @@ export default async function TeamPage({ params, searchParams }: PageProps) {
   const timePeriod = typeof resolvedSearchParams.timePeriod === 'string'
     ? resolvedSearchParams.timePeriod as TeamLeaderboardPeriod
     : 'all';
+  const showArchived = resolvedSearchParams.showArchived === 'true';
 
   // Parallel data fetch
   const [stats, formGuide, leaderboard, upcomingMatches, recentWithAccuracy, accuracyTrend, teamContentData] = await Promise.all([
     getTeamStats(team.id),
     getTeamFormGuide(team.id, 5),
-    getTeamModelLeaderboard(team.id, { timePeriod }),
+    getTeamModelLeaderboard(team.id, { timePeriod, includeArchived: showArchived }),
     getTeamUpcomingWithPredictions(team.id, 5),
     getTeamRecentWithAccuracy(team.id, 10),
     getTeamAccuracyTrend(team.id),
