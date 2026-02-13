@@ -151,7 +151,7 @@ Plans:
 - [x] 72-01-PLAN.md -- Archive schema + new model provider definitions
 - [x] 72-02-PLAN.md -- Finalize 20-model configuration (routes, arrays, validation)
 
-#### Phase 73: Archive System Integration
+#### Phase 73: Archive System Integration ✅
 
 **Goal**: Archived models are excluded from pipeline and leaderboards with user-controlled toggle
 
@@ -171,8 +171,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 73-01-PLAN.md -- Backend pipeline/query exclusion of archived models
-- [ ] 73-02-PLAN.md -- Frontend leaderboard toggle and archived visual indicators
+- [x] 73-01-PLAN.md -- Backend pipeline/query exclusion of archived models
+- [x] 73-02-PLAN.md -- Frontend leaderboard toggle and archived visual indicators
 
 #### Phase 74: Discord Alert Service
 
@@ -270,8 +270,8 @@ Phases execute in numeric order: 72 → 73 → 74
 | 70. Navigation & Cross-Linking | v3.0 | 2/2 | Complete | 2026-02-11 |
 | 71. AI Content & FAQ Generation | v3.0 | 2/2 | Complete | 2026-02-12 |
 | 72. Model Configuration & Archive Schema | v3.1 | 2/2 | Complete | 2026-02-12 |
-| 73. Archive System Integration | v3.1 | 0/2 | Not started | - |
+| 73. Archive System Integration | v3.1 | 2/2 | Complete | 2026-02-13 |
 | 74. Discord Alert Service | v3.1 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-12 after Phase 73 planning*
+*Last updated: 2026-02-13 after Phase 73 execution*
