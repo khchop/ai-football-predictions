@@ -126,7 +126,7 @@ See `.planning/MILESTONES.md` and `.planning/milestones/v3.0-ROADMAP.md` for ful
 
 </details>
 
-### 🚧 v3.1 Model Lifecycle & Discord Alerts (In Progress)
+### v3.1 Model Lifecycle & Discord Alerts (In Progress)
 
 **Milestone Goal:** Replace 18 models with 20 new/updated models, add archival system with leaderboard toggle, and build Discord webhook notifications for persistent model errors.
 
@@ -189,10 +189,10 @@ Plans:
   4. Alert fires during daily regression check when a model drops more than 10% success rate
   5. Alerts include actionable context: error type, failure count, last success time, suggested action
 
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 74-01: TBD
+- [ ] 74-01-PLAN.md -- Discord notification service with auto-disable and regression alert integration
 
 ## Progress
 
@@ -271,7 +271,7 @@ Phases execute in numeric order: 72 → 73 → 74
 | 71. AI Content & FAQ Generation | v3.0 | 2/2 | Complete | 2026-02-12 |
 | 72. Model Configuration & Archive Schema | v3.1 | 2/2 | Complete | 2026-02-12 |
 | 73. Archive System Integration | v3.1 | 2/2 | Complete | 2026-02-13 |
-| 74. Discord Alert Service | v3.1 | 0/TBD | Not started | - |
+| 74. Discord Alert Service | v3.1 | 0/1 | Not started | - |
 
 ---
-*Last updated: 2026-02-13 after Phase 73 execution*
+*Last updated: 2026-02-13 after Phase 74 planning*
