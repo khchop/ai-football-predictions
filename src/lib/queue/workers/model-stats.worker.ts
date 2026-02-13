@@ -20,6 +20,7 @@ import { aggregateDailyStats, detectRegressions } from '@/lib/db/queries/model-s
 import { getDb } from '@/lib/db';
 import { llmModelStats } from '@/lib/db/schema';
 import { loggers } from '@/lib/logger/modules';
+import { sendRegressionAlert } from '@/lib/notifications/discord';
 
 export function createModelStatsWorker() {
   const log = loggers.modelStatsWorker;
@@ -58,6 +59,9 @@ export function createModelStatsWorker() {
                   severity: a.severity,
                 })),
               }, `MODEL REGRESSION: ${criticalCount} critical, ${warningCount} warning`);
+
+              // Send Discord alert for regressions
+              await sendRegressionAlert(regressions);
             } else {
               jobLog.info('No regressions detected');
             }
@@ -89,6 +93,9 @@ export function createModelStatsWorker() {
                   severity: a.severity,
                 })),
               }, `MODEL REGRESSION: ${criticalCount} critical, ${warningCount} warning`);
+
+              // Send Discord alert for regressions
+              await sendRegressionAlert(regressions);
             } else {
               jobLog.info('No regressions detected');
             }

@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { loggers } from '@/lib/logger/modules';
 import { withCache, cacheKeys, CACHE_TTL, cacheDelete, invalidateModelCountCaches, safeConnection } from '@/lib/cache/redis';
 import { calculateQuotaScores } from '@/lib/utils/scoring';
+import { sendAutoDisableAlert } from '@/lib/notifications/discord';
 
 /**
  * Database queries for the application.
@@ -899,6 +900,22 @@ export async function recordModelFailure(
       threshold: DISABLE_THRESHOLD,
       errorType,
     }, 'Model auto-disabled after consecutive failures');
+
+    // Get display name for Discord alert (cheap single-row query)
+    const modelInfo = await db
+      .select({ displayName: models.displayName, lastSuccessAt: models.lastSuccessAt })
+      .from(models)
+      .where(eq(models.id, modelId))
+      .limit(1);
+
+    // Send Discord alert (fire-and-forget, cannot crash pipeline)
+    sendAutoDisableAlert({
+      modelId,
+      displayName: modelInfo[0]?.displayName || modelId,
+      consecutiveFailures: updated.consecutiveFailures || 0,
+      failureReason: reason.substring(0, 200),
+      lastSuccessAt: modelInfo[0]?.lastSuccessAt || null,
+    }).catch(() => {}); // Fire and forget, errors logged internally
 
     // Invalidate model count caches when auto-disabled
     await invalidateModelCountCaches();
