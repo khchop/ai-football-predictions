@@ -47,6 +47,8 @@ export interface LeaderboardEntry {
   // Trend data
   trendDirection?: 'rising' | 'falling' | 'stable' | 'new';
   rankChange?: number;
+  // Archive status
+  archived?: boolean;
 }
 
 interface LeaderboardTableProps {
@@ -213,8 +215,22 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
       header: 'Model',
       cell: ({ row }) => (
         <Link href={`/models/${row.original.modelId}`} className="block group">
-          <p className="font-medium group-hover:text-primary transition-colors">{row.original.displayName}</p>
-          <p className="text-xs text-muted-foreground capitalize">{row.original.provider}</p>
+          <div className="flex items-center gap-2">
+            <div>
+              <p className={cn(
+                "font-medium group-hover:text-primary transition-colors",
+                row.original.archived && "text-muted-foreground"
+              )}>
+                {row.original.displayName}
+              </p>
+              <p className="text-xs text-muted-foreground capitalize">{row.original.provider}</p>
+            </div>
+            {row.original.archived && (
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/50">
+                Archived
+              </span>
+            )}
+          </div>
         </Link>
       ),
       size: 180,
@@ -391,10 +407,11 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
       <div
         className={cn(
           "rounded-lg border border-border/50 p-4 space-y-3 transition-colors",
-          index === 0 && "bg-yellow-500/5 border-yellow-500/30",
-          index === 1 && "bg-gray-500/5 border-gray-400/30",
-          index === 2 && "bg-orange-500/5 border-orange-500/30",
-          rowSelection[entry.modelId] && "ring-2 ring-primary/50"
+          index === 0 && !entry.archived && "bg-yellow-500/5 border-yellow-500/30",
+          index === 1 && !entry.archived && "bg-gray-500/5 border-gray-400/30",
+          index === 2 && !entry.archived && "bg-orange-500/5 border-orange-500/30",
+          rowSelection[entry.modelId] && "ring-2 ring-primary/50",
+          entry.archived && "opacity-60"
         )}
       >
         {/* Header: Checkbox + Rank + Model Name + Streak */}
@@ -421,8 +438,22 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
           </div>
           <div className="flex-1 min-w-0">
             <Link href={`/models/${entry.modelId}`} className="block group">
-              <p className="font-medium group-hover:text-primary transition-colors">{entry.displayName}</p>
-              <p className="text-xs text-muted-foreground capitalize">{entry.provider}</p>
+              <div className="flex items-center gap-2">
+                <div>
+                  <p className={cn(
+                    "font-medium group-hover:text-primary transition-colors",
+                    entry.archived && "text-muted-foreground"
+                  )}>
+                    {entry.displayName}
+                  </p>
+                  <p className="text-xs text-muted-foreground capitalize">{entry.provider}</p>
+                </div>
+                {entry.archived && (
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/50">
+                    Archived
+                  </span>
+                )}
+              </div>
             </Link>
           </div>
           <div className="flex items-center gap-2">
@@ -578,9 +609,10 @@ export function LeaderboardTable({ entries, showBreakdown: _showBreakdown = fals
                 key={row.id}
                 className={cn(
                   "border-b border-border/30 transition-colors hover:bg-muted/30",
-                  index === 0 && "bg-yellow-500/5",
-                  index === 1 && "bg-gray-500/5",
-                  index === 2 && "bg-orange-500/5"
+                  index === 0 && !row.original.archived && "bg-yellow-500/5",
+                  index === 1 && !row.original.archived && "bg-gray-500/5",
+                  index === 2 && !row.original.archived && "bg-orange-500/5",
+                  row.original.archived && "opacity-60"
                 )}
               >
                 {row.getVisibleCells().map(cell => (

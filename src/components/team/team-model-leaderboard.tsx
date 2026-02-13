@@ -27,6 +27,7 @@ interface TeamModelLeaderboardProps {
     accuracy: number;
     trendDirection: 'rising' | 'falling' | 'stable' | 'new';
     rankChange: number;
+    archived?: boolean;
   }>;
 }
 
@@ -64,9 +65,18 @@ export function TeamModelLeaderboard({ entries }: TeamModelLeaderboardProps) {
         accessorKey: 'displayName',
         header: 'Model',
         cell: ({ row }) => (
-          <div>
-            <p className="font-medium">{row.original.displayName}</p>
-            <p className="text-xs text-muted-foreground capitalize">{row.original.provider}</p>
+          <div className="flex items-center gap-2">
+            <div>
+              <p className={cn("font-medium", row.original.archived && "text-muted-foreground")}>
+                {row.original.displayName}
+              </p>
+              <p className="text-xs text-muted-foreground capitalize">{row.original.provider}</p>
+            </div>
+            {row.original.archived && (
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/50">
+                Archived
+              </span>
+            )}
           </div>
         ),
         size: 180,
@@ -198,7 +208,10 @@ export function TeamModelLeaderboard({ entries }: TeamModelLeaderboardProps) {
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="border-b border-border/30 transition-colors hover:bg-muted/30"
+                className={cn(
+                  "border-b border-border/30 transition-colors hover:bg-muted/30",
+                  row.original.archived && "opacity-60"
+                )}
               >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="py-4 px-4">
@@ -218,15 +231,27 @@ export function TeamModelLeaderboard({ entries }: TeamModelLeaderboardProps) {
           return (
             <div
               key={entry.modelId}
-              className="rounded-lg border border-border/50 p-4 space-y-3 bg-card/50"
+              className={cn(
+                "rounded-lg border border-border/50 p-4 space-y-3 bg-card/50",
+                entry.archived && "opacity-60"
+              )}
             >
               {/* Header: Rank + Model Name + Trend */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-muted-foreground font-mono text-sm">#{entry.rank}</span>
-                  <div>
-                    <p className="font-medium">{entry.displayName}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{entry.provider}</p>
+                  <div className="flex items-center gap-2">
+                    <div>
+                      <p className={cn("font-medium", entry.archived && "text-muted-foreground")}>
+                        {entry.displayName}
+                      </p>
+                      <p className="text-xs text-muted-foreground capitalize">{entry.provider}</p>
+                    </div>
+                    {entry.archived && (
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/50">
+                        Archived
+                      </span>
+                    )}
                   </div>
                 </div>
                 {getTrendIcon(entry.trendDirection)}
