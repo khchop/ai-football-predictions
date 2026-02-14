@@ -22,7 +22,7 @@ import {
 import type { NewPrediction } from '@/lib/db/schema';
 import { getActiveProviders } from '@/lib/llm';
 import { buildBatchPrompt } from '@/lib/football/prompt-builder';
-import { parseBatchPredictionResponse, BATCH_SYSTEM_PROMPT } from '@/lib/llm/prompt';
+import { parseBatchPredictionResponse, parseBatchPredictionEnhanced, BATCH_SYSTEM_PROMPT } from '@/lib/llm/prompt';
 import { FallbackAPIResult } from '@/lib/llm/providers/base';
 import { getStandingsForLeagues, getStandingFromMap } from '@/lib/football/standings';
 import { getResult, calculateQuotas } from '@/lib/utils/scoring';
@@ -224,22 +224,45 @@ export function createPredictionsWorker() {
               }
 
               // Parse simple JSON: [{match_id: "xxx", home_score: X, away_score: Y}]
-              const parsed = parseBatchPredictionResponse(rawResponse, [matchId]);
+              let parsed = parseBatchPredictionResponse(rawResponse, [matchId]);
 
                if (!parsed.success || parsed.predictions.length === 0) {
-                 // Log error with raw response preview for debugging
-                 const responsePreview = rawResponse.slice(0, 300).replace(/\s+/g, ' ');
-                 const errorType = ErrorType.PARSE_ERROR;
-                 log.warn({
-                   matchId,
-                   modelId: provider.id,
-                   error: parsed.error,
-                   errorType,
-                   rawResponsePreview: responsePreview
-                 }, `Failed to parse prediction`);
-                 await recordModelFailure(provider.id, parsed.error || 'Parse failed', errorType);
-                 failCount++;
-                 continue;
+                 // Try enhanced multi-strategy parser as fallback
+                 const enhanced = parseBatchPredictionEnhanced(rawResponse, [matchId]);
+
+                 if (enhanced.success && enhanced.predictions && enhanced.predictions.length > 0) {
+                   // Enhanced parser succeeded - use its result
+                   // Overwrite parsed with compatible structure
+                   log.info({
+                     matchId,
+                     modelId: provider.id,
+                     strategy: 'enhanced-fallback',
+                   }, 'Enhanced parser recovered prediction after basic parser failed');
+
+                   // Replace parsed so the code below picks it up
+                   parsed = {
+                     success: true,
+                     predictions: enhanced.predictions.map(p => ({
+                       matchId: p.matchId,
+                       homeScore: p.homeScore,
+                       awayScore: p.awayScore,
+                     })),
+                   };
+                 } else {
+                   // Both parsers failed - record failure
+                   const responsePreview = rawResponse.slice(0, 300).replace(/\s+/g, ' ');
+                   const errorType = ErrorType.PARSE_ERROR;
+                   log.warn({
+                     matchId,
+                     modelId: provider.id,
+                     error: parsed.error,
+                     errorType,
+                     rawResponsePreview: responsePreview
+                   }, 'Failed to parse prediction (basic + enhanced parsers failed)');
+                   await recordModelFailure(provider.id, parsed.error || 'Parse failed', errorType);
+                   failCount++;
+                   continue;
+                 }
                }
 
              const prediction = parsed.predictions[0];
