@@ -574,8 +574,130 @@ function extractFlexibleScores(response: string): Array<{ matchId: string; homeS
 }
 
 /**
+ * Strategy 5: Natural Language Score Extraction
+ * Extracts scores from prose/natural language responses (e.g., "my prediction is 0-2")
+ * Only works for single-match predictions (cannot reliably assign scores to matches from prose)
+ * @param response - Raw LLM response
+ * @param matchIds - Expected match IDs (only works if length === 1)
+ * @returns Parsed prediction or null
+ */
+function extractNaturalLanguageScores(
+  response: string,
+  matchIds: string[]
+): Array<{ matchId: string; homeScore: number; awayScore: number }> | null {
+  // Only works for single-match predictions
+  if (matchIds.length !== 1) {
+    return null;
+  }
+
+  const matchId = matchIds[0];
+
+  // Clean the response (same as basic parser does)
+  let cleaned = response.trim();
+  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  cleaned = cleaned.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+  cleaned = cleaned.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
+
+  // Try patterns in priority order
+  const patterns = [
+    // Pattern a: Explicit prediction pattern
+    // Matches: "prediction is 0-2", "my prediction: 1-1", "final score 2-1", "result: 3-0"
+    {
+      name: 'explicit-prediction',
+      regex: /(?:predict(?:ion)?|final\s*score|my\s*(?:prediction|score)|result)\s*(?:is|:)?\s*(\d+)\s*[-\u2013:]\s*(\d+)/i,
+      extract: (match: RegExpMatchArray) => ({
+        homeScore: parseInt(match[1], 10),
+        awayScore: parseInt(match[2], 10),
+      }),
+    },
+    // Pattern b: Score-at-end pattern
+    // Matches: thinking models put final prediction at end, e.g., "...Therefore 0-2"
+    {
+      name: 'score-at-end',
+      regex: null, // Custom logic below
+      extract: (text: string) => {
+        const lines = text.split('\n').filter(line => line.trim().length > 0);
+        if (lines.length === 0) return null;
+        const lastLine = lines[lines.length - 1];
+        const match = lastLine.match(/(\d+)\s*[-\u2013:]\s*(\d+)/);
+        if (!match) return null;
+        return {
+          homeScore: parseInt(match[1], 10),
+          awayScore: parseInt(match[2], 10),
+        };
+      },
+    },
+    // Pattern c: Home/away labeled pattern
+    // Matches: "Home: 2, Away: 1", "Home 2 - Away 1"
+    {
+      name: 'home-away-labeled',
+      regex: /(?:home|heim)\s*[:=]?\s*(\d+)[\s\S]*?(?:away|aus|gast)\s*[:=]?\s*(\d+)/i,
+      extract: (match: RegExpMatchArray) => ({
+        homeScore: parseInt(match[1], 10),
+        awayScore: parseInt(match[2], 10),
+      }),
+    },
+    // Pattern d: Last X-Y occurrence in text
+    // Most aggressive/fallback - find ALL matches, use LAST one
+    // Guard: skip if >10 occurrences (likely stats-heavy response)
+    {
+      name: 'last-score-pattern',
+      regex: null, // Custom logic below
+      extract: (text: string) => {
+        const scorePattern = /(\d+)\s*[-\u2013]\s*(\d+)/g;
+        const matches = [...text.matchAll(scorePattern)];
+
+        // Guard: too many matches suggests stats-heavy response
+        if (matches.length === 0 || matches.length > 10) {
+          return null;
+        }
+
+        // Use last occurrence
+        const lastMatch = matches[matches.length - 1];
+        return {
+          homeScore: parseInt(lastMatch[1], 10),
+          awayScore: parseInt(lastMatch[2], 10),
+        };
+      },
+    },
+  ];
+
+  // Try each pattern
+  for (const pattern of patterns) {
+    try {
+      let scores: { homeScore: number; awayScore: number } | null = null;
+
+      if (pattern.regex) {
+        const match = cleaned.match(pattern.regex);
+        if (match && typeof pattern.extract === 'function') {
+          scores = pattern.extract(match);
+        }
+      } else {
+        // Custom extraction logic (patterns b and d)
+        if (typeof pattern.extract === 'function') {
+          scores = pattern.extract(cleaned);
+        }
+      }
+
+      if (scores && isValidScore(scores.homeScore) && isValidScore(scores.awayScore)) {
+        return [{
+          matchId,
+          homeScore: scores.homeScore,
+          awayScore: scores.awayScore,
+        }];
+      }
+    } catch {
+      // Continue to next pattern
+      continue;
+    }
+  }
+
+  return null;
+}
+
+/**
  * Multi-strategy parser with fallbacks
- * Tries 4 strategies in order: direct JSON → markdown code block → score pattern regex → flexible pattern
+ * Tries 5 strategies in order: direct JSON → markdown code block → score pattern regex → flexible pattern → natural language
  * @param response - Raw LLM response
  * @param matchIds - Expected match IDs for validation
  * @returns Parsed predictions or error
@@ -599,6 +721,7 @@ export function parseBatchPredictionEnhanced(
     }},
     { name: 'Score pattern regex', fn: () => extractScorePatterns(response) },
     { name: 'Flexible pattern', fn: () => extractFlexibleScores(response) },
+    { name: 'Natural language', fn: () => extractNaturalLanguageScores(response, matchIds) },
   ];
 
   // Try each strategy in order
