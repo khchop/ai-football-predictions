@@ -9,6 +9,7 @@ import {
   getTeamUpcomingWithPredictions,
   getTeamRecentWithAccuracy,
   getTeamAccuracyTrend,
+  getTeamLogo,
   type TeamLeaderboardPeriod
 } from '@/lib/db/queries/team-stats';
 import { getTeamContent } from '@/lib/db/queries/team-content';
@@ -22,7 +23,7 @@ import { buildTeamBreadcrumbs } from '@/lib/navigation/breadcrumb-utils';
 import { getCompetitionById } from '@/lib/football/competitions';
 import { TeamModelLeaderboard } from '@/components/team/team-model-leaderboard';
 import { TeamLeaderboardFilter } from '@/components/team/team-leaderboard-filter';
-import { TeamFormIndicator } from '@/components/team/team-form-indicator';
+import { TeamHero } from '@/components/team/team-hero';
 import { TeamStatsOverview } from '@/components/team/team-stats-overview';
 import { TeamUpcomingMatches } from '@/components/team/team-upcoming-matches';
 import { TeamRecentMatches } from '@/components/team/team-recent-matches';
@@ -124,7 +125,7 @@ export default async function TeamPage({ params, searchParams }: PageProps) {
   const showArchived = resolvedSearchParams.showArchived === 'true';
 
   // Parallel data fetch
-  const [stats, formGuide, leaderboard, upcomingMatches, recentWithAccuracy, accuracyTrend, teamContentData] = await Promise.all([
+  const [stats, formGuide, leaderboard, upcomingMatches, recentWithAccuracy, accuracyTrend, teamContentData, teamLogo] = await Promise.all([
     getTeamStats(team.id),
     getTeamFormGuide(team.id, 5),
     getTeamModelLeaderboard(team.id, { timePeriod, includeArchived: showArchived }),
@@ -132,7 +133,11 @@ export default async function TeamPage({ params, searchParams }: PageProps) {
     getTeamRecentWithAccuracy(team.id, 10),
     getTeamAccuracyTrend(team.id),
     getTeamContent(team.id),
+    getTeamLogo(team.id),
   ]);
+
+  // Compute winRate for hero
+  const winRate = stats.totalMatches > 0 ? Math.round((stats.wins / stats.totalMatches) * 100) : 0;
 
   // Parse FAQ content
   const faqs: FAQItem[] | null = teamContentData?.faqContent
@@ -172,40 +177,30 @@ export default async function TeamPage({ params, searchParams }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
       <Breadcrumbs items={visualBreadcrumbs} />
-      <div className="space-y-8">
-        {/* Header section */}
-        <div>
-          <h1 className="text-3xl font-bold">{team.id}</h1>
-          <p className="text-muted-foreground">
-            {competition ? (
-              <Link
-                href={`/leagues/${competition.id}`}
-                className="hover:text-primary transition-colors hover:underline"
-              >
-                {competition.name}
-              </Link>
-            ) : (
-              team.league
-            )}{' '}
-            — {stats.totalMatches} matches tracked
-          </p>
-        </div>
+      <div className="space-y-6">
+        {/* Hero section with logo, name, league, description, form */}
+        <TeamHero
+          teamName={team.id}
+          teamSlug={team.slug}
+          logoUrl={teamLogo}
+          leagueName={competition?.name ?? team.league}
+          leagueId={competition?.id ?? team.league}
+          totalMatches={stats.totalMatches}
+          record={{ wins: stats.wins, draws: stats.draws, losses: stats.losses }}
+          winRate={winRate}
+          goalDifference={stats.goalDifference}
+          description={teamContentData?.analysis ?? null}
+          formGuide={formGuide}
+        />
 
-        {/* Stats overview section */}
+        {/* Stats overview */}
         <section>
-          <h2 className="text-xl font-semibold mb-4">Statistics</h2>
           <TeamStatsOverview stats={stats} />
-        </section>
-
-        {/* Form section */}
-        <section>
-          <h2 className="text-xl font-semibold mb-4">Recent Form</h2>
-          <TeamFormIndicator form={formGuide} />
         </section>
 
         {/* Model Leaderboard section */}
         <section>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-semibold">AI Model Leaderboard for {team.id}</h2>
             <TeamLeaderboardFilter teamSlug={team.slug} />
           </div>
@@ -214,40 +209,26 @@ export default async function TeamPage({ params, searchParams }: PageProps) {
 
         {/* Model Accuracy Trend section */}
         <section>
-          <h2 className="text-xl font-semibold mb-4">Model Accuracy Over Time</h2>
+          <h2 className="text-xl font-semibold mb-3">Model Accuracy Over Time</h2>
           <TeamAccuracyTrendChart data={accuracyTrend} />
         </section>
 
-        {/* AI Analysis section - only show when content exists */}
-        {teamContentData?.analysis && (
-          <section>
-            <h2 className="text-xl font-semibold mb-4">AI Club Analysis</h2>
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              {teamContentData.analysis.split('\n\n').map((paragraph, i) => (
-                <p key={i} className="text-muted-foreground leading-relaxed">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          </section>
-        )}
-
         {/* Upcoming Matches section */}
         <section>
-          <h2 className="text-xl font-semibold mb-4">Upcoming Matches</h2>
+          <h2 className="text-xl font-semibold mb-3">Upcoming Matches</h2>
           <TeamUpcomingMatches matches={upcomingMatches} teamName={team.id} />
         </section>
 
         {/* Recent Matches section */}
         <section>
-          <h2 className="text-xl font-semibold mb-4">Recent Matches</h2>
+          <h2 className="text-xl font-semibold mb-3">Recent Matches</h2>
           <TeamRecentMatches matches={recentWithAccuracy} teamName={team.id} />
         </section>
 
         {/* FAQ section - only show when FAQ content exists */}
         {faqs && faqs.length > 0 && (
           <section>
-            <h2 className="text-xl font-semibold mb-4">Frequently Asked Questions</h2>
+            <h2 className="text-xl font-semibold mb-3">Frequently Asked Questions</h2>
             <div className="space-y-4">
               {faqs.map((faq, i) => (
                 <div key={i} className="border rounded-lg p-4">
