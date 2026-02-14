@@ -598,3 +598,34 @@ export async function getTeamAccuracyTrend(
     };
   });
 }
+
+/**
+ * Get team logo from most recent match
+ * Returns the team's logo URL from the most recent match they played in
+ */
+export async function getTeamLogo(teamName: string): Promise<string | null> {
+  const db = getDb();
+
+  const result = await db
+    .select({
+      homeTeam: matches.homeTeam,
+      awayTeam: matches.awayTeam,
+      homeTeamLogo: matches.homeTeamLogo,
+      awayTeamLogo: matches.awayTeamLogo,
+    })
+    .from(matches)
+    .where(or(eq(matches.homeTeam, teamName), eq(matches.awayTeam, teamName)))
+    .orderBy(desc(matches.kickoffTime))
+    .limit(1);
+
+  if (result.length === 0) {
+    return null;
+  }
+
+  const match = result[0];
+  if (match.homeTeam === teamName) {
+    return match.homeTeamLogo;
+  } else {
+    return match.awayTeamLogo;
+  }
+}
