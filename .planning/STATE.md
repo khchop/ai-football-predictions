@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 ## Current Position
 
 Phase: 75 of 79 (CLS Fixes)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-14 — v3.2 roadmap created with 5 phases
+Plan: 1 of 1 in current phase
+Status: Phase 75 complete
+Last activity: 2026-02-14 — Completed 75-01 CLS fixes (eliminated all fallback={null})
 
-Progress: [████████████████████░] 93% (74/79 phases from v1.0-v3.1 complete)
+Progress: [████████████████████░] 95% (75/79 phases from v1.0-v3.2 complete)
 
 ## Performance Metrics
 
@@ -29,7 +29,7 @@ Progress: [████████████████████░] 93% 
 | Milestone | Phases | Status |
 |-----------|--------|--------|
 | v1.0-v3.1 | 1-74 | Complete |
-| v3.2 | 75-79 | Ready to plan |
+| v3.2 | 75-79 | In progress (1/5 phases) |
 
 **Recent Trend:**
 - v3.1 (3 phases, 5 plans): 2 days
@@ -37,7 +37,11 @@ Progress: [████████████████████░] 93% 
 - v2.9 (4 phases + quick fixes): 3 days
 - Trend: Stable velocity, efficient execution
 
-*Updated after v3.2 roadmap creation*
+**Phase 75 Execution:**
+
+| Plan | Duration (s) | Tasks | Files | Completed |
+|------|-------------|-------|-------|-----------|
+| Phase 75 P01 | 151 | 2 tasks | 3 files | 2026-02-14 |
 
 ## Accumulated Context
 
@@ -50,6 +54,8 @@ Recent decisions affecting v3.2 work:
 - **Phase structure**: 5 phases derived from natural requirement boundaries (CLS, LCP, Bundle, DOM, Verification)
 - **Lighthouse baseline**: Desktop 77, Mobile 86 — target 90+ both
 - **LiveMatches root cause**: Suspense fallback={null} expands from zero height pushing footer down
+- **Skeleton fallback strategy (75-01)**: Use skeletons matching exact content layout instead of fallback={null} to prevent PPR streaming CLS
+- **LiveMatchesSkeleton card count (75-01)**: Show 3 skeleton cards (typical live match count) to balance visual noise vs height accuracy
 
 ### Pending Todos
 
@@ -58,7 +64,7 @@ None yet (v3.2 just started).
 ### Blockers/Concerns
 
 **Known issues to address in v3.2:**
-- CLS 0.294 on desktop caused by LiveMatches Suspense with fallback={null}
+- ~~CLS 0.294 on desktop caused by LiveMatches Suspense with fallback={null}~~ **FIXED in 75-01**
 - Mobile LCP 4.2s with hero `<p>` tag as LCP element (font loading + hydration bottleneck)
 - 78 KiB unused JS, 14 KiB legacy JS identified
 - 1,155 DOM elements on homepage (target < 1,000)
@@ -74,10 +80,10 @@ None yet (v3.2 just started).
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: v3.2 roadmap created, ready to plan Phase 75
-Resume file: None
+Stopped at: Completed Phase 75-01-PLAN.md (CLS fixes)
+Resume file: .planning/phases/75-cls-fixes/75-01-SUMMARY.md
 
-**Next action:** Run `/gsd:plan-phase 75` to create execution plan for CLS fixes
+**Next action:** Continue v3.2 with Phase 76 (LCP optimization) or next phase in roadmap
 
 ---
-*Last updated: 2026-02-14 after v3.2 roadmap creation*
+*Last updated: 2026-02-14 after completing Phase 75 Plan 01*
