@@ -32,37 +32,35 @@ export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
   // Moonshot Kimi (1)
   'kimi-k2.5': ['kimi-k2.5-or'],
 
-  // Qwen (3)
+  // Qwen (2)
   'qwen3-235b': ['qwen3-235b-or'],
-  'qwen3-235b-thinking': ['qwen3-235b-thinking-or'],
   'qwen3-30b-a3b': ['qwen3-30b-a3b-or'],
 
   // Meta Llama (2)
-  'llama-4-maverick': ['llama-4-maverick-or'],
+  'llama-3.3-70b': ['llama-3.3-70b-or'],
   'llama-4-scout': ['llama-4-scout-or'],
 
-  // OpenAI OSS (1)
+  // OpenAI OSS (2)
   'gpt-oss-20b': ['gpt-oss-20b-or'],
-
-  // Deep Cogito (1)
-  'cogito-671b': ['cogito-671b-or'],
+  'gpt-oss-120b': ['gpt-oss-120b-or'],
 
   // Mistral (2)
-  'devstral-small': ['devstral-small-or'],
+  'devstral-2': ['devstral-2-or'],
   'mistral-small-3.2-24b': ['mistral-small-3.2-24b-or'],
 
   // StepFun (1)
   'step-3.5-flash': ['step-3.5-flash-or'],
 
   // NVIDIA (1)
-  'nemotron-nano-9b-v2': ['nemotron-nano-9b-v2-or'],
+  'nemotron-3-nano-30b-a3b': ['nemotron-3-nano-30b-a3b-or'],
 
   // Google (2)
   'gemma-3-27b': ['gemma-3-27b-or'],
   'gemma-3-12b': ['gemma-3-12b-or'],
 
-  // Z-AI GLM (1)
+  // Z-AI GLM (2)
   'glm-5': ['glm-5-or'],
+  'glm-4.7': ['glm-4.7-or'],
 
   // MiniMax (2)
   'minimax-m2.1': ['minimax-m2.1-or'],

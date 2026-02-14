@@ -67,7 +67,7 @@ export class OpenRouterProvider extends OpenAICompatibleProvider {
 }
 
 // ============================================================================
-// KEPT OPENROUTER PROVIDERS (7 models)
+// KEPT OPENROUTER PROVIDERS (4 models)
 // ============================================================================
 
 // Qwen3 235B (Standard instruct model)
@@ -85,26 +85,26 @@ export const Qwen3_235B_OR = new OpenRouterProvider(
   }
 );
 
-// Llama 4 Maverick
-export const Llama4Maverick_OR = new OpenRouterProvider(
-  'llama-4-maverick-or',
+// Llama 3.3 70B Instruct
+export const Llama33_70B_OR = new OpenRouterProvider(
+  'llama-3.3-70b-or',
   'openrouter',
-  'meta-llama/llama-4-maverick-17b-128e-instruct',
-  'Llama 4 Maverick (OpenRouter)',
-  'ultra-budget',
-  { promptPer1M: 0.10, completionPer1M: 0.25 },
+  'meta-llama/llama-3.3-70b-instruct',
+  'Llama 3.3 70B Instruct (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.10, completionPer1M: 0.32 },
   false,
   {}
 );
 
-// Cogito 671B
-export const Cogito671B_OR = new OpenRouterProvider(
-  'cogito-671b-or',
+// GPT-OSS 120B
+export const GPTOSS120B_OR = new OpenRouterProvider(
+  'gpt-oss-120b-or',
   'openrouter',
-  'deepcogito/cogito-v2.1-671b',
-  'Cogito 671B (OpenRouter)',
+  'openai/gpt-oss-120b',
+  'GPT-OSS 120B (OpenRouter)',
   'budget',
-  { promptPer1M: 0.40, completionPer1M: 1.20 },
+  { promptPer1M: 0.039, completionPer1M: 0.19 },
   false,
   {}
 );
@@ -157,33 +157,33 @@ export const MiniMaxM25_OR = new OpenRouterProvider(
   }
 );
 
-// Qwen3 235B Thinking (needs THINKING_STRIPPED + STRIP_THINKING_TAGS like primary)
-export const Qwen3_235BThinking_OR = new OpenRouterProvider(
-  'qwen3-235b-thinking-or',
+// GLM-4.7 (same config pattern as GLM-5 since both are Z-AI reasoning models)
+export const GLM47_OR = new OpenRouterProvider(
+  'glm-4.7-or',
   'openrouter',
-  'qwen/qwen3-235b-a22b-thinking-2507',
-  'Qwen3 235B Thinking (OpenRouter)',
-  'budget',
-  { promptPer1M: 0.11, completionPer1M: 0.60 },
-  false,
+  'z-ai/glm-4.7',
+  'GLM-4.7 (OpenRouter)',
+  'premium',
+  { promptPer1M: 0.40, completionPer1M: 1.50 },
+  true,
   {
-    promptVariant: PromptVariant.THINKING_STRIPPED,
-    responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
+    promptVariant: PromptVariant.ENGLISH_ENFORCED,
+    responseHandler: ResponseHandler.EXTRACT_JSON,
     timeoutMs: 120000,
     supportsJsonMode: false,
-    maxTokensSingle: 500,
-    maxTokensBatch: 800,
+    maxTokensSingle: 1000,
+    maxTokensBatch: 1500,
   }
 );
 
-// Nemotron Nano 9B v2 (kept as 20th model since Nemotron 30B unavailable)
-export const NemotronNano9Bv2_OR = new OpenRouterProvider(
-  'nemotron-nano-9b-v2-or',
+// NVIDIA Nemotron 3 Nano 30B A3B (replaces nemotron-nano-9b-v2)
+export const Nemotron3Nano30B_OR = new OpenRouterProvider(
+  'nemotron-3-nano-30b-a3b-or',
   'openrouter',
-  'nvidia/nemotron-nano-9b-v2',
-  'Nemotron Nano 9B v2 (OpenRouter)',
+  'nvidia/nemotron-3-nano-30b-a3b',
+  'Nemotron 3 Nano 30B A3B (OpenRouter)',
   'ultra-budget',
-  { promptPer1M: 0.04, completionPer1M: 0.16 },
+  { promptPer1M: 0.05, completionPer1M: 0.20 },
   false,
   {}
 );
@@ -242,14 +242,14 @@ export const DeepSeekR10528_OR = new OpenRouterProvider(
   }
 );
 
-// Devstral Small (budget, code-focused)
-export const DevstralSmall_OR = new OpenRouterProvider(
-  'devstral-small-or',
+// Devstral 2 (replaces devstral-small)
+export const Devstral2_OR = new OpenRouterProvider(
+  'devstral-2-or',
   'openrouter',
-  'mistralai/devstral-small',
-  'Devstral Small (OpenRouter)',
+  'mistralai/devstral-2512',
+  'Devstral 2 (OpenRouter)',
   'budget',
-  { promptPer1M: 0.10, completionPer1M: 0.30 },
+  { promptPer1M: 0.05, completionPer1M: 0.22 },
   false,
   {}
 );
@@ -383,37 +383,35 @@ export const OPENROUTER_PROVIDERS: OpenRouterProvider[] = [
   // Moonshot Kimi (1 model)
   KimiK25_OR,                  // K2.5 (KEPT)
 
-  // Qwen (3 models)
+  // Qwen (2 models)
   Qwen3_235B_OR,               // 235B (KEPT)
-  Qwen3_235BThinking_OR,       // 235B Thinking (KEPT)
   Qwen3_30B_A3B_OR,            // 30B A3B (NEW)
 
   // Meta Llama (2 models)
-  Llama4Maverick_OR,           // Llama 4 Maverick (KEPT)
+  Llama33_70B_OR,              // Llama 3.3 70B (NEW - replaces Maverick)
   Llama4Scout_OR,              // Llama 4 Scout (NEW)
 
-  // OpenAI OSS (1 model)
-  GPTOSS20B_OR,                // GPT-OSS 20B (NEW - replaces 120B)
-
-  // Deep Cogito (1 model)
-  Cogito671B_OR,               // Cogito 671B (KEPT)
+  // OpenAI OSS (2 models)
+  GPTOSS20B_OR,                // GPT-OSS 20B (NEW)
+  GPTOSS120B_OR,               // GPT-OSS 120B (NEW)
 
   // Mistral (2 models)
-  DevstralSmall_OR,            // Devstral Small (NEW)
+  Devstral2_OR,                // Devstral 2 (NEW - replaces Devstral Small)
   MistralSmall32_24B_OR,       // Mistral Small 3.2 24B (NEW - replaces 3.0)
 
   // StepFun (1 model)
   Step35Flash_OR,              // Step 3.5 Flash (NEW)
 
   // NVIDIA (1 model)
-  NemotronNano9Bv2_OR,         // Nemotron Nano 9B v2 (KEPT - substitute for unavailable 30B)
+  Nemotron3Nano30B_OR,         // Nemotron 3 Nano 30B A3B (NEW - replaces Nano 9B v2)
 
   // Google (2 models)
   Gemma3_27B_OR,               // Gemma 3 27B (NEW)
   Gemma3_12B_OR,               // Gemma 3 12B (NEW)
 
-  // Z-AI GLM (1 model)
-  GLM5_OR,                     // GLM-5 (NEW - replaces 4.7)
+  // Z-AI GLM (2 models)
+  GLM5_OR,                     // GLM-5 (NEW)
+  GLM47_OR,                    // GLM-4.7 (NEW)
 
   // MiniMax (2 models)
   MiniMaxM21_OR,               // MiniMax M2.1 (UPDATED pricing)
