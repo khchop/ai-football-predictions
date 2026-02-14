@@ -156,7 +156,7 @@ See `.planning/MILESTONES.md` and `.planning/milestones/v3.1-ROADMAP.md` for ful
 **Plans**: 1 plan
 
 Plans:
-- [ ] 75-01-PLAN.md — Replace all `fallback={null}` with proper skeletons (homepage LiveMatches, matches badge, league FAQ)
+- [x] 75-01-PLAN.md — Replace all `fallback={null}` with proper skeletons (homepage LiveMatches, matches badge, league FAQ)
 
 #### Phase 76: LCP & Font Optimization
 
@@ -246,11 +246,11 @@ Phases execute in numeric order: 75 → 76 → 77 → 78 → 79
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-74. Previous milestones | v1.0-v3.1 | All | Complete | 2026-02-13 |
-| 75. CLS Fixes | v3.2 | 0/TBD | Not started | - |
+| 75. CLS Fixes | v3.2 | 1/1 | Complete | 2026-02-14 |
 | 76. LCP & Font Optimization | v3.2 | 0/TBD | Not started | - |
 | 77. Bundle Reduction | v3.2 | 0/TBD | Not started | - |
 | 78. DOM & Rendering | v3.2 | 0/TBD | Not started | - |
 | 79. Final Verification | v3.2 | 0/TBD | Not started | - |
 
 ---
-*Last updated: 2026-02-14 after v3.2 roadmap creation*
+*Last updated: 2026-02-14 after Phase 75 execution*
