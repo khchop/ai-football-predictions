@@ -277,7 +277,7 @@ export const Step35Flash_OR = new OpenRouterProvider(
   'budget',
   { promptPer1M: 0.10, completionPer1M: 0.30 },
   false,
-  {}
+  { supportsJsonMode: false }
 );
 
 // Mistral Small 3.2 24B (ultra-budget, replaces Mistral Small 3)
