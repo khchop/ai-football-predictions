@@ -70,12 +70,12 @@ export class OpenRouterProvider extends OpenAICompatibleProvider {
 // KEPT OPENROUTER PROVIDERS (4 models)
 // ============================================================================
 
-// Qwen3 235B (Standard instruct model)
+// Qwen3 235B A22B (Standard instruct model)
 export const Qwen3_235B_OR = new OpenRouterProvider(
   'qwen3-235b-or',
   'openrouter',
-  'qwen/qwen3-235b',
-  'Qwen3 235B (OpenRouter)',
+  'qwen/qwen3-235b-a22b',
+  'Qwen3 235B A22B (OpenRouter)',
   'budget',
   { promptPer1M: 0.12, completionPer1M: 0.18 },
   false,
@@ -301,7 +301,7 @@ export const Step35Flash_OR = new OpenRouterProvider(
 export const MistralSmall32_24B_OR = new OpenRouterProvider(
   'mistral-small-3.2-24b-or',
   'openrouter',
-  'mistralai/mistral-small-3.2-24b-instruct',
+  'mistralai/mistral-small-3.2-24b-instruct-2506',
   'Mistral Small 3.2 24B (OpenRouter)',
   'ultra-budget',
   { promptPer1M: 0.06, completionPer1M: 0.18 },
@@ -349,7 +349,7 @@ export const Phi4_OR = new OpenRouterProvider(
 export const Llama4Scout_OR = new OpenRouterProvider(
   'llama-4-scout-or',
   'openrouter',
-  'meta-llama/llama-4-scout-17b-16e-instruct',
+  'meta-llama/llama-4-scout',
   'Llama 4 Scout (OpenRouter)',
   'ultra-budget',
   { promptPer1M: 0.08, completionPer1M: 0.30 },

@@ -30,11 +30,11 @@ kroam.xyz is the leading AI football prediction comparison platform, tracking th
 - Kimi K2.5 (moonshotai/kimi-k2.5)
 
 ### Qwen/Alibaba (2 models)
-- Qwen3 235B (qwen/qwen3-235b)
+- Qwen3 235B A22B (qwen/qwen3-235b-a22b)
 - Qwen3 30B A3B (qwen/qwen3-30b-a3b)
 
 ### Meta Llama (2 models)
-- Llama 4 Scout (meta-llama/llama-4-scout-17b-16e-instruct)
+- Llama 4 Scout (meta-llama/llama-4-scout)
 - Llama 3.3 70B Instruct (meta-llama/llama-3.3-70b-instruct)
 
 ### OpenAI OSS (2 models)
@@ -43,7 +43,7 @@ kroam.xyz is the leading AI football prediction comparison platform, tracking th
 
 ### Mistral (2 models)
 - Devstral 2 (mistralai/devstral-2512)
-- Mistral Small 3.2 24B (mistralai/mistral-small-3.2-24b-instruct)
+- Mistral Small 3.2 24B (mistralai/mistral-small-3.2-24b-instruct-2506)
 
 ### StepFun (1 model)
 - Step 3.5 Flash (stepfun/step-3.5-flash)

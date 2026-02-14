@@ -7,7 +7,7 @@
 
 import { getDb } from './index';
 import { models } from './schema';
-import { getActiveProviders } from '../llm';
+import { ALL_PROVIDERS } from '../llm';
 import { loggers } from '@/lib/logger/modules';
 import { eq } from 'drizzle-orm';
 
@@ -28,11 +28,12 @@ export async function syncModelsToDatabase(): Promise<{
   const db = getDb();
   
   try {
-    // Get all active providers from code
-    const providers = await getActiveProviders();
-    
+    // Use ALL code-defined providers (not getActiveProviders which filters out archived/disabled)
+    // This ensures models that were previously archived get un-archived when they're still in code
+    const providers = ALL_PROVIDERS;
+
     if (providers.length === 0) {
-      loggers.modelSync.warn('No active providers found in code');
+      loggers.modelSync.warn('No providers found in code');
       return { added: 0, updated: 0, deactivated: 0, total: 0 };
     }
     
