@@ -7,7 +7,7 @@ import { getDb, models } from '@/lib/db';
 import { eq, sql, and } from 'drizzle-orm';
 
 // OpenRouter providers (sole provider)
-// OpenRouter: 20 active models = 20 total
+// OpenRouter: 21 active models = 21 total
 export const ALL_PROVIDERS: LLMProvider[] = [...OPENROUTER_PROVIDERS];
 
 // ============================================================================
@@ -64,8 +64,9 @@ export const MODEL_PROVIDER_ROUTES: Record<string, string[]> = {
   // Z-AI GLM (1)
   'glm-5': ['glm-5-or'],
 
-  // MiniMax (1)
+  // MiniMax (2)
   'minimax-m2.1': ['minimax-m2.1-or'],
+  'minimax-m2.5': ['minimax-m2.5-or'],
 
   // Arcee AI (1)
   'trinity-large-preview': ['trinity-large-preview-or'],

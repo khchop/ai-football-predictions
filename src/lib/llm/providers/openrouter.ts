@@ -140,6 +140,23 @@ export const MiniMaxM21_OR = new OpenRouterProvider(
   }
 );
 
+// MiniMax M2.5 (reasoning model with mandatory <think> tags)
+export const MiniMaxM25_OR = new OpenRouterProvider(
+  'minimax-m2.5-or',
+  'openrouter',
+  'minimax/minimax-m2.5',
+  'MiniMax M2.5 (OpenRouter)',
+  'budget',
+  { promptPer1M: 0.30, completionPer1M: 1.20 },
+  false,
+  {
+    promptVariant: PromptVariant.THINKING_STRIPPED,
+    responseHandler: ResponseHandler.STRIP_THINKING_TAGS,
+    timeoutMs: 120000,
+    supportsJsonMode: false,
+  }
+);
+
 // Qwen3 235B Thinking (needs THINKING_STRIPPED + STRIP_THINKING_TAGS like primary)
 export const Qwen3_235BThinking_OR = new OpenRouterProvider(
   'qwen3-235b-thinking-or',
@@ -353,7 +370,7 @@ export const Gemma3_12B_OR = new OpenRouterProvider(
 );
 
 // ============================================================================
-// ALL OPENROUTER PROVIDERS (20 models)
+// ALL OPENROUTER PROVIDERS (21 models)
 // OpenRouter is now the sole LLM provider for all predictions and content generation
 // Organized by model family for clarity
 // ============================================================================
@@ -398,8 +415,9 @@ export const OPENROUTER_PROVIDERS: OpenRouterProvider[] = [
   // Z-AI GLM (1 model)
   GLM5_OR,                     // GLM-5 (NEW - replaces 4.7)
 
-  // MiniMax (1 model)
+  // MiniMax (2 models)
   MiniMaxM21_OR,               // MiniMax M2.1 (UPDATED pricing)
+  MiniMaxM25_OR,               // MiniMax M2.5 (NEW - reasoning model)
 
   // Arcee AI (1 model)
   TrinityLargePreview_OR,      // Trinity Large Preview (NEW)
