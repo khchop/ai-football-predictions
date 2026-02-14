@@ -34,6 +34,7 @@ import { PredictionInsertSchema } from '@/lib/validation/prediction-schema';
 import { loggers } from '@/lib/logger/modules';
 import { getMatchWithRetry } from '@/lib/utils/retry-helpers';
 import { classifyErrorType, isModelSpecificFailure, ErrorType } from '@/lib/utils/retry-config';
+import { sendPredictionRunSummary } from '@/lib/notifications/discord';
 
 /**
  * Error classification for retry strategy (LEGACY - now using retry-config)
@@ -179,11 +180,18 @@ export function createPredictionsWorker() {
 
          let successCount = 0;
          let failCount = 0;
-         
+
          // Collect all predictions to insert in batch
          const predictionsToInsert: NewPrediction[] = [];
          // Track which models succeeded so we can record health AFTER batch insert
          const successfulModelIds: string[] = [];
+         // Track per-model failures for Discord summary
+         const modelFailures: Array<{
+           modelId: string;
+           displayName: string;
+           errorType: string;
+           errorMessage: string;
+         }> = [];
 
          // Generate predictions for each model with isolation
          for (const provider of filteredProviders) {
@@ -217,8 +225,15 @@ export function createPredictionsWorker() {
               // Validate response before parsing (defensive null check)
               if (!rawResponse || typeof rawResponse !== 'string') {
                 const errorType = ErrorType.PARSE_ERROR; // Empty response treated as parse error
+                const errorMessage = 'empty_response';
                 log.warn({ modelId: provider.id, errorType }, 'Provider returned null/invalid response');
-                await recordModelFailure(provider.id, 'empty_response', errorType);
+                modelFailures.push({
+                  modelId: provider.id,
+                  displayName: provider.displayName || provider.name || provider.id,
+                  errorType,
+                  errorMessage: errorMessage.substring(0, 100),
+                });
+                await recordModelFailure(provider.id, errorMessage, errorType);
                 failCount++;
                 continue;
               }
@@ -252,14 +267,21 @@ export function createPredictionsWorker() {
                    // Both parsers failed - record failure
                    const responsePreview = rawResponse.slice(0, 300).replace(/\s+/g, ' ');
                    const errorType = ErrorType.PARSE_ERROR;
+                   const errorMessage = parsed.error || 'Parse failed';
                    log.warn({
                      matchId,
                      modelId: provider.id,
-                     error: parsed.error,
+                     error: errorMessage,
                      errorType,
                      rawResponsePreview: responsePreview
                    }, 'Failed to parse prediction (basic + enhanced parsers failed)');
-                   await recordModelFailure(provider.id, parsed.error || 'Parse failed', errorType);
+                   modelFailures.push({
+                     modelId: provider.id,
+                     displayName: provider.displayName || provider.name || provider.id,
+                     errorType,
+                     errorMessage: errorMessage.substring(0, 100),
+                   });
+                   await recordModelFailure(provider.id, errorMessage, errorType);
                    failCount++;
                    continue;
                  }
@@ -276,13 +298,21 @@ export function createPredictionsWorker() {
              });
 
              if (!insertValidation.success) {
+               const errorType = ErrorType.PARSE_ERROR;
+               const errorMessage = 'schema_validation_failed';
                log.error({
                  modelId: provider.id,
                  matchId,
                  issues: insertValidation.error.issues,
                  rawValues: { home: prediction.homeScore, away: prediction.awayScore },
                }, 'Prediction failed schema validation before database insert');
-               await recordModelFailure(provider.id, 'schema_validation_failed', ErrorType.PARSE_ERROR);
+               modelFailures.push({
+                 modelId: provider.id,
+                 displayName: provider.displayName || provider.name || provider.id,
+                 errorType,
+                 errorMessage: errorMessage.substring(0, 100),
+               });
+               await recordModelFailure(provider.id, errorMessage, errorType);
                failCount++;
                continue;
              }
@@ -325,6 +355,13 @@ export function createPredictionsWorker() {
                   errorType,
                   countsTowardDisable: isModelSpecificFailure(errorType),
                 }, `Model prediction failed`);
+
+                modelFailures.push({
+                  modelId: provider.id,
+                  displayName: provider.displayName || provider.name || provider.id,
+                  errorType,
+                  errorMessage: errorMessage.substring(0, 100),
+                });
 
                 await recordModelFailure(provider.id, errorMessage, errorType);
 
@@ -374,7 +411,19 @@ export function createPredictionsWorker() {
                log.warn({ matchId, err }, 'Betting content generation failed (non-blocking)');
              }
            }
-          
+
+           // Send Discord summary if there were failures (fire-and-forget)
+           if (modelFailures.length > 0) {
+             const matchLabel = `${match.homeTeam} vs ${match.awayTeam} (${competition.name})`;
+             sendPredictionRunSummary({
+               matchLabel,
+               totalModels: filteredProviders.length,
+               successful: successCount,
+               failed: failCount,
+               failures: modelFailures,
+             }).catch(() => {}); // Fire and forget
+           }
+
           log.info({
             totalModels: providers.length,
             filtered: filteredProviders.length,
