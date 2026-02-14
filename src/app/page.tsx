@@ -295,6 +295,42 @@ function FeaturedInsightsLoadingSkeleton() {
   );
 }
 
+function LiveMatchesSkeleton() {
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-4 gap-4">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-3 w-3 rounded-full" />
+          <div>
+            <Skeleton className="h-6 w-32 mb-1" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        </div>
+        <Skeleton className="h-4 w-16" />
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-border/30">
+              <Skeleton className="h-4 w-32" />
+            </div>
+            <div className="p-4">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-10 w-10 rounded-lg flex-shrink-0" />
+                <Skeleton className="h-4 flex-1" />
+                <Skeleton className="h-6 w-12" />
+                <Skeleton className="h-4 flex-1" />
+                <Skeleton className="h-10 w-10 rounded-lg flex-shrink-0" />
+              </div>
+              <Skeleton className="h-3 w-24 mx-auto mt-3" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function HomePage() {
   return (
     <div className="space-y-8">
@@ -324,7 +360,7 @@ export default function HomePage() {
       </Suspense>
 
       {/* Live Matches - only shows when there are live matches */}
-      <Suspense fallback={null}>
+      <Suspense fallback={<LiveMatchesSkeleton />}>
         <LiveMatches />
       </Suspense>
 
