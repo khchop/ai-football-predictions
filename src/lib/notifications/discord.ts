@@ -33,6 +33,14 @@ interface AutoDisableParams {
   consecutiveFailures: number;
   failureReason: string;
   lastSuccessAt: string | null;
+  errorType?: string;
+}
+
+export interface PredictionRunFailure {
+  modelId: string;
+  displayName: string;
+  errorType: string;
+  errorMessage: string;
 }
 
 interface RegressionItem {
@@ -101,7 +109,7 @@ async function sendDiscordAlert(embed: DiscordEmbed): Promise<void> {
  * Send auto-disable alert when a model hits the consecutive failure threshold.
  */
 export async function sendAutoDisableAlert(params: AutoDisableParams): Promise<void> {
-  const { modelId, displayName, consecutiveFailures, failureReason, lastSuccessAt } = params;
+  const { modelId, displayName, consecutiveFailures, failureReason, lastSuccessAt, errorType } = params;
 
   const embed: DiscordEmbed = {
     title: '🔴 Model Auto-Disabled',
@@ -123,7 +131,12 @@ export async function sendAutoDisableAlert(params: AutoDisableParams): Promise<v
         inline: true,
       },
       {
-        name: 'Error',
+        name: 'Error Type',
+        value: errorType || 'unknown',
+        inline: true,
+      },
+      {
+        name: 'Error Details',
         value: failureReason.substring(0, 200),
         inline: false,
       },
@@ -180,4 +193,92 @@ export async function sendRegressionAlert(regressions: RegressionItem[]): Promis
   });
 
   await sendDiscordAlert(embed);
+}
+
+/**
+ * Send prediction run summary when any models fail during prediction generation.
+ * Groups failures by error type for easy troubleshooting.
+ */
+export async function sendPredictionRunSummary(params: {
+  matchLabel: string;
+  totalModels: number;
+  successful: number;
+  failed: number;
+  failures: PredictionRunFailure[];
+}): Promise<void> {
+  const { matchLabel, totalModels, successful, failed, failures } = params;
+
+  // No notification for clean runs
+  if (failures.length === 0) {
+    return;
+  }
+
+  try {
+    // Color: orange if < 50% failed, red if >= 50% failed
+    const color = failed >= totalModels / 2 ? 0xff0000 : 0xffa500;
+
+    // Group failures by errorType
+    const groupedFailures = failures.reduce<Record<string, PredictionRunFailure[]>>((acc, failure) => {
+      if (!acc[failure.errorType]) {
+        acc[failure.errorType] = [];
+      }
+      acc[failure.errorType].push(failure);
+      return acc;
+    }, {});
+
+    // Build fields for each error type group
+    const fields: Array<{ name: string; value: string; inline: boolean }> = [];
+    let totalShown = 0;
+    const LIMIT = 10; // Show at most 10 failures total
+
+    for (const [errorType, groupFailures] of Object.entries(groupedFailures)) {
+      if (totalShown >= LIMIT) break;
+
+      const failuresToShow = groupFailures.slice(0, LIMIT - totalShown);
+      const value = failuresToShow
+        .map(f => {
+          const truncatedMsg = f.errorMessage.substring(0, 80);
+          return `- ${f.displayName}: ${truncatedMsg}`;
+        })
+        .join('\n');
+
+      fields.push({
+        name: `${errorType} (${groupFailures.length} model${groupFailures.length > 1 ? 's' : ''})`,
+        value,
+        inline: false,
+      });
+
+      totalShown += failuresToShow.length;
+    }
+
+    // Add "+N more" if we hit the limit
+    if (failures.length > LIMIT) {
+      const remaining = failures.length - LIMIT;
+      fields.push({
+        name: 'Additional Failures',
+        value: `(+${remaining} more failure${remaining > 1 ? 's' : ''})`,
+        inline: false,
+      });
+    }
+
+    const embed: DiscordEmbed = {
+      title: `Prediction Run: ${successful}/${totalModels} succeeded`,
+      description: matchLabel,
+      color,
+      fields,
+      timestamp: new Date().toISOString(),
+      footer: {
+        text: 'Prediction Run Summary',
+      },
+    };
+
+    await sendDiscordAlert(embed);
+  } catch (error) {
+    // Fire-and-forget: log errors but never throw
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    loggers.discord.error(
+      { error: errorMsg, matchLabel },
+      'Failed to send prediction run summary'
+    );
+  }
 }

@@ -916,6 +916,7 @@ export async function recordModelFailure(
       consecutiveFailures: updated.consecutiveFailures || 0,
       failureReason: reason.substring(0, 200),
       lastSuccessAt: modelInfo[0]?.lastSuccessAt || null,
+      errorType: errorType || 'unknown',
     }).catch(() => {}); // Fire and forget, errors logged internally
 
     // Invalidate model count caches when auto-disabled
