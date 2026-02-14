@@ -13,7 +13,7 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 Phase: 74 of 74 (all complete)
 Plan: All plans complete
 Status: Milestone v3.1 shipped
-Last activity: 2026-02-14 - Completed quick task 055: Redesign team page layout with compact stats and hero section
+Last activity: 2026-02-14 - Completed quick task 056: Fix model list to match exact 20 active models plus MiniMax M2.5
 
 Progress: [██████████████████████████████████████████████████] 100% (74/74 phases, 16 milestones)
 
@@ -72,11 +72,12 @@ None.
 | 053 | Add detailed model errors to Discord notifications | 2026-02-14 | bd81a32 | [053-add-detailed-model-errors-to-discord-not](./quick/53-add-detailed-model-errors-to-discord-not/) |
 | 054 | Fix empty page loads with Suspense fallbacks and error boundaries | 2026-02-14 | 7805bc9 | [054-fix-empty-page-loads-comprehensive-inves](./quick/54-fix-empty-page-loads-comprehensive-inves/) |
 | 055 | Redesign team page layout with compact stats and hero section | 2026-02-14 | bc60fb7 | [055-redesign-team-page-layout-compact-stats-](./quick/55-redesign-team-page-layout-compact-stats-/) |
+| 056 | Fix model list to match exact 20 active models plus MiniMax M2.5 | 2026-02-14 | df90500 | [056-fix-model-list-to-match-exact-20-active-](./quick/56-fix-model-list-to-match-exact-20-active-/) |
 
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Completed quick task 055: Redesign team page layout with compact stats and hero section
+Stopped at: Completed quick task 056: Fix model list to match exact 20 active models plus MiniMax M2.5
 Resume file: None
 
 **Next step:** Start next milestone with `/gsd:new-milestone`
