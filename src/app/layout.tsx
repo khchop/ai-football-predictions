@@ -102,6 +102,22 @@ export default function RootLayout({
     </nav>
   );
 
+  const PageLoadingSkeleton = () => (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="space-y-6">
+        {/* Header skeleton */}
+        <div className="h-8 w-64 rounded-xl bg-muted animate-pulse" />
+
+        {/* Card grid skeleton */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-48 rounded-xl bg-muted animate-pulse" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased min-h-screen bg-background flex flex-col`}>
@@ -128,7 +144,7 @@ export default function RootLayout({
 
             <ViewTransition>
               <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl pb-20 md:pb-0">
-                <Suspense>
+                <Suspense fallback={<PageLoadingSkeleton />}>
                   <ErrorBoundaryProvider>
                     {children}
                   </ErrorBoundaryProvider>
