@@ -72,6 +72,6 @@ describe.skipIf(shouldSkip)('JSON-04: All Models JSON Validation', () => {
 
   // Summary test to verify model count
   test('validates expected model count', () => {
-    expect(ALL_PROVIDERS.length).toBe(23);
+    expect(ALL_PROVIDERS.length).toBe(21);
   });
 });

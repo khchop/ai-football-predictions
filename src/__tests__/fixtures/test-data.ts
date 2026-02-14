@@ -56,6 +56,7 @@ export const REASONING_MODEL_IDS = new Set([
   'kimi-k2-thinking-syn',
   'qwen3-235b-thinking-syn',
   'deepseek-r1',
+  'minimax-m2.5-or',
 ]);
 
 /**
