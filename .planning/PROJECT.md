@@ -94,7 +94,16 @@ See `.planning/MILESTONES.md` for full history of v1.0 through v2.6 validated re
 
 ### Active
 
-(No active milestone — define next with `/gsd:new-milestone`)
+## Current Milestone: v3.2 PageSpeed Optimization
+
+**Goal:** Achieve 90+ Lighthouse performance score on all page types (desktop and mobile)
+
+**Target features:**
+- Fix CLS issues (desktop footer shift 0.294)
+- Improve LCP on mobile (4.2s -> <2.5s)
+- Reduce JS bundle with dynamic imports for below-fold components
+- Eliminate legacy JavaScript polyfills
+- Optimize DOM size and main thread work
 
 ### Out of Scope
 
@@ -172,4 +181,4 @@ Per-model health dashboard with regression alerts operational.
 v1.0, v1.1, v1.2, v1.3, v2.0, v2.1, v2.2, v2.3, v2.4, v2.5, v2.6, v2.7, v2.8, v2.9, v3.0, v3.1 — see `.planning/MILESTONES.md` for full history.
 
 ---
-*Last updated: 2026-02-13 after v3.1 milestone*
+*Last updated: 2026-02-14 after v3.2 milestone start*
