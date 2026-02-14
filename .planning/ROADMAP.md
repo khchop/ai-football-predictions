@@ -153,10 +153,10 @@ See `.planning/MILESTONES.md` and `.planning/milestones/v3.1-ROADMAP.md` for ful
   4. Suspense fallbacks use proper skeletons with reserved height matching content
   5. No layout shift when components hydrate or lazy-load
 
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 75-01: TBD
+- [ ] 75-01-PLAN.md — Replace all `fallback={null}` with proper skeletons (homepage LiveMatches, matches badge, league FAQ)
 
 #### Phase 76: LCP & Font Optimization
 
