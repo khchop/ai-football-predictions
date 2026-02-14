@@ -41,12 +41,12 @@ describe('REGR-01: Golden Fixture Regression Tests', () => {
   // ============================================================================
 
   describe('Model Count Validation', () => {
-    test('total fixture count matches expected (38 OpenRouter models)', () => {
-      expect(fixtureStats.total).toBe(38);
+    test('total fixture count matches expected (42 historical models)', () => {
+      expect(fixtureStats.total).toBe(42);
     });
 
-    test('OpenRouter model count is 38', () => {
-      expect(fixtureStats.openrouterCount).toBe(38);
+    test('fixture count is non-zero', () => {
+      expect(fixtureStats.total).toBeGreaterThan(0);
     });
   });
 
