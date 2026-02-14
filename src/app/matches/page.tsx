@@ -323,7 +323,7 @@ export default function MatchesPage() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
             </span>
             Live
-            <Suspense fallback={null}>
+            <Suspense fallback={<span className="ml-1.5 w-5 h-4 inline-block" />}>
               <LiveMatchCountBadge />
             </Suspense>
           </TabsTrigger>

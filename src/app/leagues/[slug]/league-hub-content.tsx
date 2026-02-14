@@ -259,6 +259,21 @@ function InsightsLoadingSkeleton() {
   );
 }
 
+function FAQLoadingSkeleton() {
+  return (
+    <div className="rounded-xl border border-border/50 bg-card/50 p-6">
+      <Skeleton className="h-6 w-48 mb-4" />
+      <div className="space-y-3">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="border-b border-border/30 pb-3">
+            <Skeleton className="h-5 w-full max-w-md" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 async function LeagueInsights({ competitionId }: { competitionId: string }) {
   // Fetch all data in parallel
   const [topModels, stats, predictionSummary, nextMatch, matches, trends] = await Promise.all([
@@ -380,7 +395,7 @@ export async function LeagueHubContent({ competitionId }: LeagueHubContentProps)
       </Tabs>
 
       {/* FAQ section at the very bottom */}
-      <Suspense fallback={null}>
+      <Suspense fallback={<FAQLoadingSkeleton />}>
         <LeagueFAQSection competitionId={competitionId} />
       </Suspense>
     </div>
