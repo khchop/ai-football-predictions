@@ -73,6 +73,7 @@ export async function syncModelsToDatabase(): Promise<{
               displayName: provider.displayName,
               isPremium: provider.isPremium,
               active: true,
+              archived: false,
             })
             .where(eq(models.id, provider.id));
           updated++;

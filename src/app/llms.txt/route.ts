@@ -69,7 +69,7 @@ kroam.xyz tracks and analyzes AI model predictions for football matches using th
 
 - **Framework**: Next.js 16 (App Router)
 - **Data Source**: API-Football for match data
-- **AI Models**: Together AI, OpenAI, Anthropic, Google, Meta
+- **AI Models**: 21 open-source models via OpenRouter
 - **Database**: PostgreSQL with Drizzle ORM
 
 ## Important URLs
