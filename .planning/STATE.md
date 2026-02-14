@@ -13,14 +13,14 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 Phase: 74 of 74 (all complete)
 Plan: All plans complete
 Status: Milestone v3.1 shipped
-Last activity: 2026-02-14 - Completed quick task 048: Fix Step 3.5 Flash supportsJsonMode
+Last activity: 2026-02-14 - Completed quick task 049: Fix model health stats to exclude auto-disabled models
 
 Progress: [██████████████████████████████████████████████████] 100% (74/74 phases, 16 milestones)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 183 plans (phases 1-62, 67-74) + 12 quick tasks
+- Total plans completed: 183 plans (phases 1-62, 67-74) + 13 quick tasks
 - Milestones shipped: 16 (v1.0 through v3.1)
 
 **Recent Milestones:**
@@ -65,14 +65,15 @@ None.
 | 046 | Fix model health success rate calculation with per-model attempt counting | 2026-02-13 | a8fbd71 | [046-fix-model-health-success-rate-calculatio](./quick/046-fix-model-health-success-rate-calculatio/) |
 | 047 | Add natural language score extraction as fallback parser for thinking models | 2026-02-14 | c25e2a8 | [047-add-natural-language-score-extraction-fa](./quick/47-add-natural-language-score-extraction-fa/) |
 | 048 | Fix Step 3.5 Flash auto-disable by setting supportsJsonMode false | 2026-02-14 | 7dc89ac | [048-fix-step-3-5-flash-auto-disable-by-setti](./quick/48-fix-step-3-5-flash-auto-disable-by-setti/) |
+| 049 | Fix model health stats to exclude auto-disabled models | 2026-02-14 | a694bde | [049-fix-model-health-stats-to-exclude-auto-d](./quick/49-fix-model-health-stats-to-exclude-auto-d/) |
 
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Completed quick task 048: Fix Step 3.5 Flash supportsJsonMode
+Stopped at: Completed quick task 049: Fix model health stats to exclude auto-disabled models
 Resume file: None
 
 **Next step:** Start next milestone with `/gsd:new-milestone`
 
 ---
-*Last updated: 2026-02-14 after quick task 048 completion*
+*Last updated: 2026-02-14 after quick task 049 completion*
