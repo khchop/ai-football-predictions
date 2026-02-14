@@ -61,27 +61,27 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CLS-01 | TBD | Pending |
-| CLS-02 | TBD | Pending |
-| CLS-03 | TBD | Pending |
-| LCP-01 | TBD | Pending |
-| LCP-02 | TBD | Pending |
-| LCP-03 | TBD | Pending |
-| LCP-04 | TBD | Pending |
-| BNDL-01 | TBD | Pending |
-| BNDL-02 | TBD | Pending |
-| BNDL-03 | TBD | Pending |
-| BNDL-04 | TBD | Pending |
-| DOM-01 | TBD | Pending |
-| DOM-02 | TBD | Pending |
-| PERF-01 | TBD | Pending |
-| PERF-02 | TBD | Pending |
+| CLS-01 | Phase 75 | Pending |
+| CLS-02 | Phase 75 | Pending |
+| CLS-03 | Phase 75 | Pending |
+| LCP-01 | Phase 76 | Pending |
+| LCP-02 | Phase 76 | Pending |
+| LCP-03 | Phase 78 | Pending |
+| LCP-04 | Phase 78 | Pending |
+| BNDL-01 | Phase 77 | Pending |
+| BNDL-02 | Phase 77 | Pending |
+| BNDL-03 | Phase 77 | Pending |
+| BNDL-04 | Phase 77 | Pending |
+| DOM-01 | Phase 78 | Pending |
+| DOM-02 | Phase 78 | Pending |
+| PERF-01 | Phase 79 | Pending |
+| PERF-02 | Phase 79 | Pending |
 
 **Coverage:**
 - v3.2 requirements: 15 total
-- Mapped to phases: 0
-- Unmapped: 15
+- Mapped to phases: 15
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-14*
-*Last updated: 2026-02-14 after initial definition*
+*Last updated: 2026-02-14 after v3.2 roadmap creation*
