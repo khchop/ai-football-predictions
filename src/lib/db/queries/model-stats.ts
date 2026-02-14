@@ -172,7 +172,7 @@ export async function aggregateDailyStats(date: string): Promise<void> {
       failureReason: models.failureReason,
     })
     .from(models)
-    .where(eq(models.active, true));
+    .where(and(eq(models.active, true), eq(models.autoDisabled, false)));
 
   if (activeModels.length === 0) {
     // No active models; nothing to aggregate
@@ -340,7 +340,7 @@ export async function getAllModelHealthSummary(): Promise<ModelHealthSummary[]> 
   const activeModels = await db
     .select()
     .from(models)
-    .where(eq(models.active, true));
+    .where(and(eq(models.active, true), eq(models.autoDisabled, false)));
 
   // Get all stats for last 30 days (covers both 7d and 30d windows)
   const allStats = await db
@@ -419,7 +419,7 @@ export async function detectRegressions(): Promise<RegressionAlert[]> {
   const activeModels = await db
     .select()
     .from(models)
-    .where(eq(models.active, true));
+    .where(and(eq(models.active, true), eq(models.autoDisabled, false)));
 
   // Get all stats for last 14 days (covers both windows)
   const allStats = await db
