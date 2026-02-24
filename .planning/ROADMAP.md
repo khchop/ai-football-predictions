@@ -173,10 +173,10 @@ Plans:
   4. Critical text visible before full font loads (FOUT acceptable vs FOIT)
   5. Hero section HTML delivered inline (not waiting for client components)
 
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 76-01: TBD
+- [x] 76-01-PLAN.md — Optimize next/font Inter config + restructure Providers to eliminate hydration blocking
 
 #### Phase 77: Bundle Reduction
 
@@ -247,7 +247,7 @@ Phases execute in numeric order: 75 → 76 → 77 → 78 → 79
 |-------|-----------|----------------|--------|-----------|
 | 1-74. Previous milestones | v1.0-v3.1 | All | Complete | 2026-02-13 |
 | 75. CLS Fixes | v3.2 | 1/1 | Complete | 2026-02-14 |
-| 76. LCP & Font Optimization | v3.2 | 0/TBD | Not started | - |
+| 76. LCP & Font Optimization | v3.2 | 1/1 | Planned | - |
 | 77. Bundle Reduction | v3.2 | 0/TBD | Not started | - |
 | 78. DOM & Rendering | v3.2 | 0/TBD | Not started | - |
 | 79. Final Verification | v3.2 | 0/TBD | Not started | - |
