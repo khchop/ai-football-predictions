@@ -13,7 +13,7 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 Phase: 75 of 79 (CLS Fixes)
 Plan: 1 of 1 in current phase
 Status: Phase 75 complete
-Last activity: 2026-02-14 — Completed 75-01 CLS fixes (eliminated all fallback={null})
+Last activity: 2026-02-26 - Completed quick task 57: Fix team page match links pointing to 410 /matches/ routes
 
 Progress: [████████████████████░] 95% (75/79 phases from v1.0-v3.2 complete)
 
@@ -76,6 +76,12 @@ None yet (v3.2 just started).
 - next/font Inter with swap default already configured
 - No third-party scripts (0ms blocking)
 - All optimizations must work with existing Turbopack build
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 57 | Fix team page match links pointing to 410 /matches/ routes | 2026-02-26 | 4cc89e8 | [57-investigate-and-fix-4xx-errors-from-cool](./quick/57-investigate-and-fix-4xx-errors-from-cool/) |
 
 ## Session Continuity
 
