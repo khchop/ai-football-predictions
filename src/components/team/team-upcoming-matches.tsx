@@ -21,7 +21,9 @@ export function TeamUpcomingMatches({ matches, teamName }: TeamUpcomingMatchesPr
   return (
     <div className="space-y-3">
       {matches.map((match) => {
-        const matchUrl = match.slug ? `/matches/${match.slug}` : null;
+        const matchUrl = match.slug && match.competitionId
+          ? `/leagues/${match.competitionId}/${match.slug}`
+          : null;
         const homeConfig = getTeamByIdOrAlias(match.homeTeam);
         const awayConfig = getTeamByIdOrAlias(match.awayTeam);
 
